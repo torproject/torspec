@@ -1,0 +1,85 @@
+Filename: 178-param-voting.txt
+Title: Require majority of authorities to vote for consensus parameters
+Author: Sebastian Hahn	
+Created: 16-Feb-2011
+Status: Draft
+
+Overview:
+
+The consensus that the directory authorities create may contain one or
+more parameters (32-bit signed integers) that influence the behavior
+of Tor nodes (see proposal 167, "Vote on network parameters in
+consensus" for more details).
+
+Currently (as of consensus method 11), a consensus will end up
+containing a parameter if at least one directory authority votes for
+that paramater. The value of the parameter will be the low-median of
+all the votes for this parameter.
+
+This proposal aims at changing this voting process to be more secure
+against tampering by a non-majority of directory authorities.
+
+Motivation:
+
+To prevent a minority of the directory authorities from influencing
+the value of a parameter unduly, the majority of directory authorities
+has to vote for that parameter. This is not currently happening, and
+it was in fact not uncommon for a single authority to govern the value
+of a consensus parameter.
+
+Design:
+
+When the consensus is generated, the directory authorities ensure that
+a param is only included in the list of params if at least half of the
+total number of authorities votes for that param. The value chosen is
+the low-median of all the votes. We don't mandate that the authorities
+have to vote on exactly the same value for it to be included because
+some consensus parameters could be the result of active measurements
+that individual authorities make.
+
+Security implications:
+
+This change is aimed at improving the security of Tor nodes against
+attacks carried out by a minority of directory authorities. It is
+possible that a consensus parameter that would be helpful to the
+network is not included because not enough directory authorities
+voted for it, but since clients are required to have sane defaults
+in case the parameter is absent this does not carry a security risk.
+
+Specification:
+
+dir-spec section 3.4 currently says:
+
+     Entries are given on the "params" line for every keyword on which any
+     authority voted.  The values given are the low-median of all votes on
+     that keyword.
+
+It is proposed that the above is changed to:
+
+     Entries are given on the "params" line for every keyword on which a
+     majority of authorities (total authorities, not just those
+     participating this vote) voted on. The values given are the
+     low-median of all votes on that keyword. XXX note previous behaviour.
+
+The following should be added to the bottom of section 3.4.:
+
+        * If consensus method 12 or later is used, only consensus 
+          parameters that more than half of the total number of
+          authorities voted for are included in the consensus.
+
+The following line should be added to the bottom of section 3.4.1.:
+
+     "12" -- Params are only included if a majority voted for them
+
+Compatibility:
+
+A sufficient number of directory authorities must upgrade to the new
+consensus method used to calculate the params in the way this proposal
+calls for, otherwise the old mechanism is used. Nodes that do not act
+as directory authorities do not need to be upgraded and should
+experience no change in behaviour.
+
+Implementation:
+
+An example implementation of this feature can be found in
+https://gitweb.torproject.org/sebastian/tor.git, branch safer_params.
