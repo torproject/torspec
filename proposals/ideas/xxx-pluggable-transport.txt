@@ -109,13 +109,13 @@ Design overview
 
   To write a new transport protocol, an implementer must provide two
   pieces: a "Client Proxy" to run at the initiator side, and a "Server
-  Proxy" to run a the server side.  These two pieces may or may not be
+  Proxy" to run at the server side.  These two pieces may or may not be
   implemented by the same program.
 
   Each client may run any number of Client Proxies.  Each one acts like
-  a SOCKS proxy that accepts accept connections on localhost.  Each one
+  a SOCKS proxy that accepts connections on localhost.  Each one
   runs on a different port, and implements one or more transport
-  methods.  If the protocol has any parameters, they passed from Tor
+  methods.  If the protocol has any parameters, they are passed from Tor
   inside the regular username/password parts of the SOCKS protocol.
 
   Bridges (and maybe relays) may run any number of Server Proxies: these
@@ -147,7 +147,7 @@ Specifications: Client behavior
   on the TLS connection to match the digest provided in
   [id-fingerprint].  If any [k=v] items are provided, they are
   configuration parameters for the proxy: Tor should separate them with
-  semicolons and put them user and password fields of the request,
+  semicolons and put them in the user and password fields of the request,
   splitting them across the fields as necessary.  If a key or value
   value must contain a semicolon or a backslash, it is escaped with a
   backslash.
@@ -174,6 +174,7 @@ Specifications: Client behavior
   connections. The Tor client only launches one instance of each
   external program, even if the same executable is listed for more than
   one method.
+  [What if the options are different? -RD]
 
   The same program can implement a managed or an external proxy: it just
   needs to take an argument saying which one to be.
@@ -237,8 +238,8 @@ Server proxy behavior
 
    [If we're using the bridge authority/bridgedb system for distributing
    bridge info, the right place to advertise bridge lines is probably
-   the extrainfo document.  We also need a way to tell the bridge
-   authority "don't give out a default bridge line for me"]
+   the extrainfo document.  We also need a way to tell bridgedb
+   "don't give out a default bridge line for me"]
 
 Server behavior
 
@@ -289,12 +290,12 @@ Appendix: recommendations for transports
   make it either get a small userbase, or poor auditing.
 
   Think secure: if your code is in a C-like language, and it's hard to
-  read it and become convinced it's safe then, it's probably not safe.
+  read it and become convinced it's safe, then it's probably not safe.
 
   Think small: we want to minimize the bytes that a Windows user needs
   to download for a transport client.
 
-  Specify: if you can't come up with a good explanation
+  Specify: if you can't come up with a good explanation [XXX]
 
   Avoid security-through-obscurity if possible.  Specify.
 
@@ -309,4 +310,5 @@ Appendix: recommendations for transports
 Appendix: Raw-traffic transports
 
   This section describes an optional extension to the proposal above.
-  We  are not sure whether it is a good idea.
+  We are not sure whether it is a good idea.
+

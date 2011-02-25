@@ -7,7 +7,7 @@ Status: Accepted
 Overview:
 
     Over the course of developing arm there's been numerous hacks and
-    workarounds to gleam pieces of basic, desirable information about the tor
+    workarounds to glean pieces of basic, desirable information about the tor
     process. As per Roger's request I've compiled a list of these pain points
     to try and improve the control protocol interface.
 
@@ -15,19 +15,19 @@ Motivation:
 
     The purpose of this proposal is to expose additional process and relay
     related information that is currently unavailable in a convenient,
-    dependable, and/or platform independent way. Examples of this are...
-    
+    dependable, and/or platform independent way. Examples are:
+
       - The relay's total contributed bandwidth. This is a highly requested
         piece of information and, based on the following patch from pipe, looks
         trivial to include.
         http://www.mail-archive.com/or-talk@freehaven.net/msg13085.html
-      
+
       - The process ID of the tor process. There is a high degree of guess work
         in obtaining this. Arm for instance uses pidof, netstat, and ps yet
         still fails on some platforms, and Orbot recently got a ticket about
         its own attempt to fetch it with ps:
         https://trac.torproject.org/projects/tor/ticket/1388
-    
+
     This just includes the pieces of missing information I've noticed
     (suggestions or questions of their usefulness are welcome!).
 
@@ -39,43 +39,45 @@ Security Implications:
 Specification:
 
     The following addition would be made to the control-spec's GETINFO section:
-    
+
     "relay/bw-limit" -- Effective relayed bandwidth limit.
-    
+
     "relay/burst-limit" -- Effective relayed burst limit.
-    
+
     "relay/read-total" -- Total bytes relayed (download).
-    
+
     "relay/write-total" -- Total bytes relayed (upload).
-    
+
     "relay/flags" -- Space separated listing of flags currently held by the
-    relay as repored by the currently cached consensus.
-    
+    relay as reported by the currently cached consensus.
+
     "process/user" -- Username under which the tor process is running,
-    providing an empty string if none exists.
-    
+    or an empty string if none exists.
+    [what do we mean 'if none exists'?]
+
     "process/pid" -- Process id belonging to the main tor process, -1 if none
     exists for the platform.
-    
+
     "process/uptime" -- Total uptime of the tor process (in seconds).
-    
+
     "process/uptime-reset" -- Time since last reset (startup, sighup, or RELOAD
-    signal, in seconds).
-    
+    signal, in seconds). [should clarify exactly which events cause an
+    uptime reset]
+
     "process/descriptors-used" -- Count of file descriptors used.
-    
+
     "process/descriptor-limit" -- File descriptor limit (getrlimit results).
-    
+
     "ns/authority" -- Router status info (v2 directory style) for all
     recognized directory authorities, joined by newlines.
-    
+
     "state/names" -- A space-separated list of all the keys supported by this
     version of Tor's state.
-    
+
     "state/val/<key>" -- Provides the current state value belonging to the
     given key. If undefined, this provides the key's default value.
-    
-    "status/ports-seen" -- A summary of which ports we've seen connections
+
+    "status/ports-seen" -- A summary of which ports we've seen connections'
     circuits connect to recently, formatted the same as the EXITS_SEEN status
     event described in Section 4.1.XX. This GETINFO option is currently
     available only for exit relays.
@@ -90,7 +92,7 @@ Specification:
   in their "relay" configuration window, to give them a sense of how they're
   being used (popularity of the various ports they exit to). Currently only
   exit relays will receive this event.
-  
+
   TimeStarted is a quoted string indicating when the reported summary
   counts from (in GMT).
 

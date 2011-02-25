@@ -37,7 +37,7 @@ Target: 0.2.2
   The median round-trip latency appears to be around 2s, with 25% of
   the data points taking more than 5s. That's a lot of variance.
 
-  We designed Tor originally with the original goal of maximizing
+  We designed Tor originally with the goal of maximizing
   throughput. We figured that would also optimize other network properties
   like round-trip latency. Looks like we were wrong.
 

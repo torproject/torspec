@@ -31,7 +31,7 @@ Target: 0.2.2
    In the current Tor TLS connection handshake protocol ("V2", or
    "renegotiating"), the parties begin with a single certificate
    sent from the server (responder) to the client (initiator), and
-   then renegotiate to a two-certs-from-each-authenticating party.
+   then renegotiate to a two-certs-from-each-authenticating-party.
    We made this change to make Tor's handshake look like a browser
    speaking SSL to a webserver.  (See proposal 130, and
    tor-spec.txt.)  To tell whether to use the V1 or V2 handshake,
@@ -171,7 +171,7 @@ Target: 0.2.2
    On learning the link protocol, the server then sends the client a
    CERT cell and a NETINFO cell.  If the client wants to
    authenticate to the server, it sends a CERT cell, an AUTHENTICATE
-   cell, and a NETINFO cell, or it may simply send a NETINFO cell if
+   cell, and a NETINFO cell; or it may simply send a NETINFO cell if
    it does not want to authenticate.
 
    The CERT cell describes the keys that a Tor instance is claiming
@@ -199,7 +199,7 @@ Target: 0.2.2
    where CertType is 1 (meaning "RSA/SHA256")
          CertPurpose is 1 (meaning "link certificate")
          PublicKey is the DER encoding of the ASN.1 representation
-            of the RSA key of the subject of this certificate,
+            of the RSA key of the subject of this certificate
          NotBefore is a time in HOURS since January 1, 1970, 00:00
             UTC before which this certificate should not be
             considered valid.
@@ -208,7 +208,7 @@ Target: 0.2.2
             considered valid.
          SignerID is the SHA-256 digest of the public key signing
             this certificate
-         and Signature is the signature of the all other fields in
+         and Signature is the signature of all the other fields in
             this certificate, using SHA256 as described in proposal
             158.
 
@@ -362,12 +362,12 @@ Target: 0.2.2
    We need to reserve command numbers for CERT and AUTH cells.  I
    suggest that in link protocol 3 and higher, we reserve command
    numbers 128..240 for variable-length cells.  (241-256 we can hold
-   for future extensions.
+   for future extensions.)
 
 5. Efficiency
 
-   This protocol add a round-trip step when the client sends a
-   VERSIONS cell to the server, and waits for the {VERSIONS, CERT,
+   This protocol adds a round-trip step when the client sends a
+   VERSIONS cell to the server and waits for the {VERSIONS, CERT,
    NETINFO} response in turn.  (The server then waits for the
    client's {NETINFO} or {CERT, AUTHENTICATE, NETINFO} reply,
    but it would have already been waiting for the client's NETINFO,
@@ -402,3 +402,4 @@ Target: 0.2.2
   - What should servers that don't have TLS renegotiation do?  For
     now, I think they should just get it.  Eventually we can
     deprecate the V2 handshake as we did with the V1 handshake.
+

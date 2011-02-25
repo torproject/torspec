@@ -175,6 +175,8 @@ Status: Draft
    might as well be a new one with no history. This policy may change
    once we start allowing the bridge authority to hand out new IP
    addresses given the fingerprint.
+   [Perhaps another consensus param? Also, this means we save previous
+    IP address in our state file, yes? -RD]
 
 3.x Bandwidth measurement
 
@@ -222,7 +224,7 @@ Status: Draft
      * Publication of IP address
      * Blocking from IRC (even for non-exit relays)
 
-   - What feedback should we give to bridge relays, to encourage then
+   - What feedback should we give to bridge relays, to encourage them
      e.g. number of recent users (what about reserve bridges)?
 
    - Can clients back-off from doing these tests (yes, we should do
