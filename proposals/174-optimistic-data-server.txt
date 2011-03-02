@@ -2,7 +2,7 @@ Filename: 174-optimistic-data-server.txt
 Title: Optimistic Data for Tor: Server Side
 Author: Ian Goldberg
 Created: 2-Aug-2010
-Status: Open
+Status: Accepted
 
 Overview:
 

@@ -2,8 +2,9 @@ Filename: 169-eliminating-renegotiation.txt
 Title: Eliminate TLS renegotiation for the Tor connection handshake
 Author: Nick Mathewson
 Created: 27-Jan-2010
-Status: Draft
+Status: Superseded
 Target: 0.2.2
+Superseded-By: 176
 
 1. Overview
 

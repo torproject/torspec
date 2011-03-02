@@ -2,7 +2,7 @@ Filename: 177-flag-abstention.txt
 Title: Abstaining from votes on individual flags
 Author: Nick Mathewson
 Created: 14 Feb 2011
-Status: Draft
+Status: Open
 
 Overview:
 
