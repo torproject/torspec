@@ -2,7 +2,7 @@ Filename: 178-param-voting.txt
 Title: Require majority of authorities to vote for consensus parameters
 Author: Sebastian Hahn	
 Created: 16-Feb-2011
-Status: Draft
+Status: Open
 
 Overview:
 
