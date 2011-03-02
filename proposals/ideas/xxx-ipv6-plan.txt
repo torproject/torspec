@@ -18,13 +18,16 @@ Motivation:
 
 What needs to change:
 
-   Tor uses the Internet in many ways.  There four main ways that
+   Tor uses the Internet in many ways.  There are four main ways that
    will need to change for IPv6 support, from most urgent to least
    urgent.
 
+     0. An unknown laundry list of issues that will supersede all other
+        listed issues in this list.
+
      1. Tor must allow connections from IPv6-only clients. (Currently,
-        routers do not listen on IPv6 addresses, and can't advertise
-        that they support IPv6 addresses, so clients can't learn that
+        routers and bridges do not listen on IPv6 addresses, and can't
+        advertise that they support IPv6 addresses, so clients can't learn that
         they do.)
 
      2. Tor must transport IPv6 traffic and IPv6-related DNS traffic.
@@ -35,8 +38,11 @@ What needs to change:
      3. Tor must allow nodes to connect to one another over IPv6.
 
    Allowing IPv6-only clients is the most important, since unless we
-   do, these unable to connect to Tor at all.  Next most
-   important is to allow IPv6 XXXX
+   do, these clients will be unable to connect to Tor at all.  Next most
+   important is to support IPv6 DNS related dependencies and exiting to IPv6
+   services. Finally, allowing Tor nodes to support a dual stack of both IPv4
+   and IPv6 for interconnection seems like a reasonable step towards a fully
+   hybrid v4/v6 Tor network.
 
 Designs that we will need to do:
 
@@ -51,12 +57,15 @@ Designs that we will need to do:
    for places that might assume that IPs are a scarce resource.  For
    example, clients assume that any two routers occupying an IPv4 /16
    network are "too close" topologically to be used in the same
-   circuit, and the bridgedb https distributor assumes that hopping
+   circuit, and the bridgedb HTTPS distributor assumes that hopping
    from one /24 to another takes a little effort for most clients.
    The directory authorities assume that blacklisting an IP is an okay
    response to a bad router at that address.  These and other places
    will needed instead more appropriate notions of "closeness" and
    "similarity".
+
+   We'll want to consider geographic and political boundaries rather than
+   purely mathematical notions such as the size of network blocks.
 
    We'll need a way to advertise IPv6 bridges, and to use them.
 
