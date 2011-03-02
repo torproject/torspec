@@ -155,7 +155,7 @@ Contents
    Tor instance and may expose attacks against the anonymity of Tor
    users.
 
-   Tor avoid this potential problem entirely MAPADDRESS must always
+   To avoid this potential problem entirely MAPADDRESS must always
    generate the Global, Subnet, and Interface IDs randomly for each
    request.  It is also highly suggested that explicitly specifying an
    IPv6 source address instead of the wildcard address not be supported
