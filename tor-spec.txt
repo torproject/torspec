@@ -965,7 +965,9 @@ see tor-design.pdf.
    do not apply to cells that the OR receives from one host and relays
    to another.
 
-   Each 'window' value is initially set to 1000 data cells
+   Each 'window' value is initially set based on the consensus parameter
+   'circwindow' in the directory (see dir-spec.txt), or to 1000 data cells
+   if no 'circwindow' value is given,
    in each direction (cells that are not data cells do not affect
    the window).  When an OR is willing to deliver more cells, it sends a
    RELAY_SENDME cell towards the OP, with Stream ID zero.  When an OR
