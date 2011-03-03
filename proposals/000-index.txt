@@ -99,6 +99,7 @@ Proposals by number:
 176  Proposed version-3 link handshake for Tor [OPEN]
 177  Abstaining from votes on individual flags [OPEN]
 178  Require majority of authorities to vote for consensus parameters [OPEN]
+179  TLS certificate and parameter normalization [DRAFT]
 
 
 Proposals by status:
@@ -112,6 +113,7 @@ Proposals by status:
    149  Using data from NETINFO cells [for 0.2.1.x]
    170  Configuration options regarding circuit building
    175  Automatically promoting Tor clients to nodes
+   179  TLS certificate and parameter normalization
  NEEDS-REVISION:
    131  Help users to verify they are using Tor
  OPEN:
