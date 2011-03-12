@@ -172,29 +172,48 @@ Specifications: Client behavior
   exec /usr/libexec/tor-proxies/trebuchet [options]", and tells Tor to launch
   an external program on-demand to provide a socks proxy for 'trebuchet'
   connections. The Tor client only launches one instance of each
-  external program, even if the same executable is listed for more than
-  one method.
-  [What if the options are different? -RD]
+  external program with a given set of options, even if the same
+  executable and options are listed for more than one method.
+
+  If instead of a transport name, the torrc lists "*" for a managed proxy,
+  tor uses that proxy for all transports that it supports.
 
   The same program can implement a managed or an external proxy: it just
   needs to take an argument saying which one to be.
 
 Client proxy behavior
 
-   When launched from the command-line by a Tor client, a transport
-   proxy needs to tell Tor which methods and ports it supports.  It does
-   this by printing one or more CMETHOD: lines to its stdout.  These look
-   like
+   When the Tor client launches a client proxy from the command line, it
+   sets the environment variable
+     "CLIENT_TRANSPORT_VER=1"
+   to tell the proxy which versions of this configuration protocol
+   it supports.  Future versions will give a comma-separated list.
 
-   CMETHOD: trebuchet SOCKS5 127.0.0.1:19999 ARGS:rocks,height \
-              OPT-ARGS:tensile-strength
+   The Tor client also sets the environment variable
+   CLIENT_TRANSPORTS to a comma-separated list of which methods this
+   client should enable, or * if all methods should be enabled.
+
+   The Tor client also sets STATE_LOCATION to a directory where
+   where the proxy should store state, if it wants to.
+
+   The transport proxy replies by printing "VERSION: 1\n" to its
+   stdout to say that it supports this protocol.  It must either
+   pick a version that Tor told it about, or pick no version at all,
+   and say "ERROR: no-version\n" and exit.
+
+   It then needs to tell Tor which methods and ports it
+   supports.  It does this by printing zero or more CMETHOD: lines
+   to its stdout.  These look like
+
+   CMETHOD: trebuchet SOCKS5 127.0.0.1:19999 ARGS=rocks,height \
+              OPT-ARGS=tensile-strength
 
    The ARGS field lists mandatory parameters that must appear in every
    bridge line for this method. The OPT-ARGS field lists optional
    parameters.  If no ARGS or OPT-ARGS field is provided, Tor should not
    check the parameters in bridge lines for this method.
 
-   The proxy should print a single "METHODS: DONE" line after it is
+   The proxy should print a single "CMETHODS: DONE" line after it is
    finished telling Tor about the methods it provides.
 
    The transport proxy MUST exit cleanly when it receives a SIGTERM from
@@ -213,43 +232,216 @@ Client proxy behavior
    is both listed as a possible method for that proxy in torrc, and it
    is listed by the proxy as a method it supports.
 
-   [XXXX say something about versioning.]
+Manually configuring a client proxy for a bridge
+
+  All clients will support the methods "socks4" and "socks5".  Users can use
+  these to configure a local proxy that doesn't support this plug-in
+  infrastructure method; developers can use them to test new proxies before
+  they have added support for this plug-in in.
+
+  A bridge configured with these methods looks like:
+
+     bridge socks4 www.example.com:8888 keyid=(fingerprint) \
+                 proxy=127.0.0.1:9999 auth=xyz
+
+  or
+
+     bridge socks5 www.example.com:8888 keyid=(fingerprint) \
+                 proxy=127.0.0.1:9999 user=x password=y
+
+  The "proxy" argument for these methods is mandatory: it specifies a proxy
+  to use when talking to the bridge.  The auth or user/password arguments for
+  these methods are optional: they are passed to the proxy either as its
+  authentication part (for socks4) or its username/password part (for
+  socks5).
+
+  The socks4 method uses SOCKS4 if the bridge is given as an IP
+  address, and SOCKS4A if the bridge is given as a hostname.
+
+  [We'll want to implement this part first, since it lets us test out
+  per-bridge proxies, albeit with a user-unfriendly manner.]
 
 Server behavior
 
-   Server proxies are configured similarly to client proxies.
+  Server proxies are configured similarly to client proxies.  When
+  launching a proxy, the server must tell it what ORPort it has
+  configured, and what address (if any) it can listen on.  The
+  server must tell the proxy which (if any) methods it should
+  provide if it can; the proxy needs to tell the server which
+  methods it is actually providing, and on what ports.
 
-   
+  When a client connects to the proxy, the proxy may need a way to
+  tell the server some identifier for the client address.  It does
+  this in-band.
+
+  As before, the server lists proxies in its torrc.  These can be
+  external proxies that run on their own, or managedproxies that Tor
+  launches.
+
+  An external proxy is configured as
+
+      ServerTransportPlugin trebuchet address:port [options] -- param=val param=val...
+
+  A managed proxy is configured as
+
+      ServerTransportPlugin trebuchet exec /path/to/binary [options]
+  or
+      ServerTransportPlugin * exec /path/to/binary [options]
+  The param=val pairs in the external proxy configuration, and the address,
+  are advertised to make our bridge configuration.
+
+  When possible, Tor should launch only one binary of each binary/option
+  pair configured.  So if the torrc contains
+
+     ClientTransportPlugin foo exec /usr/bin/megaproxy --foo
+     ClientTransportPlugin bar exec /usr/bin/megaproxy --bar
+     ServerTransportPlugin * exec /usr/bin/megaproxy --foo
+
+  then Tor will launch the megaproxy binary twice: once with the option
+  --foo and once with the option --bar.
+
+  When the server launches managed binaries, it sets these environment
+  variables:
+     SERVER_TRANSPORT_VER=1
+        (As CLIENT_TRANPORT_VER)
+
+     EXT_SERVER_PORT=addr:portnum
+        (A port on localhost that speaks the extended server protocol)
+
+     ORPORT=addr:portnum
+        (Our regular orport in a form suitable for local connections)
+
+     BINDADDR=addr
+        (An address on which to listen to connections.  This might be the
+         advertised address, or might be a local address that Tor will
+         forward ports to.)
+
+     SERVER_TRANSPORTS=...
+        (A comma-separated list of server methods that the proxy
+         should support, or *).
+
+     STATE_LOCATION=...
+        (A directory where where the proxy should store state, if it
+        wants to.)
+
+   It also opens an extending server port as described below.
 
 Server proxy behavior
 
+  The server proxy communicates with the server as the client does.
+  Both start with a version line to indicate which protocol they
+  have chosen (or an error line if it supports no version in common
+  with tor), then it lists a number of SMETHOD lines.
 
+  Each SMETHOD line is of the form:
 
-   [so, we can have this work like client proxies, where the bridge
-   launches some programs, and they tell the bridge, "I am giving you
-   method X with parameters Y"?  Do you have to take all the methods? If
-   not, which do you specify?]
+    SMETHOD: methodname address:port ARGS:k=v,k=v,k=v [Options]
 
-   [Do we allow programs that get started independently?]
+  Or:
 
-   [We'll need to figure out how this works with port forwarding.  Is
-   port forwarding the bridge's problem, the proxy's problem, or some
-   combination of the two?]
+    SMETHOD-ERROR: methodname message
 
-   [If we're using the bridge authority/bridgedb system for distributing
-   bridge info, the right place to advertise bridge lines is probably
-   the extrainfo document.  We also need a way to tell bridgedb
-   "don't give out a default bridge line for me"]
+  SMETHOD and CMETHOD lines may be interspersed.
 
-Server behavior
+  After the list SMETHOD line, the proxy says "SMETHODS: DONE"
+
+  Each SMETHOD lime is a configured and working server method.
+
+  The 'address:port' part of an SMETHOD line is the address to put
+  in the bridge line.  The ARGS: part is a list of key-value pairs
+  that the client needs to know.  The Options part is a list of
+  space-separated K:V flags that Tor should know about.  Recognized
+  options are:
+
+      - FORWARD:1
+
+        If this option is set, and address:port is not a publicly
+        accessible address, then the bridge needs to forward some
+        other address:port to address:port via upnp-helper.
+
+      - DECLARE:K=V,...
+
+        If this option is set, all the K=V options should be
+        added as extension entries to the router descriptor.  (See
+        below)
+
+  Server transports may need to connect to the bridge and pass
+  additional information about client connections that the bridge would
+  ordinarily receive from .  To to this, they connect to the
+  "extended server port" as given in SERVER_PORT, sent a short amount of
+  information, wait for a response, and then send the user traffic
+  on that port.
+
+  The extended server port protocol is as follows:
+
+     COMMAND [2 bytes, big-endian]
+     BODYLEN [2 bytes, big-endian]
+     BODY [Bodylen bytes]
+
+     Commands sent from the transport to the server are:
+
+     [0x0000] DONE: There is no more information to give. (body ignored)
+
+     [0x0001] USERADDR: an address:port string that represents the user's
+       address.  If the transport doesn't actually do addresses,
+       this shouldn't besent.
+
+     Replies sent from tor to the proxy are:
+
+     [0x1001] OKAY: Send the user's traffic. (body ignored)
+
+     [0x1002] DENY: Tor would prefer not to get more traffic from
+       this address for a while. (body ignored)
+
+  [We could also use an out-of-band signalling method to tell Tor
+  about client addresses, but that's a historically error-prone way
+  to go about annotating connections.]
+
+Advertising bridge methods:
+
+  Bridges put the 'method' lines in their extra-info documents.
+
+     method SP methodname SP address:port SP arglist NL
+
+  The address:port parse are as returned from an SMETHOD line.  The
+  arglist is a K=V,... list as retuned in the ARGS part of the
+  SMETHOD line.
+
+  If the SMETHOD line includes a DECLARE: part, the routerinfo gets
+  a new line:
+
+     method-info SP methodname SP arglist NL
 
 Bridge authority behavior
 
+  We need to specify a way to test different transport methods that
+  bridges claim to support.  We should test as many as possible.  We
+  should NOT require that we have a way to tra
+
+Bridgedb behavior:
+
+  Bridgedb can, given a set of router descriptors and their
+  corresponding extrainfo documents, generate a set of bridge lines
+  for each descriptor.  Bridgedb may want to avoid handing out
+  methods that seem to get bridges blocked quickly.
+
 Implementation plan
 
-   Turn this into a draft proposal
+  First, we should implement per-bridge socks settings (as
+  described above in "manually configuring a client proxy for a
+  bridge") and the extended-server-port mechanism.  This will let
+  bridges run transport proxies such that they can hand-generate
+  bridge lines to give to clients for testing.  Once that's done,
+  the next most important part seems to be getting the client-side
+  automatic part written.  And once that's done, we can evaluate how
+  much of the server side is easy for people to do and how much is
+  hard.
 
-   Circulate and discuss on or-dev.
+  The "obfsproxy" obfuscating proxy is a likely candidate for an
+  initial transport, as is Steven Murdoch's http thing or something
+  similar.
+
+Notes on plugins to write:
 
    We should ship a couple of null plugin implementations in one or two
    popular, portable languages so that people get an idea of how to
@@ -262,7 +454,7 @@ Implementation plan
 
    2. We should implement a basic proxy that does not transform the bytes at all
 
-   1. We should implement DNS or HTTP using other software (as goodell
+   1. We should implement DNS or HTTP using other software (as goodesll
       did years ago with DNS) as an example of wrapping existing code into
       our plugin model.
 
@@ -295,8 +487,6 @@ Appendix: recommendations for transports
   Think small: we want to minimize the bytes that a Windows user needs
   to download for a transport client.
 
-  Specify: if you can't come up with a good explanation [XXX]
-
   Avoid security-through-obscurity if possible.  Specify.
 
   Resist trivial fingerprinting: There should be no good string or regex
@@ -307,8 +497,5 @@ Appendix: recommendations for transports
   protocols -- and in many cases, most possible variants of a given
   protocol won't actually exist in the wild.
 
-Appendix: Raw-traffic transports
 
-  This section describes an optional extension to the proposal above.
-  We are not sure whether it is a good idea.
 
