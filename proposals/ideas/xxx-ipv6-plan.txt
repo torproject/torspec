@@ -7,7 +7,7 @@ Status: Draft
 Overview:
 
    This document outlines what we'll have to do to make Tor fully
-   support IPv6.  It refers to other proposals, current and as-yes
+   support IPv6.  It refers to other proposals, current and as-yet
    unwritten.  It suggests a few incremental steps, each of which on
    its own should make Tor more useful in the brave new IPv6 future of
    tomorrow.
@@ -48,7 +48,7 @@ Designs that we will need to do:
 
    For IPv6-only clients, we'll need to specify that routers can have
    multiple addresses and ORPorts, and allow secondary addresses/ports
-   that.  There is an old proposal (118) to try to allow multiple
+   that[...? XXX].  There is an old proposal (118) to try to allow multiple
    ORPorts per router.  It's been accepted; it needs to be checked for
    correctness, updated to track other changes in more recent Tor
    versions, and updated to work with the new microdescriptor designs.
@@ -61,7 +61,7 @@ Designs that we will need to do:
    from one /24 to another takes a little effort for most clients.
    The directory authorities assume that blacklisting an IP is an okay
    response to a bad router at that address.  These and other places
-   will needed instead more appropriate notions of "closeness" and
+   will instead need more appropriate notions of "closeness" and
    "similarity".
 
    We'll want to consider geographic and political boundaries rather than
@@ -84,15 +84,15 @@ Designs that we will need to do:
    Tor routers.  For these, we'll need to consider network topology
    issues: having nodes that can't connect to all the other nodes
    will weaken one of our basic assumptions for path generation, so
-   we'll need to make sure to do the analysis enough to tell that this
+   we'll need to make sure to do the analysis enough to tell whether this
    is safe.
 
 Ready, fire, aim: An alternative methodology
 
    At least one volunteer is currently working on IPv6 issues in Tor.
    If his efforts go well, it might be that our first design drafts
-   for some of these open topics arrive concurrently (or even in the
-   form of!) with alpha code to implement them.  If so, we need to
+   for some of these open topics arrive concurrently with (or even in
+   the form of!) alpha code to implement them.  If so, we need to
    follow a variant of the design process, extracting design from code
    to evaluate it (rather than designing then coding).  Probably,
    based on design review, some changes to code would be necessary.
