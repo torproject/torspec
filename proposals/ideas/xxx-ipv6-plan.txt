@@ -41,8 +41,15 @@ What needs to change:
    dual stack of both IPv4 and IPv6 for interconnection seems like a
    reasonable step towards a fully hybrid v4/v6 Tor network.
 
-   Of course, more issues may be discovered as we develop solutions for these
-   issues, some of which may need to take priority.
+   One implementation hurdle that will need to get resolved alongside
+   these changes is to convert uint32_t to tor_addr_t in many more places
+   in the Tor code, so we can handle addresses being either IPv4 or IPv6.
+   There are a few cases, e.g. the local router list, where we'll want
+   to think harder about the resource requirements of keeping tens of
+   thousands of larger addresses in memory.
+
+   More issues may of course also be discovered as we develop solutions
+   for these issues, some of which may need to take priority.
 
 Designs that we will need to do:
 
