@@ -797,11 +797,25 @@ see tor-design.pdf.
    their own cached entries after a fixed interval.  This prevents certain
    attacks.]
 
-   The OP waits for a RELAY_CONNECTED cell before sending any data.
    Once a connection has been established, the OP and exit node
    package stream data in RELAY_DATA cells, and upon receiving such
    cells, echo their contents to the corresponding TCP stream.
-   RELAY_DATA cells sent to unrecognized streams are dropped.
+
+   If the exit node does not support optimistic data (i.e. its
+   version number is before 0.2.3.1-alpha), then the OP MUST wait
+   for a RELAY_CONNECTED cell before sending any data.  If the exit
+   node supports optimistic data (i.e. its version number is
+   0.2.3.1-alpha or later), then the OP MAY send RELAY_DATA cells
+   immediately after sending the RELAY_BEGIN cell (and before
+   receiving either a RELAY_CONNECTED or RELAY_END cell).
+
+   RELAY_DATA cells sent to unrecognized streams are dropped.  If
+   the exit node supports optimistic data, then RELAY_DATA cells it
+   receives on streams which have seen RELAY_BEGIN but have not yet
+   been replied to with a RELAY_CONNECTED or RELAY_END are queued.
+   If the stream creation succeeds with a RELAY_CONNECTED, the queue
+   is processed immediately afterwards; if the stream creation fails
+   with a RELAY_END, the contents of the queue are deleted.
 
    Relay RELAY_DROP cells are long-range dummies; upon receiving such
    a cell, the OR or OP must drop it.
