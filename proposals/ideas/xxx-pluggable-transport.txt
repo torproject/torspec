@@ -119,10 +119,9 @@ Design overview
   inside the regular username/password parts of the SOCKS protocol.
 
   Bridges (and maybe relays) may run any number of Server Proxies: these
-  programs provide an interface like stunnel-server (or whatever the
-  option is): they get connections from the network (typically by
-  listening for connections on the network) and relay them to the
-  Bridge's real ORPort.
+  programs provide an interface like stunnel: they get connections from the
+  network (typically by listening for connections on the network) and relay
+  them to the Bridge's real ORPort.
 
   To configure one of these programs, it should be sufficient simply to
   list it in your torrc.  The program tells Tor which transports it
@@ -139,18 +138,23 @@ Design overview
 
 Specifications: Client behavior
 
-  Bridge lines can now follow the extended format "bridge method
-  address:port [[keyid=]id-fingerprint] [k=v] [k=v] [k=v]". To connect
-  to such a bridge, a client must open a local connection to the SOCKS
-  proxy for "method", and ask it to connect to address:port.  If
-  [id-fingerprint] is provided, it should expect the public identity key
-  on the TLS connection to match the digest provided in
-  [id-fingerprint].  If any [k=v] items are provided, they are
-  configuration parameters for the proxy: Tor should separate them with
-  semicolons and put them in the user and password fields of the request,
-  splitting them across the fields as necessary.  If a key or value
-  value must contain a semicolon or a backslash, it is escaped with a
-  backslash.
+  We extend the bridge line format to allow you to say which method
+  to use to connect to a bridge.
+
+  The new format is:
+     "bridge method address:port [[keyid=]id-fingerprint] [k=v] [k=v] [k=v]"
+
+  To connect to such a bridge, the Tor program needs to know which
+  local SOCKS proxy will support the transport called "method".  It
+  then connects to this proxy, and asks it to connect to
+  address:port.  If [id-fingerprint] is provided, Tor should expect
+  the public identity key on the TLS connection to match the digest
+  provided in [id-fingerprint].  If any [k=v] items are provided,
+  they are configuration parameters for the proxy: Tor should
+  separate them with semicolons and put them in the user and
+  password fields of the request, splitting them across the fields
+  as necessary.  If a key or value value must contain a semicolon or
+  a backslash, it is escaped with a backslash.
 
   The "id-fingerprint" field is always provided in a field named
   "keyid", if it was given.  Method names must be C identifiers.
@@ -165,101 +169,38 @@ Specifications: Client behavior
 
   There are two ways to tell Tor clients about protocol proxies:
   external proxies and managed proxies.  An external proxy is configured
-  with "ClientTransportPlugin trebuchet socks5 127.0.0.1:9999".  This
-  tells Tor that another program is already running to handle
-  'trubuchet' connections, and Tor doesn't need to worry about it.  A
-  managed proxy is configured with "ClientTransportPlugin trebuchet
-  exec /usr/libexec/tor-proxies/trebuchet [options]", and tells Tor to launch
-  an external program on-demand to provide a socks proxy for 'trebuchet'
-  connections. The Tor client only launches one instance of each
-  external program with a given set of options, even if the same
-  executable and options are listed for more than one method.
+  with
+     ClientTransportPlugin method socks4 address:port [auth=X]
+  or
+     ClientTransportPlugin method socks5 address:port [username=X] [password=Y]
+  as in
+     "ClientTransportPlugin trebuchet socks5 127.0.0.1:9999".
+  This example tells Tor that another program is already running to handle
+  'trubuchet' connections, and Tor doesn't need to worry about it.
+
+  A managed proxy is configured with
+     ClientTransportPlugin <method> exec <path> [options]
+  as in
+    "ClientTransportPlugin trebuchet exec /usr/libexec/trebuchet --managed"
+  This example tells Tor to launch an external program to provide a
+  socks proxy for 'trebuchet' connections. The Tor client only
+  launches one instance of each external program with a given set of
+  options, even if the same executable and options are listed for
+  more than one method.
 
   If instead of a transport name, the torrc lists "*" for a managed proxy,
-  tor uses that proxy for all transports that it supports.
+  tor uses that proxy for all transports that it supports.  So
+  "ClientTransportPlugin * exec /usr/libexec/tor/foobar" tells Tor
+  that it should use the foobar plugin for everything that it supports.
+
+  If two proxies support the same method, Tor should use whichever
+  one is listed first.
 
   The same program can implement a managed or an external proxy: it just
   needs to take an argument saying which one to be.
 
-Client proxy behavior
-
-   When the Tor client launches a client proxy from the command line, it
-   sets the environment variable
-     "CLIENT_TRANSPORT_VER=1"
-   to tell the proxy which versions of this configuration protocol
-   it supports.  Future versions will give a comma-separated list.
-
-   The Tor client also sets the environment variable
-   CLIENT_TRANSPORTS to a comma-separated list of which methods this
-   client should enable, or * if all methods should be enabled.
-
-   The Tor client also sets STATE_LOCATION to a directory where
-   where the proxy should store state, if it wants to.
-
-   The transport proxy replies by printing "VERSION: 1\n" to its
-   stdout to say that it supports this protocol.  It must either
-   pick a version that Tor told it about, or pick no version at all,
-   and say "ERROR: no-version\n" and exit.
-
-   It then needs to tell Tor which methods and ports it
-   supports.  It does this by printing zero or more CMETHOD: lines
-   to its stdout.  These look like
-
-   CMETHOD: trebuchet SOCKS5 127.0.0.1:19999 ARGS=rocks,height \
-              OPT-ARGS=tensile-strength
-
-   The ARGS field lists mandatory parameters that must appear in every
-   bridge line for this method. The OPT-ARGS field lists optional
-   parameters.  If no ARGS or OPT-ARGS field is provided, Tor should not
-   check the parameters in bridge lines for this method.
-
-   The proxy should print a single "CMETHODS: DONE" line after it is
-   finished telling Tor about the methods it provides.
-
-   The transport proxy MUST exit cleanly when it receives a SIGTERM from
-   Tor.
-
-   The Tor client MUST ignore lines beginning with a keyword and a colon
-   if it does not recognize the keyword.
-
-   In the future, if we need a control mechanism, we can use the
-   stdin/stdout from Tor to the transport proxy.
-
-   A transport proxy MUST handle SOCKS connect requests using the SOCKS
-   version it advertises.
-
-   Tor clients SHOULD NOT use any method from a client proxy unless it
-   is both listed as a possible method for that proxy in torrc, and it
-   is listed by the proxy as a method it supports.
-
-Manually configuring a client proxy for a bridge
-
-  All clients will support the methods "socks4" and "socks5".  Users can use
-  these to configure a local proxy that doesn't support this plug-in
-  infrastructure method; developers can use them to test new proxies before
-  they have added support for this plug-in in.
-
-  A bridge configured with these methods looks like:
-
-     bridge socks4 www.example.com:8888 keyid=(fingerprint) \
-                 proxy=127.0.0.1:9999 auth=xyz
-
-  or
-
-     bridge socks5 www.example.com:8888 keyid=(fingerprint) \
-                 proxy=127.0.0.1:9999 user=x password=y
-
-  The "proxy" argument for these methods is mandatory: it specifies a proxy
-  to use when talking to the bridge.  The auth or user/password arguments for
-  these methods are optional: they are passed to the proxy either as its
-  authentication part (for socks4) or its username/password part (for
-  socks5).
-
-  The socks4 method uses SOCKS4 if the bridge is given as an IP
-  address, and SOCKS4A if the bridge is given as a hostname.
-
-  [We'll want to implement this part first, since it lets us test out
-  per-bridge proxies, albeit with a user-unfriendly manner.]
+  See "Managed proxy behavior" for more information on the managed
+  proxy interface.
 
 Server behavior
 
@@ -278,17 +219,17 @@ Server behavior
   external proxies that run on their own, or managedproxies that Tor
   launches.
 
-  An external proxy is configured as
-
-      ServerTransportPlugin trebuchet address:port [options] -- param=val param=val...
+  An external server proxy is configured as
+     ServerTransportPlugin method proxy address:port param=val..
+  as in
+     ServerTransportPlugin trebuchet proxy 127.0.0.1:999 rocks=heavy
+  The param=val pairs and the address are used to make the bridge
+  configuration information that we'll tell users.
 
   A managed proxy is configured as
-
-      ServerTransportPlugin trebuchet exec /path/to/binary [options]
+      ServerTransportPlugin method exec /path/to/binary [options]
   or
       ServerTransportPlugin * exec /path/to/binary [options]
-  The param=val pairs in the external proxy configuration, and the address,
-  are advertised to make our bridge configuration.
 
   When possible, Tor should launch only one binary of each binary/option
   pair configured.  So if the torrc contains
@@ -300,52 +241,106 @@ Server behavior
   then Tor will launch the megaproxy binary twice: once with the option
   --foo and once with the option --bar.
 
-  When the server launches managed binaries, it sets these environment
-  variables:
-     SERVER_TRANSPORT_VER=1
-        (As CLIENT_TRANPORT_VER)
+Managed proxy interface
 
-     EXT_SERVER_PORT=addr:portnum
-        (A port on localhost that speaks the extended server protocol)
+   When the Tor client launches a client proxy from the command
+   line, it communicates via environment variables.  At a minimum,
+   it sets:
 
-     ORPORT=addr:portnum
-        (Our regular orport in a form suitable for local connections)
+      {Client and server}
+      HOME, PATH -- as you'd expect.
 
-     BINDADDR=addr
-        (An address on which to listen to connections.  This might be the
-         advertised address, or might be a local address that Tor will
-         forward ports to.)
+      "STATE_LOCATION" -- a directory where the proxy should store
+       state if it wants to.  This directory is not required to
+       exist, but the proxy SHOULD be able to create it if it
+       doesn't.  The proxy SHOULD NOT store state elsewhere.
 
-     SERVER_TRANSPORTS=...
-        (A comma-separated list of server methods that the proxy
-         should support, or *).
+      "MANAGED_TRANSPORT_VER=1" -- To tell the proxy which versions
+       of this configuration protocol Tor supports.  Future versions
+       will give a comma-separated list.  Clients MUST accept
+       comma-separated lists containing any version that they
+       recognize, and MUST work correctly even if some of the
+       versions they don't recognize are non-numeric.
 
-     STATE_LOCATION=...
-        (A directory where where the proxy should store state, if it
-        wants to.)
+      {Client only}
 
-   It also opens an extending server port as described below.
+      "CLIENT_TRANSPORTS" -- a comma-separated list of which methods
+        this client should enable, or * if all methods should be
+        enabled.  The proxy SHOULD ignore methods that it doesn't
+        recognize.
 
-Server proxy behavior
+      {Server only}
 
-  The server proxy communicates with the server as the client does.
-  Both start with a version line to indicate which protocol they
-  have chosen (or an error line if it supports no version in common
-  with tor), then it lists a number of SMETHOD lines.
+      "EXT_SERVER_PORT=addr:portnum" -- A port (probably on localhost) that
+        speaks the extended server protocol.
 
-  Each SMETHOD line is of the form:
+      "ORPORT=addr:portnum" -- Our regular ORPort in a form suitable
+        for local connections.
 
-    SMETHOD: methodname address:port ARGS:k=v,k=v,k=v [Options]
+      "BINDADDR=addr" -- An address on which to listen for local
+         connections.  This might be the advertised address, or might
+         be a local address that Tor will forward ports to.  It MUST
+         be an address that will work with bind().
 
-  Or:
+      "SERVER_TRANSPORTS=..." -- A comma-separated list of server
+          methods that the proxy should support, or *
 
-    SMETHOD-ERROR: methodname message
+  The transport proxy replies by writing NL-terminated lines to
+  stdout.  The metaformat is
 
-  SMETHOD and CMETHOD lines may be interspersed.
+      Keyword OptArgs NL
+      OptArgs = Args |
+      Args = SP ArgChar | Args ArgChar
+      ArgChar = Any character but NUL or NL
+      Keyword = KeywordChar | Keyword KeywordChar
+      KeyWordChar = All alphanumeric characters, dash, and underscore.
 
-  After the list SMETHOD line, the proxy says "SMETHODS: DONE"
+  Tor MUST ignore lines with keywords that it doesn't recognize.
 
-  Each SMETHOD lime is a configured and working server method.
+  First, the proxy writes "VERSION 1" to say that it supports this
+  protocol. It must either pick a version that Tor told it about, or
+  pick no version at all, and say "ERROR no-version\n" and exit.
+
+  The proxy should then open its ports.  If running as a client
+  proxy, it should not use fixed ports; instead it should autoselect
+  ports to avoid conflicts.  A client proxy should by default only
+  listen on localhost for connections.
+
+  A server proxy SHOULD try listen at a consistent port, though it
+  SHOULD pick a different one if the port it last used is now allocated.
+
+  A client or server proxy then should tell which methods it has
+  made available and how.  It does this by printing zero or more
+  CMETHOD and SMETHOD lines to its stdout.  These lines look like:
+
+   CMETHOD methodname SOCKS4/SOCKS5 address:port [ARGS=arglist] \
+        [OPT-ARGS=arglist]
+
+  as in
+
+   CMETHOD trebuchet SOCKS5 127.0.0.1:19999 ARGS=rocks,height \
+              OPT-ARGS=tensile-strength
+
+  The ARGS field lists mandatory parameters that must appear in
+  every bridge line for this method. The OPT-ARGS field lists
+  optional parameters.  If no ARGS or OPT-ARGS field is provided,
+  Tor should not check the parameters in bridge lines for this
+  method.
+
+  The proxy should print a single "CMETHODS DONE" line after it is
+  finished telling Tor about the client methods it provides.  If it
+  tries to supply a client method but can't for some reason, it
+  should say:
+    CMETHOD-ERROR methodname "Message"
+
+  A proxy should tell Tor about the server methods it is providing
+  by printing zero or more SMETHOD lines.  These lines look like:
+
+    SMETHOD methodname address:port  [Options]
+
+  If there's an error setting up a configured server method, the
+  proxy should say:
+    SMETHOD-ERROR methodname "message"
 
   The 'address:port' part of an SMETHOD line is the address to put
   in the bridge line.  The ARGS: part is a list of key-value pairs
@@ -359,18 +354,47 @@ Server proxy behavior
         accessible address, then the bridge needs to forward some
         other address:port to address:port via upnp-helper.
 
+      - ARGS:k=v,k=v,k=v
+
+        If this option is set, the K=V arguments are added to the
+        extrainfo document.
+
       - DECLARE:K=V,...
 
         If this option is set, all the K=V options should be
         added as extension entries to the router descriptor.  (See
         below)
 
+      - USE-EXTPORT:1
+
+        If this option is set, the server plugin is using the
+        extended server port.
+
+  SMETHOD and CMETHOD lines may be interspersed.  After the list
+  SMETHOD line, the proxy says "SMETHODS DONE"
+
+  The proxy SHOULD NOT tell Tor about a server or client method
+  unless it is actually open and ready to use.
+
+  Tor clients SHOULD NOT use any method from a client proxy or
+  advertise any method from a server proxy UNLESS it is listed as a
+  possible method for that proxy in torrc, and it is listed by the
+  proxy as a method it supports.
+
+  Proxies should respond to a single INT signal by closing their
+  listener ports and not accepting any new connections, but keeping
+  all connections open, then terminating when connections are all
+  closed.  Proxies should respond to a second INT signal by shutting
+  down cleanly.
+
+The extended ORPort protocol.
+
   Server transports may need to connect to the bridge and pass
-  additional information about client connections that the bridge would
-  ordinarily receive from .  To to this, they connect to the
-  "extended server port" as given in SERVER_PORT, sent a short amount of
-  information, wait for a response, and then send the user traffic
-  on that port.
+  additional information about client connections that the bridge
+  would ordinarily receive from the kernel's TCP stack.  To to this,
+  they connect to the "extended server port" as given in
+  SERVER_PORT, sent a short amount of information, wait for a
+  response, and then send the user traffic on that port.
 
   The extended server port protocol is as follows:
 
@@ -384,7 +408,7 @@ Server proxy behavior
 
      [0x0001] USERADDR: an address:port string that represents the user's
        address.  If the transport doesn't actually do addresses,
-       this shouldn't besent.
+       this shouldn't be sent.
 
      Replies sent from tor to the proxy are:
 
@@ -431,11 +455,16 @@ Implementation plan
   described above in "manually configuring a client proxy for a
   bridge") and the extended-server-port mechanism.  This will let
   bridges run transport proxies such that they can hand-generate
-  bridge lines to give to clients for testing.  Once that's done,
-  the next most important part seems to be getting the client-side
-  automatic part written.  And once that's done, we can evaluate how
-  much of the server side is easy for people to do and how much is
-  hard.
+  bridge lines to give to clients for testing.
+
+  Once that's done, we can improve usability a little bit by
+  implementing external proxies.  Once that's done, we can see if we
+  need any managed proxies, or if the whole idea there is silly.
+
+  If we do, the next most important part seems to be getting
+  the client-side automatic part written.  And once that's done, we
+  can evaluate how much of the server side is easy for people to do
+  and how much is hard.
 
   The "obfsproxy" obfuscating proxy is a likely candidate for an
   initial transport, as is Steven Murdoch's http thing or something
