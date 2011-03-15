@@ -47,8 +47,9 @@ What needs to change:
 Designs that we will need to do:
 
    For IPv6-only clients, we'll need to specify that routers can have
-   multiple addresses and ORPorts, and allow secondary addresses/ports
-   that[...? XXX].  There is an old proposal (118) to try to allow multiple
+   multiple addresses and ORPorts.
+
+   There is an old proposal (118) to try to allow multiple
    ORPorts per router.  It's been accepted; it needs to be checked for
    correctness, updated to track other changes in more recent Tor
    versions, and updated to work with the new microdescriptor designs.
