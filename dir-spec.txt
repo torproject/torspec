@@ -1160,8 +1160,8 @@
         Parameters ::= Parameter | Parameters SP Parameter
 
         The parameters list, if present, contains a space-separated list of
-        case-sensitive key-value pairs, sorted in lexical order by
-        their keyword. Each parameter has its own meaning.
+        case-sensitive key-value pairs, sorted in lexical order by their
+        keyword (as ASCII byte strings). Each parameter has its own meaning.
 
         (Only included when the vote is generated with consensus-method 7 or
         later.)
@@ -1286,8 +1286,8 @@
 
         [At most once.]
 
-        A series of space-separated status flags, in alphabetical order.
-        Currently documented flags are:
+        A series of space-separated status flags, in lexical order (as ASCII
+        byte strings).  Currently documented flags are:
 
           "Authority" if the router is a directory authority.
           "BadExit" if the router is believed to be useless as an exit node
@@ -1375,10 +1375,10 @@
        "Wgb=" INT SP "Wgd=" INT SP "Wgg=" INT SP "Wgm=" INT SP
        "Wmb=" INT SP "Wmd=" INT SP "Wme=" INT SP "Wmg=" INT SP "Wmm=" INT NL
 
-       These values represent the weights to apply to router bandwidths during
-       path selection. They are sorted in alphabetical order in the list. The
-       integer values are divided by BW_WEIGHT_SCALE=10000 or the consensus
-       param "bwweightscale". They are:
+       These values represent the weights to apply to router bandwidths
+       during path selection. They are sorted in lexical order (as ASCII byte
+       strings). The integer values are divided by BW_WEIGHT_SCALE=10000 or
+       the consensus param "bwweightscale". They are:
 
          Wgg - Weight for Guard-flagged nodes in the guard position
          Wgm - Weight for non-flagged nodes in the guard Position
