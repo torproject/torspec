@@ -127,7 +127,7 @@ Design overview
   list it in your torrc.  The program tells Tor which transports it
   provides.  The Tor consensus should carry a new approved version number that
   is specific for pluggable transport; this will allow Tor to know when a
-  particular transport is known to be unsafe safe or non-functional.
+  particular transport is known to be unsafe, safe, or non-functional.
 
   Bridges (and maybe relays) report in their descriptors which transport
   protocols they support.  This information can be copied into bridge
@@ -260,7 +260,8 @@ Managed proxy interface
        will give a comma-separated list.  Clients MUST accept
        comma-separated lists containing any version that they
        recognize, and MUST work correctly even if some of the
-       versions they don't recognize are non-numeric.
+       versions they don't recognize are non-numeric.  Valid version
+       characters are non-space, non-comma printing ASCII characters.
 
       {Client only}
 
@@ -440,7 +441,9 @@ Bridge authority behavior
 
   We need to specify a way to test different transport methods that
   bridges claim to support.  We should test as many as possible.  We
-  should NOT require that we have a way to tra
+  should NOT require that we have a way to test every possible
+  transport method before we allow its use: the point of this design
+  is to remove bottlenecks in transport deployment.
 
 Bridgedb behavior:
 
@@ -451,15 +454,15 @@ Bridgedb behavior:
 
 Implementation plan
 
-  First, we should implement per-bridge socks settings (as
-  described above in "manually configuring a client proxy for a
-  bridge") and the extended-server-port mechanism.  This will let
-  bridges run transport proxies such that they can hand-generate
-  bridge lines to give to clients for testing.
+  First, we should implement per-bridge proxies via the "external
+  proxy" method described in "Specifications: Client behavior".  the
+  extended-server-port mechanism.  This will let bridges run
+  transport proxies such that they can give bridge lines to
+  give to clients for testing, so long as the user configures and
+  launches their proxies on their own.
 
-  Once that's done, we can improve usability a little bit by
-  implementing external proxies.  Once that's done, we can see if we
-  need any managed proxies, or if the whole idea there is silly.
+  Once that's done, we can see if we need any managed proxies, or if
+  the whole idea there is silly.
 
   If we do, the next most important part seems to be getting
   the client-side automatic part written.  And once that's done, we
