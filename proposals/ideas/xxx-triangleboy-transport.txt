@@ -1,0 +1,194 @@
+[See also http://archives.seul.org/tor/dev/Feb-2011/msg00000.html and
+its follow-ups.]
+
+Filename: ideas/xxx-triangleboy-transport.txt
+Title: The Triangle Boy Transport
+Author: Mike Perry
+Created: 31-Jan-2011
+Status: Draft
+
+
+Introduction
+
+In this proposal, we describe a transport plugin known as the Triangle
+Boy transport:
+http://www.webrant.com/safeweb_site/html/www/tboy_whitepaper.html
+
+The basic idea is to be able to utilize an asymmetric residential IP
+with minimal CPU and memory resources, and limited upstream. We would
+use the bridge for only half of the stream, avoiding the upstream
+bottleneck of most residential connections. The return direction
+will be spoofed by a supporting high-capacity Tor relay.
+
+
+Overview
+
+The high level packet flow diagram would look like this.
+
+  Client -> Client Plugin -> Transport Bridge -> Relay Plugin -> Relay
+  Client <- Client Plugin      <--(spoof)---     Relay Plugin <- Relay
+
+Testing in the field has demonstrated that most residential
+connections also perform egress filtering, where as many colo centers
+do not. This means that the spoofing logic needs to be present at the
+Relay endpoint, and not in the Transport Bridge (though the Transport
+Bridge will still need raw sockets to listen for TCP fragments).
+
+It is this egress filter constraint that requires that this transport
+use the pluggable-transport spec, as opposed to creating a very simple
+spoofing Transport Bridge.
+
+There are two possible designs for the operation of the Transport
+Bridge. The bridge can either be peered with a relay of its choosing,
+or it can be peered with a client-specified relay. Since using a
+client-specified relay in a censored location is prone to failure due
+to unobservable changing network conditions, we will consider the case
+where the Transport Bridge chooses which relay to forward the
+connections to.
+
+The client will use the Transport Bridge IP with a bridge line like:
+   "bridge TriangleBoy address:port"
+
+On the client side, the TriangleBoy transport keyword would only mean
+that the Tor client should not try to cache the identity key of the
+bridge in question, nor should it perform any strict checks to ensure
+that the IP reported by the relay is consistent or matches its
+endpoint.
+
+Other than these basic loosened constraints, it should be able to use
+the Transport Bridge IP as if it were any other bridge. This is
+uniquely different from the what the pluggable-transport spec assumes.
+Most of the complexity involved in supporting this transport will be
+in the Transport Bridge, and in the Relay Plugin side of the equation.
+
+
+Transport Bridge Operation
+
+The Transport Bridge will require raw sockets to operate. It will also
+require a tor client to fetch and authenticate the Tor directory.
+
+The current pluggable transport spec suggests that extrainfo
+descriptors be used to describe which transport plugins a bridge
+supports. This would require that the Transport Bridge set
+DownloadExtraInfo=1 in its torrc.
+
+The extrainfo document would need to list the following information:
+TriangleBoyTransport ip:port
+TriangleBoyCert <Certificate>
+
+The Transport Bridge would attempt to select an appropriate relay or
+relays to forward all client connections.
+
+The forwarding operation by the Transport Bridge would involve a TLS
+connection to the ip and port specified in the extrainfo document and
+authenticated by the certificate there, and speak cells of the
+following format:
+
+   <data_len>: 2 bytes
+   <data>: data_len bytes
+
+Each new raw TCP packet that arrives at the transport bridge would be
+packaged up according to this scheme. The data portion of the packet
+would be the raw IP frame received by the transport bridge.
+
+The TLS connection can be reused to multiplex many different raw
+datagrams for many different clients.
+
+
+Relay Plugin Startup
+
+Not all relays can support the TriangleBoy transport. Many relays are
+behind egress filters that will prevent the transmission of spoofed
+packets. The transport plugin should be robust enough to be able to
+determine if it can properly spoof the packets. This involves both
+ensuring that the plugin process has sufficient permissions, and also
+sending some spoofed test packets to a server to receive the response.
+
+If either of these tests fail, the plugin needs to inform Tor of this
+fact so that Tor does *not* provide the lines for the TriangleBoy
+transport in its extrainfo document.
+
+The relay would configure the plugin using its torrc:
+
+ServerTransportPlugin TriangleBoy /path/to/triangleboy ip=<ip> port=<port> \
+ tor_ip=<ip> tor_port=<port> free_rfc1918=<ip>
+
+Tor would launch the triangleboy process, which would perform the
+appropriate uid checks, and send test spoofed packets to $SERVER (the
+bridgedb?). If the tests pass, it would reply with:
+
+SMETHOD: TriangleBoy <ip>:<port> \
+ EXTRAINFO:TriangleBoyTransport=<ip>:<port>,TriangleBoyCert=<Certificate>
+METHODS: DONE
+
+If there are any errors with permissions or spoofing, the transport
+should reply with:
+
+METHODS: NONE
+
+and then exit.
+
+
+Relay Plugin Operation
+
+The relay plugin will listen for TLS connections on its port, using
+the certificate it created and sent to Tor during startup.
+
+It will perform some verification on the integrity of incoming
+datagrams: ensuring that they are in fact TCP/IP, that their destination
+IP was in fact the Transport Bridge, and that their source IP is in
+publicly routable IP space.
+
+It would then perform a form of NAT in order to translate the raw IP
+frames coming in to be sourced from the free_rfc1918 IP (specified in
+the configuration line) and a random free port. It will maintain an
+internal mapping between these randomized local source ports and the
+originating Client IP and port (as well as the Transport Bridge IP).
+
+The Relay will then proceed believing that it has a TCP connection
+from an unused, local rfc1918 ip and source port. This ip+port will
+not actually exist, but instead will be handled by a raw socket
+listening in the Relay Plugin.
+
+Upon receiving packets from the Tor process on its raw socket, the
+Relay Plugin will use the destination port to look up the original
+Client IP and port, and the Transport Bridge IP. It will rewrite the
+packets to spoof the source IP as the Transport Bridge IP, and set the
+destination IP and port as the one it found for the Client in the its
+NAT table.
+
+In this way, the NAT will properly seamlessly translate packets for
+the Relay, and the Client will communicate with what it believes to be
+the Transport Bridge IP, while using the capacity of the supporting
+Tor Relay for the downstream direction.
+
+
+Appendix: List of key xxx-pluggable-transport.txt shortcomings
+
+1. This pluggable transport does not need any intelligence or process
+launching on the Client side, aside from a way to tell Tor not to be
+so pedantic about ensuring identity key and IP address consistency.
+
+2. The relay side needs to be able to detect if it has both the
+permissions and the network ability to send spoofed packets. It needs
+to communicate this fact with the Relay Plugin by responding with the
+appropriate extrainfo lines, or with "METHODS: NONE" to indicate
+error. This relay-side handshake should be specified in the
+pluggable-transport spec.
+
+3. The relay plugin side needs some way to communicate EXTRAINFO lines
+to be added to its extrainfo descriptor. In this proposal, we use the
+SMETHOD reply to do this.
+
+4. Is extrainfo really the best place to keep this information?
+Shouldn't it just be in the relay/bridge descriptor? Putting it in
+extrainfo requires our TransportBridges to enable the wasteful
+DownloadExtraInfo=1 torrc setting, which will consume more scarce
+resources and RAM on what will probably be cheap routers with 32-64M
+of RAM.
+
+5. How would we go about chaining an actual obfuscation mechanism with
+this transport? Would we just create new and separate transport called
+TriangleBoyOverHTTP, for example, or is there a better way to chain
+different mechanisms?
+
