@@ -159,6 +159,15 @@ Specifications: Client behavior
   The "id-fingerprint" field is always provided in a field named
   "keyid", if it was given.  Method names must be C identifiers.
 
+  For reference, the old bridge format was
+    bridge address[:port] [id-fingerprint]
+  where port defaults to 443 and the id-fingerprint is optional. The
+  new format can be distinguished from the old one by checking if the
+  first argument has any non-C-identifier characters. (Looking for a
+  period should be a simple way.) Also, while the id-fingerprint could
+  optionally include whitespace in the old format, whitespace in the
+  id-fingerprint is not permitted in the new format.
+
   Example: if the bridge line is "bridge trebuchet www.example.com:3333
      rocks=20 height=5.6m" AND if the Tor client knows that the
      'trebuchet' method is provided by a SOCKS5 proxy on
