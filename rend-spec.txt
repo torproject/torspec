@@ -500,6 +500,9 @@
    request to a URL "/tor/rendezvous2/publish" relative to the hidden service
    directory's root, containing as its body Bob's service descriptor.
 
+   [XXX022 Reusing old circuits for HS dir posts is very bad. Do we really
+    do that? --RR]
+
    At any time, there are 6 hidden service directories responsible for
    keeping replicas of a descriptor; they consist of 2 sets of 3 hidden
    service directories with consecutive onion IDs. Bob's OP learns about
