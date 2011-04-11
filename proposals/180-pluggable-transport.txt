@@ -142,7 +142,7 @@ Specifications: Client behavior
   to use to connect to a bridge.
 
   The new format is:
-     "bridge method address:port [[keyid=]id-fingerprint] [k=v] [k=v] [k=v]"
+     bridge method address:port [[keyid=]id-fingerprint] [k=v] [k=v] [k=v]
 
   To connect to such a bridge, the Tor program needs to know which
   local SOCKS proxy will support the transport called "method".  It
@@ -352,30 +352,34 @@ Managed proxy interface
 
       - FORWARD:1
 
-        If this option is set, and address:port is not a publicly
-        accessible address, then the bridge needs to forward some
-        other address:port to address:port via upnp-helper.
+        If this option is set (for example, because address:port is not
+        a publicly accessible address), then Tor needs to forward some
+        other address:port to address:port via upnp-helper. Tor would
+        then advertise that other address:port in the bridge line instead.
 
-      - ARGS:k=v,k=v,k=v
+      - ARGS:K=V,K=V,K=V
 
-        If this option is set, the K=V arguments are added to the
+        If this option is set, the K=V arguments are added to Tor's
         extrainfo document.
 
       - DECLARE:K=V,...
 
-        If this option is set, all the K=V options should be
-        added as extension entries to the router descriptor, so other
-        relays can make use of it.  (See below)
+        If this option is set, the K=V options should be added as
+        extension entries to the router descriptor, so clients and other
+        relays can make use of it. See ideas/xxx-triangleboy-transport.txt
+        for an example situation where the plugin would want to declare
+        parameters to other Tors.
 
       - USE-EXTENDED-PORT:1
 
-        If this option is set, the server plugin is using the
-        extended server port.
+        If this option is set, the server plugin is planning to connect
+        to Tor's extended server port.
 
   SMETHOD and CMETHOD lines may be interspersed, to allow the proxies to
-  report success even when some methods may require probing your network,
-  connecting to some kind of peers, etc. After the last SMETHOD line,
-  the proxy says "SMETHODS DONE".
+  report methods as they become available, even when some methods may
+  require probing your network, connecting to some kind of peers, etc
+  before they are set up. After the final SMETHOD line, the proxy says
+  "SMETHODS DONE".
 
   The proxy SHOULD NOT tell Tor about a server or client method
   unless it is actually open and ready to use.
@@ -395,9 +399,9 @@ The extended ORPort protocol
 
   Server transports may need to connect to the bridge and pass
   additional information about client connections that the bridge
-  would ordinarily receive from the kernel's TCP stack.  To to this,
+  would ordinarily receive from the kernel's TCP stack.  To do this,
   they connect to the "extended server port" as given in
-  SERVER_PORT, sent a short amount of information, wait for a
+  EXTENDED_SERVER_PORT, send a short amount of information, wait for a
   response, and then send the user traffic on that port.
 
   The extended server port protocol is as follows:
@@ -429,16 +433,16 @@ Advertising bridge methods
 
   Bridges put the 'method' lines in their extra-info documents.
 
-     method SP methodname SP address:port SP arglist NL
+     method SP methodname SP address:port [SP arglist] NL
 
-  The address:port parse are as returned from an SMETHOD line.  The
-  arglist is a K=V,... list as returned in the ARGS part of the
-  SMETHOD line.
+  The address:port are as returned from an SMETHOD line (unless they are
+  replaced by the FORWARD: directive).  The arglist is a K=V,... list as
+  returned in the ARGS: part of the SMETHOD line's Options component.
 
   If the SMETHOD line includes a DECLARE: part, the router descriptor gets
   a new line:
 
-     method-info SP methodname SP arglist NL
+     method-info SP methodname [SP arglist] NL
 
 Bridge authority behavior
 
@@ -452,7 +456,7 @@ Bridgedb behavior
 
   Bridgedb can, given a set of router descriptors and their
   corresponding extrainfo documents, generate a set of bridge lines
-  for each descriptor.  Bridgedb may want to avoid handing out
+  for each bridge.  Bridgedb may want to avoid handing out
   methods that seem to get bridges blocked quickly.
 
 Implementation plan
