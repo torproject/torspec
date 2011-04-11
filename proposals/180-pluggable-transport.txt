@@ -102,8 +102,8 @@ Non-Goals
   current proposal, though we are not currently sure whether it's a good
   idea to implement.
 
-  We deliberately reject any design that would involve linking more code
-  into Tor's process space.
+  We deliberately reject any design that would involve linking the
+  transport plugins into Tor's process space.
 
 Design overview
 
@@ -188,19 +188,18 @@ Specifications: Client behavior
   options, even if the same executable and options are listed for
   more than one method.
 
-  If instead of a transport name, the torrc lists "*" for a managed proxy,
-  tor uses that proxy for all transports that it supports.  So
-  "ClientTransportPlugin * exec /usr/libexec/tor/foobar" tells Tor
-  that it should use the foobar plugin for everything that it supports.
+  If instead of a transport method, the torrc lists "*" for a managed
+  proxy, Tor uses that proxy for all transport methods that the plugin
+  supports. So "ClientTransportPlugin * exec /usr/libexec/tor/foobar"
+  tells Tor that Tor should use the foobar plugin for every method that
+  the proxy supports. See the "Managed proxy interface" section below
+  for details on how Tor learns which methods a plugin supports.
 
-  If two proxies support the same method, Tor should use whichever
+  If two plugins support the same method, Tor should use whichever
   one is listed first.
 
   The same program can implement a managed or an external proxy: it just
   needs to take an argument saying which one to be.
-
-  See "Managed proxy behavior" for more information on the managed
-  proxy interface.
 
 Server behavior
 
@@ -216,7 +215,7 @@ Server behavior
   this in-band.
 
   As before, the server lists proxies in its torrc.  These can be
-  external proxies that run on their own, or managedproxies that Tor
+  external proxies that run on their own, or managed proxies that Tor
   launches.
 
   An external server proxy is configured as
@@ -227,9 +226,9 @@ Server behavior
   configuration information that we'll tell users.
 
   A managed proxy is configured as
-      ServerTransportPlugin method exec /path/to/binary [options]
+     ServerTransportPlugin method exec /path/to/binary [options]
   or
-      ServerTransportPlugin * exec /path/to/binary [options]
+     ServerTransportPlugin * exec /path/to/binary [options]
 
   When possible, Tor should launch only one binary of each binary/option
   pair configured.  So if the torrc contains
@@ -243,12 +242,12 @@ Server behavior
 
 Managed proxy interface
 
-   When the Tor client launches a client proxy from the command
-   line, it communicates via environment variables.  At a minimum,
-   it sets:
+   When the Tor client or relay launches a managed proxy, it communicates
+   via environment variables.  At a minimum, it sets:
 
       {Client and server}
-      HOME, PATH -- as you'd expect.
+
+      "HOME", "PATH" -- as you'd expect.
 
       "STATE_LOCATION" -- a directory where the proxy should store
        state if it wants to.  This directory is not required to
@@ -272,19 +271,23 @@ Managed proxy interface
 
       {Server only}
 
-      "EXT_SERVER_PORT=addr:portnum" -- A port (probably on localhost) that
-        speaks the extended server protocol.
+      "EXTENDED_SERVER_PORT=addr:portnum" -- A port (probably on localhost)
+        that speaks the extended server protocol. (See the "The extended
+        ORPort protocol" section below.)
 
       "ORPORT=addr:portnum" -- Our regular ORPort in a form suitable
-        for local connections.
+        for local connections, i.e. connections from the proxy to
+        the ORPort.
 
-      "BINDADDR=addr" -- An address on which to listen for local
+      "BINDADDR=addr" -- An address on which to listen for client proxy
          connections.  This might be the advertised address, or might
          be a local address that Tor will forward ports to.  It MUST
          be an address that will work with bind().
 
       "SERVER_TRANSPORTS=..." -- A comma-separated list of server
-          methods that the proxy should support, or *
+        methods that the proxy should support, or * if all methods
+        should be enabled.  The proxy SHOULD ignore methods that it
+        doesn't recognize.
 
   The transport proxy replies by writing NL-terminated lines to
   stdout.  The metaformat is
@@ -300,14 +303,14 @@ Managed proxy interface
 
   First, the proxy writes "VERSION 1" to say that it supports this
   protocol. It must either pick a version that Tor told it about, or
-  pick no version at all, and say "ERROR no-version\n" and exit.
+  pick no version at all, say "ERROR no-version\n", and exit.
 
   The proxy should then open its ports.  If running as a client
   proxy, it should not use fixed ports; instead it should autoselect
   ports to avoid conflicts.  A client proxy should by default only
   listen on localhost for connections.
 
-  A server proxy SHOULD try listen at a consistent port, though it
+  A server proxy SHOULD try to listen at a consistent port, though it
   SHOULD pick a different one if the port it last used is now allocated.
 
   A client or server proxy then should tell which methods it has
@@ -334,20 +337,18 @@ Managed proxy interface
   should say:
     CMETHOD-ERROR methodname "Message"
 
-  A proxy should tell Tor about the server methods it is providing
+  A proxy should also tell Tor about the server methods it is providing
   by printing zero or more SMETHOD lines.  These lines look like:
 
-    SMETHOD methodname address:port  [Options]
+    SMETHOD methodname address:port [Options]
 
   If there's an error setting up a configured server method, the
   proxy should say:
     SMETHOD-ERROR methodname "message"
 
   The 'address:port' part of an SMETHOD line is the address to put
-  in the bridge line.  The ARGS: part is a list of key-value pairs
-  that the client needs to know.  The Options part is a list of
-  space-separated K:V flags that Tor should know about.  Recognized
-  options are:
+  in the bridge line.  The Options part is a list of space-separated
+  K:V flags that Tor should know about.  Recognized options are:
 
       - FORWARD:1
 
@@ -363,16 +364,18 @@ Managed proxy interface
       - DECLARE:K=V,...
 
         If this option is set, all the K=V options should be
-        added as extension entries to the router descriptor.  (See
-        below)
+        added as extension entries to the router descriptor, so other
+        relays can make use of it.  (See below)
 
-      - USE-EXTPORT:1
+      - USE-EXTENDED-PORT:1
 
         If this option is set, the server plugin is using the
         extended server port.
 
-  SMETHOD and CMETHOD lines may be interspersed.  After the list
-  SMETHOD line, the proxy says "SMETHODS DONE"
+  SMETHOD and CMETHOD lines may be interspersed, to allow the proxies to
+  report success even when some methods may require probing your network,
+  connecting to some kind of peers, etc. After the last SMETHOD line,
+  the proxy says "SMETHODS DONE".
 
   The proxy SHOULD NOT tell Tor about a server or client method
   unless it is actually open and ready to use.
@@ -388,7 +391,7 @@ Managed proxy interface
   closed.  Proxies should respond to a second INT signal by shutting
   down cleanly.
 
-The extended ORPort protocol.
+The extended ORPort protocol
 
   Server transports may need to connect to the bridge and pass
   additional information about client connections that the bridge
@@ -422,17 +425,17 @@ The extended ORPort protocol.
   about client addresses, but that's a historically error-prone way
   to go about annotating connections.]
 
-Advertising bridge methods:
+Advertising bridge methods
 
   Bridges put the 'method' lines in their extra-info documents.
 
      method SP methodname SP address:port SP arglist NL
 
   The address:port parse are as returned from an SMETHOD line.  The
-  arglist is a K=V,... list as retuned in the ARGS part of the
+  arglist is a K=V,... list as returned in the ARGS part of the
   SMETHOD line.
 
-  If the SMETHOD line includes a DECLARE: part, the routerinfo gets
+  If the SMETHOD line includes a DECLARE: part, the router descriptor gets
   a new line:
 
      method-info SP methodname SP arglist NL
@@ -445,7 +448,7 @@ Bridge authority behavior
   transport method before we allow its use: the point of this design
   is to remove bottlenecks in transport deployment.
 
-Bridgedb behavior:
+Bridgedb behavior
 
   Bridgedb can, given a set of router descriptors and their
   corresponding extrainfo documents, generate a set of bridge lines
@@ -455,9 +458,10 @@ Bridgedb behavior:
 Implementation plan
 
   First, we should implement per-bridge proxies via the "external
-  proxy" method described in "Specifications: Client behavior".  the
+  proxy" method described in "Specifications: Client behavior".  Also,
+  we'll want to build the
   extended-server-port mechanism.  This will let bridges run
-  transport proxies such that they can give bridge lines to
+  transport proxies such that they can generate bridge lines to
   give to clients for testing, so long as the user configures and
   launches their proxies on their own.
 
@@ -465,15 +469,15 @@ Implementation plan
   the whole idea there is silly.
 
   If we do, the next most important part seems to be getting
-  the client-side automatic part written.  And once that's done, we
+  the client-side automation part written.  And once that's done, we
   can evaluate how much of the server side is easy for people to do
   and how much is hard.
 
   The "obfsproxy" obfuscating proxy is a likely candidate for an
-  initial transport, as is Steven Murdoch's http thing or something
-  similar.
+  initial transport (trac entry #2760), as is Steven Murdoch's http
+  thing (trac entry #2759) or something similar.
 
-Notes on plugins to write:
+Notes on plugins to write
 
    We should ship a couple of null plugin implementations in one or two
    popular, portable languages so that people get an idea of how to
@@ -482,23 +486,15 @@ Notes on plugins to write:
    1. We should have one that's just a proof of concept that does
       nothing but transfer bytes back and forth.
 
-   1. We should not do a rot13 one.
-
-   2. We should implement a basic proxy that does not transform the bytes at all
-
-   1. We should implement DNS or HTTP using other software (as goodesll
+   2. We should implement DNS or HTTP using other software (as Geoff Goodell
       did years ago with DNS) as an example of wrapping existing code into
       our plugin model.
 
-   2. The obfuscated-ssh superencipherment is pretty trivial and pretty
-   useful.  It makes the protocol stringwise unfingerprintable.
+   3. The obfuscated-ssh superencipherment is pretty trivial and pretty
+      useful.  It makes the protocol stringwise unfingerprintable.
 
-      1. Nick needs to be told firmly not to bikeshed the obfuscated-ssh
-        superencipherment too badly
-
-         1. Go ahead, bikeshed my day
-
-   1. If we do a raw-traffic proxy, openssh tunnels would be the logical choice.
+   4. If we do a raw-traffic proxy, openssh tunnels would be the logical
+      choice.
 
 Appendix: recommendations for transports
 
@@ -506,8 +502,9 @@ Appendix: recommendations for transports
   someday do so well at circumvention that it should be implemented
   inside Tor, it should use the same license as Tor.
 
-  Use libraries that Tor already requires. (You can rely on openssl and
-  libevent being present if current Tor is present.)
+  Tor already uses OpenSSL, Libevent, and zlib.  Before you go and decide
+  to use crypto++ in your transport plugin, ask yourself whether OpenSSL
+  wouldn't be a nicer choice.
 
   Be portable: most Tor users are on Windows, and most Tor developers
   are not, so designing your code for just one of these platforms will
@@ -528,6 +525,4 @@ Appendix: recommendations for transports
   Imitate a real profile: There are many ways to implement most
   protocols -- and in many cases, most possible variants of a given
   protocol won't actually exist in the wild.
-
-
 
