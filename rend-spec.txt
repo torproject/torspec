@@ -510,9 +510,7 @@
    consensus status document received from the directory authorities. A
    hidden service directory is deemed responsible for all descriptor IDs in
    the interval from its direct predecessor, exclusive, to its own ID,
-   inclusive; it further holds replicas for its 2 predecessors. A
-   participant only trusts its own routing list and never learns about
-   routing information from other parties.
+   inclusive; it further holds replicas for its 2 predecessors.
 
    Bob's OP publishes a new v2 descriptor once an hour or whenever its
    content changes. V2 descriptors can be found by clients within a given
