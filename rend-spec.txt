@@ -508,9 +508,12 @@
    service directories with consecutive onion IDs. Bob's OP learns about
    the complete list of hidden service directories by filtering the
    consensus status document received from the directory authorities. A
-   hidden service directory is deemed responsible for all descriptor IDs in
-   the interval from its direct predecessor, exclusive, to its own ID,
-   inclusive; it further holds replicas for its 2 predecessors.
+   hidden service directory is deemed responsible for a descriptor ID if
+   it has the HSDir flag and its identity digest is one of the first three
+   identity digests of HSDir relays following the descriptor ID in a
+   circular list. A hidden service directory will only accept a descriptor
+   whose timestamp is no more than three days before or one day after the
+   current time according to the directory's clock.
 
    Bob's OP publishes a new v2 descriptor once an hour or whenever its
    content changes. V2 descriptors can be found by clients within a given
