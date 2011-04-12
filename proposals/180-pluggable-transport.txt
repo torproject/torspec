@@ -145,7 +145,7 @@ Specifications: Client behavior
      bridge method address:port [[keyid=]id-fingerprint] [k=v] [k=v] [k=v]
 
   To connect to such a bridge, the Tor program needs to know which
-  local SOCKS proxy will support the transport called "method".  It
+  SOCKS proxy will support the transport called "method".  It
   then connects to this proxy, and asks it to connect to
   address:port.  If [id-fingerprint] is provided, Tor should expect
   the public identity key on the TLS connection to match the digest
@@ -156,8 +156,7 @@ Specifications: Client behavior
   as necessary.  If a key or value value must contain a semicolon or
   a backslash, it is escaped with a backslash.
 
-  The "id-fingerprint" field is always provided in a field named
-  "keyid", if it was given.  Method names must be C identifiers.
+  Method names must be C identifiers.
 
   For reference, the old bridge format was
     bridge address[:port] [id-fingerprint]
@@ -168,11 +167,11 @@ Specifications: Client behavior
   optionally include whitespace in the old format, whitespace in the
   id-fingerprint is not permitted in the new format.
 
-  Example: if the bridge line is "bridge trebuchet www.example.com:3333
-     rocks=20 height=5.6m" AND if the Tor client knows that the
-     'trebuchet' method is provided by a SOCKS5 proxy on
-     127.0.0.1:19999, the client should connect to that proxy, ask it to
-     connect to www.example.com, and provide the string
+  Example: if the bridge line is "bridge trebuchet www.example.com:3333 
+     keyid=09F911029D74E35BD84156C5635688C009F909F9 rocks=20 height=5.6m" 
+     AND if the Tor client knows that the 'trebuchet' method is supported,
+     the client should connect to the proxy that provides the 'trebuchet'
+     method, ask it to connect to www.example.com, and provide the string
      "rocks=20;height=5.6m" as the username, the password, or split
      across the username and password.
 
