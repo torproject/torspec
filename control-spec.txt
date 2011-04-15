@@ -1831,7 +1831,7 @@
   normal operations.  Unless a controller provides replacement functionality
   to fill this gap, Tor will not correctly handle user requests.
 
-  __AllDirOptionsPrivate
+  __AllDirActionsPrivate
 
     If true, Tor will try to launch all directory operations through
     anonymous connections.  (Ordinarily, Tor only tries to anonymize
