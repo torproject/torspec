@@ -1129,16 +1129,18 @@
 
         [At most once.]
 
-        A comma-separated list of recommended client versions, in
-        ascending order.  If absent, no opinion is held about client
+        A comma-separated list of recommended Tor versions for client
+        usage, in ascending order. The versions are given as defined by
+        version-spec.txt. If absent, no opinion is held about client
         versions.
 
     "server-versions" SP VersionList NL
 
         [At most once.]
 
-        A comma-separated list of recommended server versions, in
-        ascending order.  If absent, no opinion is held about server
+        A comma-separated list of recommended Tor versions for server
+        usage, in ascending order. The versions are given as defined by
+        version-spec.txt. If absent, no opinion is held about server
         versions.
 
     "known-flags" SP FlagList NL
