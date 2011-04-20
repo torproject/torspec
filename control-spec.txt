@@ -863,7 +863,7 @@
 
     InfoLine = AuthLine / VersionLine / OtherLine
 
-     AuthLine = "250-AUTH" SP "METHODS=" AuthMethod *(",")AuthMethod
+     AuthLine = "250-AUTH" SP "METHODS=" AuthMethod *("," AuthMethod)
                        *(SP "COOKIEFILE=" AuthCookieFile) CRLF
      VersionLine = "250-VERSION" SP "Tor=" TorVersion [SP Arguments] CRLF
 
