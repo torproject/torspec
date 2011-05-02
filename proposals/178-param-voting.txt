@@ -60,11 +60,15 @@ It is proposed that the above is changed to:
      Entries are given on the "params" line for every keyword on which a
      majority of authorities (total authorities, not just those
      participating this vote) voted on. The values given are the
-     low-median of all votes on that keyword. XXX note previous behaviour.
+     low-median of all votes on that keyword.
+
+     Consensus methods 11 and before, entries are given on the "params"
+     line for every keyword on which any authority voted, the value given
+     being the low-median of all votes on that keyword.
 
 The following should be added to the bottom of section 3.4.:
 
-        * If consensus method 12 or later is used, only consensus 
+        * If consensus method 12 or later is used, only consensus
           parameters that more than half of the total number of
           authorities voted for are included in the consensus.
 
@@ -84,3 +88,4 @@ Implementation:
 
 An example implementation of this feature can be found in
 https://gitweb.torproject.org/sebastian/tor.git, branch safer_params.
+
