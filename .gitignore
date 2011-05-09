@@ -1,0 +1,11 @@
+# Editor droppings
+\#*\#
+.#*
+*~
+*.swp
+# C stuff
+*.o
+# Diff droppings
+*.orig
+*.rej
+
