@@ -3,7 +3,7 @@ Title: Publish the consensus in multiple flavors
 Author: Nick Mathewson
 Created: 14-May-2009
 Target: 0.2.2
-Status: Open
+Status: Finished
 
 Overview:
 
