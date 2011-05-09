@@ -69,7 +69,7 @@ Proposals by number:
 146  Add new flag to reflect long-term stability [OPEN]
 147  Eliminate the need for v2 directories in generating v3 directories [ACCEPTED]
 148  Stream end reasons from the client side should be uniform [CLOSED]
-149  Using data from NETINFO cells [DRAFT]
+149  Using data from NETINFO cells [SUPERSEDED]
 150  Exclude Exit Nodes from a circuit [CLOSED]
 151  Improving Tor Path Selection [FINISHED]
 152  Optionally allow exit from single-hop circuits [CLOSED]
@@ -78,23 +78,23 @@ Proposals by number:
 155  Four Improvements of Hidden Service Performance [FINISHED]
 156  Tracking blocked ports on the client side [OPEN]
 157  Make certificate downloads specific [ACCEPTED]
-158  Clients download consensus + microdescriptors [OPEN]
+158  Clients download consensus + microdescriptors [FINISHED]
 159  Exit Scanning [OPEN]
 160  Authorities vote for bandwidth offsets in consensus [FINISHED]
 161  Computing Bandwidth Adjustments [FINISHED]
-162  Publish the consensus in multiple flavors [OPEN]
-163  Detecting whether a connection comes from a client [OPEN]
+162  Publish the consensus in multiple flavors [FINISHED]
+163  Detecting whether a connection comes from a client [SUPERSEDED]
 164  Reporting the status of server votes [OPEN]
 165  Easy migration for voting authority sets [OPEN]
 166  Including Network Statistics in Extra-Info Documents [CLOSED]
 167  Vote on network parameters in consensus [CLOSED]
 168  Reduce default circuit window [OPEN]
 169  Eliminate TLS renegotiation for the Tor connection handshake [SUPERSEDED]
-170  Configuration options regarding circuit building [DRAFT]
+170  Configuration options regarding circuit building [SUPERSEDED]
 171  Separate streams across circuits by connection metadata [OPEN]
 172  GETINFO controller option for circuit information [ACCEPTED]
 173  GETINFO Option Expansion [ACCEPTED]
-174  Optimistic Data for Tor: Server Side [ACCEPTED]
+174  Optimistic Data for Tor: Server Side [CLOSED]
 175  Automatically promoting Tor clients to nodes [DRAFT]
 176  Proposed version-3 link handshake for Tor [OPEN]
 177  Abstaining from votes on individual flags [OPEN]
@@ -111,8 +111,6 @@ Proposals by status:
    133  Incorporate Unreachable ORs into the Tor Network
    141  Download server descriptors on demand
    144  Increase the diversity of circuits by detecting nodes belonging the same provider
-   149  Using data from NETINFO cells [for 0.2.1.x]
-   170  Configuration options regarding circuit building
    175  Automatically promoting Tor clients to nodes
    179  TLS certificate and parameter normalization
  NEEDS-REVISION:
@@ -122,10 +120,7 @@ Proposals by status:
    145  Separate "suitable as a guard" from "suitable as a new guard" [for 0.2.1.x]
    146  Add new flag to reflect long-term stability [for 0.2.1.x]
    156  Tracking blocked ports on the client side [for 0.2.?]
-   158  Clients download consensus + microdescriptors
    159  Exit Scanning
-   162  Publish the consensus in multiple flavors [for 0.2.2]
-   163  Detecting whether a connection comes from a client [for 0.2.2]
    164  Reporting the status of server votes [for 0.2.2]
    165  Easy migration for voting authority sets
    168  Reduce default circuit window [for 0.2.2]
@@ -143,7 +138,6 @@ Proposals by status:
    157  Make certificate downloads specific [for 0.2.1.x]
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
-   174  Optimistic Data for Tor: Server Side
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process
@@ -153,8 +147,10 @@ Proposals by status:
    121  Hidden Service Authentication [in 0.2.1.x]
    151  Improving Tor Path Selection
    155  Four Improvements of Hidden Service Performance [in 0.2.1.x]
+   158  Clients download consensus + microdescriptors
    160  Authorities vote for bandwidth offsets in consensus [for 0.2.2.x]
    161  Computing Bandwidth Adjustments [for 0.2.2.x]
+   162  Publish the consensus in multiple flavors [for 0.2.2]
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]
@@ -184,13 +180,17 @@ Proposals by status:
    152  Optionally allow exit from single-hop circuits [in 0.2.1.6-alpha]
    166  Including Network Statistics in Extra-Info Documents [for 0.2.2]
    167  Vote on network parameters in consensus [in 0.2.2]
+   174  Optimistic Data for Tor: Server Side
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration
    124  Blocking resistant TLS certificate usage
+   149  Using data from NETINFO cells
    153  Automatic software update protocol
    154  Automatic Software Update Protocol
+   163  Detecting whether a connection comes from a client
    169  Eliminate TLS renegotiation for the Tor connection handshake
+   170  Configuration options regarding circuit building
  DEAD:
    100  Tor Unreliable Datagram Extension Proposal
    115  Two Hop Paths
