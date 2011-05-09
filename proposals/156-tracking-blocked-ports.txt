@@ -3,7 +3,7 @@ Title: Tracking blocked ports on the client side
 Author: Robert Hogan
 Created: 14-Oct-2008
 Status: Open
-Target: 0.2.?
+
 
 Motivation:
 Tor clients that are behind extremely restrictive firewalls can end up

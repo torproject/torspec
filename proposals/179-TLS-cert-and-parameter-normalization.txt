@@ -3,6 +3,7 @@ Title: TLS certificate and parameter normalization
 Author: Jacob Appelbaum, Gladys Shufflebottom
 Created: 16-Feb-2011
 Status: Draft
+Target: 0.2.3.x
 
 
         Draft spec for TLS certificate and handshake normalization

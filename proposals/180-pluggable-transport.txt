@@ -3,6 +3,7 @@ Title: Pluggable transports for circumvention
 Author: Jacob Appelbaum, Nick Mathewson
 Created: 15-Oct-2010
 Status: Open
+Target: 0.2.3.x
 
 Overview
 

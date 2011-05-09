@@ -3,6 +3,7 @@ Title: GETINFO controller option for circuit information
 Author: Damian Johnson
 Created: 03-June-2010
 Status: Accepted
+Target: 0.2.3.x
 
 Overview:
 

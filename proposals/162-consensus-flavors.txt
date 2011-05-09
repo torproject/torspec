@@ -2,7 +2,7 @@ Filename: 162-consensus-flavors.txt
 Title: Publish the consensus in multiple flavors
 Author: Nick Mathewson
 Created: 14-May-2009
-Target: 0.2.2
+Implemented-In: 0.2.3.1-alpha
 Status: Finished
 
 Overview:

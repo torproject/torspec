@@ -3,7 +3,7 @@ Title: Reduce default circuit window
 Author: Roger Dingledine
 Created: 12-Aug-2009
 Status: Open
-Target: 0.2.2
+
 
 0. History
 

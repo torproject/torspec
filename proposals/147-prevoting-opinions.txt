@@ -3,7 +3,7 @@ Title: Eliminate the need for v2 directories in generating v3 directories
 Author: Nick Mathewson
 Created: 2-Jul-2008
 Status: Accepted
-Target: 0.2.1.x
+Target: 0.2.3.x
 
 Overview
 

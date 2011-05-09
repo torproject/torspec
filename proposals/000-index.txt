@@ -38,7 +38,7 @@ Proposals by number:
 115  Two Hop Paths [DEAD]
 116  Two hop paths from entry guards [DEAD]
 117  IPv6 exits [ACCEPTED]
-118  Advertising multiple ORPorts at once [ACCEPTED]
+118  Advertising multiple ORPorts at once [NEEDS-REVISION]
 119  New PROTOCOLINFO command for controllers [CLOSED]
 120  Shutdown descriptors when Tor servers stop [DEAD]
 121  Hidden Service Authentication [FINISHED]
@@ -65,8 +65,8 @@ Proposals by number:
 142  Combine Introduction and Rendezvous Points [DEAD]
 143  Improvements of Distributed Storage for Tor Hidden Service Descriptors [OPEN]
 144  Increase the diversity of circuits by detecting nodes belonging the same provider [DRAFT]
-145  Separate "suitable as a guard" from "suitable as a new guard" [OPEN]
-146  Add new flag to reflect long-term stability [OPEN]
+145  Separate "suitable as a guard" from "suitable as a new guard" [NEEDS-RESEARCH]
+146  Add new flag to reflect long-term stability [NEEDS-RESEARCH]
 147  Eliminate the need for v2 directories in generating v3 directories [ACCEPTED]
 148  Stream end reasons from the client side should be uniform [CLOSED]
 149  Using data from NETINFO cells [SUPERSEDED]
@@ -91,7 +91,7 @@ Proposals by number:
 168  Reduce default circuit window [OPEN]
 169  Eliminate TLS renegotiation for the Tor connection handshake [SUPERSEDED]
 170  Configuration options regarding circuit building [SUPERSEDED]
-171  Separate streams across circuits by connection metadata [OPEN]
+171  Separate streams across circuits by connection metadata [ACCEPTED]
 172  GETINFO controller option for circuit information [ACCEPTED]
 173  GETINFO Option Expansion [ACCEPTED]
 174  Optimistic Data for Tor: Server Side [CLOSED]
@@ -112,32 +112,33 @@ Proposals by status:
    141  Download server descriptors on demand
    144  Increase the diversity of circuits by detecting nodes belonging the same provider
    175  Automatically promoting Tor clients to nodes
-   179  TLS certificate and parameter normalization
+   179  TLS certificate and parameter normalization [for 0.2.3.x]
  NEEDS-REVISION:
+   118  Advertising multiple ORPorts at once
    131  Help users to verify they are using Tor
+ NEEDS-RESEARCH:
+   145  Separate "suitable as a guard" from "suitable as a new guard"
+   146  Add new flag to reflect long-term stability
  OPEN:
-   143  Improvements of Distributed Storage for Tor Hidden Service Descriptors [for 0.2.1.x]
-   145  Separate "suitable as a guard" from "suitable as a new guard" [for 0.2.1.x]
-   146  Add new flag to reflect long-term stability [for 0.2.1.x]
-   156  Tracking blocked ports on the client side [for 0.2.?]
+   143  Improvements of Distributed Storage for Tor Hidden Service Descriptors
+   156  Tracking blocked ports on the client side
    159  Exit Scanning
-   164  Reporting the status of server votes [for 0.2.2]
+   164  Reporting the status of server votes
    165  Easy migration for voting authority sets
-   168  Reduce default circuit window [for 0.2.2]
-   171  Separate streams across circuits by connection metadata
+   168  Reduce default circuit window
    176  Proposed version-3 link handshake for Tor [for 0.2.3]
-   177  Abstaining from votes on individual flags
-   178  Require majority of authorities to vote for consensus parameters
-   180  Pluggable transports for circumvention
+   177  Abstaining from votes on individual flags [for 0.2.3.x]
+   178  Require majority of authorities to vote for consensus parameters [for 0.2.3.x]
+   180  Pluggable transports for circumvention [for 0.2.3.x]
  ACCEPTED:
-   110  Avoiding infinite length circuits [for 0.2.1.x] [in 0.2.1.3-alpha]
-   117  IPv6 exits [for 0.2.1.x]
-   118  Advertising multiple ORPorts at once [for 0.2.1.x]
-   140  Provide diffs between consensuses [for 0.2.2.x]
-   147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.1.x]
-   157  Make certificate downloads specific [for 0.2.1.x]
-   172  GETINFO controller option for circuit information
-   173  GETINFO Option Expansion
+   110  Avoiding infinite length circuits [for 0.2.3.x] [in 0.2.1.3-alpha]
+   117  IPv6 exits [for 0.2.3.x]
+   140  Provide diffs between consensuses
+   147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.3.x]
+   157  Make certificate downloads specific [for 0.2.3.x]
+   171  Separate streams across circuits by connection metadata [for 0.2.3.x]
+   172  GETINFO controller option for circuit information [for 0.2.3.x]
+   173  GETINFO Option Expansion [for 0.2.3.x]
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process
@@ -147,10 +148,10 @@ Proposals by status:
    121  Hidden Service Authentication [in 0.2.1.x]
    151  Improving Tor Path Selection
    155  Four Improvements of Hidden Service Performance [in 0.2.1.x]
-   158  Clients download consensus + microdescriptors
+   158  Clients download consensus + microdescriptors [in 0.2.3.1-alpha]
    160  Authorities vote for bandwidth offsets in consensus [for 0.2.2.x]
    161  Computing Bandwidth Adjustments [for 0.2.2.x]
-   162  Publish the consensus in multiple flavors [for 0.2.2]
+   162  Publish the consensus in multiple flavors [in 0.2.3.1-alpha]
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]
@@ -180,7 +181,7 @@ Proposals by status:
    152  Optionally allow exit from single-hop circuits [in 0.2.1.6-alpha]
    166  Including Network Statistics in Extra-Info Documents [for 0.2.2]
    167  Vote on network parameters in consensus [in 0.2.2]
-   174  Optimistic Data for Tor: Server Side
+   174  Optimistic Data for Tor: Server Side [in 0.2.3.1-alpha]
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration

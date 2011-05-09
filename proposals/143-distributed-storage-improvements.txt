@@ -3,7 +3,6 @@ Title: Improvements of Distributed Storage for Tor Hidden Service Descriptors
 Author: Karsten Loesing
 Created: 28-Jun-2008
 Status: Open
-Target: 0.2.1.x
 
 Change history:
 

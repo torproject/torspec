@@ -3,7 +3,6 @@ Title: Provide diffs between consensuses
 Author: Peter Palfrader
 Created: 13-Jun-2008
 Status: Accepted
-Target: 0.2.2.x
 
 0. History
 

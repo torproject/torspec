@@ -3,6 +3,7 @@ Title: GETINFO Option Expansion
 Author: Damian Johnson
 Created: 02-June-2010
 Status: Accepted
+Target: 0.2.3.x
 
 Overview:
 

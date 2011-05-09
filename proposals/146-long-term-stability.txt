@@ -2,8 +2,7 @@ Filename: 146-long-term-stability.txt
 Title: Add new flag to reflect long-term stability
 Author: Nick Mathewson
 Created: 19-Jun-2008
-Status: Open
-Target: 0.2.1.x
+Status: Needs-Research
 
 Overview
 

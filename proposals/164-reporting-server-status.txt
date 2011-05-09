@@ -2,7 +2,6 @@ Filename: 164-reporting-server-status.txt
 Title: Reporting the status of server votes
 Author: Nick Mathewson
 Created: 22-May-2009
-Target: 0.2.2
 Status: Open
 
 
