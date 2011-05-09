@@ -2,7 +2,7 @@ Title: Configuration options regarding circuit building
 Filename: 170-user-path-config.txt
 Author: Sebastian Hahn
 Created: 01-March-2010
-Status: Draft
+Status: Superseded
 
 Overview:
 
