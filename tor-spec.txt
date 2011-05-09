@@ -366,11 +366,11 @@ see tor-design.pdf.
    Implementations MAY use the timestamp value to help decide if their
    clocks are skewed.  Initiators MAY use "other OR's address" to help
    learn which address their connections are originating from, if they do
-   not know it.  Initiators SHOULD use "this OR's address" to make sure
+   not know it.  [As of 0.2.3.1-alpha, nodes use neither of these values.]
+
+   Initiators SHOULD use "this OR's address" to make sure
    that they have connected to another OR at its canonical address.
-
-   [As of 0.2.0.23-rc, implementations use none of the above values.]
-
+   (See 5.3.1 below.)
 
 5. Circuit management
 

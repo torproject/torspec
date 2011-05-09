@@ -2,8 +2,11 @@ Filename: 149-using-netinfo-data.txt
 Title: Using data from NETINFO cells
 Author: Nick Mathewson
 Created: 2-Jul-2008
-Status: Draft
+Status: Superseded
 Target: 0.2.1.x
+
+[Partially done: we do the anti-MITM part.  Not entirely done: we don't do
+the time part.]
 
 Overview
 
