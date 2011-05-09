@@ -3,7 +3,10 @@ Title: Detecting whether a connection comes from a client
 Author: Nick Mathewson
 Created: 22-May-2009
 Target: 0.2.2
-Status: Open
+Status: Superseded
+
+[Note: Actually, this is partially done, partially superseded
+       -nickm, 9 May 2011]
 
 
 Overview:
