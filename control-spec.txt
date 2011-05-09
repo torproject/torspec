@@ -25,7 +25,7 @@
   TC is a bidirectional message-based protocol.  It assumes an underlying
   stream for communication between a controlling process (the "client"
   or "controller") and a Tor process (or "server").  The stream may be
-  implemented via TCP, TLS-over-TCP, a Unix-domain socket, or so on,
+  implemented via TCP, TLS-over-TCP, a Unix-doma2in socket, or so on,
   but it must provide reliable in-order delivery.  For security, the
   stream should not be accessible by untrusted parties.
 
@@ -467,7 +467,7 @@
       have no guess, return a 551 error. (Added in 0.1.2.2-alpha)
 
     "fingerprint" -- the contents of the fingerprint file that Tor
-      writes as a server, or a 551 if we're not a server currently.
+      writes as a relay, or a 551 if we're not a relay currently.
       (Added in 0.1.2.3-alpha)
 
     "circuit-status"
@@ -509,7 +509,7 @@
       [From 0.1.1.4-alpha to 0.1.1.10-alpha, entry-guards was called
        "helper-nodes". Tor still supports calling "helper-nodes", but it
         is deprecated and should not be used.]
-      
+
       [Older versions of Tor (before 0.1.2.x-final) generated 'down' instead
        of unlisted/unusable.  Current Tors never generate 'down'.]
 
@@ -1609,8 +1609,8 @@
         Our DNS provider is giving a hijacked address instead of well-known
         websites; Tor will not try to be an exit node.
 
-        {Controllers could warn the admin if the server is running as an
-        exit server: the admin needs to configure a good DNS server.
+        {Controllers could warn the admin if the relay is running as an
+        exit node: the admin needs to configure a good DNS server.
         Alternatively, this happens a lot in some restrictive environments
         (hotels, universities, coffeeshops) when the user hasn't registered.}
 

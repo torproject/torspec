@@ -178,8 +178,8 @@
    any missing router descriptors.  Clients download missing descriptors
    from caches; caches and authorities download from authorities.
    Descriptors are downloaded by the hash of the descriptor, not by the
-   server's identity key: this prevents servers from attacking clients by
-   giving them descriptors nobody else uses.
+   relay's identity key: this prevents directory servers from attacking
+   clients by giving them descriptors nobody else uses.
 
    All directory information is uploaded and downloaded with HTTP.
 
@@ -402,8 +402,8 @@
        "average" bandwidth is the volume per second that the OR is willing to
        sustain over long periods; the "burst" bandwidth is the volume that
        the OR is willing to sustain in very short intervals.  The "observed"
-       value is an estimate of the capacity this server can handle.  The
-       server remembers the max bandwidth sustained output over any ten
+       value is an estimate of the capacity this relay can handle.  The
+       relay remembers the max bandwidth sustained output over any ten
        second period in the past day, and another sustained input.  The
        "observed" value is the lesser of these two numbers.
 
@@ -438,7 +438,7 @@
 
        [At most once]
 
-       If the value is 1, then the Tor server was hibernating when the
+       If the value is 1, then the Tor relay was hibernating when the
        descriptor was published, and shouldn't be used to build circuits.
 
        [We didn't start parsing this line until Tor 0.1.0.6-rc; it should be
@@ -490,14 +490,14 @@
 
        [At most once]
 
-       Describes a way to contact the server's administrator, preferably
+       Describes a way to contact the relay's administrator, preferably
        including an email address and a PGP key fingerprint.
 
     "family" names NL
 
         [At most once]
 
-        'Names' is a space-separated list of server nicknames or
+        'Names' is a space-separated list of relay nicknames or
         hexdigests. If two ORs list one another in their "family" entries,
         then OPs should treat them as a single OR for the purpose of path
         selection.
@@ -530,7 +530,7 @@
         dns logic.  Versions of Tor with this field set to false SHOULD NOT
         be used for reverse hostname lookups.
 
-        [This option is obsolete.  All Tor current servers should be presumed
+        [This option is obsolete.  All Tor current relays should be presumed
          to have the evdns backend.]
 
    "caches-extra-info" NL
@@ -591,7 +591,7 @@
        [At most once.]
 
        Present only if the router allows single-hop circuits to make exit
-       connections.  Most Tor servers do not support this: this is
+       connections.  Most Tor relays do not support this: this is
        included for specialized controllers designed to support perspective
        access and such.
 
@@ -913,7 +913,7 @@
    nickname ::= between 1 and 19 alphanumeric characters ([A-Za-z0-9]),
       case-insensitive.
    hexdigest ::= a '$', followed by 40 hexadecimal characters
-      ([A-Fa-f0-9]). [Represents a server by the digest of its identity
+      ([A-Fa-f0-9]). [Represents a relay by the digest of its identity
       key.]
 
    exitpattern ::= addrspec ":" portspec
@@ -1138,7 +1138,7 @@
 
         [At most once.]
 
-        A comma-separated list of recommended Tor versions for server
+        A comma-separated list of recommended Tor versions for relay
         usage, in ascending order. The versions are given as defined by
         version-spec.txt. If absent, no opinion is held about server
         versions.
@@ -1319,7 +1319,7 @@
 
         [At most once.]
 
-        The version of the Tor protocol that this server is running.  If
+        The version of the Tor protocol that this relay is running.  If
         the value begins with "Tor" SP, the rest of the string is a Tor
         version number, and the protocol is "The Tor protocol as supported
         by the given version of Tor."  Otherwise, if the value begins with
@@ -1335,7 +1335,7 @@
 
         [At most once.]
 
-        An estimate of the bandwidth of this server, in an arbitrary
+        An estimate of the bandwidth of this relay, in an arbitrary
         unit (currently kilobytes per second).  Used to weight router
         selection. 
 
@@ -1446,7 +1446,7 @@
    believes the given name should be bound to the given key.
 
         Two strategies exist on the current network for deciding on
-        values for the Named flag.  In the original version, server
+        values for the Named flag.  In the original version, relay
         operators were asked to send nickname-identity pairs to a
         mailing list of Naming directory authorities operators.  The
         operators were then supposed to add the pairs to their
@@ -1515,13 +1515,13 @@
    serves v2 hidden service descriptors and the authority managed to connect
    to it successfully within the last 24 hours.
 
-   Directory server administrators may label some servers or IPs as
+   Directory server administrators may label some relays or IPs as
    blacklisted, and elect not to include them in their network-status lists.
 
-   Authorities SHOULD 'disable' any servers in excess of 3 on any single IP.
+   Authorities SHOULD 'disable' any relays in excess of 3 on any single IP.
    When there are more than 3 to choose from, authorities should first prefer
    authorities to non-authorities, then prefer Running to non-Running, and
-   then prefer high-bandwidth to low-bandwidth.  To 'disable' a server, the
+   then prefer high-bandwidth to low-bandwidth.  To 'disable' a relay, the
    authority *should* advertise it without the Running or Valid flag.
 
    Thus, the network-status vote includes all non-blacklisted,
@@ -2270,17 +2270,17 @@
 6. Using directory information
 
    Everyone besides directory authorities uses the approaches in this section
-   to decide which servers to use and what their keys are likely to be.
+   to decide which relays to use and what their keys are likely to be.
    (Directory authorities just believe their own opinions, as in 3.1 above.)
 
 6.1. Choosing routers for circuits.
 
    Circuits SHOULD NOT be built until the client has enough directory
    information: a live consensus network status [XXXX fallback?]  and
-   descriptors for at least 1/4 of the servers believed to be running.
+   descriptors for at least 1/4 of the relays believed to be running.
 
-   A server is "listed" if it is included by the consensus network-status
-   document.  Clients SHOULD NOT use unlisted servers.
+   A relay is "listed" if it is included by the consensus network-status
+   document.  Clients SHOULD NOT use unlisted relays.
 
    These flags are used as follows:
 
@@ -2304,7 +2304,7 @@
 
 6.2. Managing naming
 
-   In order to provide human-memorable names for individual server
+   In order to provide human-memorable names for individual router
    identities, some directory servers bind names to IDs.  Clients handle
    names in two ways:
 

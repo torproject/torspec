@@ -130,31 +130,31 @@ see tor-design.pdf.
 
 1.1. Keys and names
 
-   Every Tor server has multiple public/private keypairs:
+   Every Tor relay has multiple public/private keypairs:
 
     - A long-term signing-only "Identity key" used to sign documents and
-      certificates, and used to establish server identity.
+      certificates, and used to establish relay identity.
     - A medium-term "Onion key" used to decrypt onion skins when accepting
       circuit extend attempts.  (See 5.1.)  Old keys MUST be accepted for at
       least one week after they are no longer advertised.  Because of this,
-      servers MUST retain old keys for a while after they're rotated.
+      relays MUST retain old keys for a while after they're rotated.
     - A short-term "Connection key" used to negotiate TLS connections.
       Tor implementations MAY rotate this key as often as they like, and
       SHOULD rotate this key at least once a day.
 
-   Tor servers are also identified by "nicknames"; these are specified in
+   Tor relays are also identified by "nicknames"; these are specified in
    dir-spec.txt.
 
 2. Connections
 
-   Connections between two Tor servers, or between a client and a server,
+   Connections between two Tor relays, or between a client and a relay,
    use TLS/SSLv3 for link authentication and encryption.  All
    implementations MUST support the SSLv3 ciphersuite
    "SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA", and SHOULD support the TLS
    ciphersuite "TLS_DHE_RSA_WITH_AES_128_CBC_SHA" if it is available.
 
    There are three acceptable ways to perform a TLS handshake when
-   connecting to a Tor server: "certificates up-front", "renegotiation", and
+   connecting to a Tor relay: "certificates up-front", "renegotiation", and
    "backwards-compatible renegotiation".  ("Backwards-compatible
    renegotiation" is, as the name implies, compatible with both other
    handshake types.)
@@ -197,7 +197,7 @@ see tor-design.pdf.
    certificates have been sent, it proceeds as in "certificates up-front";
    otherwise, it proceeds as in "renegotiation".
 
-   All new implementations of the Tor server protocol MUST support
+   All new relay implementations of the Tor protocol MUST support
    "backwards-compatible renegotiation"; clients SHOULD do this too.  If
    this is not possible, new client implementations MUST support both
    "renegotiation" and "certificates up-front" and use the router's
@@ -205,7 +205,7 @@ see tor-design.pdf.
    to decide which to use.
 
    In all of the above handshake variants, certificates sent in the clear
-   SHOULD NOT include any strings to identify the host as a Tor server. In
+   SHOULD NOT include any strings to identify the host as a Tor relay. In
    the "renegotiation" and "backwards-compatible renegotiation" steps, the
    initiator SHOULD choose a list of ciphersuites and TLS extensions
    to mimic one used by a popular web browser.
@@ -255,7 +255,7 @@ see tor-design.pdf.
    (As an exception, directory servers may try to stay connected to all of
    the ORs -- though this will be phased out for the Tor 0.1.2.x release.)
 
-   To avoid being trivially distinguished from servers, client-only Tor
+   To avoid being trivially distinguished from relays, client-only Tor
    instances are encouraged but not required to use a two-certificate chain
    as well.  Clients SHOULD NOT keep using the same certificates when
    their IP address changes.  Clients MAY send no certificates at all.
@@ -332,8 +332,8 @@ see tor-design.pdf.
    version is 2 or higher.
 
    To determine the version, in any connection where the "renegotiation"
-   handshake was used (that is, where the server sent only one certificate
-   at first and where the client did not send any certificates until
+   handshake was used (that is, where the responder sent only one certificate
+   at first and where the initiator did not send any certificates until
    renegotiation), both parties MUST send a VERSIONS cell immediately after
    the renegotiation is finished, before any other cells are sent.  Parties
    MUST NOT send any other cells on a connection until they have received a
@@ -458,24 +458,24 @@ see tor-design.pdf.
 5.2. Setting circuit keys
 
    Once the handshake between the OP and an OR is completed, both can
-   now calculate g^xy with ordinary DH.  Before computing g^xy, both client
-   and server MUST verify that the received g^x or g^y value is not degenerate;
+   now calculate g^xy with ordinary DH.  Before computing g^xy, both parties
+   MUST verify that the received g^x or g^y value is not degenerate;
    that is, it must be strictly greater than 1 and strictly less than p-1
    where p is the DH modulus.  Implementations MUST NOT complete a handshake
    with degenerate keys.  Implementations MUST NOT discard other "weak"
    g^x values.
 
    (Discarding degenerate keys is critical for security; if bad keys
-   are not discarded, an attacker can substitute the server's CREATED
+   are not discarded, an attacker can substitute the OR's CREATED
    cell's g^y with 0 or 1, thus creating a known g^xy and impersonating
-   the server. Discarding other keys may allow attacks to learn bits of
+   the OR. Discarding other keys may allow attacks to learn bits of
    the private key.)
 
-   If CREATE or EXTEND is used to extend a circuit, the client and server
+   If CREATE or EXTEND is used to extend a circuit, both parties
    base their key material on K0=g^xy, represented as a big-endian unsigned
    integer.
 
-   If CREATE_FAST is used, the client and server base their key material on
+   If CREATE_FAST is used, both parties base their key material on
    K0=X|Y.
 
    From the base key material K0, they compute KEY_LEN*2+HASH_LEN*3 bytes of
@@ -624,8 +624,8 @@ see tor-design.pdf.
      3 -- REQUESTED       (A client sent a TRUNCATE command.)
      4 -- HIBERNATING     (Not currently operating; trying to save bandwidth.)
      5 -- RESOURCELIMIT   (Out of memory, sockets, or circuit IDs.)
-     6 -- CONNECTFAILED   (Unable to reach server.)
-     7 -- OR_IDENTITY     (Connected to server, but its OR identity was not
+     6 -- CONNECTFAILED   (Unable to reach relay.)
+     7 -- OR_IDENTITY     (Connected to relay, but its OR identity was not
                            as expected.)
      8 -- OR_CONN_CLOSED  (The OR connection that was carrying this circuit
                            died.)
@@ -684,7 +684,7 @@ see tor-design.pdf.
    RELAY cells that are not targeted at the first hop of any circuit as
    RELAY_EARLY cells too, in order to partially conceal the circuit length.
 
-   [In a future version of Tor, servers will reject any EXTEND cell not
+   [In a future version of Tor, relays will reject any EXTEND cell not
    received in a RELAY_EARLY cell.  See proposal 110.]
 
 6. Application connections and stream management
@@ -792,7 +792,7 @@ see tor-design.pdf.
        A number of seconds (TTL) for which the address may be cached [4 octets]
    [XXXX No version of Tor currently generates the IPv6 format.]
 
-   [Tor servers before 0.1.2.0 set the TTL field to a fixed value.  Later
+   [Tor exit nodes before 0.1.2.0 set the TTL field to a fixed value.  Later
    versions set the TTL to the last value seen from a DNS server, and expire
    their own cached entries after a fixed interval.  This prevents certain
    attacks.]
@@ -822,16 +822,16 @@ see tor-design.pdf.
 
 6.2.1. Opening a directory stream
 
-   If a Tor server is a directory server, it should respond to a
+   If a Tor relay is a directory server, it should respond to a
    RELAY_BEGIN_DIR cell as if it had received a BEGIN cell requesting a
    connection to its directory port.  RELAY_BEGIN_DIR cells ignore exit
    policy, since the stream is local to the Tor process.
 
-   If the Tor server is not running a directory service, it should respond
+   If the Tor relay is not running a directory service, it should respond
    with a REASON_NOTDIRECTORY RELAY_END cell.
 
    Clients MUST generate an all-zero payload for RELAY_BEGIN_DIR cells,
-   and servers MUST ignore the payload.
+   and relays MUST ignore the payload.
 
    [RELAY_BEGIN_DIR was not supported before Tor 0.1.2.2-alpha; clients
    SHOULD NOT send it to routers running earlier versions of Tor.]
@@ -866,7 +866,7 @@ see tor-design.pdf.
       13 -- REASON_TORPROTOCOL    (Sent when closing connection because of
                                    Tor protocol violations.)
       14 -- REASON_NOTDIRECTORY   (Client sent RELAY_BEGIN_DIR to a
-                                   non-directory server.)
+                                   non-directory relay.)
 
    (With REASON_EXITPOLICY, the 4-byte IPv4 address or 16-byte IPv6 address
    forms the optional data, along with a 4-byte TTL; no other reason
@@ -1014,7 +1014,7 @@ see tor-design.pdf.
 A.1. Differences between spec and implementation
 
 - The current specification requires all ORs to have IPv4 addresses, but
-  allows servers to exit and resolve to IPv6 addresses, and to declare IPv6
+  allows relays to exit and resolve to IPv6 addresses, and to declare IPv6
   addresses in their exit policies.  The current codebase has no IPv6
   support at all.
 

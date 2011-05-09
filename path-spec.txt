@@ -76,16 +76,16 @@ of their choices.
    is unknown (usually its target IP), but we believe the path probably
    supports the request according to the rules given below.
 
-1.1. A server's bandwidth
+1.1. A relay's bandwidth
 
    Old versions of Tor did not report bandwidths in network status
    documents, so clients had to learn them from the routers' advertised
-   server descriptors.
+   relay descriptors.
 
    For versions of Tor prior to 0.2.1.17-rc, everywhere below where we
-   refer to a server's "bandwidth", we mean its clipped advertised
+   refer to a relay's "bandwidth", we mean its clipped advertised
    bandwidth, computed by taking the smaller of the 'rate' and
-   'observed' arguments to the "bandwidth" element in the server's
+   'observed' arguments to the "bandwidth" element in the relay's
    descriptor.  If a router's advertised bandwidth is greater than
    MAX_BELIEVABLE_BANDWIDTH (currently 10 MB/s), we clipped to that
    value.
@@ -144,13 +144,13 @@ of their choices.
    In some cases we can reuse an already established circuit if it's
    clean; see Section 2.3 (cannibalizing circuits) for details.
 
-2.1.3. Servers build circuits for testing reachability and bandwidth
+2.1.3. Relays build circuits for testing reachability and bandwidth
 
-   Tor servers test reachability of their ORPort once they have
+   Tor relays test reachability of their ORPort once they have
    successfully built a circuit (on start and whenever their IP address
    changes). They build an ordinary fast internal circuit with themselves
    as the last hop. As soon as any testing circuit succeeds, the Tor
-   server decides it's reachable and is willing to publish a descriptor.
+   relay decides it's reachable and is willing to publish a descriptor.
 
    We launch multiple testing circuits (one at a time), until we
    have NUM_PARALLEL_TESTING_CIRC (4) such circuits open. Then we
@@ -161,7 +161,7 @@ of their choices.
    incoming bandwidth, and helps to jumpstart the observed bandwidth
    (see dir-spec.txt).
 
-   Tor servers also test reachability of their DirPort once they have
+   Tor relays also test reachability of their DirPort once they have
    established a circuit, but they use an ordinary exit circuit for
    this purpose.
 
@@ -266,7 +266,7 @@ of their choices.
    such a connection if any clause that accepts any connections to that port
    precedes all clauses (if any) that reject all connections to that port.
 
-   Unless requested to do so by the user, we never choose an exit server
+   Unless requested to do so by the user, we never choose an exit node
    flagged as "BadExit" by more than half of the authorities who advertise
    themselves as listing bad exits.
 
@@ -539,7 +539,7 @@ of their choices.
 
   We use Guard nodes (also called "helper nodes" in the literature) to
   prevent certain profiling attacks.  Here's the risk: if we choose entry and
-  exit nodes at random, and an attacker controls C out of N servers
+  exit nodes at random, and an attacker controls C out of N relays
   (ignoring bandwidth), then the
   attacker will control the entry and exit node of any given circuit with
   probability (C/N)^2.  But as we make many different circuits over time,
