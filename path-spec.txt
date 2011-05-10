@@ -147,7 +147,7 @@ of their choices.
 2.1.3. Relays build circuits for testing reachability and bandwidth
 
    Tor relays test reachability of their ORPort once they have
-   successfully built a circuit (on start and whenever their IP address
+   successfully built a circuit (on startup and whenever their IP address
    changes). They build an ordinary fast internal circuit with themselves
    as the last hop. As soon as any testing circuit succeeds, the Tor
    relay decides it's reachable and is willing to publish a descriptor.

@@ -25,7 +25,7 @@
   TC is a bidirectional message-based protocol.  It assumes an underlying
   stream for communication between a controlling process (the "client"
   or "controller") and a Tor process (or "server").  The stream may be
-  implemented via TCP, TLS-over-TCP, a Unix-doma2in socket, or so on,
+  implemented via TCP, TLS-over-TCP, a Unix-domain socket, or so on,
   but it must provide reliable in-order delivery.  For security, the
   stream should not be accessible by untrusted parties.
 
