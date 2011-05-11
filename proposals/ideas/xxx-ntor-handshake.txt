@@ -1,0 +1,124 @@
+Filename: xxx-ntor-handshake.txt
+Title: Improved circuit-creation key exchange
+Author:  Nick Mathewson
+Created: 11-May-2011
+Status: Draft
+
+
+This is an attempt to translate the proposed circuit handshake from
+"Anonymity and one-way authentication in key-exchange protocols" by
+Goldberg, Stebila, and Ustaoglu, into a Tor proposal format.
+
+It assumes something like Robert Ransom's proposal draft is in place to
+provide an extended CREATE cell format that can indicate what type of
+handshake is in use.
+
+Notation:
+
+  Let a|b be the concatenation of a with b.
+
+  Let H(x,t) be a tweakable hash function of output width H_LENGTH bytes.
+
+  Let t_keyid, t_mac, t_key, and t_verify be a set of arbitrarily-chosen tweaks
+  for the hash function.
+
+  Let EXP(a,b) be a^b in some appropriate group G where the appropriate DH
+  parameters hold.  Let's say elements of this group, when represented as
+  byte strings, are all G_LENGTH bytes long.  Let's say we are using a
+  generator g for this group.
+
+  Let PROTOID be a string designating this variant of the protocol.
+
+  Let KEYID be a collision-resistant (but not necessarily preimage-resistant)
+     hash function on members of G, of output length H_LENGTH bytes.
+
+Instantiation:
+
+  Let's call this PROTOID "ntor-curve25519-sha256-1"
+
+  Set H(x,t) == HMAC_SHA256 with message x and key t. So H_LENGTH == 32.
+  Set t_mac   == PROTOID | ":mac"
+      t_key1  == PROTOID | ":key1"
+      t_key2  == PROTOID | ":verify"
+  Set EXP(a,b) == curve25519(a,b), and g == 9 .
+
+  Set KEYID(B) == B.  (We don't need to use a hash function here, since our
+     keys are already very short.  It is trivially collision-resistant, since
+     KEYID(A)====KEYID(B) iff A==B.)
+
+Protocol:
+
+  Take a router with identity key digest ID.
+
+  As setup, the router generates a secret key b, and a public onion key
+  B = EXP(g,b).  The router publishes B in its server descriptor.
+
+  To send a create cell, the client generates a keypair of x, X=EXP(g,y) and
+  sends a CREATE cell with contents:
+
+    NODEID:     ID             -- H_LENGTH bytes
+    KEYID:      KEYID(B)       -- H_LENGTH bytes
+    CLIENT_PK:  X              -- G_LENGTH bytes
+
+  The server checks X, generates a keypair of y, Y=EXP(g,y) and computes
+
+    secret_input = EXP(X,y) | EXP(X,b) | ID | B | X | Y | PROTOID
+    KEY_SEED = H(secret_input, t_key)
+    verify = H(secret_input, t_verify)
+    auth_input = verify | ID | B | Y | X | PROTOID | "Server"
+
+  The server sends a CREATED cell containing:
+
+    SERVER_PK:  Y                     -- G_LENGTH bytes
+    AUTH:       H(auth_input, t_mac)  -- H_LENGTH byets
+
+  The client then checks Y, and computes
+
+    secret_input = EXP(Y,x) | EXP(B,x) | ID | B | X | Y | PROTOID
+    KEY_SEED = H(secret_input, t_key1)
+    verify = H(secret_input, t_verify)
+    auth_input = verify | ID | B | Y | X | PROTOID | "Server"
+
+    The client verifies that AUTH == H(auth_input, t_mac).
+
+  Both parties now have a shared value for KEY_SEED.  They expand this into
+  the keys needed for the Tor relay protocol.
+
+Key expansion:
+
+  Currently, the key expansion formula used by Tor here is
+
+       K = SHA(K0 | [00]) | SHA(K0 | [01]) | SHH(K0 | [02]) | ...
+
+       where K0==g^xy, and K is divvied up into Df, Db, Kf, and Kb portions.
+
+  Instead, let's have it be
+
+       K = H(KEY_SEED, t_expand1) | H(KEY_SEED, t_expand2) | ...
+
+  where t_expand1..N are tweaks for the hash.
+
+Performance notes:
+
+  In Tor's current circuit creation handshake, the client does:
+     One RSA public-key encryption
+     A full DH handshake in Z_p
+     A short AES encryption
+     Five SHA1s for key expansion
+  And the server does:
+     One RSA private-key decryption
+     A full DH handshake in Z_p
+     A short AES decryption
+     Five SHA1s for key expansion
+
+  While in the revised handshake, the client does:
+     A full DH handshake
+     A public-half of a DH handshake
+     3 H operations for the handshake
+     3 H operations for the key expansion
+  and the server does:
+     A full DH handshake
+     A private-half of a DH handshake
+     3 H operations for the handshake
+     3 H operations for the key expansion
+
