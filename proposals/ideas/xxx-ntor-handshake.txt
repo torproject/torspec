@@ -19,7 +19,7 @@ Notation:
 
   Let H(x,t) be a tweakable hash function of output width H_LENGTH bytes.
 
-  Let t_keyid, t_mac, t_key, and t_verify be a set of arbitrarily-chosen tweaks
+  Let t_mac, t_key, and t_verify be a set of arbitrarily-chosen tweaks
   for the hash function.
 
   Let EXP(a,b) be a^b in some appropriate group G where the appropriate DH
@@ -38,13 +38,13 @@ Instantiation:
 
   Set H(x,t) == HMAC_SHA256 with message x and key t. So H_LENGTH == 32.
   Set t_mac   == PROTOID | ":mac"
-      t_key1  == PROTOID | ":key1"
-      t_key2  == PROTOID | ":verify"
+      t_key  == PROTOID | ":key"
+      t_verify  == PROTOID | ":verify"
   Set EXP(a,b) == curve25519(a,b), and g == 9 .
 
   Set KEYID(B) == B.  (We don't need to use a hash function here, since our
      keys are already very short.  It is trivially collision-resistant, since
-     KEYID(A)====KEYID(B) iff A==B.)
+     KEYID(A)==KEYID(B) iff A==B.)
 
 Protocol:
 
@@ -53,7 +53,7 @@ Protocol:
   As setup, the router generates a secret key b, and a public onion key
   B = EXP(g,b).  The router publishes B in its server descriptor.
 
-  To send a create cell, the client generates a keypair of x, X=EXP(g,y) and
+  To send a create cell, the client generates a keypair of x, X=EXP(g,x) and
   sends a CREATE cell with contents:
 
     NODEID:     ID             -- H_LENGTH bytes
@@ -75,7 +75,7 @@ Protocol:
   The client then checks Y, and computes
 
     secret_input = EXP(Y,x) | EXP(B,x) | ID | B | X | Y | PROTOID
-    KEY_SEED = H(secret_input, t_key1)
+    KEY_SEED = H(secret_input, t_key)
     verify = H(secret_input, t_verify)
     auth_input = verify | ID | B | Y | X | PROTOID | "Server"
 
@@ -88,7 +88,7 @@ Key expansion:
 
   Currently, the key expansion formula used by Tor here is
 
-       K = SHA(K0 | [00]) | SHA(K0 | [01]) | SHH(K0 | [02]) | ...
+       K = SHA(K0 | [00]) | SHA(K0 | [01]) | SHA(K0 | [02]) | ...
 
        where K0==g^xy, and K is divvied up into Df, Db, Kf, and Kb portions.
 
