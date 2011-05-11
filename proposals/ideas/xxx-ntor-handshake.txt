@@ -27,6 +27,10 @@ Notation:
   byte strings, are all G_LENGTH bytes long.  Let's say we are using a
   generator g for this group.
 
+  Let a,A=KEYGEN() yield a new private-public keypair in G, where a is the
+  secret key and A = EXP(g,a).  If additional checks are needed to insure
+  a valid keypair, they should be performed.
+
   Let PROTOID be a string designating this variant of the protocol.
 
   Let KEYID be a collision-resistant (but not necessarily preimage-resistant)
@@ -34,13 +38,17 @@ Notation:
 
 Instantiation:
 
-  Let's call this PROTOID "ntor-curve25519-sha256-1"
+  Let's call this PROTOID "ntor-curve25519-sha256-1"  (We might want to make
+  this shorter if it turns out to save us a block of hashing somewhere.)
 
   Set H(x,t) == HMAC_SHA256 with message x and key t. So H_LENGTH == 32.
   Set t_mac   == PROTOID | ":mac"
       t_key  == PROTOID | ":key"
       t_verify  == PROTOID | ":verify"
-  Set EXP(a,b) == curve25519(a,b), and g == 9 .
+
+  Set EXP(a,b) == curve25519(.,b,a), and g == 9 .  Let KEYGEN() do the
+  appropriate manipulations when generating the secret key (clearing the
+  low bits, twiddling the high bits).
 
   Set KEYID(B) == B.  (We don't need to use a hash function here, since our
      keys are already very short.  It is trivially collision-resistant, since
@@ -51,16 +59,16 @@ Protocol:
   Take a router with identity key digest ID.
 
   As setup, the router generates a secret key b, and a public onion key
-  B = EXP(g,b).  The router publishes B in its server descriptor.
+  B with b, B = KEYGEN().  The router publishes B in its server descriptor.
 
-  To send a create cell, the client generates a keypair of x, X=EXP(g,x) and
+  To send a create cell, the client generates a keypair x,X = KEYGEN(), and
   sends a CREATE cell with contents:
 
     NODEID:     ID             -- H_LENGTH bytes
     KEYID:      KEYID(B)       -- H_LENGTH bytes
     CLIENT_PK:  X              -- G_LENGTH bytes
 
-  The server checks X, generates a keypair of y, Y=EXP(g,y) and computes
+  The server generates a keypair of y,Y = KEYGEN(), and computes
 
     secret_input = EXP(X,y) | EXP(X,b) | ID | B | X | Y | PROTOID
     KEY_SEED = H(secret_input, t_key)
@@ -72,7 +80,7 @@ Protocol:
     SERVER_PK:  Y                     -- G_LENGTH bytes
     AUTH:       H(auth_input, t_mac)  -- H_LENGTH byets
 
-  The client then checks Y, and computes
+  The client then checks Y is in G^* [see below], and computes
 
     secret_input = EXP(Y,x) | EXP(B,x) | ID | B | X | Y | PROTOID
     KEY_SEED = H(secret_input, t_key)
@@ -80,6 +88,9 @@ Protocol:
     auth_input = verify | ID | B | Y | X | PROTOID | "Server"
 
     The client verifies that AUTH == H(auth_input, t_mac).
+
+  [NOTE: It may be adequate to check that EXP(Y,x) is not the point at
+  infinity.  See tor-dev thread.]
 
   Both parties now have a shared value for KEY_SEED.  They expand this into
   the keys needed for the Tor relay protocol.
@@ -94,9 +105,15 @@ Key expansion:
 
   Instead, let's have it be
 
-       K = H(KEY_SEED, t_expand1) | H(KEY_SEED, t_expand2) | ...
+       K = K_0 | K_1 | K_2 | K_3 | ...
 
-  where t_expand1..N are tweaks for the hash.
+       Where K_0     = H(m_expand | INT8(i) , KEY_SEED )
+         and K_(i+1) = H(K_i | m_expand | INT8(i) , KEY_SEED )
+         and m_expend is an arbitrarily chosen value,
+         and INT8(i) is a octet with the value "i".
+
+  Ian says this is due to a construction from Krawczyk at
+  http://eprint.iacr.org/2010/264 .
 
 Performance notes:
 
