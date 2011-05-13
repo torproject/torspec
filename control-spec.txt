@@ -631,6 +631,16 @@
       Section 4.1.14. This GETINFO option is currently available only
       for bridge relays.
 
+    "net/listeners/or"
+    "net/listeners/dir"
+    "net/listeners/socks"
+    "net/listeners/trans"
+    "net/listeners/natd"
+    "net/listeners/dns"
+    "net/listeners/control"
+      A space-separated list of the addresses at which Tor is listening for
+      connections of each specified type.  [New in Tor 0.2.2.26-alpha.]
+
   Examples:
      C: GETINFO version desc/name/moria1
      S: 250+desc/name/moria=
