@@ -639,7 +639,7 @@
     "net/listeners/dns"
     "net/listeners/control"
       A space-separated list of the addresses at which Tor is listening for
-      connections of each specified type.  [New in Tor 0.2.2.26-alpha.]
+      connections of each specified type.  [New in Tor 0.2.2.26-beta.]
 
   Examples:
      C: GETINFO version desc/name/moria1
