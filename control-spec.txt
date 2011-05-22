@@ -913,6 +913,17 @@
 
   [PROTOCOLINFO was not supported before Tor 0.2.0.5-alpha.]
 
+3.22. LOADCONF
+
+  The syntax is:
+    "+LOADCONF" CRLF ConfigText CRLF "." CRLF
+
+  This command allows a controller to upload the text of a config file
+  to Tor over the control port.  This config file is then loaded as if
+  it had been read from disk.
+
+  [LOADCONF was added in Tor 0.2.1.1-alpha.]
+
 4. Replies
 
   Reply codes follow the same 3-character format as used by SMTP, with the
