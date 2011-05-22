@@ -788,7 +788,7 @@
 3.17. CLOSECIRCUIT
 
    The syntax is:
-     CLOSECIRCUIT SP CircuitID *(SP Flag) CRLF
+     "CLOSECIRCUIT" SP CircuitID *(SP Flag) CRLF
      Flag = "IfUnused"
 
   Tells the server to close the specified circuit.   If "IfUnused" is
