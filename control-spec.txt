@@ -1893,6 +1893,14 @@
 
     (Boolean.  Default: "1")
 
+  __OwningControllerProcess
+
+    If this option is set to a process ID, Tor will periodically check
+    whether a process with the specified PID exists, and exit if one
+    does not.  Added in Tor 0.2.2.28-beta.
+
+    (String.  Default: unset.)
+
 5.5. Phases from the Bootstrap status event.
 
   This section describes the various bootstrap phases currently reported
