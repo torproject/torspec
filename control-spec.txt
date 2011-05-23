@@ -931,7 +931,37 @@
 
   This command instructs Tor to shut down (as if it had received
   SIGINT or a "SIGNAL INT" controller command) when this control
-  connection is closed.
+  connection is closed.  This command affects each control connection
+  that sends it independently; if multiple control connections send
+  the TAKEOWNERSHIP command to a Tor instance, Tor will shut down when
+  any of those connections closes.
+
+  This command is intended to be used with the
+  __OwningControllerProcess configuration option.  A controller that
+  starts a Tor process which the user cannot easily control or stop
+  should 'own' that Tor process:
+
+    * When starting Tor, the controller should specify its PID in an
+      __OwningControllerProcess on Tor's command line.  This will
+      cause Tor to poll for the existence of a process with that PID,
+      and exit if it does not find such a process.  (This is not a
+      completely reliable way to detect whether the 'owning
+      controller' is still running, but it should work well enough in
+      most cases.)
+
+    * Once the controller has connected to Tor's control port, it
+      should send the TAKEOWNERSHIP command along its control
+      connection.  At this point, *both* the TAKEOWNERSHIP command and
+      the __OwningControllerProcess option are in effect: Tor will
+      exit when the control connection ends *and* Tor will exit if it
+      detects that there is no process with the PID specified in the
+      __OwningControllerProcess option.
+
+    * After the controller has sent the TAKEOWNERSHIP command, it
+      should send "RESETCONF __OwningControllerProcess" along its
+      control connection.  This will cause Tor to stop polling for the
+      existence of a process with its owning controller's PID; Tor
+      will still exit when the control connection ends.
 
   [TAKEOWNERSHIP was added in Tor 0.2.2.28-beta.]
 
@@ -1908,7 +1938,13 @@
 
     If this option is set to a process ID, Tor will periodically check
     whether a process with the specified PID exists, and exit if one
-    does not.  Added in Tor 0.2.2.28-beta.
+    does not.  Added in Tor 0.2.2.28-beta.  This option's intended use
+    is documented in section 3.23 with the related TAKEOWNERSHIP
+    command.
+
+    Note that this option can only specify a single process ID, unlike
+    the TAKEOWNERSHIP command which can be sent along multiple control
+    connections.
 
     (String.  Default: unset.)
 
