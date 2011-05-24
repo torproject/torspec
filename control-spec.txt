@@ -218,7 +218,7 @@
   different keywords.  These cannot be fetched directly.  Currently there
   is only one such option: clients should use the "HiddenServiceOptions"
   virtual keyword to get all HiddenServiceDir, HiddenServicePort,
-  HiddenServiceNodes, and HiddenServiceExcludeNodes option settings.
+  HiddenServiceVersion, and HiddenserviceAuthorizeClient option settings.
 
 3.4. SETEVENTS
 
