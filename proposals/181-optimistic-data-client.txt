@@ -1,0 +1,127 @@
+Filename: 181-optimistic-data-client.txt
+Title: Optimistic Data for Tor: Client Side
+Author: Ian Goldberg
+Created: 2-Jun-2011
+Status: Open
+
+Overview:
+
+This proposal (as well as its already-implemented sibling concerning the
+server side) aims to reduce the latency of HTTP requests in particular
+by allowing:
+1. SOCKS clients to optimistically send data before they are notified
+    that the SOCKS connection has completed successfully
+2. OPs to optimistically send DATA cells on streams in the CONNECT_WAIT
+    state
+3. Exit nodes to accept and queue DATA cells while in the
+    EXIT_CONN_STATE_CONNECTING state
+
+This particular proposal deals with #1 and #2.
+
+For more details (in general and for #3), see the sibling proposal 174
+(Optimistic Data for Tor: Server Side), which has been implemented in
+0.2.3.1-alpha.
+
+Motivation:
+
+This change will save one OP<->Exit round trip (down to one from two).
+There are still two SOCKS Client<->OP round trips (negligible time) and
+two Exit<->Server round trips.  Depending on the ratio of the
+Exit<->Server (Internet) RTT to the OP<->Exit (Tor) RTT, this will
+decrease the latency by 25 to 50 percent.  Experiments validate these
+predictions. [Goldberg, PETS 2010 rump session; see
+https://thunk.cs.uwaterloo.ca/optimistic-data-pets2010-rump.pdf ]
+
+Design:
+
+Currently, data arriving on the SOCKS connection to the OP on a stream
+in AP_CONN_STATE_CONNECT_WAIT is queued, and transmitted when the state
+transitions to AP_CONN_STATE_OPEN.  Instead, when data arrives on the
+SOCKS connection to the OP on a stream in AP_CONN_STATE_CONNECT_WAIT
+(connection_edge_process_inbuf):
+
+- Check to see whether optimistic data is allowed at all (see below).
+- Check to see whether the exit node for this stream supports optimistic
+  data (according to tor-spec.txt section 6.2, this means that the
+  exit node's version number is at least 0.2.3.1-alpha).  If you don't
+  know the exit node's version number (because it's not in your
+  hashtable of fingerprints, for example), assume it does *not* support
+  optimistic data.
+- If both are true, transmit the data on the stream.
+
+Also, when a stream transitions *to* AP_CONN_STATE_CONNECT_WAIT
+(connection_ap_handshake_send_begin), do the above checks, and
+immediately send any already-queued data if they pass.
+
+SOCKS clients (e.g. polipo) will also need to be patched to take
+advantage of optimistic data.  The simplest solution would seem to be to
+just start sending data immediately after sending the SOCKS CONNECT
+command, without waiting for the SOCKS server reply.  When the SOCKS
+client starts reading data back from the SOCKS server, it will first
+receive the SOCKS server reply, which may indicate success or failure.
+If success, it just continues reading the stream as normal.  If failure,
+it does whatever it used to do when a SOCKS connection failed.
+
+Security implications:
+
+ORs (for sure the Exit, and possibly others, by watching the
+pattern of packets), as well as possibly end servers, will be able to
+tell that a particular client is using optimistic data.  This of course
+has the potential to fingerprint clients, dividing the anonymity set.
+The usual kind of solution is suggested:
+
+- There is a boolean consensus parameter UseOptimisticData.
+- There is a 3-state (-1, 0, 1) configuration parameter
+  UseOptimisticData (or give it a distinct name if you like)
+  defaulting to -1.
+- If the configuration parameter is -1, the OP obeys the consensus
+  value; otherwise, it obeys the configuration parameter.
+
+It may be wise to set the consensus parameter to 1 at the same time as
+similar other client protocol changes are made (for example, a new
+circuit construction protocol) in order to not further subdivide the
+anonymity set.
+
+Specification:
+
+The current tor-spec has already been updated by proposal 174 to handle
+optimistic data.  It says, in part:
+
+    If the exit node does not support optimistic data (i.e. its version
+    number is before 0.2.3.1-alpha), then the OP MUST wait for a
+    RELAY_CONNECTED cell before sending any data.  If the exit node
+    supports optimistic data (i.e. its version number is 0.2.3.1-alpha
+    or later), then the OP MAY send RELAY_DATA cells immediately after
+    sending the RELAY_BEGIN cell (and before receiving either a
+    RELAY_CONNECTED or RELAY_END cell).
+
+Should the "MAY" be more specific, referring to the consensus
+parameters?  Or does the existence of the configuration parameter
+override mean it's really "MAY", regardless?
+
+Compatibility:
+
+There are compatibility issues, as mentioned above.  OPs MUST NOT send
+optimistic data to Exit nodes whose version numbers predate
+0.2.3.1-alpha.  OPs MAY send optimistic data to Exit nodes whose version
+numbers match or follow that value.
+
+Implementation:
+
+My git diff is 42 lines long (+17 lines, -1 line), changing only the two
+functions mentioned above (connection_edge_process_inbuf and
+connection_ap_handshake_send_begin).  This diff does not, however,
+handle the configuration options, or check the version number of the
+exit node.
+
+I have patched a command-line SOCKS client (webfetch) to use optimistic
+data.  I have not attempted to patch polipo, but I have looked at it a
+bit, and it seems pretty straightforward.  (Of course, if and when
+polipo is deprecated, whatever else speaks SOCKS to the OP should take
+advantage of optimistic data.)
+
+Performance and scalability notes:
+
+OPs may queue a little more data, if the SOCKS client pushes it faster
+than the OP can write it out.  But that's also true today after the
+SOCKS CONNECT returns success, right?
