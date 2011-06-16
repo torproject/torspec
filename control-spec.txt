@@ -1081,6 +1081,7 @@
    The syntax is:
 
      "650" SP "CIRC" SP CircuitID SP CircStatus [SP Path]
+          [SP "PURPOSE=" Purpose]
           [SP "REASON=" Reason [SP "REMOTE_REASON=" Reason]] CRLF
 
       CircStatus =
@@ -1094,7 +1095,11 @@
         ; In Tor versions 0.1.2.2-alpha through 0.2.2.1-alpha with feature
         ; VERBOSE_NAMES turned off and before version 0.1.2.2-alpha, Path
         ; is as follows:
-        Path = ServerID *("," ServerID)
+        ; Path = ServerID *("," ServerID)
+
+      Purpose = "GENERAL" / "HS_CLIENT_INTRO" / "HS_CLIENT_REND" /
+                "HS_SERVICE_INTRO" / "HS_SERVICE_REND" / "TESTING" /
+                "CONTROLLER"
 
       Reason = "NONE" / "TORPROTOCOL" / "INTERNAL" / "REQUESTED" /
                "HIBERNATING" / "RESOURCELIMIT" / "CONNECTFAILED" /
@@ -1104,6 +1109,19 @@
 
    The path is provided only when the circuit has been extended at least one
    hop.
+
+   The "PURPOSE" field is provided only in versions 0.2.1.6-alpha and
+   later, and only if extended events are enabled (see 3.19).  Clients
+   MUST accept purposes not listed above.  Purposes are defined as
+   follows:
+
+      GENERAL         (circuit for AP and/or directory request streams)
+      HS_CLIENT_INTRO (HS client-side introduction-point circuit)
+      HS_CLIENT_REND  (HS client-side rendezvous circuit; carries AP streams)
+      HS_SERVICE_INTRO (HS service-side introduction-point circuit)
+      HS_SERVICE_REND (HS service-side rendezvous circuit)
+      TESTING         (reachability-testing circuit; carries no traffic)
+      CONTROLLER      (circuit built by a controller)
 
    The "REASON" field is provided only for FAILED and CLOSED events, and only
    if extended events are enabled (see 3.19).  Clients MUST accept reasons
