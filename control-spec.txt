@@ -1196,7 +1196,7 @@
    requesting program.
 
       Purpose = "DIR_FETCH" / "UPLOAD_DESC" / "DNS_REQUEST" /
-                 "USER" /  "DIRPORT_TEST"
+                "USER" /  "DIRPORT_TEST"
 
    The "PURPOSE" field is provided only for NEW and NEWRESOLVE events, and
    only if extended events are enabled (see 3.19).  Clients MUST accept
