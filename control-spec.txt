@@ -653,8 +653,8 @@
 
   Sent from the client to the server.  The format is:
       "EXTENDCIRCUIT" SP CircuitID
-                      [SP ServerSpec *("," ServerSpec)
-                       SP "purpose=" Purpose] CRLF
+                      [SP ServerSpec *("," ServerSpec)]
+                      [SP "purpose=" Purpose] CRLF
 
   This request takes one of two forms: either the CircuitID is zero, in
   which case it is a request for the server to build a new circuit,
