@@ -1922,6 +1922,8 @@
              "PURPOSE_CHANGED" / ; circuit purpose or HS-related state changed
              "CANNIBALIZED"      ; circuit cannibalized
 
+  Clients MUST accept circuit events not listed above.
+
   The "OLD_PURPOSE" field is provided for both PURPOSE_CHANGED and
   CANNIBALIZED events.  The "OLD_HS_STATE" field is provided whenever
   the "OLD_PURPOSE" field is provided and is a hidden-service-related
