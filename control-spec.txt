@@ -231,7 +231,8 @@
          "INFO" / "NOTICE" / "WARN" / "ERR" / "NEWDESC" / "ADDRMAP" /
          "AUTHDIR_NEWDESCS" / "DESCCHANGED" / "STATUS_GENERAL" /
          "STATUS_CLIENT" / "STATUS_SERVER" / "GUARD" / "NS" / "STREAM_BW" /
-         "CLIENTS_SEEN" / "NEWCONSENSUS" / "BUILDTIMEOUT_SET" / "SIGNAL"
+         "CLIENTS_SEEN" / "NEWCONSENSUS" / "BUILDTIMEOUT_SET" / "SIGNAL" /
+         "CIRC2"
 
   Any events *not* listed in the SETEVENTS line are turned off; thus, sending
   SETEVENTS with an empty body turns off all event reporting.
@@ -1907,6 +1908,28 @@
   generate any event.
 
   [First added in 0.2.3.1-alpha]
+
+4.1.18. Circuit status changed slightly
+
+  The syntax is:
+
+    "650" SP "CIRC2" SP CircuitID SP CircEvent [SP Path]
+          [SP "BUILD_FLAGS=" BuildFlags] [SP "PURPOSE=" Purpose]
+          [SP "HS_STATE=" HSState] [SP "REND_QUERY=" HSAddress]
+          [SP "OLD_PURPOSE=" Purpose [SP "OLD_HS_STATE=" HSState]] CRLF
+
+    CircEvent =
+             "PURPOSE_CHANGED" / ; circuit purpose or HS-related state changed
+             "CANNIBALIZED"      ; circuit cannibalized
+
+  The "OLD_PURPOSE" field is provided for both PURPOSE_CHANGED and
+  CANNIBALIZED events.  The "OLD_HS_STATE" field is provided whenever
+  the "OLD_PURPOSE" field is provided and is a hidden-service-related
+  purpose.
+
+  Other fields are as specified in section 4.1.1 above.
+
+  [First added in 0.2.3.2-alpha]
 
 5. Implementation notes
 
