@@ -1,0 +1,181 @@
+Filename: 182-creditbucket.txt
+Title: Credit Bucket
+Author: Florian Tschorsch and Björn Scheuermann
+Created: 22 Jun 2011
+Status: Draft
+
+Overview:
+
+  The following proposal targets the reduction of queuing times in onion
+  routers. In particular, we focus on the token bucket algorithm in Tor and
+  point out that current usage unnecessarily locks cells for long time spans.
+  We propose a non-intrusive change in Tor's design which overcomes the
+  deficiencies.
+
+Motivation and Background:
+
+  Cell statistics from the Tor network [1] reveal that cells reside in
+  individual onion routers' cell queues for up to several seconds. These
+  queuing times increase the end-to-end delay very significantly and are
+  apparently the largest contributor to overall cell latency in Tor.
+
+  In Tor there exist multiple token buckets on different logical levels. They 
+  all work independently. They are used to limit the up- and downstream of an
+  onion router. All token buckets are refilled every second with a constant
+  amount of tokens that depends on the configured bandwidth limits. For
+  example, the so-called RelayedTokenBucket limits relay traffic only. All
+  read data of incoming connections are bound to a dedicated read token
+  bucket. An analogous mechanism exists for written data leaving the onion
+  router. We were able to identify the specific usage and implementation of
+  the token bucket algorithm as one cause for very high (and unnecessary)
+  queuing times in an onion router.
+
+  We observe that the token buckets in Tor are (surprisingly at a first
+  glance) allowed to take on negative fill levels. This is justified by the
+  TLS connections between onion routers where whole TLS records need to be
+  processed. The token bucket on the incoming side (i.e., the one which
+  determines at which rate it is allowed to read from incoming TCP
+  connections) in particular often runs into non-negligible negative fill
+  levels. As a consequence of this behavior, sometimes slightly more data is
+  read than it would be admissible upon strict interpretation of the token
+  bucket concept.
+
+  However, the token bucket for limiting the outgoing rate does not take on
+  negative fill levels equally often. Consequently, it regularly happens
+  that somewhat more data are read on the incoming side than the outgoing
+  token bucket allows to be written during the same cycle, even if their
+  configured data rates are the same. The respective cells will thus not be
+  allowed to leave the onion router immediately. They will thus necessarily
+  be queued for at least as long as it takes until the token bucket on the
+  outgoing side is refilled again. The refill interval currently is, as
+  mentioned before, one second -- so, these cells are delayed for a very
+  substantial time. In summary, one could say that the two buckets, on the
+  incoming and outgoing side, work like a double door system and frequently
+  lock cells for a full token bucket refill interval length.
+
+General Design:
+
+  In order to overcome the described problem, we propose the following 
+  changes related to the token bucket algorithm.
+
+  We observe that the token bucket on the outgoing connections with its
+  current design is contra productive in the sense of queuing times. We 
+  therefore propose modifications to the token bucket algorithm that will
+  eliminate the "double door effect" discussed above.
+
+  Let us start from Tor's current approach: Thus, we have a regular token 
+  bucket on the reading side with a certain rate and a certain burst size. 
+  Let x denote the current amount of tokens in the bucket. On the outgoing 
+  side we need something appropriate that monitors and constrains the 
+  outgoing rate, but at the same time avoids holding back cells (cf. double 
+  door effects) whenever possible.
+
+  Here we propose something that adopts the role of a token bucket, but 
+  realizes this functionality in a slightly different way. We call it a 
+  "credit bucket". Like a token bucket, the credit bucket also has a current 
+  fill level, denoted by y. However, the credit bucket is refilled in a 
+  different way.
+
+  To understand how it works, let us look at the possible operations:
+
+  As said, x is the fill level of a regular token bucket on the incoming 
+  side   and thus gets incremented periodically according to the configured 
+  rate. No changes here.
+
+  If x<=0, we are obviously not allowed to read. If x>0, we are allowed to 
+  read up to x bytes of incoming data. If k bytes are read (k<=x), then we 
+  update x and y as follows:
+
+    x = x - k        (1)
+    y = y + k        (2)
+
+  (1) is the standard token bucket operation on the incoming side. Whenever 
+  data is admitted in, though, an additional operation is performed: (2) 
+  allocates the same number of bytes on the outgoing side, which will later 
+  on allow the same number of bytes to leave the onion router without any 
+  delays.
+
+  If y + x > -M, we are allowed to write up to y + x + M bytes on the 
+  outgoing side, where M is a positive constant. M specifies a burst size for
+  the outgoing side. M should be higher than the number of tokens that get 
+  refilled during a refill interval, we would suggest to have M in the order 
+  of a few seconds "worth" of data. Now if k bytes are written on the 
+  outgoing side, we proceed as follows:
+
+    If k <= y then y = y - k
+
+  In this case we use "saved" credits, previously allocated on the incoming 
+  side when incoming data has been processed.
+
+    If k > y then y = 0 and x = x - (k-y)
+
+  We generated additional traffic in the onion router, so that more data is 
+  to be sent than has been read (the credit is not sufficient). We therefore 
+  "steal" tokens from the token buffer on the incoming side to compensate for 
+  the additionally generated data. This will result in correspondingly less 
+  data being read on the incoming side subsequently. As a result of such an 
+  operation, the token bucket fill level x on the incoming side may become 
+  negative (but it can never fall below -M).
+
+  If y + x <= -M then outgoing data will be held back. This may lead to 
+  double-door effects, but only in extreme cases where the outgoing traffic 
+  largely exceeds the incoming traffic, so that the outgoing bursts size M is 
+  exceeded.
+
+  Aside from short-term bursts of configurable size (as with every token 
+  bucket), this procedure guarantees that the configured rate may never be 
+  exceeded (on the application layer, that is; as with the current 
+  implementation, an attacker may easily cause the onion router to 
+  arbitrarily exceed the limits on the lower layers). Over time, we never 
+  send more data than the configured rate: every sent byte needs a 
+  corresponding token on the incoming side; this token must either have been
+  consumed by an incoming byte before (it then became a "credit"), or it is 
+  "stolen" from the incoming bucket to compensate for data generated within 
+  the onion router.
+
+Specific Design Changes: 
+
+  In the following we briefly point out the specific changes that need to be 
+  done in Tor's source code. By doing so one can see how non intrusive our
+  modifications are. 
+  
+  First we need to address the bucket increment and decrement operations. 
+  According to the described logic above, this should be done in the methods 
+  connection_bucket_refill and connection_buckets_decrement respectively. In
+  particular allocating, saving and "stealing" of tokens need to be 
+  considered here. 
+  
+  Second the rate limiting, i.e. the amount we are allowed to write 
+  (connection_bucket_write_limit) needs to be adapted in lines of the credit 
+  bucket logic. Meaning in order to avoid  the here identified unnecessary 
+  queuing of cells, we need to consider the new burst parameter M. Here we 
+  also need to take non rate limited connections such as from the localhost 
+  into account. The rate limiting on the reading side remains the same.   
+
+  At last we need to find good values/ ratios for the parameter M such that 
+  the trade off between avoiding "double door effects" and maintaining 
+  strict rate limits work as expected. As future work and after insights 
+  about the performance gain of the here described proposal we need to find a
+  way to implement this both using bufferevent rate limiting with libevent 
+  2.3.x and Tor's rate limiting code. 
+
+Conclusion:
+
+  This proposal can be implemented with moderate effort and requires changes 
+  only at the points where currently the token bucket operations are 
+  performed.
+
+  We feel that this is not the be-all and end-all solution, because it again 
+  introduces a feedback loop between the incoming and the outgoing side. We 
+  therefore still hope that we will be able to come to a both simpler and 
+  more effective design in the future. However, we believe that what we 
+  proposed here is a good compromise between avoiding double-door effects to 
+  the furthest possible extent, strictly enforcing an application-layer data 
+  rate, and keeping the extent of changes to the code small.
+
+  Feedback is highly appreciated.
+
+References:
+
+  [1] Karsten Loesing. Analysis of Circuit Queues in Tor. August 25, 2009.
+  [2] https://trac.torproject.org/projects/tor/wiki/sponsors/SponsorD/June2011

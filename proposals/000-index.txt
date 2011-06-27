@@ -102,6 +102,7 @@ Proposals by number:
 179  TLS certificate and parameter normalization [DRAFT]
 180  Pluggable transports for circumvention [OPEN]
 181  Optimistic Data for Tor: Client Side [OPEN]
+182  Credit Bucket [DRAFT]
 
 
 Proposals by status:
@@ -114,6 +115,7 @@ Proposals by status:
    144  Increase the diversity of circuits by detecting nodes belonging the same provider
    175  Automatically promoting Tor clients to nodes
    179  TLS certificate and parameter normalization [for 0.2.3.x]
+   182  Credit Bucket
  NEEDS-REVISION:
    118  Advertising multiple ORPorts at once
    131  Help users to verify they are using Tor
