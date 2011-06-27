@@ -1084,6 +1084,7 @@
      "650" SP "CIRC" SP CircuitID SP CircStatus [SP Path]
           [SP "BUILD_FLAGS=" BuildFlags] [SP "PURPOSE=" Purpose]
           [SP "HS_STATE=" HSState] [SP "REND_QUERY=" HSAddress]
+          [SP "TIME_CREATED=" TimeCreated]
           [SP "REASON=" Reason [SP "REMOTE_REASON=" Reason]] CRLF
 
       CircStatus =
@@ -1115,6 +1116,10 @@
 
       HSAddress = 16*Base32Character
       Base32Character = ALPHA / "2" / "3" / "4" / "5" / "6" / "7"
+
+      TimeCreated = Seconds "," MicroSeconds
+      Seconds = 1*DIGIT
+      Microseconds = 1*DIGIT
 
       Reason = "NONE" / "TORPROTOCOL" / "INTERNAL" / "REQUESTED" /
                "HIBERNATING" / "RESOURCELIMIT" / "CONNECTFAILED" /
@@ -1175,6 +1180,11 @@
    circuits, and only in versions 0.2.3.2-alpha and later.  Clients
    MUST accept hidden service addresses in formats other than that
    specified above.
+
+   The "TIME_CREATED" field is provided only in versions 0.2.3.2-alpha
+   and later.  Seconds is the tv_sec field of a 'struct timeval';
+   Microseconds is the tv_usec field.  TIME_CREATED is the time at
+   which the circuit was created or cannibalized.
 
    The "REASON" field is provided only for FAILED and CLOSED events, and only
    if extended events are enabled (see 3.19).  Clients MUST accept reasons
@@ -1916,6 +1926,7 @@
     "650" SP "CIRC2" SP CircuitID SP CircEvent [SP Path]
           [SP "BUILD_FLAGS=" BuildFlags] [SP "PURPOSE=" Purpose]
           [SP "HS_STATE=" HSState] [SP "REND_QUERY=" HSAddress]
+          [SP "TIME_CREATED=" TimeCreated]
           [SP "OLD_PURPOSE=" Purpose [SP "OLD_HS_STATE=" HSState]] CRLF
 
     CircEvent =
