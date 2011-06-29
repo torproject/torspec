@@ -40,6 +40,47 @@
 
   Servers respond to messages in the order messages are received.
 
+1.1. Forward-compatibility
+
+  This is an evolving protocol; new client and server behavior will be
+  allowed in future versions.  To allow new backward-compatible client
+  on behalf of the client, we may add new commands and allow existing
+  commands to take new arguments in future versions.  To allow new
+  backward-compatible server behavior, we note various places below
+  where servers speaking a future versions of this protocol may insert
+  new data, and note that clients should/must "tolerate" unexpected
+  elements in these places.  There are two ways that we do this:
+
+  * Adding a new field to a message:
+
+    For example, we might say "This message has three space-separated
+    fields; clients MUST tolerate more fields."  This means that a
+    client MUST NOT crash or otherwise fail to parse the message or
+    other subsequent messages when there are more than three fields, and
+    that it SHOULD function at least as well when more fields are
+    provided as it does when it only gets the fields it accepts.  The
+    most obvious way to do this is by ignoring additional fields; the
+    next-most-obvious way is to report additional fields verbatim to the
+    user, perhaps as part of an expert UI.
+
+  * Adding a new possible value to a list of alternatives:
+
+    For example, we might say "This field will be OPEN, CLOSED, or
+    CONNECTED.  Clients MUST tolerate unexpected values."  This means
+    that a client MUST NOT crash or otherwise fail to parse the message
+    or other subsequent when there are unexpected values, and that the
+    client SHOULD try to handle the rest of the message as well as it
+    can.  The most obvious way to do this is by pretending that each
+    list of alternatives has an additional "unrecognized value" element,
+    and mapping any unrecognized values to that element; the
+    next-most-obvious way is to create a separate "unrecognized value"
+    element for each unrecognized value.
+
+    Clients SHOULD NOT "tolerate" unrecognized alternatives by
+    pretending that the message containing them is absent.  For example,
+    a stream closed for an unrecognized reason is nevertheless closed,
+    and should be reported as such.
+
 2. Message format
 
 2.1. Description format
@@ -244,7 +285,8 @@
   information with events for this connection; see 4.1 for more information.
   NOTE: All events on a given connection will be provided in extended format,
   or none.
-  NOTE: "EXTENDED" is only supported in Tor 0.1.1.9-alpha or later.
+  NOTE: "EXTENDED" was first supported in Tor 0.1.1.9-alpha; it is
+  always-on in Tor 0.2.2.1-alpha and later.
 
   Each event is described in more detail in Section 4.1.
 
@@ -472,8 +514,9 @@
 
     "circuit-status"
       A series of lines as for a circuit status event. Each line is of
-      the form:
-         CircuitID SP CircStatus [SP Path] CRLF
+      the form described in section 4.1.1, omitting the initial
+      "650 CIRC ".  Note that clients must be ready to accept additional
+      arguments as described in section 4.1.
 
     "stream-status"
       A series of lines as for a stream status event.  Each is of the form:
@@ -1059,7 +1102,7 @@
      S: 650 CIRC 1000 EXTENDED moria1,moria2
      S: 250 ORPORT=0
 
-  Clients MUST tolerate more arguments in an asynchonous reply than
+  Clients MUST tolerate more arguments in an asynchronous reply than
   expected, and MUST tolerate more lines in an asynchronous reply than
   expected.  For instance, a client that expects a CIRC message like:
       650 CIRC 1000 EXTENDED moria1,moria2
@@ -1068,13 +1111,26 @@
       650-EXTRAMAGIC=99
       650 ANONYMITY=high
 
-  If clients ask for extended events, then each event line as specified below
-  will be followed by additional extensions. Additional lines will be of the
-  form
+  If clients receives extended events (selected by USEFEATUERE
+  EXTENDED_EVENTS in Tor 0.1.2.2-alpha..Tor-0.2.1.x, and always-on in
+  Tor 0.2.2.x and later), then each event line as specified below may be
+  followed by additional arguments and additional lines.  Additional
+  lines will be of the form:
       "650" ("-"/" ") KEYWORD ["=" ARGUMENTS] CRLF
   Additional arguments will be of the form
       SP KEYWORD ["=" ( QuotedString / * NonSpDquote ) ]
-  Such clients MUST tolerate lines with keywords they do not recognize.
+
+  Clients MUST tolerate events with arguments and keywords they do not
+  recognize, and SHOULD process those events as if any unrecognized
+  arguments and keywords were not present.
+
+  Clients SHOULD NOT depend on the order of keywords=value arguments,
+  and SHOULD NOT depend on there being no new keyword=value arguments
+  appearing between existing keyword=value arguments, though as of this
+  writing (Jun 2011) some do.  Thus, extensions to this protocol should
+  add new keywords only after the existing keywords, until all
+  controllers have been fixed.  At some point this "SHOULD NOT" might
+  become a "MUST NOT".
 
 4.1.1. Circuit status changed
 
@@ -1158,7 +1214,6 @@
       PRIVATE_ADDR (The client tried to connect to a private address like
                     127.0.0.1 or 10.0.0.1 over Tor.)
       [XXXX document more. -NM]
-      
 
    The "REMOTE_REASON" field is provided only when we receive a RELAY_END
    cell, and only if extended events are enabled.  It contains the actual
