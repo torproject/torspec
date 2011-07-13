@@ -228,9 +228,9 @@ Server behavior
   launches.
 
   An external server proxy is configured as
-     ServerTransportPlugin <method> <address:port> <param=val> ...
+     ServerTransportPlugin <method> proxy <address:port> <param=val> ...
   as in
-     "ServerTransportPlugin trebuchet 127.0.0.1:999 rocks=heavy".
+     "ServerTransportPlugin trebuchet proxy 127.0.0.1:999 rocks=heavy".
   The param=val pairs and the address are used to make the bridge
   configuration information that we'll tell users.
 
@@ -283,15 +283,15 @@ Managed proxy interface
 
       {Server only}
 
-      "TOR_PT_EXTENDED_SERVER_PORT" -- A port (probably on localhost)
+      "TOR_PT_EXTENDED_SERVER_PORT" -- An addr:port (probably on localhost)
        that speaks the extended server protocol. (See the "The extended
        ORPort protocol" section below.)
-      Example: TOR_PT_EXTENDED_SERVER_PORT=4200
+      Example: TOR_PT_EXTENDED_SERVER_PORT=127.0.0.1:4200
 
       "TOR_PT_ORPORT" -- Our regular ORPort in a form suitable
        for local connections, i.e. connections from the proxy to
        the ORPort.
-      Example: TOR_PT_ORPORT=9001
+      Example: TOR_PT_ORPORT=127.0.0.1:9001
 
       "TOR_PT_SERVER_BINDADDR" -- The address[:port] on which to
        listen for client proxy connections.  This might be the
