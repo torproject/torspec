@@ -91,7 +91,7 @@ Proposals by number:
 168  Reduce default circuit window [OPEN]
 169  Eliminate TLS renegotiation for the Tor connection handshake [SUPERSEDED]
 170  Configuration options regarding circuit building [SUPERSEDED]
-171  Separate streams across circuits by connection metadata [ACCEPTED]
+171  Separate streams across circuits by connection metadata [CLOSED]
 172  GETINFO controller option for circuit information [ACCEPTED]
 173  GETINFO Option Expansion [ACCEPTED]
 174  Optimistic Data for Tor: Server Side [CLOSED]
@@ -140,7 +140,6 @@ Proposals by status:
    140  Provide diffs between consensuses
    147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.3.x]
    157  Make certificate downloads specific [for 0.2.3.x]
-   171  Separate streams across circuits by connection metadata [for 0.2.3.x]
    172  GETINFO controller option for circuit information [for 0.2.3.x]
    173  GETINFO Option Expansion [for 0.2.3.x]
  META:
@@ -185,6 +184,7 @@ Proposals by status:
    152  Optionally allow exit from single-hop circuits [in 0.2.1.6-alpha]
    166  Including Network Statistics in Extra-Info Documents [for 0.2.2]
    167  Vote on network parameters in consensus [in 0.2.2]
+   171  Separate streams across circuits by connection metadata [in 0.2.3.3-alpha]
    174  Optimistic Data for Tor: Server Side [in 0.2.3.1-alpha]
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
