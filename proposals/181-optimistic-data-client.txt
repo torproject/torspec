@@ -2,7 +2,8 @@ Filename: 181-optimistic-data-client.txt
 Title: Optimistic Data for Tor: Client Side
 Author: Ian Goldberg
 Created: 2-Jun-2011
-Status: Open
+Status: Closed
+Implemented-In: 0.2.3.3-alpha
 
 Overview:
 

@@ -1207,6 +1207,11 @@
         parameters governing behavior" in path-spec.txt for a series of
         circuit build time related consensus params.
 
+        "UseOptimisticData" -- If set to zero, clients by default
+        shouldn't try to send optimistic data to servers until they have
+        received a RELAY_CONNECTED cell.
+        Min: 0, Max: 1
+
    The authority section of a vote contains the following items, followed
    in turn by the authority's current key certificate:
 

@@ -75,6 +75,19 @@ Tor's extensions to the SOCKS protocol
   misconfigured.  This is helpful for the many users who mistakenly try to
   use Tor as an HTTP proxy instead of a SOCKS proxy.
 
+5. Optimistic data
+
+  Tor allows SOCKS clients to send connection data before Tor has sent a
+  SOCKS response.  When using an exit node that supports "optimistic data",
+  Tor will send such data to the server without waiting to see whether the
+  connection attempt succeeds.  This behavior can save a single round-trip
+  time when starting connections with a protocol where the client speaks
+  first (like HTTP).  Clients that do this must be ready to hear that
+  their connection has succeeded or failed _after_ they have sent the
+  data.
+
+
+
 References:
  [1] http://archive.socks.permeo.com/protocol/socks4.protocol
  [2] http://archive.socks.permeo.com/protocol/socks4a.protocol
