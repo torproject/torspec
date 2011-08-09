@@ -293,18 +293,23 @@ Managed proxy interface
        the ORPort.
       Example: TOR_PT_ORPORT=127.0.0.1:9001
 
-      "TOR_PT_SERVER_BINDADDR" -- The address[:port] on which to
-       listen for client proxy connections.  This might be the
-       advertised address, or might be a local address that Tor will
-       forward ports to.  It MUST be an address that will work with
-       bind().
-      Example: TOR_PT_SERVER_BINDADDR=127.0.0.1:1984
+      "TOR_PT_SERVER_BINDADDR" -- A comma seperated list of
+       <key>-<value> pairs, where <key> is a transport name and
+       <value> is the adress:port on which it should listen for client
+       proxy connections.
+       The keys holding transport names must appear on the same order
+       as they appear on TOR_PT_SERVER_TRANSPORTS.
+       This might be the advertised address, or might be a local
+       address that Tor will forward ports to.  It MUST be an address
+       that will work with bind().
+      Example:
+        TOR_PT_SERVER_BINDADDR=trebuchet-127.0.0.1:1984,ballista-127.0.0.1:4891
 
       "TOR_PT_SERVER_TRANSPORTS" -- A comma-separated list of server
        methods that the proxy should support, or * if all methods
        should be enabled.  The proxy SHOULD ignore methods that it
        doesn't recognize.
-      Example: TOR_PT_SERVER_TRANSPORTS=trebuchet,ballista,balrog
+      Example: TOR_PT_SERVER_TRANSPORTS=trebuchet,ballista
 
   The transport proxy replies by writing NL-terminated lines to
   stdout.  The line metaformat is
