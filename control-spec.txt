@@ -1900,7 +1900,7 @@
 
      StartReplyLine = "650-CONF_CHANGED" CRLF
      MidReplyLine = "650-" KEYWORD ["=" VALUE] CRLF
-     EndReplyLine = "650-OK"
+     EndReplyLine = "650 OK"
 
   Tor configuration options have changed (such as via a SETCONF or RELOAD
   signal). KEYWORD and VALUE specify the configuration option that was changed.
