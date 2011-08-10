@@ -1897,6 +1897,19 @@
 
   [First added in 0.2.3.1-alpha]
 
+4.1.17. Configuration changed
+
+  The syntax is:
+     StartReplyLine *(MidReplyLine) EndReplyLine
+
+     StartReplyLine = "650-CONF_CHANGED" CRLF
+     MidReplyLine = "650-" KEYWORD ["=" VALUE] CRLF
+     EndReplyLine = "650 OK"
+
+  Tor configuration options have changed (such as via a SETCONF or RELOAD
+  signal). KEYWORD and VALUE specify the configuration option that was changed.
+  Undefined configuration options contain only the KEYWORD.
+
 5. Implementation notes
 
 5.1. Authentication
