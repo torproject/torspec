@@ -293,14 +293,18 @@
 3.5. AUTHENTICATE
 
   Sent from the client to the server.  The syntax is:
-     "AUTHENTICATE" [ SP 1*HEXDIG / QuotedString ] CRLF
+     "AUTHENTICATE" [ SP N*HEXDIG / QuotedString ] CRLF
 
   The server responds with "250 OK" on success or "515 Bad authentication" if
   the authentication cookie is incorrect.  Tor closes the connection on an
   authentication failure.
 
-  The format of the 'cookie' is implementation-dependent; see 5.1 below for
-  information on how the standard Tor implementation handles it.
+  The authentication token can be specified as either a quoted ASCII string,
+  or as an unquoted hexadecimal encoding of that same string (to avoid escaping
+  issues).
+
+  For information on how the implementation securely stores authentication
+  information on disk, see section 5.1.
 
   Before the client has authenticated, no command other than PROTOCOLINFO,
   AUTHENTICATE, or QUIT is valid.  If the controller sends any other command,
