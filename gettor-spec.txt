@@ -30,6 +30,10 @@
  Security and privacy considerations should be described on a per transport
  basis.
 
+2.1 Reference implementation
+
+ We have implemented[0] a compliant GetTor that supports SMTP as a transport.
+
 3. SMTP transport
 
  The SMTP transport for GetTor should allow users to send any RFC822 compliant message
@@ -67,3 +71,5 @@
  It is suggested that any compliant GetTor instance should be written in a so
  called "safe" language such as Python.
 
+[0] https://gitweb.torproject.org/gettor.git
+[1] https://metrics.torproject.org/packages.html
