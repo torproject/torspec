@@ -1,0 +1,69 @@
+
+                              GetTor specification
+                                 Jacob Appelbaum
+
+0. Preface
+
+ This document describes GetTor and how to properly implementation GetTor.
+
+1. Overview
+
+ GetTor was created to resolve direct and indirect censorship of Tor's software.
+ In many countries and networks Tor's main website is blocked and would be Tor
+ users are unable to download even the source code to the Tor program. Other
+ software hosted by the Tor Project is similarly censored. The filtering
+ of the possible download sites is sometimes easy to bypass by using our TLS enabled
+ website. In other cases the website and all of the mirrors are entirely
+ blocked; this is a situation where a user seems to actually need Tor to fetch
+ Tor. We discovered that it is feasible to use alternate transport methods such
+ as SMTP between a non-trusted third party or with IRC and XDCC.
+
+2. Implementation
+
+ Any compliant GetTor implementation will implement at least a single transport
+ to meet the needs of a certain class of users. It should be i18n and l10n compliant
+ for all user facing interactions; users should be able to manually set their
+ language and this should serve as their preference for localization of any
+ software delivered. The implementation must be free software and it should be
+ freely available by request from the implementation that they interface with
+ to download any of the other software available from that GetTor instance.
+ Security and privacy considerations should be described on a per transport
+ basis.
+
+3. SMTP transport
+
+ The SMTP transport for GetTor should allow users to send any RFC822 compliant message
+ in any known human language; GetTor should respond in whatever language is
+ detected with supplementary translations in the same email.  GetTor shall offer
+ a list of all available software in the body of the email - it should offer the
+ software as a list of packages and their subsequent descriptions.
+
+3.1 SMTP transport security considerations
+
+ Any GetTor instance that offers SMTP as a transport should optionally implement
+ the checking of DKIM signatures to ensure that email is not forged.
+ Optionally GetTor should take an OpenPGP key from the user and encrypt the
+ response with a blinded message.
+
+3.2 SMTP transport privacy considerations
+
+ Any GetTor instance that offers SMTP as a transport must at least store the
+ requester's address for the time that it takes to process a response. This
+ should not be written to any permanent storage medium; GetTor should function
+ without any long term storage excepting a cache of files that it will send to
+ any user who requests it.
+
+ GetTor may optionally collect anonymized usage statistics to better understand
+ how GetTor[1] is in use. This must not include any personally identifying
+ information about any of the requester beyond language selection.
+
+4. Other transports
+
+ At this time no other transports have been specified. IRC XDCC is a likely useful
+ system as is XMPP/Jabber with the newest OTR file sharing transport.
+
+5. Implementation suggestions
+
+ It is suggested that any compliant GetTor instance should be written in a so
+ called "safe" language such as Python.
+
