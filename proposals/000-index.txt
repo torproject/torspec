@@ -151,8 +151,8 @@ Proposals by status:
    151  Improving Tor Path Selection
    155  Four Improvements of Hidden Service Performance [in 0.2.1.x]
    158  Clients download consensus + microdescriptors [in 0.2.3.1-alpha]
-   160  Authorities vote for bandwidth offsets in consensus [for 0.2.2.x]
-   161  Computing Bandwidth Adjustments [for 0.2.2.x]
+   160  Authorities vote for bandwidth offsets in consensus [for 0.2.1.x]
+   161  Computing Bandwidth Adjustments [for 0.2.1.x]
    162  Publish the consensus in multiple flavors [in 0.2.3.1-alpha]
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
