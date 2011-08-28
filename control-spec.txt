@@ -1831,7 +1831,7 @@
   650-CLIENTS_SEEN TimeStarted="2008-12-25 23:50:43"
   CountrySummary=us=16,de=8,uk=8
 
-4.1.15. New consensus networkstatus has arrived.
+4.1.15. New consensus networkstatus has arrived
 
   The syntax is:
      "650" "+" "NEWCONSENSUS" CRLF 1*NetworkStatus "." CRLF "650" SP
@@ -1844,7 +1844,7 @@
 
   [First added in 0.2.1.13-alpha]
 
-4.1.16. New circuit buildtime has been set.
+4.1.16. New circuit buildtime has been set
 
   The syntax is:
      "650" SP "BUILDTIMEOUT_SET" SP Type SP "TOTAL_TIMES=" Total SP
@@ -1902,7 +1902,7 @@
 
   [First added in 0.2.3.1-alpha]
 
-4.1.17. Configuration changed
+4.1.18. Configuration changed
 
   The syntax is:
      StartReplyLine *(MidReplyLine) EndReplyLine
