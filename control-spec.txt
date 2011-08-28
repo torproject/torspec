@@ -103,9 +103,9 @@
 
 2.2. Commands from controller to Tor
 
-    Command = Keyword Arguments CRLF / "+" Keyword Arguments CRLF CmdData
+    Command = Keyword OptArguments CRLF / "+" Keyword OptArguments CRLF CmdData
     Keyword = 1*ALPHA
-    Arguments = *(SP / VCHAR)
+    OptArguments = [ SP *(SP / VCHAR) ]
 
   A command is either a single line containing a Keyword and arguments, or a
   multiline command whose initial keyword begins with +, and whose data
@@ -927,7 +927,7 @@
 
      AuthLine = "250-AUTH" SP "METHODS=" AuthMethod *("," AuthMethod)
                        *(SP "COOKIEFILE=" AuthCookieFile) CRLF
-     VersionLine = "250-VERSION" SP "Tor=" TorVersion [SP Arguments] CRLF
+     VersionLine = "250-VERSION" SP "Tor=" TorVersion OptArguments CRLF
 
      AuthMethod =
       "NULL"           / ; No authentication is required
@@ -937,7 +937,7 @@
      AuthCookieFile = QuotedString
      TorVersion = QuotedString
 
-     OtherLine = "250-" Keyword [SP Arguments] CRLF
+     OtherLine = "250-" Keyword OptArguments CRLF
 
     PIVERSION: 1*DIGIT
 
@@ -1370,9 +1370,9 @@
      StatusKeyword = 1*(ALNUM / "_")
      StatusValue = 1*(ALNUM / '_')  / QuotedString
 
-     Action is a string, and Arguments is a series of keyword=value
-     pairs on the same line.  Values may be space-terminated strings,
-     or quoted strings.
+     StatusAction is a string, and StatusArguments is a series of
+     keyword=value pairs on the same line.  Values may be space-terminated
+     strings, or quoted strings.
 
      These events are always produced with EXTENDED_EVENTS and
      VERBOSE_NAMES; see the explanations in the USEFEATURE section
