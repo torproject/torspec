@@ -103,11 +103,16 @@
 
 2.2. Commands from controller to Tor
 
-    Command = Keyword Arguments CRLF / "+" Keyword Arguments CRLF Data
+    Command = Keyword Arguments CRLF / "+" Keyword Arguments CRLF CmdData
     Keyword = 1*ALPHA
     Arguments = *(SP / VCHAR)
 
-  Specific commands and their arguments are described below in section 3.
+  A command is either a single line containing a Keyword and arguments, or a
+  multiline command whose initial keyword begins with +, and whose data
+  section ends with a single "." on a line of its own.  (We use a special
+  character to distinguish multiline commands so that Tor can correctly parse
+  multi-line commands that it does not recognize.) Specific commands and
+  their arguments are described below in section 3.
 
 2.3. Replies from Tor to the controller
 
@@ -175,11 +180,11 @@
 
   Address = ip4-address / ip6-address / hostname   (XXXX Define these)
 
-  ; A "Data" section is a sequence of octets concluded by the terminating
+  ; A "CmdData" section is a sequence of octets concluded by the terminating
   ; sequence CRLF "." CRLF.  The terminating sequence may not appear in the
   ; body of the data.  Leading periods on lines in the data are escaped with
   ; an additional leading period as in RFC 2821 section 4.5.2.
-  Data = *DataLine "." CRLF
+  CmdData = *DataLine "." CRLF
   DataLine = CRLF / "." 1*LineItem CRLF / NonDotItem *LineItem CRLF
   LineItem = NonCR / 1*CR NonCRLF
   NonDotItem = NonDotCR / 1*CR NonCRLF
