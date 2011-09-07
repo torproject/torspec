@@ -143,7 +143,7 @@ Specifications: Client behavior
   to use to connect to a bridge.
 
   The new format is:
-     bridge method address:port [[keyid=]id-fingerprint] [k=v] [k=v] [k=v]
+     Bridge method address:port [[keyid=]id-fingerprint] [k=v] [k=v] [k=v]
 
   To connect to such a bridge, the Tor program needs to know which
   SOCKS proxy will support the transport called "method".  It
@@ -160,7 +160,7 @@ Specifications: Client behavior
   Method names must be C identifiers.
 
   For reference, the old bridge format was
-    bridge address[:port] [id-fingerprint]
+    Bridge address[:port] [id-fingerprint]
   where port defaults to 443 and the id-fingerprint is optional. The
   new format can be distinguished from the old one by checking if the
   first argument has any non-C-identifier characters. (Looking for a
@@ -168,8 +168,8 @@ Specifications: Client behavior
   optionally include whitespace in the old format, whitespace in the
   id-fingerprint is not permitted in the new format.
 
-  Example: if the bridge line is "bridge trebuchet www.example.com:3333 
-     keyid=09F911029D74E35BD84156C5635688C009F909F9 rocks=20 height=5.6m" 
+  Example: if the bridge line is "bridge trebuchet www.example.com:3333
+     keyid=09F911029D74E35BD84156C5635688C009F909F9 rocks=20 height=5.6m"
      AND if the Tor client knows that the 'trebuchet' method is supported,
      the client should connect to the proxy that provides the 'trebuchet'
      method, ask it to connect to www.example.com, and provide the string
@@ -319,7 +319,7 @@ Managed proxy interface
       <NL> ::= <US-ASCII newline (line feed) character (10)>
 
   Tor MUST ignore lines with keywords that it doesn't recognize.
-  
+
   First, if there's an error parsing the environment variables, the
   proxy should write:
     ENV-ERROR <errormessage>
@@ -375,7 +375,7 @@ Managed proxy interface
   proxy should say:
     SMETHOD-ERROR <methodname> <errormessage>
   as in
-    SMETHOD-ERROR no support for the 'trebuchet' method  
+    SMETHOD-ERROR could not setup 'trebuchet' method
 
   The 'address:port' part of an SMETHOD line is the address to put
   in the bridge line.  The Options part is a list of space-separated
@@ -427,7 +427,7 @@ Managed proxy interface
   down cleanly.
 
   The managed proxy configuration protocol version defined in this
-  section is "1". 
+  section is "1".
   So, for example, if tor supports this configuration protocol it
   should set the environment variable:
     TOR_PT_MANAGED_TRANSPORT_VER=1
