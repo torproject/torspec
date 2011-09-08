@@ -1,0 +1,89 @@
+Filename: 183-refillintervals.txt
+Title: Refill Intervals
+Author: Florian Tschorsch and Björn Scheuermann
+Created: 03-Dec-2010
+Status: Open
+
+Overview:
+
+  In order to avoid additional queuing and bursty traffic, the refill 
+  interval of the token bucket algorithm should be shortened. Thus we 
+  propose a configurable parameter that sets the refill interval 
+  accordingly. 
+
+Motivation and Background:
+
+  In Tor there exist multiple token buckets on different logical levels. They 
+  all work independently. They are used to limit the up- and downstream of an
+  onion router. All token buckets are refilled every second with a constant
+  amount of tokens that depends on the configured bandwidth limits. The very
+  coarse-grained refill interval of one second has detrimental effects. 
+
+  First, consider an onion router with multiple TLS connections over which 
+  cells arrive. If there is high activity (i.e., many incoming cells in
+  total), then the coarse refill interval will cause unfairness. Assume (just
+  for simplicity) that C doesn't share its TLS connection with any other
+  circuit. Moreover, assume that C hasn't transmitted any data for some time
+  (e.g., due a typical bursty HTTP traffic pattern). Consequently, there are
+  no cells from this circuit in the incoming socket buffers. When the buckets
+  are refilled, the incoming token bucket will immediately spend all its
+  tokens on other incoming connections. Now assume that cells from C arrive
+  soon after. For fairness' sake, these cells should be serviced timely --
+  circuit C hasn't received any bandwidth for a significant time before.
+  However, it will take a very long time (one refill interval) before the
+  current implementation will fetch these cells from the incoming TLS
+  connection, because the token bucket will remain empty for a long time. Just
+  because the cells happened to arrive at the "wrong" point in time, they must
+  wait. Such situations may occur even though the configured admissible
+  incoming data rate is not exceeded by incoming cells: the long refill
+  intervals often lead to an operational state where all the cells that were
+  admissible during a given one-second period are queued until the end of this
+  second, before the onion router even just starts processing them. This
+  results in unnecessary, long queuing delays in the incoming socket buffers.
+  These delays are not visible in the Tor circuit queue delay statistics [1]. 
+
+  Finally, the coarse-grained refill intervals result in a very bursty outgoing
+  traffic pattern at the onion routers (one large chunk of data once per
+  second, instead of smooth transmission progress). This is undesirable, since
+  such a traffic pattern can interfere with TCP's control mechanisms and can
+  be the source of suboptimal TCP performance on the TLS links between onion
+  routers.  
+
+Specific Changes: 
+
+  The token buckets should be refilled more often, with a correspondingly 
+  smaller amount of tokens. For instance, the buckets might be refilled every
+  10 milliseconds with one-hundredth of the amount of data admissible per 
+  second. This will help to overcome the problem of unfairness when reading 
+  from the incoming socket buffers. At the same time it smoothes the traffic 
+  leaving the onion routers. We are aware that this latter change has 
+  apparently been discussed before [2]; we are not sure why this change has
+  not been implemented yet.
+
+  In particular we need to change the current implementation in Tor which 
+  triggers refilling always after exactly one second. Instead the refill event 
+  should fire more frequently. The smaller time intervals between each refill 
+  action need to be taken into account for the number of tokens that are added 
+  to the bucket. 
+  
+  With libevent 2.x and bufferevents enabled, smaller refill intervals are 
+  already considered but hard coded. This should be changed to a configurable 
+  parameter, too.   
+
+Conclusion:
+
+  This proposal can be implemented with moderate effort and requires changes 
+  only at the points where the token bucket operations are currently
+  performed.
+  
+  This change will also be a good starting point for further enhancements 
+  to improve queuing times in Tor. I.e. it will pave the ground for other means 
+  that tackle this problem.  
+
+  Feedback is highly appreciated.
+
+References:
+
+  [1] Karsten Loesing. Analysis of Circuit Queues in Tor. August 25, 2009.
+  [2] https://trac.torproject.org/projects/tor/wiki/sponsors/SponsorD/June2011
+  

@@ -103,6 +103,7 @@ Proposals by number:
 180  Pluggable transports for circumvention [OPEN]
 181  Optimistic Data for Tor: Client Side [CLOSED]
 182  Credit Bucket [DRAFT]
+183  Refill Intervals [CLOSED]
 
 
 Proposals by status:
@@ -186,6 +187,7 @@ Proposals by status:
    171  Separate streams across circuits by connection metadata [in 0.2.3.3-alpha]
    174  Optimistic Data for Tor: Server Side [in 0.2.3.1-alpha]
    181  Optimistic Data for Tor: Client Side [in 0.2.3.3-alpha]
+   183  Refill Intervals [in 0.2.3.4-alpha]
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration
