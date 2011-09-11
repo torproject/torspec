@@ -89,7 +89,7 @@ Tor's extensions to the SOCKS protocol
 
 
 References:
- [1] http://archive.socks.permeo.com/protocol/socks4.protocol
- [2] http://archive.socks.permeo.com/protocol/socks4a.protocol
+ [1] http://en.wikipedia.org/wiki/SOCKS#SOCKS4
+ [2] http://en.wikipedia.org/wiki/SOCKS#SOCKS4a
  [3] SOCKS5: RFC1928
 
