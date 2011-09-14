@@ -38,7 +38,7 @@ Supersedes: 169
       * Allow responder authentication or bidirectional authentication.
       * Try to look like some popular too-important-to-block-at-whim
         encryption protocol, to avoid fingerprinting and censorship.
-      * Try to be implementatble -- on the client side at least! --
+      * Try to be implementable -- on the client side at least! --
         by as many TLS implementations as possible.
 
    When we added the v2 handshake, we added another goal:
@@ -181,12 +181,12 @@ Supersedes: 169
    So the flowchart on the server side is:
 
       Wait for a ClientHello.
-      IF the client sends a ClientHello that indicates V1:
+      If the client sends a ClientHello that indicates V1:
           - Send a certificate chain.
           - When the TLS handshake is done, if the client sent us a
             certificate chain, then check it.
       If the client sends a ClientHello that indicates V2 or V3:
-          - Send a  self-signed certificate or a CA-signed certificate
+          - Send a self-signed certificate or a CA-signed certificate
           - When the TLS handshake is done, wait for renegotiation or data.
             - If renegotiation occurs, the client is V2: send a
               certificate chain and maybe receive one.  Check the
@@ -226,7 +226,7 @@ Supersedes: 169
 
    In the protocol outline above, we require that the client can
    distinguish between v2 certificates (that is, those sent by
-   current servers) and a v3 certificates.  We further require that
+   current servers) and v3 certificates.  We further require that
    existing clients will accept v3 certificates as they currently
    accept v2 certificates.
 
@@ -303,8 +303,7 @@ Supersedes: 169
 
    To authenticate the server, the client MUST check the following:
      * The CERTS cell contains exactly one CertType 1 "Link" certificate.
-     * The CERTS cell contains exactly one CertType 2 "ID"
-       certificate.
+     * The CERTS cell contains exactly one CertType 2 "ID" certificate.
      * Both certificates have validAfter and validUntil dates that
        are not expired.
      * The certified key in the Link certificate matches the
@@ -334,7 +333,7 @@ Supersedes: 169
 
    A client does not need to authenticate to the server.  If it
    does not wish to, it responds to the server's valid CERT cell by
-   sending NETINFO cell: once it has gotten a valid NETINFO cell
+   sending a NETINFO cell: once it has gotten a valid NETINFO cell
    back, the client should consider the connection open, and the
    server should consider the connection as opened by an
    unauthenticated client.
@@ -439,7 +438,7 @@ Supersedes: 169
 6. Security argument
 
    These aren't crypto proofs, since I don't write those.  They are
-   meant be reasonably convincing.
+   meant to be reasonably convincing.
 
 6.1. The server is authenticated
 
@@ -503,7 +502,7 @@ Supersedes: 169
    least that well.
 
    Suppose that a client Alice connects to an MITM attacker Mallory,
-   thinking that he is connecting to some server Bob.  Let's assume
+   thinking that she is connecting to some server Bob.  Let's assume
    that the TLS handshake between Alice and Mallory finishes
    successfully and the v3 protocol is chosen.  [If the v1 or v2
    protocol is chosen, those already resist MITM.  If the TLS
@@ -520,7 +519,7 @@ Supersedes: 169
 
    Even if Alice fails to check the certificates from Bob, Mallory
    still can't convince Bob that she is really Alice.  Assuming that
-   Alice's keys aren't compromised, Mallory can't sent a CERT cell
+   Alice's keys aren't compromised, Mallory can't send a CERT cell
    with a cert chain from Alice's identity key to a key that Mallory
    controls, so if Mallory wants to impersonate Alice's identity
    key, she can only do so by sending an AUTHENTICATE cell really
