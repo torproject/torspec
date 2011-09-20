@@ -1,0 +1,259 @@
+Filename: xxx-multiple-orports.txt
+Title: Multiple addresses for one OR or bridge
+Author: Nick Mathewson
+Created: 19-Sep-2011
+Supersedes: 118
+Status: Draft
+
+Overview:
+
+  This document is a proposal for servers to advertise multiple
+  address/port combinations for their ORPort.
+
+  It supersedes proposal 118.
+
+Motivation:
+
+  Sometimes servers want to support multiple ports for incoming
+  connections, either in order to support multiple address families
+  (ie, to add IPv6 support), to better use multiple interfaces, or
+  to support a variety of FascistFirewallPorts settings.  This is
+  easy to set up now, but there's no way to advertise it to clients.
+
+Configuring additional addresses and ports:
+
+  In consonance with our chances to the (Socks|Trans|NATD|DNS)Port
+  options made in 0.2.3.x for proposal 171, I make a corresponding
+  change to allow multiple SocksPort options and deprecate
+  SocksListenAddress.
+
+  The new syntax will be:
+
+      "SocksPort" PortDescription Options?
+
+      Options = "NoAdvertise" | "NoListen" | "AllAddrs" | "IPV4Only"
+          | "IPV6Only"
+
+      PortDescription = PORTLIST |
+                        ADDRESS ":" PORTLIST |
+                        Hostname ":" PORTLIST
+
+      (PORTLIST and ADDRESS are defined below.)
+
+  The 'NoAdvertise' option performs the function of the old
+  SocksListenAddress option.  If it is set, we bind a port, but
+  don't put it in our descriptor.
+
+  The 'NoListen' option tells Tor to advertise an address, but not
+  bind to it.  The operator needs to use some other mechanism to
+  ensure that ports are redirected to ports that _are_ listened on.
+
+  The 'AllAddrs' option tells Tor that if no address is given in the
+  PortDescription part, we should bind/advertise every one of our
+  publicly visible unicast addresses; and that if a hostname address
+  is given in the PortDescription, we should bind/advertise every
+  publicly visible unicast address that the hostname resolves to.
+  (Q: Should this be on by default?)   The 'IPv4Only' and 'IPv6Only'
+  options tell Tor to interpret such situations as applying only to
+  IPv4 addresses or to IPv6 addresses.
+
+  As with the client *Port options, only the old format or the new
+  format are allowed: either a single numeric socksport and zero or
+  more sockslistenaddress options, or a set of one or more
+  SocksPorts in the new extended format.
+
+  In current operating systems (unless we get into crazy nonportable
+  tricks) we need to use one socket for every address:port that Tor
+  bind on.  As a sanity check, we can limit the number of such
+  sockets we use to, say, 64.  If you want to bind lots more
+  address:port combinations, you'll want to do it at the
+  firewall/routing level.
+
+  Example: We want to bind on 0.0.0.0:9001
+
+     SocksPort 9001
+
+  Example: Our firewall is redirecting ports 80, 443, and 7000-8000
+  on all hosts in x.244.2.0/24 onto our port 2929.
+
+     SocksPort 2929 no-advertise
+     SocksPort x.244.2.0/24:80,443,7000-8000 no-listen
+
+  Example: We have a dynamic DNS provider that maps
+  tornode.example.com to our current external IPv4 and IPv6
+  addresses.  Our firefall forwards port 443 on those address to our
+  port 1337.
+
+     SocksPort 1337 no-advertise alladdrs
+     SocksPort tornode.example.com:443 no-bind alladdrs
+
+Self-testing:
+
+  Right now, Tor nodes need to check every port that advertise
+  before they declare themselves reachable.  If a Tor has a large IP
+  a lot of advertised ports, that could be prohibitive.
+  Instead, it should try a sample of ports for each address.  It should
+  not advertise any given SocksPort line until it has tried
+  extending to or connecting to a sample of the address/port
+  combinations.
+
+  It will now be possible for a Tor node to find that some addresses
+  work and others do not.  In this case, the node should only
+  advertise socksport lines that have been checked.
+
+  {Until support is added for extend cells to IPv6 addresses, it
+  will only be possible to test IPv6 addresses by connecting
+  directly.  We might want to just skip self-testing those until we
+  have IPv6 extend support.}
+
+New descriptor syntax:
+
+  We add a new line in the router descriptor, "or-address".  This line
+  can occur zero, one, or multiple times.  Its format is:
+
+      or-address SP ADDRESS ":" PORTLIST NL
+
+      ADDRESS = IP6ADDR | IP4ADDR
+      IPV6ADDR = an ipv6 address, surrounded by square brackets.
+      IPV4ADDR = an ipv4 address, represented as a dotted quad.
+      PORTLIST = PORTSPEC | PORTSPEC "," PORTLIST
+      PORTSPEC = PORT | PORT "-" PORT
+      PORT = a number between 1 and 65535 inclusive.
+
+  [This is the regular format for specifying sets of addresses and
+  ports in Tor.]
+
+  A descriptor should not include an or-address line that does
+  nothing but duplicate the address:port pair from its "router"
+  line.
+
+  A node must not list more than 8 or-address lines.
+
+  (Q: Any reason to allow more than 2?)
+
+New authority behavior:
+
+  The same rationale applies as for self-testing.  An authority
+  needs to test the main address:port from the router line, and
+  every or-address line.  For or-address lines that contains
+  multiple ports, it needs to test all of them if they are few, or a
+  sample if they are not.
+
+  An authority shouldn't list a node as Running unless every
+  or-address line it advertises looks like it will work.
+
+Consensus directories and microdescriptors:
+
+  We introduce a new line type for microdescriptors and consensuses,
+  "a".  Each "a" line has the same format as an or-address line.
+  The "a" lines (if any) appear immediately after the "r" line for a
+  router in the consensus, and immediately after the "onion-key"
+  entry in a microdescriptor.
+
+  Clients that use microdescriptors should consider a node's
+  addresses to be the address:port listed in the "r" line of a
+  consensus, plus all "a" lines for that node in the consensus, plus
+  all "a" lines for that node in the its microdescriptor.  Clients
+  that use full descriptors should consider a node's addresses to be
+  everything listed in its descriptor.
+
+  We will have to define a new voting algorithm version; when using
+  this version or later, votes should include a single "a" line for
+  every relay that has an IPv6 address, to include the first IPv6
+  line in its descriptor.  (If there are no or-address lines, then
+  they shouldn't include any "a" lines.)  The remaining or-address
+  lines will turn into "a" lines in the microdescriptor.
+
+  As with other data in the vote derived from the descriptor,
+  the vote will include whichever set of "a" lines are given by the
+  most authorities who voted for the descriptor digest that will be
+  used for the router.
+
+Directory authorities with more addresses:
+
+  We need a way for a client to configure a TrustedDirServer as
+  having multiple OR addresses, specifically so that we can give at
+  least one default authority an IPv6 address for bootstrapping
+  purposes.
+
+  (Q: Do any of the current authorities have stable IPv6 addresses?)
+
+  We will want to allow the address in a "dir-source" line in a vote
+  to contain an IPv6 address, and/or allow voters to list themselves
+  with more addresses in votes/consensuses.  But right now, nothing
+  actually uses the addresses listed for voters in dir-source lines
+  for anything besides log messages.
+
+Client behavior:
+
+  I propose that initially we shouldn't change client behavior too
+  much here.
+
+  (Q: Is there any advantage to having a client choose a random
+  address?  If so we can do it later.)
+
+  Tor clients not running with bridges, and running with IPv4
+  support, should still use the address and ORPort as advertised in
+  the router or r line of the appropriate directory object.
+
+  Tor clients not running with bridges, and running without IPv4
+  support, should use the first listed IPv6 address for a node,
+  using the lowest-numbered listed port for that address.  They
+  should only connect to nodes with an IPv6 address.
+
+  Clients should accept Bridge lines with IPv6 addresses, and
+  address:port sets, in addition to the lines they currently accept.
+
+  Clients, for now, should only use the address:port from the router
+  line when making EXTEND cells; see below.
+
+Nodes without IPv4 addresses:
+
+  Currently Tor requires every node or bridge to have an IPv4
+  address.  We will want to maintain this property for the
+  forseeable future, but we should define how a node without an IPv4
+  address would advertise itself.
+
+  Right now, there's no way to do that: if anything but an IPv4
+  address appears in a router line of a routerdesc, or the r line of
+  a consensus, then it won't parse.  If something that looks like an
+  IPv4 address appears there, clients will (I believe) try to
+  connect to it.
+
+  We can make this work, though: let's allow nodes to list themselves
+  with a magic IPv4 address (say, 127.1.1.1) if they have
+  or-address entries containing only IPv6 address.  We could give
+  these nodes a new flag other than Running to indicate that they're
+  up, and not give them the Running flag.  That way, old clients
+  would never try to use them, but new clients could know to treat
+  the new flag as indicating that the node is running, and know not
+  to connect to a node listed with address 127.1.1.1.
+
+Interaction with EXTEND and NETINFO:
+
+  Currently, EXTEND cells only support IPv4 addresses, so we should
+  use only those.  There is a proposal draft to support more address
+  types.
+
+  A server's NETINFO cells must list all configured addresses for a
+  server.
+
+Why not extend DirPort this way too?
+
+  Because clients are all using BEGINDIR these days.
+
+Why not have address ranges?
+
+  Earlier drafts of this proposal suggested that clients should
+  provide not only ranges of ports, but also ranges of addresses,
+  specified with bitmasks.  That's a neat idea for circumvention,
+  but if we did that, you wouldn't want to advertise publicly that
+  you have an entire address range.
+
+Coding impact:
+
+  In addition to the obvious changes, we need to audit everything
+  that looks up or compares OR connections and nodes by address:port
+  under the assumptions that each node has only a single address or
+  ORPort.
+

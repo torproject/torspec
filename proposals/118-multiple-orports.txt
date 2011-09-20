@@ -2,7 +2,8 @@ Filename: 118-multiple-orports.txt
 Title: Advertising multiple ORPorts at once
 Author: Nick Mathewson
 Created: 09-Jul-2007
-Status: Needs-Revision
+Status: Superseded
+Superseded-By: xxx-multiple-orports.txt
 
 [Needs Revision: This proposal needs revision to come up to 2011 standards
 and take microdescriptors into account.]
