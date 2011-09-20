@@ -231,7 +231,7 @@ Supersedes: 169
    accept v2 certificates.
 
    Fortunately, current certificates have a few characteristics that
-   make them fairly mannered as it is.  We say that a certificate
+   make them fairly well-mannered as it is.  We say that a certificate
    indicates a V2-only server if ALL of the following hold:
       * The certificate is not self-signed.
       * There is no DN field set in the certificate's issuer or
@@ -280,7 +280,7 @@ Supersedes: 169
    On learning the link protocol, the server then sends the client a
    CERT cell and a NETINFO cell.  If the client wants to
    authenticate to the server, it sends a CERT cell, an AUTHENTICATE
-   cell, and a NETINFO cell, or it may simply send a NETINFO cell if
+   cell, and a NETINFO cell; or it may simply send a NETINFO cell if
    it does not want to authenticate.
 
    The CERT cell describes the keys that a Tor instance is claiming
