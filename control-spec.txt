@@ -348,10 +348,10 @@
 
   The meaning of the signals are:
 
-      RELOAD    -- Reload: reload config items, refetch directory. (like HUP)
+      RELOAD    -- Reload: reload config items. (like HUP)
       SHUTDOWN  -- Controlled shutdown: if server is an OP, exit immediately.
-                   If it's an OR, close listeners and exit after 30 seconds.
-                   (like INT)
+                   If it's an OR, close listeners and exit after
+                   ShutdownWaitLength seconds. (like INT)
       DUMP      -- Dump stats: log information about open connections and
                    circuits. (like USR1)
       DEBUG     -- Debug: switch all open logs to loglevel debug. (like USR2)
