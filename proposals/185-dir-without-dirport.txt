@@ -1,0 +1,41 @@
+Filename: 185-dir-without-dirport.txt
+Title: Directory caches without DirPort
+Author: Nick Mathewson
+Created: 20-Sep-2011
+Status: Open
+
+Overview:
+
+  Exposing a directory port is no longer necessary for running as a
+  directory cache.  This proposal suggests that we eliminate that
+  requirement, and describes how.
+
+Motivation:
+
+  Now that we tunnel directory connections by default, it is no
+  longer necessary to have a DirPort to be a directory cache.  In
+  fact, bridges act as directory caches but do not actually have a
+  DirPort exposed.  It would be nice and tidy to expand that
+  property to the rest of the network.
+
+Configuration:
+
+  Add a new torrc option, "DirCache".  Its values can be "0", "1",
+  and "auto".  If it is 0, we never act as a directory cache, even
+  if DirPort is set.  If it is 1, then we act as a directory cache
+  according to same rules as those used for nodes that set a
+  DirPort.  If it is "auto", then Tor decides whether to act as a
+  directory cache.
+
+Advertising cache status:
+
+  Nodes which are running as a directory cache but which do not have
+  a DirPort set should set the entry "dir-cache 1" in their router
+  descriptors.
+
+Consensus:
+
+  Authorities should assign a "DirCache" flag to all nodes running
+  as a directory cache that do not set a DirPort.
+
+  This does not require a new version of the consensus algorithm.

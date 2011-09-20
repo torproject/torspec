@@ -1,0 +1,82 @@
+Filename: 184-v3-link-protocol.txt
+Title: Miscellaneous changes for a v3 Tor link protocol
+Author: Nick Mathewson
+Created: 19-Sep-2011
+Status: Open
+Target: 0.2.3.x
+
+Overview:
+
+  When proposals 176 and 179 are implemented, Tor will have a new
+  link protocol.  I propose two simple improvements for the v3 link
+  protocol: a more partitioned set of which types indicate
+  variable-length cells, and a better way to handle link padding if
+  and when we come up with a decent scheme for it.
+
+Motivation:
+
+  We're getting a new link protocol in 0.2.3.x, thanks (again) to
+  TLS fingerprinting concerns.  When we do, it'd be nice to take
+  care of some small issues that require a link protocol version
+  increment.
+
+  First, our system for introducing new variable-length cell types
+  has required a protocol increment for each one.  Unlike
+  fixed-length (512 byte) cells, we can't add new variable-length
+  cells in the existing link protocols and just let older clients
+  ignore them, because unless the recipient knows which cells are
+  variable-length, it will treat them as 512-byte cells and discard
+  too much of the stream or too little.  In the past, it's been
+  useful to be able to introduce new cell types without having to
+  increment the link protocol version.
+
+  Second, once we have our new TLS handshake in place, we will want
+  a good way to address the remaining fingerprinting opportunities.
+  Some of those will likely involve traffic volume.  We can't fix
+  that easily with our existing PADDING cell type, since PADDING
+  cells are fixed-length, and wouldn't be so easy to use to break up
+  our TLS record sizes.
+
+Design: Indicating variable-length cells.
+
+  Beginning with the v3 link protocol, we specify that all cell
+  types in the range 128..255 indicate variable-length cells.
+  Cell types in the range 0..127 are still used for 512-byte
+  cells, except that the VERSIONS cell type (7) also indicates a
+  variable-length cell (for backward compatibility).
+
+  As before, all Tor instances must ignore cells with types that
+  they don't recognize.
+
+Design: Variable-length padding.
+
+  We add a new variable-length cell type, "VPADDING", to be used for
+  padding.  All Tor instances may send a DROP cell at any point that
+  a VERSIONS cell is not required; a VPADDING cell's body may be any
+  length; the body of a VPADDING cell MAY have any content.  Upon
+  receiving a VPADDING cell, the recipient should drop it, as with a
+  PADDING cell.
+
+Interaction with proposal 176:
+
+  Proposal 176 says that during the v3 handshake, no cells other
+  than VERSIONS, AUTHENTICATE, AUTH_CHALLENGE, CERT, and NETINFO are
+  allowed, and those are only allowed in their standard order.  If
+  this proposal is accepted, then VPADDING cells should also be
+  allowed in the handshake at any point after the VERSIONS cell.
+  They should be included when computing the "SLOG" and "CLOG"
+  handshake-digest fields of the AUTHENTICATE cell.
+
+Notes on future-proofing:
+
+  It may be in the future we need a new cell format that is neither the
+  original 512-byte format nor the variable-length format.  If we
+  do, we can just increment the link protocol version number again.
+
+  Right now we have 10 cell types; with this proposal and proposal
+  176, we will have 14.  It's unlikely that we'll run out any time
+  soon, but if we start to approach the number 64 with fixed-length
+  cell types or 196 with var-length cell types, we should consider
+  tweaking the link protocol to have a variable-length cell type
+  encoding.
+
