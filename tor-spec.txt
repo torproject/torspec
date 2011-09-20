@@ -164,7 +164,7 @@ see tor-design.pdf.
 
    In "certificates up-front", the connection initiator always sends a
    two-certificate chain, consisting of an X.509 certificate using a
-   short-term connection public key and a second, self- signed X.509
+   short-term connection public key and a second, self-signed X.509
    certificate containing its identity key.  The other party sends a similar
    certificate chain.  The initiator's ClientHello MUST NOT include any
    ciphersuites other than:
