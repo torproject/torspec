@@ -22,7 +22,7 @@ Motivation:
 
 Configuring additional addresses and ports:
 
-  In consonance with our chances to the (Socks|Trans|NATD|DNS)Port
+  In consonance with our changes to the (Socks|Trans|NATD|DNS)Port
   options made in 0.2.3.x for proposal 171, I make a corresponding
   change to allow multiple SocksPort options and deprecate
   SocksListenAddress.
@@ -81,7 +81,7 @@ Configuring additional addresses and ports:
 
   Example: We have a dynamic DNS provider that maps
   tornode.example.com to our current external IPv4 and IPv6
-  addresses.  Our firefall forwards port 443 on those address to our
+  addresses.  Our firewall forwards port 443 on those address to our
   port 1337.
 
      SocksPort 1337 no-advertise alladdrs
@@ -89,8 +89,8 @@ Configuring additional addresses and ports:
 
 Self-testing:
 
-  Right now, Tor nodes need to check every port that advertise
-  before they declare themselves reachable.  If a Tor has a large IP
+  Right now, Tor nodes need to check every port that they advertise
+  before they declare themselves reachable.  If a Tor has
   a lot of advertised ports, that could be prohibitive.
   Instead, it should try a sample of ports for each address.  It should
   not advertise any given SocksPort line until it has tried
@@ -129,7 +129,7 @@ New descriptor syntax:
 
   A node must not list more than 8 or-address lines.
 
-  (Q: Any reason to allow more than 2?)
+  (Q: Any reason to allow more than 2?  Multiple interfaces, I guess.)
 
 New authority behavior:
 
@@ -190,7 +190,8 @@ Client behavior:
   much here.
 
   (Q: Is there any advantage to having a client choose a random
-  address?  If so we can do it later.)
+  address?  If so we can do it later.  If not, why list any more
+  than one IPv4 and one IPv6 address?)
 
   Tor clients not running with bridges, and running with IPv4
   support, should still use the address and ORPort as advertised in
@@ -211,11 +212,11 @@ Nodes without IPv4 addresses:
 
   Currently Tor requires every node or bridge to have an IPv4
   address.  We will want to maintain this property for the
-  forseeable future, but we should define how a node without an IPv4
+  foreseeable future, but we should define how a node without an IPv4
   address would advertise itself.
 
   Right now, there's no way to do that: if anything but an IPv4
-  address appears in a router line of a routerdesc, or the r line of
+  address appears in a router line of a routerdesc, or the "r" line of
   a consensus, then it won't parse.  If something that looks like an
   IPv4 address appears there, clients will (I believe) try to
   connect to it.
@@ -241,6 +242,9 @@ Interaction with EXTEND and NETINFO:
 Why not extend DirPort this way too?
 
   Because clients are all using BEGINDIR these days.
+
+  That is, clients tunnel their directory requests inside OR
+  connections, and don't generally connect to DirPorts at all.
 
 Why not have address ranges?
 
