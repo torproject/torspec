@@ -146,16 +146,11 @@ Supersedes: 169
       1) We should make it easier to use self-signed certs, or maybe
          even existing HTTPS certificates, for the server side
          handshake, since most non-Tor SSL handshakes use either
-         self-signed certificates or
+         self-signed certificates or CA-signed certificates.
 
-      2) We should make it harder to probe for a Tor server.  Right
-         now, you can just do a handshake with a server,
-         renegotiate, then see if it gives you a VERSIONS cell.
-         That's no good.
-
-      3) We should allow other changes in our use of TLS and in our
+      2) We should allow other changes in our use of TLS and in our
          certificates so as to resist fingerprinting based on how
-         our certificates look.
+         our certificates look.  (See proposal 179.)
 
 3. Design
 
@@ -217,6 +212,7 @@ Supersedes: 169
        S->C: VERSIONS cell, CERT cell, AUTH_CHALLENGE cell, NETINFO cell
 
        C->S: Optionally: CERT cell, AUTHENTICATE cell
+       C->S: NETINFO cell
 
    A "CERTS" cell contains a set of certificates; an "AUTHENTICATE"
    cell authenticates the client to the server.  More on these
@@ -253,8 +249,7 @@ Supersedes: 169
    signed by a CA, then the issuer will surely have more DN fields
    set.  Certificates that aren't trying to resist fingerprinting
    can trivially become v3 by using a CN that doesn't end with .net,
-   or using a 1024-bit key.
-
+   or using a key longer than 1024 bits.
 
 3.3. Authenticating via Tor cells: server authentication
 
@@ -321,20 +316,28 @@ Supersedes: 169
    the connection.  If the client wanted to connect to a server with
    a different identity key, the client closes the connection.
 
-
    An AUTH_CHALLENGE cell is a variable-length cell with the following
    fields:
        Challenge [32 octets]
+       N_Methods [2 octets]
+       Methods   [2 * N_Methods octets]
+
    It is sent from the server to the client.  Clients MUST ignore
    unexpected bytes at the end of the cell.  Servers MUST generate
    every challenge using a strong RNG or PRNG.
+
+   The Challenge field is a randomly generated string that the
+   client must sign (a hash of) as part of authenticating.  The
+   methods are the authentication methods that the server will
+   accept.  Only one authentication method is defined right now; see
+   3.4 below.
 
 3.4. Authenticating via Tor cells: Client authentication
 
    A client does not need to authenticate to the server.  If it
    does not wish to, it responds to the server's valid CERT cell by
-   sending a NETINFO cell: once it has gotten a valid NETINFO cell
-   back, the client should consider the connection open, and the
+   sending a NETINFO cell: once it has gotten a valid NETINFO cell,
+   the client should consider the connection open, and the
    server should consider the connection as opened by an
    unauthenticated client.
 
@@ -352,7 +355,6 @@ Supersedes: 169
         AuthLen                               [2 octets]
         Authentication                        [AuthLen octets]
 
-
    Servers MUST ignore extra bytes at the end of an AUTHENTICATE
    cell.  If AuthType is 1 (meaning "RSA-SHA256-TLSSecret"), then the
    Authentication contains the following:
@@ -369,15 +371,15 @@ Supersedes: 169
          VERSIONS cell and the CERT cell. [32 octets]
        SCERT: A SHA256 hash of the server's TLS link
          certificate. [32 octets]
-       TLSSECRETS: Either 32 zero octets, or a SHA256 HMAC, using
-         the TLS master secret as the secret key, of the following:
+       TLSSECRETS: A SHA256 HMAC, using the TLS master secret as the
+         secret key, of the following:
            - client_random, as sent in the TLS Client Hello
            - server_random, as sent in the TLS Server Hello
            - the NUL terminated ASCII string:
              "Tor V3 handshake TLS cross-certification"
           [32 octets]
        TIME: The time of day in seconds since the POSIX epoch. [8 octets]
-       NONCE: A 16 byte value, randomly chosen by the client [16 octets]
+       RAND: A 16 byte value, randomly chosen by the client [16 octets]
        SIG: A signature of a SHA256 hash of all the previous fields
          using the client's "Authenticate" key as presented.  (As
          always in Tor, we use OAEP-MGF1 padding; see tor-spec.txt
@@ -386,19 +388,16 @@ Supersedes: 169
 
    To check the AUTHENTICATE cell, a server checks that all fields
    containing a hash contain the correct value, then verifies the
-   signature.  The server MUST ignore any extra bytes after
-   the SHA256 hash.
-
-   When possible (that is, when implemented using C TLS API),
-   implementations SHOULD include and verify the TLSSECRETS field.
+   signature.  The server MUST ignore any extra bytes in the signed
+   data after the SHA256 hash.
 
 3.5. Responding to extra cells, and other security checks.
 
-   If the handshake is a V3+ TLS handshake, both parties MUST reject
+   If the handshake is a V3 TLS handshake, both parties MUST reject
    any negotiated link version less than 3.  Both parties MUST check
    this and close the connection if it is violated.
 
-   If the handshake is not a V3+ TLS handshake, both parties MUST
+   If the handshake is not a V3 TLS handshake, both parties MUST
    still advertise all link protocols they support in their versions
    cell.  Both parties MUST close the link if it turns out they both
    would have supported version 3 or higher, but they somehow wound
@@ -613,7 +612,7 @@ Supersedes: 169
   - Can we give some way for clients to signal "I want to use the
     V3 protocol if possible, but I can't renegotiate, so don't give
     me the V2"?  Clients currently have a fair idea of server
-    versions, so they could potentially do the V3+ handshake with
+    versions, so they could potentially do the V3 handshake with
     servers that support it, and fall back to V1 otherwise.
 
   - What should servers that don't have TLS renegotiation do?  For
