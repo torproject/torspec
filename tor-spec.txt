@@ -96,8 +96,9 @@ see tor-design.pdf.
    When we refer to "the hash of a public key", we mean the SHA-1 hash of the
    DER encoding of an ASN.1 RSA public key (as specified in PKCS.1).
 
-   All "random" values should be generated with a cryptographically strong
-   random number generator, unless otherwise noted.
+   All "random" values MUST be generated with a cryptographically
+   strong pseudorandom number generator seeded from a strong entropy
+   source, unless otherwise noted.
 
    The "hybrid encryption" of a byte sequence M with a public key PK is
    computed as follows:
