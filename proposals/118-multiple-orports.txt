@@ -3,7 +3,7 @@ Title: Advertising multiple ORPorts at once
 Author: Nick Mathewson
 Created: 09-Jul-2007
 Status: Superseded
-Superseded-By: xxx-multiple-orports.txt
+Superseded-By: 186-multiple-orports.txt
 
 [Needs Revision: This proposal needs revision to come up to 2011 standards
 and take microdescriptors into account.]
