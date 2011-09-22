@@ -30,8 +30,12 @@ Configuration:
 Advertising cache status:
 
   Nodes which are running as a directory cache but which do not have
-  a DirPort set should set the entry "dir-cache 1" in their router
-  descriptors.
+  a DirPort set, or which do not have a working DirPort, should set
+  the entry "dir-cache 1" in their router descriptors and give their
+  directory port as 0 in their router lines.  (Nodes which have a
+  working directory port advertise it as usual, and do not include
+  a "dir-cache" line.  Implementations should accept and ignore
+  dir-cache lines with values other than "dir-cache 1".)
 
 Consensus:
 
