@@ -24,14 +24,14 @@ Configuring additional addresses and ports:
 
   In consonance with our changes to the (Socks|Trans|NATD|DNS)Port
   options made in 0.2.3.x for proposal 171, I make a corresponding
-  change to allow multiple SocksPort options and deprecate
-  SocksListenAddress.
+  change to allow multiple ORPort options and deprecate
+  ORListenAddress.
 
   The new syntax will be:
 
-      "SocksPort" PortDescription Options?
+      "ORPort" PortDescription Option*
 
-      Options = "NoAdvertise" | "NoListen" | "AllAddrs" | "IPV4Only"
+      Option = "NoAdvertise" | "NoListen" | "AllAddrs" | "IPV4Only"
           | "IPV6Only"
 
       PortDescription = PORTLIST |
@@ -41,7 +41,7 @@ Configuring additional addresses and ports:
       (PORTLIST and ADDRESS are defined below.)
 
   The 'NoAdvertise' option performs the function of the old
-  SocksListenAddress option.  If it is set, we bind a port, but
+  ORListenAddress option.  If it is set, we bind a port, but
   don't put it in our descriptor.
 
   The 'NoListen' option tells Tor to advertise an address, but not
@@ -60,7 +60,7 @@ Configuring additional addresses and ports:
   As with the client *Port options, only the old format or the new
   format are allowed: either a single numeric socksport and zero or
   more sockslistenaddress options, or a set of one or more
-  SocksPorts in the new extended format.
+  ORPorts in the new extended format.
 
   In current operating systems (unless we get into crazy nonportable
   tricks) we need to use one socket for every address:port that Tor
@@ -71,21 +71,21 @@ Configuring additional addresses and ports:
 
   Example: We want to bind on 0.0.0.0:9001
 
-     SocksPort 9001
+     ORPort 9001
 
   Example: Our firewall is redirecting ports 80, 443, and 7000-8000
   on all hosts in x.244.2.0/24 onto our port 2929.
 
-     SocksPort 2929 no-advertise
-     SocksPort x.244.2.0/24:80,443,7000-8000 no-listen
+     ORPort 2929 noadvertise
+     ORPort x.244.2.0/24:80,443,7000-8000 nolisten
 
   Example: We have a dynamic DNS provider that maps
   tornode.example.com to our current external IPv4 and IPv6
   addresses.  Our firewall forwards port 443 on those address to our
   port 1337.
 
-     SocksPort 1337 no-advertise alladdrs
-     SocksPort tornode.example.com:443 no-bind alladdrs
+     ORPort 1337 noadvertise alladdrs
+     ORPort tornode.example.com:443 nobind alladdrs
 
 Self-testing:
 
@@ -93,7 +93,7 @@ Self-testing:
   before they declare themselves reachable.  If a Tor has
   a lot of advertised ports, that could be prohibitive.
   Instead, it should try a sample of ports for each address.  It should
-  not advertise any given SocksPort line until it has tried
+  not advertise any given ORPort line until it has tried
   extending to or connecting to a sample of the address/port
   combinations.
 
@@ -128,6 +128,9 @@ New descriptor syntax:
   line.
 
   A node must not list more than 8 or-address lines.
+
+  A PORTLIST must have no more than 16 PORTSPEC entries, and its entries must
+  be disjoint.
 
   (Q: Any reason to allow more than 2?  Multiple interfaces, I guess.)
 
