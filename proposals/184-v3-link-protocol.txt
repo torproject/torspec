@@ -51,11 +51,27 @@ Design: Indicating variable-length cells.
 Design: Variable-length padding.
 
   We add a new variable-length cell type, "VPADDING", to be used for
-  padding.  All Tor instances may send a DROP cell at any point that
+  padding.  All Tor instances may send a VPADDING cell at any point that
   a VERSIONS cell is not required; a VPADDING cell's body may be any
   length; the body of a VPADDING cell MAY have any content.  Upon
   receiving a VPADDING cell, the recipient should drop it, as with a
   PADDING cell.
+
+  (This does not give a way to send fewer than 5 bytes of padding.
+  We could add this in the future, in a new link protocol.)
+
+  Implementations SHOULD fill the content of all padding cells
+  randomly.
+
+A note on padding:
+
+  We do not specify any situation in which a node ought to generate
+  a VPADDING cell; that's left for future work.  Implementors should
+  be aware that many schemes have been proposed for link padding
+  that do not in fact work as well as one would expect.  We
+  recommend that no mainstream implementation should produce padding
+  in an attempt to resist traffic analysis, without real research
+  showing that it helps.
 
 Interaction with proposal 176:
 
