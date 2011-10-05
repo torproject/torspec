@@ -17,16 +17,16 @@ Supersedes: 169
    and authenticate the original handshake, this proposal takes an
    approach similar to Steven Murdoch's proposal 124 and my old
    proposal 169, and uses Tor cells to finish authenticating the
-   parties' identities once the initial TLS handshake is finished.
+   parties' identities once the initial TLS handshake is finished.spo
 
    I discuss some alternative design choices and why I didn't make
    them in section 7; please have a quick look there before
    telling me that something is pointless or makes no sense.
 
-   Terminological note: I use "client" below to mean the Tor
-   instance (a client or a bridge or a relay) that initiates a TLS
-   connection, and "server" to mean the Tor instance (a bridge or a
-   relay) that accepts it.
+   Terminological note: I use "client" or "initiator" below to mean
+   the Tor instance (a client or a bridge or a relay) that initiates a
+   TLS connection, and "server" or "responder" to mean the Tor
+   instance (a bridge or a relay) that accepts it.
 
 2. History and Motivation
 
@@ -359,16 +359,17 @@ Supersedes: 169
    cell.  If AuthType is 1 (meaning "RSA-SHA256-TLSSecret"), then the
    Authentication contains the following:
 
-       Type: The characters "AUTH0001" [8 octets]
+       TYPE: The characters "AUTH0001" [8 octets]
        CID: A SHA256 hash of the client's RSA1024 identity key [32 octets]
        SID: A SHA256 hash of the server's RSA1024 identity key [32 octets]
        SLOG: A SHA256 hash of all bytes sent from the server to the client
          as part of the negotiation up to and including the
          AUTH_CHALLENGE cell; that is, the VERSIONS cell,
-         the CERT cell, and the AUTH_CHALLENGE cell. [32 octets]
+         the CERT cell, the AUTH_CHALLENGE cell, and any padding cells.
+         [32 octets]
        CLOG: A SHA256 hash of all bytes sent from the client to the
          server as part of the negotiation so far; that is, the
-         VERSIONS cell and the CERT cell. [32 octets]
+         VERSIONS cell and the CERT cell and any padding cells. [32 octets]
        SCERT: A SHA256 hash of the server's TLS link
          certificate. [32 octets]
        TLSSECRETS: A SHA256 HMAC, using the TLS master secret as the
@@ -387,7 +388,8 @@ Supersedes: 169
           [variable length]
 
    To check the AUTHENTICATE cell, a server checks that all fields
-   containing a hash contain the correct value, then verifies the
+   containing from TYPE through TLSSECRETS contain their unique
+   correct values as described above, and then verifies the signature.
    signature.  The server MUST ignore any extra bytes in the signed
    data after the SHA256 hash.
 
@@ -402,6 +404,9 @@ Supersedes: 169
    cell.  Both parties MUST close the link if it turns out they both
    would have supported version 3 or higher, but they somehow wound
    up using a v2 or v1 handshake.  (More on this in section 6.4.)
+
+   Either party may send a VPADDING cell at any time during the
+   handshake, except as the first cell. (See proposal 184.)
 
    A server SHOULD NOT send any sequence of cells when starting a v3
    negotiation other than "VERSIONS, CERT, AUTH_CHALLENGE,
@@ -421,6 +426,7 @@ Supersedes: 169
    We need to reserve command numbers for CERT, AUTH_CHALLENGE, and
    AUTHENTICATE.  I suggest that in link protocol 3 and higher, we
    reserve a separate range of commands for variable-length cells.
+   See proposal 184 for more there.
 
 5. Efficiency
 
@@ -474,15 +480,15 @@ Supersedes: 169
    replayed or MITM'd AUTHENTICATE cell that was previously sent by
    the client?
 
-   If the client included a non-zero TLSSECRET component, and the
+   Because the client includes a TLSSECRET component, and the
    server is able to verify it, then the answer is easy: the server
    knows for certain that it is talking to the party with whom it
    did the TLS handshake, since if somebody else generated a correct
    TLSSECRET, they would have to know the master secret of the TLS
    connection, which would require them to have broken TLS.
 
-   If the client was not able to include a non-zero TLSSECRET
-   component, or the server can't check it, the answer is a little
+   Even if the protocol didn't contain the TLSSECRET component,
+   the server could the client's authentication, but it's a little
    trickier.  The server knows that it is not getting a replayed
    AUTHENTICATE cell, since the cell authenticates (among other
    stuff) the server's AUTH_CHALLENGE cell, which it has never used
@@ -573,13 +579,10 @@ Supersedes: 169
    used, it should prevent the use of the AUTHENTICATE cell for
    anything other than the TLS connection the client had in mind.
 
-   A signature of the TLSSECRET element on its own should be
-   sufficient to prevent the attacks we care about, but because we
-   don't necessarily have access to the TLS master secret when using
-   a non-C TLS library, we can't depend on it.  I added it anyway
-   so that, if there is some problem with the rest of the protocol,
-   clients and servers that _are_ written in C (that is, the official
-   Tor implementation) can still be secure.
+   A signature of the TLSSECRET element on its own should also be
+   sufficient to prevent the attacks we care about.  The redundancy
+   here should come in handy if I've made a mistake somewhere else in
+   my analysis.
 
    If the client checks the server's certificates and matches them
    to the TLS connection link key before proceding with the
