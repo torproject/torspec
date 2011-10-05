@@ -188,7 +188,7 @@ Specifications: Client behavior
   'trubuchet' connections, and Tor doesn't need to worry about it.
 
   A managed proxy is configured with
-     ClientTransportPlugin <method> exec <path> [options]
+     ClientTransportPlugin <methods> exec <path> [options]
   as in
     "ClientTransportPlugin trebuchet exec /usr/libexec/trebuchet --managed".
   This example tells Tor to launch an external program to provide a
@@ -196,6 +196,10 @@ Specifications: Client behavior
   launches one instance of each external program with a given set of
   options, even if the same executable and options are listed for
   more than one method.
+
+  In managed proxies, <methods> can be a comma-separated list of
+  pluggable transport method names, as in:
+    "ClientTransportPlugin pawn,bishop,rook exec /bin/ptproxy --managed".
 
   If instead of a transport method, the torrc lists "*" for a managed
   proxy, Tor uses that proxy for all transport methods that the plugin
@@ -235,7 +239,7 @@ Server behavior
   configuration information that we'll tell users.
 
   A managed proxy is configured as
-     ServerTransportPlugin <method> exec </path/to/binary> [options]
+     ServerTransportPlugin <methods> exec </path/to/binary> [options]
   or
      ServerTransportPlugin * exec </path/to/binary> [options]
 
