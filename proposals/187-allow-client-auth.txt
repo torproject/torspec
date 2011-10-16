@@ -1,0 +1,131 @@
+Filename: 187-allow-client-auth.txt
+Title: Reserve a cell type to allow client authorization
+Author: Nick Mathewson
+Created: 16-Oct-2011
+Status: Open
+Target: 0.2.3.x
+
+Overview:
+
+  Proposals 176 and 184 introduce a new "v3" handshake, coupled with
+  a new version 3 link protocol.  This is a good time to introduce
+  other stuff we might need.
+
+  One thing we might want is a scanning resistance feature for
+  bridges.  This proposal suggests a change we should make right
+  away to enable us to deploy such a feature in future versions of
+  Tor.
+
+Motivation:
+
+  If an adversary has a suspected bridge address/port combination,
+  the easiest way for them to confirm or disconfirm their suspicion
+  is to connect to the address and see whether they can do a Tor
+  handshake.  The easiest way to fix this problem seems to be to
+  give out bridge addresses along with some secret that clients
+  should know, but which an adversary shouldn't be able to learn
+  easily.  The client should prove to the bridge that it's
+  authorized to know about the bridge, before the bridge acts like a
+  bridge.  If the client doesn't show knowledge of the proper
+  secret, the bridge should at like an HTTPS server or a bittorrent
+  tracker or something.
+
+  This proposal *does not* specify a way for clients to authorize
+  themselves at bridges; rather, it specifies changes that we should
+  make now in order to allow this kind of authorization in the
+  future.
+
+Design:
+
+  Currently, now that proposal 176 is implemented, if a server
+  provides a certificate that indicates a v3 handshake, and the
+  client understands how to do a V3 handshake, we specify that the
+  client's first cell must be a VERSIONS cell.
+
+  Instead, we make the following specification changes:
+
+  We reserve a new variable-length cell type, "AUTHORIZE."
+
+  We specify that any number of PADDING or VPADDING or AUTHORIZE
+  cells may be sent by the client before it sends a VERSIONS cell.
+  Servers that do not require client authorization MUST ignore such
+  cells, except to include them when calculating the HMAC that will
+  appear in the CLOG part of a client's AUTHENTICATE cell.
+
+  We still specify that clients SHOULD send VERSIONS as their first
+  cell; only in some future version of Tor will an AUTHORIZE cell be sent
+  first.
+
+Discussion:
+
+  This change allows future versions of the Tor client to know that
+  some bridges need authorization, and to send them authentication
+  before sending them anything recognizably Tor-like.
+
+  The authorization cell needs to be received before the server can
+  send any Tor cells, so we can't just patch it in after the
+  VERSIONS cell exchange: the server's VERSIONS cell is unsendable
+  until after the AUTHORIZE has been accepted.
+
+  Note that to avoid scanning attacks, it's not sufficient to wait
+  for a single cell, and then either handle it as authorization or
+  reject the connection.  Instead, we need to decide what kind of
+  server we're impersonating, and respond once the client has
+  provided *either* an authorization cell, *or* a recognizably valid
+  or invalid command in the impersonated protocol.
+
+
+Alternative design: Just use pluggable transports
+
+  Pluggable transports can do this too, but in general, we want to
+  avoid designing the Tor protocol so that any particular desirable
+  feature can only be done with a pluggable transport.  That is, any
+  feature that *every* bridge should want, should be doable in Tor
+  proper.
+
+  Also, as of 16 Oct 2011, pluggable transports aren't in general
+  use.  Past experience IMO suggests that we shouldn't offload
+  architectural responsibilities to our chickens until they've
+  hatched.
+
+Alternative design: Out-of-TLS authorization
+
+  There are features (like port-knocking) designed to allow a client
+  to show that it's authorized to use a bridge before the TLS
+  handshake even happens.  These are appropriate for bunches of
+  applications, but they're trickier with an adversary who is
+  MITMing the client.
+
+Alternative design: Just use padding.
+
+  Arguably, we could only add the "VPADDING" cell type to the list
+  of those allowed before VERSIONS cells, and say that any client
+  authorization we specify later on will be sent as a VPADDING
+  cell.  But that design is kludgy: padding should be padding, not
+  semantically significant.  Besides, cell types are still fairly
+  plentiful.
+
+Counterargument: specify it later
+
+  We could, later on, say that if a client learns that a bridge
+  needs authorization, it should send an AUTHORIZE cell.  So long as
+  a client never sends an AUTHORIZE to anything other than a bridge that
+  needs authorization, it'll never violate the spec.
+
+  But all things considered, it seems easier (just a few lines of
+  spec and code) to let bridges eat unexpected authorization now
+  than it does to have stuff fail later when clients think that a
+  bridge needs authorization but it doesn't.
+
+Counterargument: it's too late!
+
+  We've already got the prop176 branch merged and running on a few
+  servers.  But as of this writing, it isn't in any Tor version.
+
+  Even if it *is* out in an alpha before we can get this proposal
+  accepted and implemented, that's not a big disaster.  In the worst
+  case, where future clients don't know whom to send authorization
+  to so they need to send it to _all_ v3 servers, they will at worst
+  break their connections only to a couple of alpha versions which
+  one hopes by then will be long-deprecated already.
+
