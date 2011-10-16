@@ -1,0 +1,213 @@
+Filename: 188-bridge-guards.txt
+Title: Bridge Guards and other anti-enumeration defenses
+Author: Nick Mathewson
+Created: 14 Oct 2011
+Status: Open
+
+1. Overview
+
+   Bridges are useful against censors only so long as the adversary
+   cannot easily enumerate their addresses. I propose a design to make
+   it harder for an adversary who controls or observes only a few
+   nodes to enumerate a large number of bridges.
+
+   Briefly: bridges should choose guard nodes, and use the Tor
+   protocol's "Loose source routing" feature to re-route all extend
+   requests from clients through an additional layer of guard nodes
+   chosen by the bridge.  This way, only a bridge's guard nodes can
+   tell that it is a bridge, and the attacker needs to run many more
+   nodes in order to enumerate a large number of bridges.
+
+   I also discuss other ways to avoid enumeration, recommending some.
+
+   These ideas are due to a discussion at the 2011 Tor Developers'
+   Meeting in Waterloo, Ontario.  Practically none of the ideas here
+   are mine; I'm just writing up what I remember.
+
+2. History and Motivation
+
+   Under the current bridge design, an attacker who runs a node can
+   identify bridges by seeing which "clients" make a large number of
+   connections to it, or which "clients" make connections to it in the
+   same way clients do.  This has been a known attack since early
+   versions {XXXX check} of the design document; let's try to fix it.
+
+2.1. Related ideas: Guard nodes
+
+   The idea of guard nodes isn't new: since 0.1.1, Tor has used guard
+   nodes (first designed as "Helper" nodes by Wright et al in {XXXX})
+   to make it harder for an adversary who controls a smaller number of
+   nodes to eavesdrop on clients.  The rationale was: an adversary who
+   controls or observes only one entry and one exit will have a low
+   probability of correlating any single circuit, but over time, if
+   clients choose a random entry and exit for each circuit, such an
+   adversary will eventually see some circuits from each client with a
+   probability of 1, thereby building a statistical profile of the
+   client's activities.  Therefore, let each client choose its entry
+   node only from among a small number of client-selected "guard"
+   nodes: the client is still correlated with the same probability as
+   before, but now the client has a nonzero chance of remaining
+   unprofiled.
+
+2.2. Related idea: Loose source routing
+
+   Since the earliest versions of Onion Routing, the protocol has
+   provided "loose source routing".  In strict source routing, the
+   source of a message chooses every hop on the message's path.  But
+   in loose source routing, the message traverses the selected nodes,
+   but may also traverse other nodes as well.  In other words, the
+   client selects nodes N_a, N_b, and N_c, but the message may in fact
+   traverse any sequence of nodes N_1...N_j, so long as N_1=N_a,
+   N_x=N_b, and N_y=N_c, for 1 < x < y.
+
+   Tor has retained this feature, but has not yet made use of it.
+
+3. Design
+
+   Every bridge currently chooses a set of guard nodes for its
+   circuits.  Bridges should also re-route client circuits through
+   these circuits.
+
+   Specifically, when a bridge receives a request from a client to
+   extend a circuit, it should first create a circuit to its guard,
+   and then relay that extend cell through the guard.  The bridge
+   should add an additional layer of encryption to outgoing cells on
+   that circuit corresponding to the encryption that the guard will
+   remove, and remove a layer of encryption on incoming cells on that
+   circuit corresponding to the encryption that the guard will add.
+
+3.1. An example
+
+   This example doesn't add anything to the design above, but has some
+   interesting inline notes.
+
+      - Alice has connected to her bridge Bob, and built a circuit
+        through Bob, with the negotiated forward and reverse keys KB_f
+        and KB_r.
+
+      - Alice then wants to extend the circuit to node Charlie.  She
+        makes a hybrid-encrypted onionskin, encrypted to Charlie's
+        public key, containing her chosen g^x value.  She puts this in
+        an extend cell: "Extend (Charlie's address) (Charlie's OR
+        Port) (Onionskin) (Charlie's ID)".  She encrypts this with
+        KB_f and sends it as a RELAY_EARLY cell to Bob.
+
+      - Bob receives the RELAY_EARLY cell, and decrypts it with KB_f.
+        He then sees that it's an extend cell for him.
+
+        So far, this is exactly the same as the current procedure that
+        Alice and Bob would follow.  Now we diverge:
+
+      - Instead of connecting to Charlie directly, Bob makes sure that
+        he is connected to his guard, Guillaume.  Bob uses a
+        CREATE_FAST cell (or a CREATE cell, but see 4.1 below) to open a
+        circuit to Guillaume.  Now Bob and Guillaume share keys KG_f
+        and KG_b.
+
+      - Now Bob encrypts the Extend cell body with KG_f and sends it
+        as a RELAY_EARLY cell to Guillaume.
+
+      - Guillaume receives it, decrypts it with KG_f, and sees:
+        "Extend (Charlie's address) (Charlie's OR Port) (Onionskin)
+        (Charlie's ID)".  Guillaume acts accordingly: creating a
+        connection to Charlie if he doesn't have one, ensuring that
+        the ID is as expected, and then sending the onionskin in a
+        create cell on that connection.
+
+        Note that Guillaume is behaving exactly as a regular node
+        would upon receiving an Extend cell.
+
+      - Now the handshake finishes.  Charlie receives the onionskin
+        and sends Guillaume "CREATED g^y,KH".  Guillaume sends Bob
+        "E(KG_r, EXTENDED g^y KH)".  (Charlie and Guillaume are still
+        running as regular Tor nodes do today).
+
+      - With this extend cell, and with all future relay cells
+        received on this circuit, Bob first decrypts the cell with
+        KG_r, then re-encrypts it with KB_r, then passes it to Alice.
+        When Alice receives the cell, it will be just as she would
+        have received if Bob had extended to Charlie directly.
+
+      - With all future outgoing cells that he receives from Alice,
+        Bob first decrypts the cell with KA_f, and if the cell does
+        not have Bob as its destination, Bob encrypts it with KG_f
+        before passing it to Guillaume.
+
+   Note that this design does not require that our stream cipher
+   operations be transitive, even though they are.
+
+   Note also that this design requires no change in behavior from any
+   node other than Bob the bridge.
+
+   Finally, observe that even though the circuit is one hop longer
+   than it would be otherwise, no relay's count of permissible
+   RELAY_EARLY cells falls lower than it otherwise would.  This is
+   because the extra hop that Bob adds is done with a CREATE_FAST
+   cell, and so he does not need to send any RELAY_EARLY cells not
+   originated by Alice.
+
+4. Other ideas and alternative designs
+
+   In addition to the design above, there are more ways to try to
+   prevent enumeration.
+
+4.1. Make it harder to tell clients from bridges
+
+   Right now, there are multiple ways for the node after a bridge to
+   distinguish a circuit extended through the bridge from one
+   originating at the bridge.  (This lets the node after the bridge
+   tell that a bridge is talking to it.)
+
+   One of the giveaways here is that the first hop in a circuit is
+   created with CREATE_FAST cells, but all subsequent hops are created
+   with CREATE cells.  In the above design, it's no longer quite so
+   simple to tell, since all of the circuits that extend through a
+   bridge now reach its guards through CREATE_FAST cells, whether the
+   bridge originated them or not.
+
+   (If we adopt a faster circuit extension algorithm -- for example,
+   Goldberg, Stebila, and Ustaoglu's design instantiated over
+   curve25519 -- we could also solve this issue by eliminating
+   CREATE_FAST/CREATED_FAST entirely, which would also help our
+   security margin a little.)
+
+   The CREATE/CREATE_FAST distinction is not the only way for a
+   bridge's guard to tell bridges from orginary clients, however.
+   Most importantly, a busy bridge will open far more circuits than a
+   client would.  More subtly, the timing on response from the client
+   will be higher and more highly variable that it would be with an
+   ordinary client.  I don't think we can make bridges behave wholly
+   indistinguishably from clients: that's why we should go with guard
+   nodes for bridges.
+
+4.2. Client-enforced bridge guards
+
+   What if Tor didn't have loose source routing?  We could have
+   bridges tell clients what guards to use by advertising those guard
+   in their descriptors, and then refusing to extend circuits to any
+   other nodes.  This change would require all clients to upgrade in
+   order to be able to use the newer bridges, and would quite possibly
+   cause a fair amount of pain along the way.
+
+   Fortunately, we don't need to go down this path.  So let's not!
+
+4.3. Separate bridge-guards and client-guards
+
+   In the design above, I specify that bridges should use the same
+   guard nodes for extending client circuits as they use for their own
+   circuits.  It's not immediately clear whether this is a good idea
+   or not.  Having separate sets would seem to make the two kinds of
+   circuits more easily distinguishable (even though we already assume
+   they are distinguishable).  Having different sets of guards would
+   also seem like a way to keep the nodes who guard our own traffic
+   from learning that we're a bridge... but another set of nodes will
+   learn that anyway, so it's not clear what we'd gain.
+
+5. Other considerations
+
+   What fraction of our traffic is bridge traffic?  Will this alter
+   our circuit selection weights?
+
+   Are the current guard selection/evaluation/replacement mechanisms
+   adequate for bridge guards, or do bridges need to get more
+   sophisticated?
