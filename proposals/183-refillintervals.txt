@@ -2,7 +2,8 @@ Filename: 183-refillintervals.txt
 Title: Refill Intervals
 Author: Florian Tschorsch and Björn Scheuermann
 Created: 03-Dec-2010
-Status: Open
+Status: Closed
+Implemented-In: 0.2.3.5-alpha
 
 Overview:
 
