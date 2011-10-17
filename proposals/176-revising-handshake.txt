@@ -2,7 +2,7 @@ Filename: 176-revising-handshake.txt
 Title: Proposed version-3 link handshake for Tor
 Author: Nick Mathewson
 Created: 31-Jan-2011
-Status: Finished
+Status: Closed
 Target: 0.2.3
 Supersedes: 169
 

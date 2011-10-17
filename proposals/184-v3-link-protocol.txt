@@ -2,7 +2,7 @@ Filename: 184-v3-link-protocol.txt
 Title: Miscellaneous changes for a v3 Tor link protocol
 Author: Nick Mathewson
 Created: 19-Sep-2011
-Status: Finished
+Status: Closed
 Target: 0.2.3.x
 
 Overview:
