@@ -134,7 +134,7 @@ Status: Open
         before passing it to Guillaume.
 
    Note that this design does not require that our stream cipher
-   operations be transitive, even though they are.
+   operations be commutative, even though they are.
 
    Note also that this design requires no change in behavior from any
    node other than Bob the bridge.
