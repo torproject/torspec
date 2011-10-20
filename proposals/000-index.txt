@@ -103,10 +103,12 @@ Proposals by number:
 180  Pluggable transports for circumvention [OPEN]
 181  Optimistic Data for Tor: Client Side [CLOSED]
 182  Credit Bucket [DRAFT]
-183  Refill Intervals [OPEN]
+183  Refill Intervals [CLOSED]
 184  Miscellaneous changes for a v3 Tor link protocol [OPEN]
 185  Directory caches without DirPort [OPEN]
 186  Multiple addresses for one OR or bridge [DRAFT]
+187  Reserve a cell type to allow client authorization [OPEN]
+188  Bridge Guards and other anti-enumeration defenses [OPEN]
 
 
 Proposals by status:
@@ -137,9 +139,10 @@ Proposals by status:
    177  Abstaining from votes on individual flags [for 0.2.3.x]
    178  Require majority of authorities to vote for consensus parameters [for 0.2.3.x]
    180  Pluggable transports for circumvention [for 0.2.3.x]
-   183  Refill Intervals
    184  Miscellaneous changes for a v3 Tor link protocol [for 0.2.3.x]
    185  Directory caches without DirPort
+   187  Reserve a cell type to allow client authorization [for 0.2.3.x]
+   188  Bridge Guards and other anti-enumeration defenses
  ACCEPTED:
    110  Avoiding infinite length circuits [for 0.2.3.x] [in 0.2.1.3-alpha]
    117  IPv6 exits [for 0.2.3.x]
@@ -193,6 +196,7 @@ Proposals by status:
    171  Separate streams across circuits by connection metadata [in 0.2.3.3-alpha]
    174  Optimistic Data for Tor: Server Side [in 0.2.3.1-alpha]
    181  Optimistic Data for Tor: Client Side [in 0.2.3.3-alpha]
+   183  Refill Intervals [in 0.2.3.5-alpha]
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration
