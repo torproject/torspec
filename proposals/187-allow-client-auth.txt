@@ -44,7 +44,7 @@ Design:
 
   Instead, we make the following specification changes:
 
-  We reserve a new variable-length cell type, "AUTHORIZE."
+  We reserve a new variable-length cell type, "AUTHORIZE".
 
   We specify that any number of PADDING or VPADDING or AUTHORIZE
   cells may be sent by the client before it sends a VERSIONS cell.

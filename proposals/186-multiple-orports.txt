@@ -58,14 +58,14 @@ Configuring additional addresses and ports:
   IPv4 addresses or to IPv6 addresses.
 
   As with the client *Port options, only the old format or the new
-  format are allowed: either a single numeric socksport and zero or
-  more sockslistenaddress options, or a set of one or more
+  format are allowed: either a single numeric ORPort and zero or
+  more ORListenAddress options, or a set of one or more
   ORPorts in the new extended format.
 
   In current operating systems (unless we get into crazy nonportable
   tricks) we need to use one socket for every address:port that Tor
-  bind on.  As a sanity check, we can limit the number of such
-  sockets we use to, say, 64.  If you want to bind lots more
+  binds on.  As a sanity check, we can limit the number of such
+  sockets we use to, say, 64.  If you want to bind lots of
   address:port combinations, you'll want to do it at the
   firewall/routing level.
 
@@ -74,14 +74,14 @@ Configuring additional addresses and ports:
      ORPort 9001
 
   Example: Our firewall is redirecting ports 80, 443, and 7000-8000
-  on all hosts in x.244.2.0/24 onto our port 2929.
+  on all hosts in 18.244.2.0/24 onto our port 2929.
 
      ORPort 2929 noadvertise
-     ORPort x.244.2.0/24:80,443,7000-8000 nolisten
+     ORPort 18.244.2.0/24:80,443,7000-8000 nolisten
 
   Example: We have a dynamic DNS provider that maps
   tornode.example.com to our current external IPv4 and IPv6
-  addresses.  Our firewall forwards port 443 on those address to our
+  addresses.  Our firewall forwards port 443 on those addresses to our
   port 1337.
 
      ORPort 1337 noadvertise alladdrs
@@ -99,7 +99,7 @@ Self-testing:
 
   It will now be possible for a Tor node to find that some addresses
   work and others do not.  In this case, the node should only
-  advertise socksport lines that have been checked.
+  advertise ORPort lines that have been checked.
 
   {Until support is added for extend cells to IPv6 addresses, it
   will only be possible to test IPv6 addresses by connecting
@@ -138,7 +138,7 @@ New authority behavior:
 
   The same rationale applies as for self-testing.  An authority
   needs to test the main address:port from the router line, and
-  every or-address line.  For or-address lines that contains
+  every or-address line.  For or-address lines that contain
   multiple ports, it needs to test all of them if they are few, or a
   sample if they are not.
 
@@ -156,7 +156,7 @@ Consensus directories and microdescriptors:
   Clients that use microdescriptors should consider a node's
   addresses to be the address:port listed in the "r" line of a
   consensus, plus all "a" lines for that node in the consensus, plus
-  all "a" lines for that node in the its microdescriptor.  Clients
+  all "a" lines for that node in its microdescriptor.  Clients
   that use full descriptors should consider a node's addresses to be
   everything listed in its descriptor.
 
@@ -198,7 +198,7 @@ Client behavior:
 
   Tor clients not running with bridges, and running with IPv4
   support, should still use the address and ORPort as advertised in
-  the router or r line of the appropriate directory object.
+  the "router" or "r" line of the appropriate directory object.
 
   Tor clients not running with bridges, and running without IPv4
   support, should use the first listed IPv6 address for a node,
