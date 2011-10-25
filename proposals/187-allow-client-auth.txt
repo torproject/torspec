@@ -27,7 +27,7 @@ Motivation:
   easily.  The client should prove to the bridge that it's
   authorized to know about the bridge, before the bridge acts like a
   bridge.  If the client doesn't show knowledge of the proper
-  secret, the bridge should at like an HTTPS server or a bittorrent
+  secret, the bridge should act like an HTTPS server or a bittorrent
   tracker or something.
 
   This proposal *does not* specify a way for clients to authorize
