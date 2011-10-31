@@ -1,18 +1,6 @@
 Title: Design sketch for new crypto ops
-Date: 19 Oct 2011
+Date: 31 Oct 2011
 Author: Nick Mathewson
-
-TODO:
-   - Write missing sections
-   - Fix XXXXs
-   - Write performance notes
-   - Find rransom's extend proposal
-   - Proofread
-   - Change relay-cipher section:
-     - Pad with zeros.
-     - Encrypt-then-mac.
-     - Revise analysis.
-   - Try to be a little less monlogue-ish, a little more
 
 0. Overview
 
@@ -28,7 +16,9 @@ TODO:
        Addressed in proposls 176, 184.  We say a little here though in
        section 5.
     CREATE/EXTEND CRYPTO --
-       Addressed in xxx-ntor-handshake.txt and rransom's extend draft
+       Addressed in xxx-ntor-handshake.txt and rransom's extend draft at
+       [*] and subsequent discussion on the tor-dev mailing list.  Not
+       considered here.
     RELAY CRYPTO
        Addressed here in Section 6
     DIRECTORY SYSTEM
@@ -36,49 +26,62 @@ TODO:
     HIDDEN SERVICE SYSTEM
        Addressed in a forthcoming document by rransom.
 
+[*] https://lists.torproject.org/pipermail/tor-dev/2011-March/002547.html
+
 1. Base algorithm choice
 
   There seem to be two main candidate algorithms for signatures: RSA
   with big keys (hereinafter "RSA>1024"); and Ed25519, which is DSA with
   the sharp edges filed off on an Edwards curve related to DJB's
   Curve25519.  We can look at other ECC groups too.  {But see ECC
-  Notes.}
+  Notes in 1.1 below.}
 
-  For Diffie Hellman: Curve25519 seems like a decent choice; failing
-  that, another XXXX.  DH on Z_p with big groups (hereinafter "DH>1024").
-  {But see ECC notes.}
+  FOR DIFFIE-HELLMAN: Curve25519 seems like a decent choice; failing
+  that, one of the NIST P-groups.  Failing that, DH on Z_p with big
+  groups (hereinafter "DH>1024").  {But see ECC Notes in 1.1 below.}
 
-  For a hash function: SHA256, switching to SHA3 in 2012 when it comes
+  FOR A HASH FUNCTION: SHA256, switching to SHA3 in 2012 when it comes
   out.  It might be worthwhile waiting for SHA3 in most places, and
-  skipping over the sha256 stage entirely.
+  skipping over the SHA256 stage entirely.
 
-  For a stream cipher: AES-CTR is in one sense a conservative choice
+  FOR A STREAM CIPHER: AES-CTR is in one sense a conservative choice
   inasmuch as AES is well-analyzed, but AES's well-known issues with
   cache-based timing attacks are pretty worrisome.  We can mitigate that
   some by using random secret IVs for AES-CTR, so that we will be
   encrypting neither attacker-chosen nor attacker-known plaintext with
-  out AES cipher, but that's a bit kludgy.  Salsa20 is what rransom
-  likes these days, but IMO we aren't competent to tell whether it looks
-  good or not; the existing attacks against it don't look like very bad
-  news to me, but who knows whether it's getting enough attention that
-  we can read.  See also ChaCha; see also the other EuroCrypt {XXXX}
-  winners/finalists; see also SHA3 if the SHA3 winner specifies a way to
-  use it as a stream cipher, or specifies an underlying stream/block
-  cipher.
+  out AES cipher, but that's a bit kludgy.  There are also supposed to
+  be time-invariant implementations that use Intel's AESNI instructions
+  where available, and time-invariant implementations that use
+  bit-slicing.
 
-  For a random number generator: We currently use OpenSSL seeded with
-  RAND_poll and with platform entropy.  OpenSSL uses RC4 (XXX check).
-  The platform entropy management can be messy, obscure, or both.  I
-  suggest that:
+  Salsa20 is what rransom likes these days, but IMO we aren't competent
+  to tell whether it looks good or not; the existing attacks against it
+  don't look like very bad news to me, but who knows whether it's
+  getting enough attention that we can read.  See also ChaCha; see also
+  the other eSTREAM winners/ finalists; see also SHA3 if the SHA3 winner
+  specifies a way to use it as a stream cipher, or specifies an
+  underlying stream/block cipher.
 
-    * we should seed our PRNG with more entropy sources if we can find
+  If we're feeling cautious, we could run two independently-keyed stream
+  ciphers and xor their streams together.
+
+  FOR A RANDOM NUMBER GENERATOR: We currently use OpenSSL seeded with
+  RAND_poll and with platform entropy.  OpenSSL uses a message-digest-
+  based algorithm from SSLeay (See http://linux.die.net/man/3/sslrand
+  for the ugly details.)  The platform entropy management can be messy,
+  obscure, or both.  I suggest that:
+
+    * We should seed our PRNG with more entropy sources if we can find
       some promising code with an appropriate license
-    * instead of just using OpenSSL's PRNG, we should use OpenSSL's PRNG
-      xor'd with some other good PRNG.  (Is Yarrow still cool?  And is
-      there a combine operation better than xor?)
+    * Instead of just using OpenSSL's PRNG, we should use OpenSSL's
+      MD-based PRNG xor'd with some other good PRNG.  (Fortuna,
+      maybe. Is there a combine operation better than xor? See also SHA3
+      if the SHA3 winner is one that specifies a PRNG mode of
+      operation.)
+    * We should consider splicing this combined-stream PRNG into OpenSSL
+      as the RNG it uses for SSL and key generation.
     * We should re-seed the RNG before and after very sensitive
       operations, like private key generation.
-
 
 1.1. ECC notes
 
@@ -117,7 +120,7 @@ TODO:
   like that.  We should check that out.
 
   [*] Actually, it's older than onion routing, and older than some
-  members of the Tor project.
+  members of the Tor Project.
 
   [**] Actually, because of the common practice of choosing a small-ish
   prime value (65537) for e in RSA, RSA public key operations can be a
@@ -138,14 +141,14 @@ TODO:
     - To determine which part of the circuit ID space to use on a Tor
       instance's links.
 
-2.1. New identities, option 1: RSA>1024, slow migration.
+2.1. New identities, option 1: "RSA>1024, slow migration"
 
-  We use RSA for identity keys indefinitely.  Nearly all operations done
-  with an identity key are signature checking; signing happens only a
-  few times an hour per node even with pathological cases.  Since
-  signature checking is really cheap with RSA, there's no speed
-  advantage for ECC here.  (There is a space advantage, since the keys
-  are much smaller.)
+  In this option, we use RSA for identity keys indefinitely.  Nearly all
+  operations done with an identity key are signature checking; signing
+  happens only a few times an hour per node even with pathological
+  cases.  Since signature checking is really cheap with RSA, there's no
+  speed advantage for ECC here.  (There is a space advantage, since the
+  keys are much smaller.)
 
   The easiest way to migrate to longer identity keys is to tell all Tors
   to begin accepting longer identity keys now, and to tweak all our
@@ -156,13 +159,14 @@ TODO:
   specified.  Once all versions of Tor can accept long identity keys, we
   raise the maximum size from 1024 to somewhere in the 2048-4096 range.
 
-2.2. New identities option 2: RSA>1024, faster migration.
+2.2. New identities option 2: "RSA>1024, faster migration"
 
-  We use RSA for identity keys indefinitely as above.  But we allow
-  nodes to begin having longer identities now, even though older Tors
-  won't understand them.  This implies, of course, that every such node
-  needs to have at least 2 identities: one RSA1024 identity for backward
-  compatibility, one RSA>1024 identity for more secure identification.
+  In this option, we use RSA for identity keys indefinitely as above.
+  But we allow nodes to begin having longer identities now, even though
+  older Tors won't understand them.  This implies, of course, that every
+  such node needs to have at least 2 identities: one RSA1024 identity
+  for backward compatibility, one RSA>1024 identity for more secure
+  identification.
 
   We would have these identities cross-certify as follows: All keys
   would be listed in the router descriptor.  RSA>1024 keys would be
@@ -201,9 +205,9 @@ TODO:
   implications of letting nodes have multiple identity keys.
 
   We'll need to advertise these new identities in consensus directories
-  too; see XXXX below for more info there.
+  too; see 4.2 below for more info there.
 
-2.3. New identities option 3: RSA>1024 and/or Ed25519, faster migration
+2.3. New identities option 3: "RSA>1024 and/or Ed25519, faster migration"
 
   As in option 2 above, but new keys can also be Ed25519.  If we expect
   that not all installations will allow Ed25519 (see "ECC Notes",
@@ -269,12 +273,18 @@ TODO:
   nodes without RSA1024 identity keys (off until all clients and nodes
   accept new identity keys).
 
-2.6. Implications for directory information
+2.6. Selective correctness attacks
 
-  Clients must know a hash for each node's identity key, or else they
-  can't make an authenticated connection to the node or tell ORs how to
-  extend to the node.
+  For any scheme based on having multiple signature types on a router
+  descriptor or other document, an attacker could mount a partitioning
+  attack by making a document which older clients will accept but newer
+  clients will reject.
 
+  It's easy to prevent this at the consensus step: directory authorities
+  MUST NOT accept any descriptor unless all clients will be able to
+  verify it.
+
+  For bridge descriptors, we need to investigate more carefully.
 
 3. New fingerprints
 
@@ -328,6 +338,47 @@ TODO:
   In the UI we'll lose the property that no node has more than one
   fingerprint: I do not believe that this actually hurts us.
 
+3.3. Implications for directory information
+
+  Clients must know a hash for each node's identity key, or else they
+  can't make an authenticated connection to the node or tell ORs how to
+  extend to the node.
+
+  This means that if client Alice wants to connect to node Bob, Alice
+  must have a fingerprint of Bob's ID key such that she understands the
+  ID key type and the fingerprint algorithm.  If Alice wants to extend
+  from Bob to Carol, she must have a fingerprint of Carol's ID key such
+  that Bob understands the ID key type and the fingerprint algorithm.
+
+  So for every node, Alice must not only know a fingerprint that *she*
+  can use for that node, but also a set fingerprint such that every node
+  can understand at least one fingerprint in the set.
+
+  This implies a proliferation of fingerprints!  We should tread
+  carefully here.  To prevent proliferation, the easiest solution is not
+  to add too many new types, and to have a good plan for retiring older
+  types.
+
+3.4. Implications for EXTEND cells
+
+  As mentioned in 3.3, when a client Alice can tell node Bob to extend
+  to node Carol, she needs to give Bob a fingerprint for Carol that Bob
+  will understand: one where Bob understands the digest algorithm, and
+  understands the identity key type.
+
+  There are two ways we can do this:
+
+    1) Alice's EXTEND cell contains every fingerprint for Carol that
+       Alice knows about.  Bob treats the cell as valid if every one he
+       can verify is correct.
+
+    2) Alice knows which fingerprint types Bob understands (either via
+       his version, or something else in his directory info).  She
+       selects a fingerprint for Carol using the best one of these
+       types.
+
+  The first seems more robust to me, if we have space for enough bytes.
+  If we proliferate too many types, though, we'll need to do the second.
 
 4. Directory changes
 
@@ -336,17 +387,51 @@ TODO:
   In some places, directory objects cross-reference one another by SHA1
   hash.  They should use a better hash algorithm instead.
 
-  XXX
+  This does make problems in a few cases.
+
+  Router descriptors and extrainfo descriptors:
+
+     One problematic case is in in determining node families.  If node A
+     and node B want to list each other as being in the same family,
+     they need to do so in a way that clients can interpret.  That could
+     mean listing SHA1-RSA1024 fingerprints so old clients understand,
+     AND new fingerprints for security. (But *that* could create
+     interesting partitioning attacks wherein your family looks
+     different depending on who's looking.)
+
+       Solution: we need to move the responsibility for combining node
+       families into the consensus voting process, so clients don't
+       need to understand the cross-reference types themselves.
+
+     Another case is in certifying extrainfo documents from descriptors.
+     For that, we can list multiple extrainfo digests, either on the
+     extrainfo line, or on additional lines.
+
+  Voting and consensus documents:
+
+     Adding more fingerprints in votes isn't a problem; votes are a tiny
+     fraction of authority bw usage.  Adding more hashes is easy.
+
+     For consensus documents, we ought to have flavors that you can
+     download depending on what set of fingerprints types you
+     understand.
+
+     For integrity purposes, consensuses can refer to microdescriptors
+     or descriptors by any digest type that the client understands.  But
+     for downloading purposes, the digest type must be one that
+     directory caches also support: see 4.4.
 
 4.2. More fingerprints
 
   Because extending from node A to node B requires that we have node B's
   fingerprint in a way that node A will understand, it is not enough to
-  get a set of identity fingerprints for each node in the format _we_
-  like best.  Instead, we must .
+  get a set of identity fingerprints for each node in the format that
+  the client likes best -- see 3.3 and 3.4 above.  So every flavor of
+  consensus we serve needs to include a node identity in a format the
+  client understands, and a node identities in formats such that every
+  node will understand at least one.
 
-
-4.x. An option: compound signatures on directory objects
+4.3. An option: compound signatures on directory objects
 
    In Tor 0.2.2.x and later, when we check a signature on a directory
    object (not including hidden service descriptors), we only look at
@@ -357,13 +442,23 @@ TODO:
    with a 1024-bit key therefore leaves 128-11-20==97 more bytes we
    could use for a SHA2 or a SHA3 hash.)
 
-4.x.
+4.4. Downloading by digest
 
+   We should have directory caches support downloading objects by more
+   hash types.  Right now, descriptors are downloaded by their SHA1
+   hashes and microdescriptors by their SHA256 hashes.  This is okay for
+   now, but once SHA3 is out, we should support downloading all of these
+   by SHA3 digest.
 
 5. Link crypto changes
 
+  Currently we use TLS.  That's fine.
 
+  We should however look to longer link keys, bigger DH groups, etc.
 
+  Once TLS versiosn 1.1/1.2 is available in OpenSSL, we should move to
+  use them, I think.  We should also look into how quickly we can
+  deprecate TLS 1.0 and SSL <= 3 usage.
 
 6. Relay crypto changes
 
@@ -390,7 +485,7 @@ TODO:
 
 6.1. Option 1: Use AES-CTR in a less scary mode
 
-  When doing key expansion, in addition to establishing Kf, Kb, Df, and
+   When doing key expansion, in addition to establishing Kf, Kb, Df, and
    Db, also establish IVf and IVb.  Use the current relay crypto, except
    instead of starting the counters at 0, start them at IVf and IVb.
    This way, an attacker doesn't have any known plaintexts to work with,
@@ -414,7 +509,7 @@ TODO:
    have the key used for each block be an HMAC of all previously
    received ciphertext.)
 
-Option 3: As 1, but tagging attacks garble the circuit in the same block.
+6.3. Option 3: As 1, but tagging attacks garble the circuit in the same block.
 
    Use a large-block cipher mode, such as BEAR or LIONESS (depending on
    whether we need a PRP or SPRP).  Base the key material for each block
@@ -429,7 +524,7 @@ Option 3: As 1, but tagging attacks garble the circuit in the same block.
    start from the end, but it didn't seem much better.  We should
    investigate relative performance, though.}
 
-Option 4: Shall we have middle nodes be able to fast-stop bad data?
+6.4. Option 4: Shall we have middle nodes be able to fast-stop bad data?
 
    In all the above options, if a cell is altered, the middle node can
    at best turn that cell and the rest of the cells on the circuit into
@@ -439,8 +534,10 @@ Option 4: Shall we have middle nodes be able to fast-stop bad data?
    Might we prefer to do as in mixnets, and have nodes kill circuits
    upon receiving altered cells?
 
-   I'm not so sure.  It's relatively expensive in per-cell overhead, and
-   the next-best attack to the one it prevents isn't so great.
+   It's not such an obvious improvement.  Including more MACs is more
+   expensive in per-cell overhead.  The attacks that we would foil this
+   way but not with Option 3 are not so much better than the the passive or
+   timing-based-active end-to-end attacks that would still remain.
 
    Consider that if option 3 is in place, an end-to-end attacker who
    wants to do a tagging attack at one node can garble the rest of the
@@ -451,37 +548,43 @@ Option 4: Shall we have middle nodes be able to fast-stop bad data?
    corresponding gap at the exit.  The only advantage of the garbling
    attack would be that garbled cells are presumably rarer than circuit
    closes or traffic pauses, and thus easier to use to distinguish
-   target circuits.  But that's still bunk; the other attacks win fine,
-   and the pause attack doesn't risk detection so much.
+   target circuits.  But that's still questionable: the other attacks
+   win fine, and the pause attack doesn't risk detection as much.
 
-   Still, to do this one, we'd want to have outgoing and incoming
-   circuits treated differently.  Incoming cells could work as in 1 or 2
-   or 3 above; outgoing cells would want to have a header portion as in
-   mixmaster, where each node checks that the first N bits of the header
+   So why might we want to do this?  First, the overhead doesn't need to
+   be as bad as you might first expect (see below).  Second, it would be
+   nice to increase the security margin as much as possible: "attacks
+   only get better".
+
+   So let's figure out how it would look.
+
+   To do this one, we'd want to have outgoing and incoming circuits
+   treated differently.  Incoming cells would get decrypted as in 1
+   above, except that we'd have a MAC on them.  For outgoing cells,
+   each node would check that the first N bytes of the cell
    match a MAC of all data seen so far, *including the rest of the
-   cell*.  They'd then decrypt the rest of the cell, remove the first N
-   bits of the header, and re-pad the header with N bits at the end,
-   taken from a PRNG whose seed is shared with the client.  (This is
-   basically how mixmaster works, and how mixminion works in the common
-   case.)
+   cell*.  They'd then remove the first N bytes, and re-pad the cell
+   with bytes from a PRNG, and decrypt the resulting re-padded cell.
+   (This is basically how mixmaster works, and how mixminion works in
+   the common case.)
 
    The space overhead here is kind of large: N bits per cell per node.
-   In the most paranoid case, if we used 256-byte HMACs on 3-node paths,
+   In the most paranoid case, if we used 256-bit HMACs on 3-node paths,
    that's 96 bytes per cell, which is more than 20% of the total length.
    But we can probably do better if we let the CREATE operation also
    tell the node some N to check.  For example, the first node doesn't
    need to check any bits.  The second and third nodes could check 64
-   bits apiece; that only has 16 bytes overhead, and high probability of
-   catching any changes. (Birthday attacks don't matter here, and an
-   attacker who mounts this attack for long enough to accidentally find
-   a 64-bit mac will break so many circuits in the process as to become
-   totally unreliable.
+   bits apiece; that only has 16 bytes overhead total, and high
+   probability of catching any changes. (Birthday attacks don't matter
+   here, and an attacker who mounts this attack for long enough to
+   accidentally find a 64-bit MAC will break so many circuits in the
+   process as to become totally unreliable.)
 
-   But all of this leaks the path lengths and position on the path to
+   All of this leaks the path lengths and position on the path to
    various nodes.  We might open ourselves up to partitioning attacks if
    different clients choose different numbers of bits.  What's more, we
    might leak the length of the path to the last node by how much junk
-   there is at the end of the cell.
+   there is at the end of the cell.  So we'd need to be careful!
 
    Here's a simple construction for this format, to be concrete:
 
@@ -522,22 +625,23 @@ Option 4: Shall we have middle nodes be able to fast-stop bad data?
      When the client receives a relay cell body, it iteratively does:
 
        For node i in circuit from 1..N:
-           Let cells_i = all previous cells which we decided were from i,
+           Let cells_i = all previous cells which we previously decided
+              were from node i, or relayed by node i,
            and let cellbody = the body of the cell, except for the last
-           MACBYTESb[i] bytes.
-           {XXXX I'd be more comfortable if the MAC covered all cells
-            passed by every node on the circuit.}
+              MACBYTESb[i] bytes,
+           and let cell mac = the last MACBYTESb[i] bytes of this cell.
 
-           If MACBYTESb[i]>0, check whether MAC(cells_i | cellbody,
-           Mb[i])[:MACBYTESb[i]] the last MACBYTESb[i] bytes of the
-           cell.  If so, this cell is from node i.
+           If cellmac is nonempty, check wither cellmac = mac_received,
+           where mac_received is the first MACBYTESb[i] bytes of
+           MAC(cells_i | cellbody, Mb[i]). If so, this cell is from node
+           i.
 
-           If this cell is from node i, decrypt the first
-           CELL_DATA_LEN-MACBYTESb[i] bytes of the cell using the stream
-           keyed with Kb[i],IVb[i].  Act on it as a relay cell.
+           If this cell is from node i, add cellbody to cells_i, then
+           decrypt cellbody using the stream keyed with Kb[i],IVb[i].
+           Act on it as a relay cell.
 
-           Otherwise decrypt the entire cell, MAC included, with the
-           stream keyed with Kb[i], IVb[i].
+           Otherwise add the entire cell to cells_i, and decrypt it, MAC
+           included, with the stream keyed with Kb[i], IVb[i].
 
       If no node sent this cell: it's junk and somebody is probably
       messing with us!  Destroy the circuit.
@@ -560,19 +664,19 @@ Option 4: Shall we have middle nodes be able to fast-stop bad data?
          Let PAD[i] = the next MACBYTESf[i] bytes from the PRNG keyed
          with SEEDf[i], for i in 1...N.
 
-         Let STREAM[i] = the next CELL_DATA_LEN-MACBYTESf[i] bytes of
+         Let STREAM[i] = the next CELL_DATA_LEN bytes of
            the stream keyed by Kf[i],IV[i], for i in 1...N.
 
          Let PADSEEN[1] == ""
 
          For i in 2...N:
-             Let L = len(PADSEEN[i-1])
-             Let PADSEEN[i] = (PADSEEN[i-1] xor
-                              STREAM[i-1][CELL_DATA_LEN-L:]) | PAD[i-1]
+             Let L = len(PADSEEN[i-1]) + len(PAD[i-1])
+             Let PADSEEN[i] = (PADSEEN[i-1] | PAD[i-1]) xor
+                              STREAM[i-1][CELL_DATA_LEN-L:]
 
          For i in N down to 1:
 
-            Let Encbody = Body xor STREAM[i][len(body)]
+            Let Encbody = Body xor STREAM[i][:len(Body)]
             Let extra = "RECOGNIZED" if i == N, "OK" otherwise
             Let cells[i] = cells[i] | Body | PADSEEN[i]
             Let M = MAC(cells[i] | extra , Mf[i])
@@ -589,10 +693,10 @@ Option 4: Shall we have middle nodes be able to fast-stop bad data?
          = MAC(cells|rest|"OK", Mb)[:MACBYTESf], this cell is not for
          us, but is valid.  Otherwise, destroy the circuit.
 
-         Decrypt REST using the stream cipher keyed with Kf,IVf.  If
-         this cell is for us, act on it as a relay cell.  Otherwise, let
-         PAD = the next MACBYTESf[i] bytes of the PRNG keyed with SEEDf,
-         and relay REST | PAD.
+         Let PAD = the next MACBYTESf[i] bytes of the PRNG keyed with
+         SEEDf, and decrypt REST | PAD using the stream cipher keyed
+         with Kf,IVf.  If this cell is for us, act on it as a relay
+         cell.  Otherwise, relay it.
 
      ANOTHER VARIANT:
 
@@ -628,6 +732,32 @@ Option 4: Shall we have middle nodes be able to fast-stop bad data?
          In general, to prevent an end-to-end tagging attack, it seems
          sufficient to do something like setting MACBYTES=8 for the last
          hop, and MACBYTES=8 for one hop in the middle.
+
+     OTHER VARIANTS:
+
+         Can we combine this approach with one of the approaches in 2 or
+         3 above to ensure that if corrupt data passes (because of our
+         use of truncated HMACs) it still corrupts the stream?
+
+         Can/should we use GCM or something here instead of separate
+         encrypt/hmac operations?  It doesn't seem that GCM per se would
+         apply without some tweaking, which we probably do not have the
+         expertise to do.
+
+    OVERHEAD NOTES:
+
+         When computing additional overhead with this method, note that
+         it lets us replace the old 4 byte "digest" field and the 2 byte
+         "recognized" field.
+
+         I note in passing that we need at most 9 bits for the length
+         field, and most 6 bits for the command field, yet we're using a
+         total of 3 bytes for those 15 bits.  That's an opportunity to
+         save another byte.
+
+6.5. Other ideas for 
+
+  
 
 ACKS
 
