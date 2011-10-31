@@ -13,10 +13,10 @@ Author: Nick Mathewson
     IDENTITY KEYS AND FINGERPRINTS
        Addressed here in Section 2.
     LINK CRYPTO (TLS) --
-       Addressed in proposls 176, 184.  We say a little here though in
-       section 5.
+       Addressed in proposals 176, 184.  We say a little here in section 5,
+       though.
     CREATE/EXTEND CRYPTO --
-       Addressed in xxx-ntor-handshake.txt and rransom's extend draft at
+       Addressed in xxx-ntor-handshake.txt and rransom's EXTEND draft at
        [*] and subsequent discussion on the tor-dev mailing list.  Not
        considered here.
     RELAY CRYPTO
@@ -41,7 +41,7 @@ Author: Nick Mathewson
   groups (hereinafter "DH>1024").  {But see ECC Notes in 1.1 below.}
 
   FOR A HASH FUNCTION: SHA256, switching to SHA3 in 2012 when it comes
-  out.  It might be worthwhile waiting for SHA3 in most places, and
+  out.  It might be worthwhile waiting for SHA3 in most places and
   skipping over the SHA256 stage entirely.
 
   FOR A STREAM CIPHER: AES-CTR is in one sense a conservative choice
@@ -49,7 +49,7 @@ Author: Nick Mathewson
   cache-based timing attacks are pretty worrisome.  We can mitigate that
   some by using random secret IVs for AES-CTR, so that we will be
   encrypting neither attacker-chosen nor attacker-known plaintext with
-  out AES cipher, but that's a bit kludgy.  There are also supposed to
+  our AES cipher, but that's a bit kludgy.  There are also supposed to
   be time-invariant implementations that use Intel's AESNI instructions
   where available, and time-invariant implementations that use
   bit-slicing.
@@ -90,7 +90,7 @@ Author: Nick Mathewson
   levels of security, and the resulting outputs are much shorter.
 
   As near as I can tell as a layman, Certicom is muddying the waters as
-  much as possible wrt claiming that it's nigh impractical to deploy ECC
+  much as possible wrt claiming that it's nigh-impractical to deploy ECC
   without licensing their patents.  This is rather like the silliness
   that PKP used to pull back in the day, where they claimed that their
   patents covered not only the existing public key cryptography
@@ -131,12 +131,12 @@ Author: Nick Mathewson
 
   Identity keys and their fingerprints are used:
     - To sign router descriptors.
-    - To identify nodes in consensus directories
-    - To make sure we're talking to the right node in the link handshake
+    - To identify nodes in consensus directories.
+    - To make sure we're talking to the right node in the link handshake.
     - To make sure that the extending node is talking to the right next
-      node when sending an extend cell
-    - To identify particular nodes in the hidden service subsystem
-    - To identify nodes in the UI in various places
+      node when sending an extend cell.
+    - To identify particular nodes in the hidden service subsystem.
+    - To identify nodes in the UI in various places.
     - Internally, to identify a node uniquely in the codebase.
     - To determine which part of the circuit ID space to use on a Tor
       instance's links.
@@ -219,11 +219,11 @@ Author: Nick Mathewson
   Let's review our use of identity keys again and make sure that we can
   handle all of them with the ideas above.
 
-    - To sign router descriptors
+    - To sign router descriptors.
 
   We discussed this in 2.2.
 
-    - To make sure we're talking to the right node in the link handshake
+    - To make sure we're talking to the right node in the link handshake.
 
   The current v3 link handshake can handle presenting multiple identity
   certificates in the CERT cell.  We should consider ourselves to be
@@ -233,14 +233,14 @@ Author: Nick Mathewson
   identity we can.
 
     - To make sure that the extending node is talking to the right next node
-      when sending an extend cell
+      when sending an extend cell.
 
   The new extend cell format needs to allow the client to tell the
   extending node about some identity for the destination node that the
   extending node will be able to understand.  This is a capability of
   the extending node that the client needs to be able to check. (Also,
   the extend cell needs to hash that identity in a form the extending
-  node can understand; but that's a fingerprint issue.)
+  node can understand, but that's a fingerprint issue.)
 
     - To determine which part of the circuit ID space to use on a Tor
       instance's links.
@@ -251,19 +251,19 @@ Author: Nick Mathewson
   the initiator always gets the low circIDs and the responder always
   gets the high ones.
 
-    - To identity nodes in consensus directories
-    - To identify nodes in the UI in various places
+    - To identify nodes in consensus directories.
+    - To identify nodes in the UI in various places.
     - Internally, to identify a node uniquely in the codebase.
 
   See sections 3 and 4 below.
 
-    - To identify particular nodes in the hidden service subsystem
+    - To identify particular nodes in the hidden service subsystem.
 
   Out of scope.
 
 2.5. Migrating away from short ID keys entirely
 
-  Eventually no version of Tor that requires 1024-bit identity keys will
+  Eventually, no version of Tor that requires 1024-bit identity keys will
   remain.  When that happens, we should stop using them entirely.  That
   means that if we take any path other than the "slow migration" path of
   2.1, we'll need to make everything that looks at a node's identity
@@ -307,9 +307,11 @@ Author: Nick Mathewson
 
   Since 43 base-64 characters is enough to represent a 256-bit digest,
   with 2 bits left over, I propose that the b64 value encode
-      hh | D(hash algorithm name, key type, encoded key),
 
-  where hh is a 2-bit value, with one of the values:
+      hh | D(hash algorithm name, key type, encoded key)
+
+  where hh is a 2-bit value, with one of the following values:
+
       00 -- sha256
       01 -- sha3
       10 -- to be determined
@@ -356,7 +358,7 @@ Author: Nick Mathewson
 
   This implies a proliferation of fingerprints!  We should tread
   carefully here.  To prevent proliferation, the easiest solution is not
-  to add too many new types, and to have a good plan for retiring older
+  to add too many new types and to have a good plan for retiring older
   types.
 
 3.4. Implications for EXTEND cells
@@ -428,7 +430,7 @@ Author: Nick Mathewson
   get a set of identity fingerprints for each node in the format that
   the client likes best -- see 3.3 and 3.4 above.  So every flavor of
   consensus we serve needs to include a node identity in a format the
-  client understands, and a node identities in formats such that every
+  client understands, and node identities in formats such that every
   node will understand at least one.
 
 4.3. An option: compound signatures on directory objects
@@ -481,7 +483,7 @@ Author: Nick Mathewson
   technically slightly more difficult than xor-based tagging, and it
   could be useful to boost our defense-in-depth a little bit, just in
   case other active end-to-end attacks turn out to be harder than we'd
-  though.)
+  thought.)
 
 6.1. Option 1: Use AES-CTR in a less scary mode
 
@@ -541,7 +543,7 @@ Author: Nick Mathewson
 
    Consider that if option 3 is in place, an end-to-end attacker who
    wants to do a tagging attack at one node can garble the rest of the
-   circuit, and see if the output is garbled at the exit node.  But such
+   circuit and see if the output is garbled at the exit node.  But such
    an attacker could just as easily close the circuit at one of those
    nodes and watch for a corresponding close event, or even better --
    simply pause traffic on that circuit for a while and watch for a
@@ -563,7 +565,7 @@ Author: Nick Mathewson
    above, except that we'd have a MAC on them.  For outgoing cells,
    each node would check that the first N bytes of the cell
    match a MAC of all data seen so far, *including the rest of the
-   cell*.  They'd then remove the first N bytes, and re-pad the cell
+   cell*.  They'd then remove the first N bytes, re-pad the cell
    with bytes from a PRNG, and decrypt the resulting re-padded cell.
    (This is basically how mixmaster works, and how mixminion works in
    the common case.)
@@ -629,7 +631,7 @@ Author: Nick Mathewson
               were from node i, or relayed by node i,
            and let cellbody = the body of the cell, except for the last
               MACBYTESb[i] bytes,
-           and let cell mac = the last MACBYTESb[i] bytes of this cell.
+           and let cellmac = the last MACBYTESb[i] bytes of this cell.
 
            If cellmac is nonempty, check wither cellmac = mac_received,
            where mac_received is the first MACBYTESb[i] bytes of
@@ -702,7 +704,7 @@ Author: Nick Mathewson
 
          If we restrict MACBYTESf values to range 0..HL/2, where HL is the
          length of the MAC output, we can replace
-           MAC(x | "RECOGIZED")[:MACBYTESf] and MAC(x | "OK")[:MACBYTESf]
+           MAC(x | "RECOGNIZED")[:MACBYTESf] and MAC(x | "OK")[:MACBYTESf]
          with
            MAC(x)[:MACBYTESf] and MAC(x)[HL-MACBYTESf:]
 
@@ -754,10 +756,6 @@ Author: Nick Mathewson
          field, and most 6 bits for the command field, yet we're using a
          total of 3 bytes for those 15 bits.  That's an opportunity to
          save another byte.
-
-6.5. Other ideas for 
-
-  
 
 ACKS
 
