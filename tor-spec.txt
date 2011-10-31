@@ -194,7 +194,8 @@ see tor-design.pdf.
      [The above "should not" is because some of the ciphers that
      clients list may be fake.]
 
-   In "in-protocol" (a.k.a. "the v3 handshake"), the initiator sends no certificates, and the
+   In "in-protocol" (a.k.a. "the v3 handshake"), the initiator sends no
+   certificates, and the
    responder sends a single connection certificate.  The choice of
    ciphersuites must be as in a "renegotiation" handshake.  There are
    additionally a set of constraints on the connection certificate,
@@ -212,7 +213,7 @@ see tor-design.pdf.
    protocol version.  Assuming that the version they negotiate is 3 (the
    only one specified for use with this handshake right now), the
    responder sends a CERTS cell, an AUTH_CHALLENGE cell, and a NETINFO
-   cell to the initiator, which may send either CERTS,AUTHENTICATE,
+   cell to the initiator, which may send either CERTS, AUTHENTICATE,
    NETINFO if it wants to authenticate, or just NETINFO if it does not.
 
    For backward compatibility between later handshakes and "certificates
@@ -237,7 +238,7 @@ see tor-design.pdf.
 
    All new relay implementations of the Tor protocol MUST support
    backwards-compatible renegotiation; clients SHOULD do this too.  If
-   this is not possible, new client implementations MUST support all
+   this is not possible, new client implementations MUST support both
    "renegotiation" and "in-protocol" and use the router's
    published link protocols list (see dir-spec.txt on the "protocols" entry)
    to decide which to use.
@@ -319,7 +320,7 @@ see tor-design.pdf.
         Payload                               [Length bytes]
 
    On a version 2 connection, variable-length cells are indicated by a
-   command byte either equal to 7 ("VERSIONS").  On a version 3 or
+   command byte equal to 7 ("VERSIONS").  On a version 3 or
    higher connection, variable-length cells are indicated by a command
    byte equal to 7 ("VERSIONS"), or greater than or equal to 128.
 
@@ -382,9 +383,9 @@ see tor-design.pdf.
 
    When the renegotiation handshake is used, both parties immediately
    send a VERSIONS cell (4.1 below), and after negotiating a link
-   protocol version (which will be 2), send a NETINFO cell (4.5 below) to
-   confirm their addresses and timestamps.  No other intervening cell
-   types are allowed.
+   protocol version (which will be 2), each send a NETINFO cell (4.5
+   below) to confirm their addresses and timestamps.  No other intervening
+   cell types are allowed.
 
    When the in-protocol handshake is used, the initiator sends a
    VERSIONS cell to indicate that it will not be renegotiating.  The
@@ -392,11 +393,13 @@ see tor-design.pdf.
    initiator the certificates it needs to learn the responder's
    identity, an AUTH_CHALLENGE cell (4.3) that the initiator must include
    as part of its answer if it chooses to authenticate, and a NETINFO
-   cell (4.5).  As soon as it gets the CERTS cell, the initiator knows
-   whether the responder is correctly authenticated.  At this point the
-   initiator may send a NETINFO cell if it does not wish to
-   authenticate, or a CERTS cell, an AUTHENTICATE cell (4.4), and a NETINFO
-   cell if it does.  When this handshake is in use, the first cell must
+   cell (4.5).  The initiator can use the CERTS cell to confirm whether
+   the responder is correctly authenticated. If the initiator does not wish
+   to authenticate, it can send a NETINFO cell once it has received the
+   VERSIONS cell from the responder. If the initiator does wish to
+   authenticate, it waits until it gets the AUTH_CHALLENGE cell, and then
+   sends a CERTS cell, an AUTHENTICATE cell (4.4), and a NETINFO
+   cell.  When this handshake is in use, the first cell must
    still be VERSIONS, and no other cell type is allowed to intervene
    besides those specified, except for PADDING and VPADDING cells.
 
@@ -414,8 +417,8 @@ see tor-design.pdf.
    sent only one certificate at first and where the initiator did not
    send any certificates in the first negotiation), both parties MUST
    send a VERSIONS cell.  In "renegotiation", they send a VERSIONS cell
-   right after he renegotiation is finished, before any other cells are
-   sent.  In "in-protocol", the initiator send a VERSIONS cell
+   right after the renegotiation is finished, before any other cells are
+   sent.  In "in-protocol", the initiator sends a VERSIONS cell
    immediately after the initial TLS handshake, and the responder
    replies immediately with a VERSIONS cell.  Parties MUST NOT send any
    other cells on a connection until they have received a VERSIONS cell.
@@ -435,7 +438,7 @@ see tor-design.pdf.
 
 4.2. CERTS cells
 
-   The CERT cell describes the keys that a Tor instance is claiming
+   The CERTS cell describes the keys that a Tor instance is claiming
    to have.  It is a variable-length cell.  Its payload format is:
 
         N: Number of certs in cell            [1 octet]
@@ -444,7 +447,7 @@ see tor-design.pdf.
            CLEN                               [2 octets]
            Certificate                        [CLEN octets]
 
-   Any extra octets at the end of a CERT cell MUST be ignored.
+   Any extra octets at the end of a CERTS cell MUST be ignored.
 
      CertType values are:
         1: Link key certificate certified by RSA1024 identity
@@ -470,7 +473,7 @@ see tor-design.pdf.
      * The ID certificate is correctly self-signed.
    Checking these conditions is sufficient to authenticate that the
    initiator is talking to the Tor node with the expected identity,
-   as certified in the ID certificate
+   as certified in the ID certificate.
 
    To authenticate the initiator, the responder MUST check the
    following:
@@ -486,8 +489,8 @@ see tor-design.pdf.
        ID certificate.
      * The ID certificate is correctly self-signed.
    Checking these conditions is NOT sufficient to authenticate that the
-   initiator has the ID it claims; to do so, the cells in 4.3 below must
-   be exchanged.
+   initiator has the ID it claims; to do so, the cells in 4.3 and 4.4
+   below must be exchanged.
 
 4.3. AUTH_CHALLENGE cells
 
@@ -510,8 +513,8 @@ see tor-design.pdf.
 4.4. AUTHENTICATE cells
 
    If an initiator wants to authenticate, it responds to the
-   AUTH_CHALLENGE cell with a CERT cell and an AUTHENTICATE cell.
-   The CERT cell is as a server would send, except that instead of
+   AUTH_CHALLENGE cell with a CERTS cell and an AUTHENTICATE cell.
+   The CERTS cell is as a server would send, except that instead of
    sending a CertType 1 cert for an arbitrary link certificate, the
    client sends a CertType 3 cert for an RSA AUTHENTICATE key.
    (This difference is because we allow any link key type on a TLS
@@ -534,11 +537,11 @@ see tor-design.pdf.
        SID: A SHA256 hash of the responder's RSA1024 identity key [32 octets]
        SLOG: A SHA256 hash of all bytes sent from the responder to the
          initiator as part of the negotiation up to and including the
-         AUTH_CHALLENGE cell; that is, the VERSIONS cell, the CERT cell,
+         AUTH_CHALLENGE cell; that is, the VERSIONS cell, the CERTS cell,
          the AUTH_CHALLENGE cell, and any padding cells.  [32 octets]
        CLOG: A SHA256 hash of all bytes sent from the initiator to the
          responder as part of the negotiation so far; that is, the
-         VERSIONS cell and the CERT cell and any padding cells. [32
+         VERSIONS cell and the CERTS cell and any padding cells. [32
          octets]
        SCERT: A SHA256 hash of the responder's TLS link certificate. [32
          octets]
@@ -558,7 +561,7 @@ see tor-design.pdf.
           [variable length]
 
    To check the AUTHENTICATE cell, a responder checks that all fields
-   containing from TYPE through TLSSECRETS contain their unique
+   from TYPE through TLSSECRETS contain their unique
    correct values as described above, and then verifies the signature.
    signature.  The server MUST ignore any extra bytes in the signed
    data after the SHA256 hash.
