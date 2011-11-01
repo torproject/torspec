@@ -67,13 +67,20 @@ Protocol:
     NODEID:     ID             -- H_LENGTH bytes
     KEYID:      KEYID(B)       -- H_LENGTH bytes
     CLIENT_PK:  X              -- G_LENGTH bytes
+    PARAMSLEN:                 -- 2 bytes
+    PARMS:                     -- PARAMSLEN byets
+
+  (The "PARAMS" component is used to encode any additional authenticated
+  information that's needed for establishing the right kind of circuit.)
 
   The server generates a keypair of y,Y = KEYGEN(), and computes
 
-    secret_input = EXP(X,y) | EXP(X,b) | ID | B | X | Y | PROTOID
+    secret_input = EXP(X,y) | EXP(X,b) | ID | B | X | Y | PARAMSLEN | PARAMS
+                     | PROTOID
     KEY_SEED = H(secret_input, t_key)
     verify = H(secret_input, t_verify)
-    auth_input = verify | ID | B | Y | X | PROTOID | "Server"
+    auth_input = verify | ID | B | Y | X | PARAMSLEN | PARAMS | PROTOID
+                     | "Server"
 
   The server sends a CREATED cell containing:
 
@@ -82,10 +89,12 @@ Protocol:
 
   The client then checks Y is in G^* [see below], and computes
 
-    secret_input = EXP(Y,x) | EXP(B,x) | ID | B | X | Y | PROTOID
+    secret_input = EXP(Y,x) | EXP(B,x) | ID | B | X | Y | PARAMSLEN | PARAMS
+                     | PROTOID
     KEY_SEED = H(secret_input, t_key)
     verify = H(secret_input, t_verify)
-    auth_input = verify | ID | B | Y | X | PROTOID | "Server"
+    auth_input = verify | ID | B | Y | X | PARAMLENS | PARAMS | PROTOID
+                     | "Server"
 
     The client verifies that AUTH == H(auth_input, t_mac).
 
