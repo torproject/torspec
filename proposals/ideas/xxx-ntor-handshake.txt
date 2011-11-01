@@ -71,7 +71,8 @@ Protocol:
     PARMS:                     -- PARAMSLEN byets
 
   (The "PARAMS" component is used to encode any additional authenticated
-  information that's needed for establishing the right kind of circuit.)
+  information that's needed for establishing the right kind of circuit.
+   XXXXX nickm added it; we need to ask if it's safe!!!!)
 
   The server generates a keypair of y,Y = KEYGEN(), and computes
 
