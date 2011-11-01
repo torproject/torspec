@@ -278,8 +278,9 @@ see tor-design.pdf.
    OPs alike if their certificates were missing or malformed.]
 
    Once a TLS connection is established, the two sides send cells
-   (specified below) to one another.  Cells are sent serially.  All
-   cells are CELL_LEN bytes long.  Cells may be sent embedded in TLS
+   (specified below) to one another.  Cells are sent serially.  Standard
+   cells are CELL_LEN bytes long, but variable-length cells also exist; see
+   Section 3.  Cells may be sent embedded in TLS
    records of any size or divided across TLS records, but the framing
    of TLS records MUST NOT leak information about the type or contents
    of the cells.
@@ -291,13 +292,12 @@ see tor-design.pdf.
    also hold a TLS connection with no circuits open, if it is likely that a
    circuit will be built soon using that connection.
 
-   (As an exception, directory servers may try to stay connected to all of
-   the ORs -- though this will be phased out for the Tor 0.1.2.x release.)
-
-   To avoid being trivially distinguished from relays, client-only Tor
-   instances are encouraged but not required to use a two-certificate chain
-   as well.  Clients SHOULD NOT keep using the same certificates when
-   their IP address changes.  Clients MAY send no certificates at all.
+   Client-only Tor instances are encouraged to avoid using handshake
+   variants that include certificates, if those certificates provide
+   any persistent tags to the relays they contact. If clients do use
+   certificates, they SHOULD NOT keep using the same certificates when
+   their IP address changes.  Clients MAY send certificates using any
+   of the above handshake variants.
 
 3. Cell Packet format
 
@@ -311,7 +311,7 @@ see tor-design.pdf.
         Command                               [1 byte]
         Payload (padded with 0 bytes)         [PAYLOAD_LEN bytes]
 
-   On a version 2 connection, all cells are as in version 1 connections,
+   On a version 2 or 3 connection, all cells are as in version 1 connections,
    except for variable-length cells, whose format is:
 
         CircID                                [2 octets]
@@ -323,7 +323,6 @@ see tor-design.pdf.
    command byte equal to 7 ("VERSIONS").  On a version 3 or
    higher connection, variable-length cells are indicated by a command
    byte equal to 7 ("VERSIONS"), or greater than or equal to 128.
-
 
    The CircID field determines which circuit, if any, the cell is
    associated with.
