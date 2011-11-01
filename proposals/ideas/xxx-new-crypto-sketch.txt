@@ -20,7 +20,7 @@ Author: Nick Mathewson
        [*] and subsequent discussion on the tor-dev mailing list.  Not
        considered here.
     RELAY CRYPTO
-       Addressed here in Section 6
+       Addressed here in Section 6.
     DIRECTORY SYSTEM
        Addressed here.
     HIDDEN SERVICE SYSTEM
@@ -58,7 +58,7 @@ Author: Nick Mathewson
   to tell whether it looks good or not; the existing attacks against it
   don't look like very bad news to me, but who knows whether it's
   getting enough attention that we can read.  See also ChaCha; see also
-  the other eSTREAM winners/ finalists; see also SHA3 if the SHA3 winner
+  the other eSTREAM winners/finalists; see also SHA3 if the SHA3 winner
   specifies a way to use it as a stream cipher, or specifies an
   underlying stream/block cipher.
 
@@ -115,7 +115,7 @@ Author: Nick Mathewson
   make any major free software distribution decide not to include us.  I
   seem to recall seeing that one or two of the big ones had at one point
   decided to ship OpenSSL only with ECC disabled, either because of real
-  patent concerns, or because of an opinion that the certicom license
+  patent concerns, or because of an opinion that the Certicom license
   for ECC use in TLS was problematic for free software, or something
   like that.  We should check that out.
 
@@ -290,7 +290,7 @@ Author: Nick Mathewson
 
   Right now we compute fingerprints by taking the SHA1 hash of an ASN1
   encoding of the RSA1024 identity key.  We encode this in hex almost
-  everywhere, and prefix it with a $.
+  everywhere, and sometimes prefix it with a $.
 
   I propose that fingerprints of the future be determined by taking a
   digest using SHA256 or SHA3 of:
@@ -353,8 +353,8 @@ Author: Nick Mathewson
   that Bob understands the ID key type and the fingerprint algorithm.
 
   So for every node, Alice must not only know a fingerprint that *she*
-  can use for that node, but also a set fingerprint such that every node
-  can understand at least one fingerprint in the set.
+  can use for that node, but also a set of fingerprints such that every
+  node can understand at least one fingerprint in the set.
 
   This implies a proliferation of fingerprints!  We should tread
   carefully here.  To prevent proliferation, the easiest solution is not
@@ -363,7 +363,7 @@ Author: Nick Mathewson
 
 3.4. Implications for EXTEND cells
 
-  As mentioned in 3.3, when a client Alice can tell node Bob to extend
+  As mentioned in 3.3, when a client Alice tells node Bob to extend
   to node Carol, she needs to give Bob a fingerprint for Carol that Bob
   will understand: one where Bob understands the digest algorithm, and
   understands the identity key type.
@@ -393,7 +393,7 @@ Author: Nick Mathewson
 
   Router descriptors and extrainfo descriptors:
 
-     One problematic case is in in determining node families.  If node A
+     One problematic case is in determining node families.  If node A
      and node B want to list each other as being in the same family,
      they need to do so in a way that clients can interpret.  That could
      mean listing SHA1-RSA1024 fingerprints so old clients understand,
@@ -415,7 +415,7 @@ Author: Nick Mathewson
      fraction of authority bw usage.  Adding more hashes is easy.
 
      For consensus documents, we ought to have flavors that you can
-     download depending on what set of fingerprints types you
+     download depending on what set of fingerprint types you
      understand.
 
      For integrity purposes, consensuses can refer to microdescriptors
@@ -458,7 +458,7 @@ Author: Nick Mathewson
 
   We should however look to longer link keys, bigger DH groups, etc.
 
-  Once TLS versiosn 1.1/1.2 is available in OpenSSL, we should move to
+  Once TLS versions 1.1/1.2 are available in OpenSSL, we should move to
   use them, I think.  We should also look into how quickly we can
   deprecate TLS 1.0 and SSL <= 3 usage.
 
@@ -483,7 +483,7 @@ Author: Nick Mathewson
   technically slightly more difficult than xor-based tagging, and it
   could be useful to boost our defense-in-depth a little bit, just in
   case other active end-to-end attacks turn out to be harder than we'd
-  thought.)
+  thought.
 
 6.1. Option 1: Use AES-CTR in a less scary mode
 
@@ -762,3 +762,4 @@ ACKS
    Lots of the good ideas and concerns here are due to Robert Ransom.
 
    Michael Stone helped some with "relay option 4" above.
+
