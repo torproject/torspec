@@ -645,8 +645,9 @@ Author: Nick Mathewson
            Otherwise add the entire cell to cells_i, and decrypt it, MAC
            included, with the stream keyed with Kb[i], IVb[i].
 
-      If no node sent this cell: it's junk and somebody is probably
-      messing with us!  Destroy the circuit.
+       If no node sent this cell: it's junk and somebody is probably
+       messing with us!  Destroy the circuit.
+
 
      When the client *sends* a cell outbound to node N:
 
@@ -664,10 +665,10 @@ Author: Nick Mathewson
                             CELL_DATA_LEN-5-MACLEN-len(Data) bytes]
 
          Let PAD[i] = the next MACBYTESf[i] bytes from the PRNG keyed
-         with SEEDf[i], for i in 1...N.
+         with SEEDf[i], for i in 1...N
 
          Let STREAM[i] = the next CELL_DATA_LEN bytes of
-           the stream keyed by Kf[i],IV[i], for i in 1...N.
+           the stream keyed by Kf[i],IV[i], for i in 1...N
 
          Let PADSEEN[1] == ""
 
@@ -753,7 +754,7 @@ Author: Nick Mathewson
          "recognized" field.
 
          I note in passing that we need at most 9 bits for the length
-         field, and most 6 bits for the command field, yet we're using a
+         field, and at most 6 bits for the command field, yet we're using a
          total of 3 bytes for those 15 bits.  That's an opportunity to
          save another byte.
 
