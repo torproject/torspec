@@ -1,0 +1,122 @@
+Filename: 189-authorize-cell.txt
+Title: AUTHORIZE and AUTHORIZED cells
+Author: George Kadianakis
+Created: 04 Nov 2011
+Status: Open
+
+1. Overview
+
+   Proposal 187 introduced the concept of the AUTHORIZE cell, a cell
+   whose purpose is to make Tor bridges resistant to scanning attacks.
+
+   This is achieved by having the bridge and the client share a secret
+   out-of-band and then use AUTHORIZE cells to validate that the
+   client indeed knows that secret before proceeding with the Tor
+   protocol.
+
+   This proposal specifies the format of the AUTHORIZE cell and also
+   introduces the AUTHORIZED cell, a way for bridges to announce to
+   clients that the authorization process is complete and successful.
+
+2. Motivation
+
+   AUTHORIZE cells should be able to perform a variety of
+   authorization protocols based on a variety of shared secrets. This
+   forces the AUTHORIZE cell to have a dynamic format based on the
+   authorization method used.
+
+   AUTHORIZED cells are used by bridges to signal the end of a
+   successful bridge client authorization and the beginning of the
+   actual link handshake. AUTHORIZED cells have no other use and for
+   this reason their format is very simple.
+
+   Both AUTHORIZE and AUTHORIZED cells are to be used under censorship
+   conditions and they should look innocuous to any adversary capable
+   of monitoring network traffic.
+
+   As an attack example, an adversary could passively monitor the
+   traffic of a bridge host, looking at the packets directly after the
+   TLS handshake and trying to deduce from their packet size if they
+   are AUTHORIZE and AUTHORIZED cells. For this reason, AUTHORIZE and
+   AUTHORIZED cells are padded with a random amount of padding before
+   sending.
+
+3. Design
+
+3.1. AUTHORIZE cell
+
+   The AUTHORIZE cell is a variable-sized cell.
+
+   The generic AUTHORIZE cell format is:
+
+         AuthMethod                       [1 octet]
+         MethodFields                     [...]
+         PadLen                           [2 octets]
+         Padding                          ['PadLen' octets]
+
+   where:
+
+   'AuthMethod', is the authorization method to be used.
+
+   'MethodFields', is dependent on the authorization Method used. It's
+                   a meta-field hosting an arbitrary amount of fields.
+
+   'PadLen', specifies the amount of padding in octets.
+
+   'Padding', is 'PadLen' octets of random content.
+
+3.2. AUTHORIZED cell format
+
+   The AUTHORIZED cell is a variable-sized cell.
+
+   The AUTHORIZED cell format is:
+
+         'AuthMethod'                       [1 octet]
+         'PadLen'                           [2 octets]
+         'Padding'                          ['PadLen' octets]
+
+   where all fields have the same meaning as in section 3.1.
+
+3.3. Cell parsing
+
+   Implementations MUST ignore the contents of 'Padding'.
+
+   Implementations MUST reject an AUTHORIZE or AUTHORIZED cell where
+   the 'Padding' field is not 'PadLen' octets long.
+
+   Implementations MUST reject an AUTHORIZE cell with an 'AuthMethod'
+   they don't recognize.
+
+4. Discussion
+
+4.1. Why not let the pluggable transports do the padding, like they
+     are supposed to do for the rest of the Tor protocol?
+
+   The arguments of section "Alternative design: Just use pluggable
+   transports" of proposal 187, apply here as well:
+
+   All bridges who use client authorization will also need camouflaged
+   AUTHORIZE/AUTHORIZED cell.
+
+4.2. How should multiple round-trip authorization protocols be handled?
+
+   Protocols that require multiple round-trips between the client and
+   the bridge should use AUTHORIZE cells for communication.
+
+   The format of the AUTHORIZE cell is flexible enough to support
+   messages from the client to the bridge and the inverse.
+
+   In the end of a successful multiple round-trip protocol, an
+   AUTHORIZED cell must be issued from the bridge to the client.
+
+4.3. AUTHORIZED seems useless. Why not use VPADDING instead?
+
+   As noted in proposal 187, the Tor protocol uses VPADDING cells for
+   padding; any other use of VPADDING makes the Tor protocol kludgy.
+
+   In the future, and in the example case of a v3 handshake, a client
+   can optimistically send a VERSIONS cell along with the final
+   AUTHORIZE cell of an authorization protocol. That allows the
+   bridge, in the case of successful authorization, to also process
+   the VERSIONS cell and begin the v3 handshake promptly.
+
