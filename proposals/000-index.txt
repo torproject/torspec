@@ -109,6 +109,8 @@ Proposals by number:
 186  Multiple addresses for one OR or bridge [DRAFT]
 187  Reserve a cell type to allow client authorization [OPEN]
 188  Bridge Guards and other anti-enumeration defenses [OPEN]
+189  AUTHORIZE and AUTHORIZED cells [OPEN]
+190  Password-based Bridge Client Authorization [OPEN]
 
 
 Proposals by status:
@@ -141,6 +143,8 @@ Proposals by status:
    185  Directory caches without DirPort
    187  Reserve a cell type to allow client authorization [for 0.2.3.x]
    188  Bridge Guards and other anti-enumeration defenses
+   189  AUTHORIZE and AUTHORIZED cells
+   190  Password-based Bridge Client Authorization
  ACCEPTED:
    110  Avoiding infinite length circuits [for 0.2.3.x] [in 0.2.1.3-alpha]
    117  IPv6 exits [for 0.2.3.x]
