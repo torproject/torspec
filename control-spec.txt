@@ -458,6 +458,10 @@
     "desc/id/<OR identity>" or "desc/name/<OR nickname>" -- the latest
       server descriptor for a given OR, NUL-terminated.
 
+    "md/id/<OR identity>" or "md/name/<OR nickname>" -- the latest
+      microdescriptor for a given OR. [First implemented in
+      0.2.3.8-alpha.]
+
     "desc-annotations/id/<OR identity>" -- outputs the annotations string
       (source, timestamp of arrival, purpose, etc) for the corresponding
       descriptor. [First implemented in 0.2.0.13-alpha.]
