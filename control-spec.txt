@@ -456,7 +456,7 @@
       *append* to the ExitPolicy config option.
 
     "desc/id/<OR identity>" or "desc/name/<OR nickname>" -- the latest
-      server descriptor for a given OR, NUL-terminated.
+      server descriptor for a given OR.
 
     "md/id/<OR identity>" or "md/name/<OR nickname>" -- the latest
       microdescriptor for a given OR. [First implemented in
