@@ -84,7 +84,7 @@ The following should be added to the bottom of section 3.4.:
 
 The following line should be added to the bottom of section 3.4.1.:
 
-     "12" -- Params are only included if a enough auths voted for them
+     "12" -- Params are only included if enough auths voted for them
 
 Compatibility:
 
