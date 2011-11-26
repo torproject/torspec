@@ -348,7 +348,8 @@ of their choices.
    frequently occurring 50ms histogram bin, until the point where 1000
    circuits are recorded. After this point, the weighted average of the top
    'cbtnummodes' (default: 3) midpoint modes is used as Xm. All times below
-   this value are counted as having the midpoint value of this weighted average bin.
+   this value are counted as having the midpoint value of this weighted average
+   bin.
 
    The timeout itself is calculated by using the Pareto Quantile function (the
    inverted CDF) to give us the value on the CDF such that 80% of the mass
@@ -471,8 +472,8 @@ of their choices.
         Min: Value of cbtquantile parameter
         Max: 99
         Effect: This is the position on the quantile curve to use to set the
-                timeout value to use to actually close circuits. It is a percent
-                (0-99).
+                timeout value to use to actually close circuits. It is a
+                percent (0-99).
 
       cbttestfreq
         Default: 60

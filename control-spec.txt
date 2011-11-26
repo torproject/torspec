@@ -541,7 +541,7 @@
       0.2.2.1-alpha and later by default, each line is of the form:
          LongName SP ORStatus CRLF
 
-     In Tor versions 0.1.2.2-alpha through 0.2.2.1-alpha with feature 
+     In Tor versions 0.1.2.2-alpha through 0.2.2.1-alpha with feature
      VERBOSE_NAMES turned off and before version 0.1.2.2-alpha, each line
      is of the form:
          ServerID SP ORStatus CRLF
@@ -552,7 +552,7 @@
       0.2.2.1-alpha and later by default, each line is of the form:
          LongName SP Status [SP ISOTime] CRLF
 
-     In Tor versions 0.1.2.2-alpha through 0.2.2.1-alpha with feature 
+     In Tor versions 0.1.2.2-alpha through 0.2.2.1-alpha with feature
      VERBOSE_NAMES turned off and before version 0.1.2.2-alpha, each line
      is of the form:
          ServerID2 SP Status [SP ISOTime] CRLF

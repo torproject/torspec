@@ -1342,12 +1342,12 @@
 
         An estimate of the bandwidth of this relay, in an arbitrary
         unit (currently kilobytes per second).  Used to weight router
-        selection. 
+        selection.
 
-        Additionally, the Measured= keyword is present in votes by 
+        Additionally, the Measured= keyword is present in votes by
         participating bandwidth measurement authorities to indicate
-        a measured bandwidth currently produced by measuring stream 
-        capacities. 
+        a measured bandwidth currently produced by measuring stream
+        capacities.
 
         Other weighting keywords may be added later.
         Clients MUST ignore keywords they do not recognize.
@@ -1632,9 +1632,9 @@
           one, breaking ties in favor of the lexicographically larger
           vote.)  The port list is encoded as specified in 3.4.2.
 
-        * If consensus-method 6 or later is in use and if 3 or more 
-          authorities provide a Measured= keyword in their votes for 
-          a router, the authorities produce a consensus containing a 
+        * If consensus-method 6 or later is in use and if 3 or more
+          authorities provide a Measured= keyword in their votes for
+          a router, the authorities produce a consensus containing a
           Bandwidth= keyword equal to the median of the Measured= votes.
 
         * If consensus-method 7 or later is in use, the params line is

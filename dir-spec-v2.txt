@@ -155,7 +155,7 @@
    Every router descriptor MUST start with a "router" Item; MUST end with a
    "router-signature" Item and an extra NL; and MUST contain exactly one
    instance of each of the following Items: "published" "onion-key"
-   "signing-key" "bandwidth". 
+   "signing-key" "bandwidth".
 
    A router descriptor MAY have zero or one of each of the following Items,
    but MUST NOT have more than one: "contact", "uptime", "fingerprint",
@@ -892,5 +892,6 @@
 
 7.2. HTTP status codes
 
-  XXX We should write down what return codes dirservers send in what situations.
+  XXX We should write down what return codes dirservers send in what
+  situations.
 
