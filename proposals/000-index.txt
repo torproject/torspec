@@ -98,7 +98,7 @@ Proposals by number:
 175  Automatically promoting Tor clients to nodes [DRAFT]
 176  Proposed version-3 link handshake for Tor [CLOSED]
 177  Abstaining from votes on individual flags [OPEN]
-178  Require majority of authorities to vote for consensus parameters [OPEN]
+178  Require majority of authorities to vote for consensus parameters [CLOSED]
 179  TLS certificate and parameter normalization [DRAFT]
 180  Pluggable transports for circumvention [OPEN]
 181  Optimistic Data for Tor: Client Side [CLOSED]
@@ -138,7 +138,6 @@ Proposals by status:
    165  Easy migration for voting authority sets
    168  Reduce default circuit window
    177  Abstaining from votes on individual flags [for 0.2.3.x]
-   178  Require majority of authorities to vote for consensus parameters [for 0.2.3.x]
    180  Pluggable transports for circumvention [for 0.2.3.x]
    185  Directory caches without DirPort
    187  Reserve a cell type to allow client authorization [for 0.2.3.x]
@@ -198,6 +197,7 @@ Proposals by status:
    171  Separate streams across circuits by connection metadata [in 0.2.3.3-alpha]
    174  Optimistic Data for Tor: Server Side [in 0.2.3.1-alpha]
    176  Proposed version-3 link handshake for Tor [for 0.2.3]
+   178  Require majority of authorities to vote for consensus parameters [in 0.2.3.9-alpha]
    181  Optimistic Data for Tor: Client Side [in 0.2.3.3-alpha]
    183  Refill Intervals [in 0.2.3.5-alpha]
    184  Miscellaneous changes for a v3 Tor link protocol [for 0.2.3.x]
