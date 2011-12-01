@@ -1,0 +1,114 @@
+Filename: 191-mitm-bridge-detection-resistance.txt
+Title: Bridge Detection Resistance against MITM-capable Adversaries
+Author: George Kadianakis
+Created: 07 Nov 2011
+Status: Open
+
+1. Overview
+
+   Proposals 187, 189 and 190 make the first steps toward scanning
+   resistant bridges. They attempt to block attacks from censoring
+   adversaries who provoke bridges into speaking the Tor protocol.
+
+   An attack vector that hasn't been explored in those previous
+   proposals is that of an adversary capable of performing Man In The
+   Middle attacks to Tor clients. At the moment, Tor clients using the
+   v3 link protocol have no way to detect such an MITM attack, and
+   will gladly send an VERSIONS or an AUTHORIZE cell to the MITMed
+   connection, thereby revealing the Tor protocol and thus the bridge.
+
+   This proposal introduces a way for clients to detect an MITMed SSL
+   connection, allowing them to protect against the above attack.
+
+2. Motivation
+
+   When the v3 link handshake protocol is performed, Tor's SSL
+   handshake is performed with the server sending a self-signed
+   certificate and the client blindly accepting it. This allows the
+   adversary to perform an MITM attack.
+
+   A Tor client must detect the MITM attack before he initializes the
+   Tor protocol by sending a VERSIONS or an AUTHORIZE cell. A good
+   moment to detect such an MITM attack is during the SSL handshake.
+
+   To achieve that, bridge operators provide their bridge users with a
+   hash digest of the public-key certificate their bridge is using for
+   SSL. Bridge clients store that hash digest locally and associate it
+   with that specific bridge. Bridge clients who have "pinned" a
+   bridge to a certificate "fingerprint" can thereafter validate that
+   their SSL connection peer is the intended bridge.
+
+   Of course, the hash digest must be provided to users out-of-band
+   and before the actual SSL handshake. Usually, the bridge operator
+   gives the hash digest to her bridge users along with the rest of
+   the bridge credentials, like the bridge's address and port.
+
+3. Security implications
+
+   Bridge clients who have pinned a bridge to a certificate
+   fingerprint will be able to detect an MITMing adversary in timely
+   fashion. If after detection they act as an innocuous Internet
+   client, they can successfully remove suspicion from the SSL
+   connection and subvert bridge detection.
+
+   Pinning a certificate fingerprint and detecting an MITMing attacker
+   does not automatically aleviate suspicions from the bridge or the
+   client. Clients must have a behavior to follow after detecting the
+   MITM attack so that they look like innocent Netizens. This proposal
+   does not try to specify such a behavior.
+
+   Implementation and use of this scheme does not render bridges and
+   clients immune to scanning or DPI attacks. This scheme should be
+   used along with bridge client authorization schemes like the ones
+   detailed in proposal 190.
+
+4. Tor Implementation
+
+4.1. Certificate fingerprint creation
+
+   The certificate fingerprints used on this scheme MUST be computed
+   by applying the SHA256 cryptographic hash function upon the ASN.1
+   DER encoding of a public-key certificate.
+
+4.2. Bridge side implementation
+
+   Tor bridge implementations SHOULD provide a command line option
+   that exports a fully equipped Bridge line containing the bridge
+   address and port, the link certificate fingerprint and any other
+   enabled Bridge options, so that bridge operators can easily send it
+   to their users.
+
+   In the case of expiring SSL certificates, Tor bridge
+   implementations SHOULD warn the bridge operator a sensible amount
+   of time before the expiration, so that she can warn her clients and
+   potentially rotate the certificate herself.
+
+4.3. Client side implementation
+
+   Tor client implementations MUST extend their Bridge line format to
+   support bridge SSL certificate fingerprints. The new format is:
+     Bridge <method> <address:port> [["keyid="]<id-fingerprint>] \
+       ["shared_secret="<shared_secret>] ["link_cert_fpr="<fingerprint>]
+
+   where <fingerprint> is the bridge's SSL certificate fingerprint in
+   hexademical encoding.
+
+   Tor clients who use bridges and want to pin their SSL certificates
+   must specify the bridge's SSL certificate fingerprint as in:
+     Bridge 12.34.56.78 shared_secret=934caff420aa7852b855 \
+         link_cert_fpr=38b0712e90bed729df81f2a22811d3dd89e91406d2522f4482ae4079e5245187
+
+4.4. Implementation prerequisites
+
+   Tor bridges currently rotate their SSL certificates every 2
+   hours. This not only acts as a fingerprint for the bridges, but it
+   also acts as a blocker for this proposal.
+
+   Tor trac ticket #4390 and proposal YYY were created to resolve this
+   issue.
+
+5. Acknowledgements
+
+   Thanks to Robert Ransom for his great help and suggestions on
+   devising this scheme and writing this proposal!
+

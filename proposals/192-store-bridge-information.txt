@@ -1,0 +1,137 @@
+Filename: 192-store-bridge-information.txt
+Title: Automatically retrieve and store information about bridges
+Author: Sebastian Hahn
+Created: 16-Nov-2011
+Status: Open
+Target: 0.2.[45].x
+
+Overview:
+Currently, tor already stores some information about the bridges it is
+configured to use locally, but doesn't make great use of the stored
+data. This data is the Tor configuration information about the bridge
+(IP address, port, and optionally fingerprint) and the bridge descriptor
+which gets stored along with the other descriptors a Tor client fetches,
+as well as an "EntryGuard" line in the state file. That line includes
+the Tor version we used to add the bridge, and a slightly randomized
+timestamp (up to a month in the past of the real date). The descriptor
+data also includes some more accurate timestamps about when the
+descriptor was fetched.
+
+The information we give out about bridges via bridgedb currently only
+includes the IP address and port, because giving out the fingerprint as
+well might mean that Tor clients make direct connections to the bridge
+authority, since we didn't design Tor's UpdateBridgesFromAuthority
+behaviour correctly.
+
+Motivation:
+
+The only way to let Tor know about a change affecting the bridge (IP
+address or port change) is to either ask the bridge authority directly,
+or reconfigure Tor. The former requires making a non-anonymized direct
+connection to the bridge authority Tonga and asking it for the current
+descriptor of the bridge with a given fingerprint - this is unsafe and
+also requires prior knowledge of the fingerprint. The latter requires
+user intervention, first to learn that there was an update and second to
+actually teach Tor about the change.
+
+This is way too complicated for most users, and should be unnecessary
+while the user has at least one bridge that remains working: Tonga can
+give out bridge descriptors when asked for the descriptor for a certain
+fingerprint, and Tor clients learn the fingerprint either from their
+torrc file or from the first connection they make to a bridge.
+
+For some users, however, this option is not what they want: They might
+use private bridges or have special security concerns, which would make
+them want to connect to the IP addresses specified in their
+configuration only, and not tell Tonga about the set of bridges they
+know about, even through a Tor circuit. Also see
+https://blog.torproject.org/blog/different-ways-use-bridge for more
+information about the different types of bridge users.
+
+Design:
+
+Tor should provide a new configuration option that allows bridge users
+to indicate that they wish to contact Tonga anonymously and learn about
+updates for the bridges that they know about, but can't currently reach.
+Once those updates have been received, the clients would then hold on to
+the new information in their state file, and use it across restarts for
+connection attempts.
+
+The option UpdateBridgesFromAuthority should be removed or recycled for
+this purpose, as it is currently dangerous to set (it makes direct
+connections to the bridge authority, thus leaking that a user is about
+to use bridges). Recycling the option is probably the better choice,
+because current users of the option get a surprising and never useful
+behaviour. On the other hand, users who downgrade their Tors might get
+the old behaviour by accident.
+
+If configured with this option, tor would make an anonymized connection
+to Tonga to ask for the descriptors of bridges that it cannot currently
+connect to, once every few hours. Making more frequent requests would
+likely not help, as bridge information doesn't typically change that
+frequently, and may overload Tonga.
+
+This information needs to be stored in the state file:
+
+- An exact copy of the Bridge stanza in the torrc file, so that tor can
+  detect when the bridge is unconfigured/the configuration is changed
+
+- The IP address, port, and fingerprint we last used when making a
+  successful connection to the bridge, if this differs from/supplements
+  the configured data.
+
+- The IP address, port, and fingerprint we learned from the bridge
+  authority, if this differs from both the configured data and the data
+  we used for the last successful connection.
+
+We don't store more data in the state file to avoid leaking too much if
+the state file falls into the hands of an adversary.
+
+Security implications:
+
+Storing sensitive data on disk is risky when the computer one uses gets
+into the wrong hands, and state file entries can be used to identify
+times the user was online. This is already a problem for the Bridge
+lines in a user's configuration file, but by storing more information
+about bridges some timings can be deduced.
+
+Another risk is that this allows long-term tracking of users when the
+set of bridges a user knows about is known to the attacker, and the set
+is unique.  This is not very hard to achieve for bridgedb, as users
+typically make requests to it non-anomymized and bridgedb can
+selectively pick bridges to report. By combining the data about
+descriptor fetches on Tonga and this fingerprint, a usage pattern can be
+established. Also, bridgedb could give out a made-up fingerprint to a
+user that requested bridges, thus easily creating a unique set.
+
+Users of private bridges should not set this option, as it will leak the
+fingerprints of their bridges to Tonga. This is not a huge concern, as
+Tonga doesn't know about those descriptors, but private bridge users
+will likely want to avoid leaking the existence of their bridge. We
+might want to figure out a way to indicate that a bridge is private on
+the Bridge line in the configuration, so fetching the descriptor from
+Tonga is disabled for those automatically. This warrants more discussion
+to find a solution that doesn't require bridge users to understand the
+trade-offs of setting a configuration option.
+
+One idea is to indicate that a bridge is private by a special flag in
+its bridge descriptor, so clients can avoid leaking those to the bridge
+authority automatically. Also, Bridge lines for private bridges
+shouldn't include the fingerprint so that users don't accidentally leak
+the fingerprint to the bridge authority before they have talked to the
+bridge.
+
+Specification:
+
+No change/addition to the current specification is necessary, as the
+data that gets stored at clients is not covered by the specification.
+This document is supposed to serve as a basis for discussion and to
+provide hints for implementors.
+
+Compatibility:
+
+Tonga is already set up to send out descriptors requested by clients, so
+the bridge authority side doesn't need any changes. The new
+configuration options governing the behaviour of Tor would be
+incompatible with previous versions, so the torrc needs to be adapted.
+The state file changes should not affect older versions.

@@ -111,6 +111,8 @@ Proposals by number:
 188  Bridge Guards and other anti-enumeration defenses [OPEN]
 189  AUTHORIZE and AUTHORIZED cells [OPEN]
 190  Password-based Bridge Client Authorization [OPEN]
+191  Bridge Detection Resistance against MITM-capable Adversaries [OPEN]
+192  Automatically retrieve and store information about bridges [OPEN]
 
 
 Proposals by status:
@@ -144,6 +146,8 @@ Proposals by status:
    188  Bridge Guards and other anti-enumeration defenses
    189  AUTHORIZE and AUTHORIZED cells
    190  Password-based Bridge Client Authorization
+   191  Bridge Detection Resistance against MITM-capable Adversaries
+   192  Automatically retrieve and store information about bridges [for 0.2.[45].x]
  ACCEPTED:
    110  Avoiding infinite length circuits [for 0.2.3.x] [in 0.2.1.3-alpha]
    117  IPv6 exits [for 0.2.3.x]
