@@ -709,8 +709,8 @@
 
   Sent from the client to the server.  The format is:
       "EXTENDCIRCUIT" SP CircuitID
-                      [SP ServerSpec *("," ServerSpec)
-                       SP "purpose=" Purpose] CRLF
+                      [SP ServerSpec *("," ServerSpec)]
+                      [SP "purpose=" Purpose] CRLF
 
   This request takes one of two forms: either the CircuitID is zero, in
   which case it is a request for the server to build a new circuit,
@@ -1150,6 +1150,8 @@
    The syntax is:
 
      "650" SP "CIRC" SP CircuitID SP CircStatus [SP Path]
+          [SP "BUILD_FLAGS=" BuildFlags] [SP "PURPOSE=" Purpose]
+          [SP "HS_STATE=" HSState] [SP "REND_QUERY=" HSAddress]
           [SP "REASON=" Reason [SP "REMOTE_REASON=" Reason]] CRLF
 
       CircStatus =
@@ -1163,7 +1165,24 @@
         ; In Tor versions 0.1.2.2-alpha through 0.2.2.1-alpha with feature
         ; VERBOSE_NAMES turned off and before version 0.1.2.2-alpha, Path
         ; is as follows:
-        Path = ServerID *("," ServerID)
+        ; Path = ServerID *("," ServerID)
+
+      BuildFlags = BuildFlag *("," BuildFlag)
+      BuildFlag = "ONEHOP_TUNNEL" / "IS_INTERNAL" /
+                  "NEED_CAPACITY" / "NEED_UPTIME"
+
+      Purpose = "GENERAL" / "HS_CLIENT_INTRO" / "HS_CLIENT_REND" /
+                "HS_SERVICE_INTRO" / "HS_SERVICE_REND" / "TESTING" /
+                "CONTROLLER"
+
+      HSState = "HSCI_CONNECTING" / "HSCI_INTRO_SENT" / "HSCI_DONE" /
+                "HSCR_CONNECTING" / "HSCR_ESTABLISHED_IDLE" /
+                "HSCR_ESTABLISHED_WAITING" / "HSCR_JOINED" /
+                "HSSI_CONNECTING" / "HSSI_ESTABLISHED" /
+                "HSSR_CONNECTING" / "HSSR_JOINED"
+
+      HSAddress = 16*Base32Character
+      Base32Character = ALPHA / "2" / "3" / "4" / "5" / "6" / "7"
 
       Reason = "NONE" / "TORPROTOCOL" / "INTERNAL" / "REQUESTED" /
                "HIBERNATING" / "RESOURCELIMIT" / "CONNECTFAILED" /
@@ -1173,6 +1192,57 @@
 
    The path is provided only when the circuit has been extended at least one
    hop.
+
+   The "BUILD_FLAGS" field is provided only in versions 0.2.3.2-alpha
+   and later.  Clients MUST accept build flags not listed above.
+   Build flags are defined as follows:
+
+      ONEHOP_TUNNEL   (one-hop circuit, used for tunneled directory conns)
+      IS_INTERNAL     (internal circuit, not to be used for exiting streams)
+      NEED_CAPACITY   (this circuit must use only high-capacity nodes)
+      NEED_UPTIME     (this circuit must use only high-uptime nodes)
+
+   The "PURPOSE" field is provided only in versions 0.2.1.6-alpha and
+   later, and only if extended events are enabled (see 3.19).  Clients
+   MUST accept purposes not listed above.  Purposes are defined as
+   follows:
+
+      GENERAL         (circuit for AP and/or directory request streams)
+      HS_CLIENT_INTRO (HS client-side introduction-point circuit)
+      HS_CLIENT_REND  (HS client-side rendezvous circuit; carries AP streams)
+      HS_SERVICE_INTRO (HS service-side introduction-point circuit)
+      HS_SERVICE_REND (HS service-side rendezvous circuit)
+      TESTING         (reachability-testing circuit; carries no traffic)
+      CONTROLLER      (circuit built by a controller)
+
+   The "HS_STATE" field is provided only for hidden-service circuits,
+   and only in versions 0.2.3.2-alpha and later.  Clients MUST accept
+   hidden-service circuit states not listed above.  Hidden-service
+   circuit states are defined as follows:
+
+      HSCI_*      (client-side introduction-point circuit states)
+        HSCI_CONNECTING          (connecting to intro point)
+        HSCI_INTRO_SENT          (sent INTRODUCE1; waiting for reply from IP)
+        HSCI_DONE                (received reply from IP relay; closing)
+
+      HSCR_*      (client-side rendezvous-point circuit states)
+        HSCR_CONNECTING          (connecting to or waiting for reply from RP)
+        HSCR_ESTABLISHED_IDLE    (established RP; waiting for introduction)
+        HSCR_ESTABLISHED_WAITING (introduction sent to HS; waiting for rend)
+        HSCR_JOINED              (connected to HS)
+
+      HSSI_*      (service-side introduction-point circuit states)
+        HSSI_CONNECTING          (connecting to intro point)
+        HSSI_ESTABLISHED         (established intro point)
+
+      HSSR_*      (service-side rendezvous-point circuit states)
+        HSSR_CONNECTING          (connecting to client's rend point)
+        HSSR_JOINED              (connected to client's RP circuit)
+
+   The "REND_QUERY" field is provided only for hidden-service-related
+   circuits, and only in versions 0.2.3.2-alpha and later.  Clients
+   MUST accept hidden service addresses in formats other than that
+   specified above.
 
    The "REASON" field is provided only for FAILED and CLOSED events, and only
    if extended events are enabled (see 3.19).  Clients MUST accept reasons
@@ -1246,7 +1316,7 @@
    requesting program.
 
       Purpose = "DIR_FETCH" / "UPLOAD_DESC" / "DNS_REQUEST" /
-                 "USER" /  "DIRPORT_TEST"
+                "USER" /  "DIRPORT_TEST"
 
    The "PURPOSE" field is provided only for NEW and NEWRESOLVE events, and
    only if extended events are enabled (see 3.19).  Clients MUST accept
