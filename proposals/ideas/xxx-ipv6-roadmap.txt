@@ -1,0 +1,188 @@
+Filename: xxx-ipv6-roadmap.txt
+Title: Roadmap for implementing IPv6 in Tor
+Authors: Nick Mathewson
+Created: 29 December 2011
+Status: Draft
+
+0. Overview
+
+  IPv6 support is important, but too large to do in a single step.
+  Therefore, we need a plan for how to build IPv6, starting with high
+  benefit-per-effort items, and eventually getting full IPv6 support in
+  Tor's protocols and implementation.
+
+  The phases in brief:
+
+    1. Remove internal barriers and limitations in Tor's implementation
+       that would affect IPv6 hosts and multi-stack hosts.
+
+    2. Make client->private bridge connections support IPv6.
+
+    3. Make client->public bridge connections support IPv6.
+
+    4. Make client->relay connections support IPv6.
+
+    5. Support exiting to IPv6 addresses over Tor.
+
+    6. Allow relays to connect to one another over IPv6.
+
+0.1. Motivation
+
+  4 billion addresses wasn't enough.
+
+  Also, the IPv6 world is currently not quite so censored as the IPv4
+  world, so we should take advantage of that.
+
+1. The roadmap in detail
+
+  We list the steps below in rough implementation order.  There may be
+  issues with what we can do without hurting anonymity which has to do
+  with how many relays we have on IPv6.  So maybe it's not wise to derive
+  the deployment order from the implementation order.  The following tasks
+  also differ hugely in size.
+
+1.1. Phase 1: Infrastructure, part 1
+
+  Throughout Tor, there are pieces of code that make certain assumptions
+  which we will need to change in order to support the features below.
+
+  Most of these pieces are already implemented, including:
+
+    * We have switched nearly all of our code that assumed an IPv4
+      address to assume an IPv4 or an IPv6 address.
+
+    * We have relaxed the assumption that a Tor relay or bridge may have
+      one address.
+
+1.2. Phase 2: Client->Private Bridge connections
+
+  The first piece of IPv6 functionality to deploy is allowing clients
+  to talk to bridges over IPv6.  (This is simplest because it requires
+  relatively little design, and has minimal impact on the rest of the
+  network and codebase.)
+
+  The Tor side of this more or less complete. Bridges can advertise
+  themselves as having IPv4 and IPv6 address, and clients can use a
+  bridge over IPv6 if configured to know about its IPv6 address.
+
+  Design issues to solve:
+    * If the user configures both the IPv4 and the IPv6 address of a
+      given bridge, which one does the client use?  (Defaulting to IPv6
+      if possible seems like a reasonable policy for starters).
+    * Should we (can we?) detect whether the client is configured to use
+      its ethernet MAC to build the last part of its address, and
+      treat it as a privacy issue inasmuch as it allows a bridge to
+      link connections from a single ethernet device as it moves around
+      the net?  If possible, we should at least detect this, tell
+      the user how to work around it, and prefer IPv4 so long as our
+      IPv6 address identifies our device.
+
+  There is a UI component here as well.  We must extend Tor Tor
+  controllers to allow IPv6 bridges.  Vidalia, arm, Torflow, TAILS, and
+  TorCtl will all need to be tested.
+
+1.3. Phase 3: Client->Public Bridge connections
+
+  The next stage is to support IPv6 addresses in public bridges.
+
+  This is mainly a matter of extending support tools.  We need to
+  implement the part of proposal 186 that specifies how IPv6 addresses
+  are tested and added to network statuses, so that the bridge authority
+  can test IPv6 bridges and tell BridgeDB about them.
+
+  We'll also need to enhance bridgedb itself.
+
+  We'll need an IPv6 GeoIP database for bridges to use to tell where
+  they're being censored.
+
+  BridgeDB needs to be extended to parse IPv6 addresses in bridge
+  descriptors, and give them out to clients who can support them.
+  Identifying these clients will need some work. One option is for
+  clients to opt in; another is to detect clients who have connected to
+  BridgeDB over an IPv6 address, and send them IPv6 bridges.
+
+  We need to update the metrics-db parts that sanitize bridge
+  descriptors.  We need to come up with an algorithm for sanitizing IPv6
+  addresses similar to the one for sanitizing IPv4 addresses.
+
+  We'll need to migrate the bridge authority to IPv6 soon if we
+  anticipate clients and/or bridges without IPv4 addresses.  The
+  administrator says the server can be on IPv6 as soon as we need it to.
+
+1.4. Phase 4: Client->Relay connections
+
+  The next step will be to make clients talk to non-bridge relays via
+  IPv6.  Most of the code here is written: there are only a few more
+  tweaks to make in order to expand client->bridge support into
+  client->relay support.
+
+  Most notably, we'll need a way for clients to decide which address to
+  use when connecting to a server.  As in phase 1, we should take
+  MAC-address privacy and other IPv6 privacy issues into account.
+
+  Design considerations:
+
+   * We might want to delay deploying the client-side facility until a
+     threshold of relays are advertising IPv6 addresses.
+
+  Directory authorities will need a way to test IPv6 addresses; relays
+  will need to self-test them as well as their IPv4 addresses. The hard
+  part there will be to expand the current notion of self-testing and
+  node testing so that a test result is now associated with a
+  node-address pair, rather than just a node.
+
+  Related tools will need to know about IPv6 relays, including the
+  metrics subsystem.
+
+  If we plan to have IPv6-only clients, we should make sure that some
+  directory authorities run on IPv6.  Maatuska has an IPv6 address as of
+  November 22.  We should not turn on relays on IPv6 until we have some
+  other relays on IPv6 too, so as not to load the directory authorities
+  too badly.
+
+1.5. Phase 5: IPv6 exit support
+
+  This part will be particularly fiddly, but as more and more target
+  addresses support IPv6, it will be increasingly useful.
+
+  Once IPv6 exits become extant, relays will want to prove they were
+  running a relay at a given IPv6 address, so ExoneraTor will need to
+  handle IPv6 in relay descriptors.
+
+  Our DNS system has long needed serious work. For IPv6 support, we'll
+  need to get our resolver to support IPv6 addresses, and our clients do
+  decide which to report to the client and which to use. Solving this
+  could be part of a broader DNS revamp. Long ago, we wrote a design
+  document (proposal 117) to try to solve some of these issues, but it
+  will need more attention based on experience we've gained over the
+  past few years.
+
+  The second part of making IPv6 exits work is to transport IPv6 traffic
+  and exit to IPv6 servers.  The issues to solve here are exit policies;
+  formulating an approach similar to the notion of topologically close
+  in IPv4 (same /16) to IPv6, unless it doesn't make sense; and
+  implementing the specified enhancements to RELAY_BEGIN cells from
+  tor-spec.
+
+  Necessary tool enhancements will include:
+
+  - We need to extend TorDNSEL/TorBEL and the part of ExoneraTor that
+    processes the TorDNSEL/TorBEL output.
+  - We also need to update VisiTor to handle IPv6 addresses in web server
+    logs and compare them to exit lists.
+
+1.6. Phase 6: Relay->Relay connections on IPv6
+
+  This part is least essential, and should fall out as a consequence of
+  the other parts.
+
+  Allowing opportunistic IPv6 traffic between nodes that can
+  communicate with both IPv4 and IPv6 will be relatively simple, as will
+  be bridges that have only an IPv6 address: both of these fall out
+  relatively simply from designing a process for advertising and
+  connecting to IPv6 addresses.  The harder problem is in supporting
+  IPv6-only Tor routers.  For these, we'll need to consider network
+  topology issues: having nodes that can't connect to all the other
+  nodes will weaken one of our basic assumptions for path generation, so
+  we'll need to make sure to do the analysis enough to tell whether this
+  is safe.
