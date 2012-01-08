@@ -68,7 +68,9 @@ Status: Open
 
    The certificate fingerprints used on this scheme MUST be computed
    by applying the SHA256 cryptographic hash function upon the ASN.1
-   DER encoding of a public-key certificate.
+   DER encoding of a public-key certificate, then truncating the hash
+   output to 12 bytes, encoding it to RFC4648 Base32 and omitting any
+   trailing padding '='.
 
 4.2. Bridge side implementation
 
@@ -90,13 +92,12 @@ Status: Open
      Bridge <method> <address:port> [["keyid="]<id-fingerprint>] \
        ["shared_secret="<shared_secret>] ["link_cert_fpr="<fingerprint>]
 
-   where <fingerprint> is the bridge's SSL certificate fingerprint in
-   hexademical encoding.
+   where <fingerprint> is the bridge's SSL certificate fingerprint.
 
    Tor clients who use bridges and want to pin their SSL certificates
    must specify the bridge's SSL certificate fingerprint as in:
      Bridge 12.34.56.78 shared_secret=934caff420aa7852b855 \
-         link_cert_fpr=38b0712e90bed729df81f2a22811d3dd89e91406d2522f4482ae4079e5245187
+         link_cert_fpr=GM4GEMBXGEZGKOJQMJSWINZSHFSGMOBRMYZGCMQ
 
 4.4. Implementation prerequisites
 
@@ -107,7 +108,55 @@ Status: Open
    Tor trac ticket #4390 and proposal YYY were created to resolve this
    issue.
 
-5. Acknowledgements
+5. Other ideas
+
+5.1. Certificate tagging using a shared secret
+
+   Another idea worth considering is having the bridge use the shared
+   secret from proposal 190 to embed a "secret message" on her
+   certificate, which could only be understood by a client who knows
+   that shared secret, essentially authenticating the bridge.
+
+   Specifically, the bridge would "tag" the Serial Number (or any
+   other covert field) of her certificate with the (potentially
+   truncated) HMAC of her link public key, using the shared secret of
+   proposal 190 as the key: HMAC(shared_secret, link_public_key).
+
+   A client knowing the shared secret would be able to verify the
+   'link_public_key' and authenticate the bridge, and since the Serial
+   Number field is usually composed of random bytes a probing attacker
+   would not notice the "tagging" of the certificate.
+
+   Arguments for this scheme are that it:
+   a) doesn't need extra bridge credentials apart from the shared secret
+      of prop190.
+   b) doesn't need any maintenance in case of certificate expiration.
+
+   Arguments against this scheme are:
+   a) In the case of self-signed certificates, OpenSSL creates an
+      8-bytes random Serial number, and we would probably need
+      something more than 8-bytes to tag. There are not many other
+      covert fields in SSL certificates mutable by vanilla OpenSSL.
+   b) It complicates the scheme, and if not implemented and researched
+      wisely it might also make it fingerprintable.
+   c) We most probably won't be able to tag CA-signed certificates.
+
+6. Discussion
+
+6.1. In section 4.1, why do you truncate the SHA256 output to 12 bytes?!
+
+   Bridge credentials are frequently propagated by word of mouth or
+   are physically written down, which renders the occult Base64
+   encoding unsatisfactory. The 104 characters Base32 encoding or the
+   64 characters hex representation of the SHA256 output would also be
+   too much bloat.
+
+   By truncating the SHA256 output to 12 bytes and encoding it with
+   Base32, we get 39 characters of readable and easy to transcribe
+   output, and sufficient security. Finally, dividing '39' by the
+   golden ratio gives us about 24.10!
+
+7. Acknowledgements
 
    Thanks to Robert Ransom for his great help and suggestions on
    devising this scheme and writing this proposal!

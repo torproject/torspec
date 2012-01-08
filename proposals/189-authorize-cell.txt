@@ -62,6 +62,8 @@ Status: Open
                    a meta-field hosting an arbitrary amount of fields.
 
    'PadLen', specifies the amount of padding in octets.
+   Implementations SHOULD pick 'PadLen' to be a random integer from 1
+   to 3141 inclusive.
 
    'Padding', is 'PadLen' octets of random content.
 
@@ -89,27 +91,33 @@ Status: Open
 
 4. Discussion
 
-4.1. Why not let the pluggable transports do the padding, like they
+4.1. What's up with the [1,3141] padding bytes range?
+
+   The upper limit is larger than the Ethernet MTU so that AUTHORIZE
+   and AUTHORIZED cells are not always transmitted into a single
+   packet. Other than that, it's indeed pretty much arbitrary.
+
+4.2. Why not let the pluggable transports do the padding, like they
      are supposed to do for the rest of the Tor protocol?
 
    The arguments of section "Alternative design: Just use pluggable
    transports" of proposal 187, apply here as well:
 
-   All bridges who use client authorization will also need camouflaged
-   AUTHORIZE/AUTHORIZED cell.
+   All bridges who use client authorization will also need padded
+   AUTHORIZE and AUTHORIZED cells.
 
-4.2. How should multiple round-trip authorization protocols be handled?
+4.3. How should multiple round-trip authorization protocols be handled?
 
-   Protocols that require multiple round-trips between the client and
+   Protocols that require multiple-round trips between the client and
    the bridge should use AUTHORIZE cells for communication.
 
    The format of the AUTHORIZE cell is flexible enough to support
-   messages from the client to the bridge and the inverse.
+   messages from the client to the bridge and the reverse.
 
-   In the end of a successful multiple round-trip protocol, an
+   At the end of a successful multiple round-trip protocol, an
    AUTHORIZED cell must be issued from the bridge to the client.
 
-4.3. AUTHORIZED seems useless. Why not use VPADDING instead?
+4.4. AUTHORIZED seems useless. Why not use VPADDING instead?
 
    As noted in proposal 187, the Tor protocol uses VPADDING cells for
    padding; any other use of VPADDING makes the Tor protocol kludgy.
@@ -119,4 +127,14 @@ Status: Open
    AUTHORIZE cell of an authorization protocol. That allows the
    bridge, in the case of successful authorization, to also process
    the VERSIONS cell and begin the v3 handshake promptly.
+
+4.5. What should actually happen when a bridge rejects an AUTHORIZE
+     cell?
+
+   When a bridge detects a badly formed or malicious AUTHORIZE cell,
+   it should assume that the other side is an adversary scanning for
+   bridges. The bridge should then act accordingly to avoid detection.
+
+   This proposal does not try to specify how a bridge can avoid
+   detection by an adversary.
 
