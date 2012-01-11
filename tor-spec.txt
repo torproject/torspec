@@ -345,6 +345,7 @@ see tor-design.pdf.
          129 -- CERTS     (Certificates)            (See Sec 4.2)
          130 -- AUTH_CHALLENGE (Challenge value)    (See Sec 4.3)
          131 -- AUTHENTICATE (Client authentication)(See Sec 4.5)
+         132 -- AUTHORIZE (Client authorization)    (Not yet used)
 
    The interpretation of 'Payload' depends on the type of the cell.
       PADDING: Payload is unused.
@@ -399,8 +400,15 @@ see tor-design.pdf.
    authenticate, it waits until it gets the AUTH_CHALLENGE cell, and then
    sends a CERTS cell, an AUTHENTICATE cell (4.4), and a NETINFO
    cell.  When this handshake is in use, the first cell must
-   still be VERSIONS, and no other cell type is allowed to intervene
-   besides those specified, except for PADDING and VPADDING cells.
+   be VERSIONS, VPADDING or AUTHORIZE, and no other cell type is allowed to
+   intervene besides those specified, except for PADDING and VPADDING cells.
+
+   The AUTHORIZE cell type is reserved for future use by scanning-resistance
+   designs.
+
+   [Tor versions before 0.2.3.11-alpha did not recognize the AUTHORIZE cell,
+   and did not permit any command other than VERSIONS as the first cell of
+   the in-protocol handshake.]
 
 4.1. Negotiating versions with VERSIONS cells
 

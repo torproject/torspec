@@ -2,7 +2,7 @@ Filename: 187-allow-client-auth.txt
 Title: Reserve a cell type to allow client authorization
 Author: Nick Mathewson
 Created: 16-Oct-2011
-Status: Open
+Status: Closed
 Target: 0.2.3.x
 
 Overview:

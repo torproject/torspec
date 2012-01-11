@@ -107,10 +107,10 @@ Proposals by number:
 184  Miscellaneous changes for a v3 Tor link protocol [CLOSED]
 185  Directory caches without DirPort [OPEN]
 186  Multiple addresses for one OR or bridge [DRAFT]
-187  Reserve a cell type to allow client authorization [OPEN]
+187  Reserve a cell type to allow client authorization [CLOSED]
 188  Bridge Guards and other anti-enumeration defenses [OPEN]
 189  AUTHORIZE and AUTHORIZED cells [OPEN]
-190  Password-based Bridge Client Authorization [OPEN]
+190  Bridge Client Authorization Based on a Shared Secret [OPEN]
 191  Bridge Detection Resistance against MITM-capable Adversaries [OPEN]
 192  Automatically retrieve and store information about bridges [OPEN]
 
@@ -142,10 +142,9 @@ Proposals by status:
    177  Abstaining from votes on individual flags [for 0.2.3.x]
    180  Pluggable transports for circumvention [for 0.2.3.x]
    185  Directory caches without DirPort
-   187  Reserve a cell type to allow client authorization [for 0.2.3.x]
    188  Bridge Guards and other anti-enumeration defenses
    189  AUTHORIZE and AUTHORIZED cells
-   190  Password-based Bridge Client Authorization
+   190  Bridge Client Authorization Based on a Shared Secret
    191  Bridge Detection Resistance against MITM-capable Adversaries
    192  Automatically retrieve and store information about bridges [for 0.2.[45].x]
  ACCEPTED:
@@ -205,6 +204,7 @@ Proposals by status:
    181  Optimistic Data for Tor: Client Side [in 0.2.3.3-alpha]
    183  Refill Intervals [in 0.2.3.5-alpha]
    184  Miscellaneous changes for a v3 Tor link protocol [for 0.2.3.x]
+   187  Reserve a cell type to allow client authorization [for 0.2.3.x]
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration
