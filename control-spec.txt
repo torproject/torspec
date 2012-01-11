@@ -277,7 +277,8 @@
          "INFO" / "NOTICE" / "WARN" / "ERR" / "NEWDESC" / "ADDRMAP" /
          "AUTHDIR_NEWDESCS" / "DESCCHANGED" / "STATUS_GENERAL" /
          "STATUS_CLIENT" / "STATUS_SERVER" / "GUARD" / "NS" / "STREAM_BW" /
-         "CLIENTS_SEEN" / "NEWCONSENSUS" / "BUILDTIMEOUT_SET" / "SIGNAL"
+         "CLIENTS_SEEN" / "NEWCONSENSUS" / "BUILDTIMEOUT_SET" / "SIGNAL" /
+         "CIRC2"
 
   Any events *not* listed in the SETEVENTS line are turned off; thus, sending
   SETEVENTS with an empty body turns off all event reporting.
@@ -1152,6 +1153,7 @@
      "650" SP "CIRC" SP CircuitID SP CircStatus [SP Path]
           [SP "BUILD_FLAGS=" BuildFlags] [SP "PURPOSE=" Purpose]
           [SP "HS_STATE=" HSState] [SP "REND_QUERY=" HSAddress]
+          [SP "TIME_CREATED=" TimeCreated]
           [SP "REASON=" Reason [SP "REMOTE_REASON=" Reason]] CRLF
 
       CircStatus =
@@ -1183,6 +1185,10 @@
 
       HSAddress = 16*Base32Character
       Base32Character = ALPHA / "2" / "3" / "4" / "5" / "6" / "7"
+
+      TimeCreated = Seconds "," MicroSeconds
+      Seconds = 1*DIGIT
+      Microseconds = 1*DIGIT
 
       Reason = "NONE" / "TORPROTOCOL" / "INTERNAL" / "REQUESTED" /
                "HIBERNATING" / "RESOURCELIMIT" / "CONNECTFAILED" /
@@ -1243,6 +1249,11 @@
    circuits, and only in versions 0.2.3.2-alpha and later.  Clients
    MUST accept hidden service addresses in formats other than that
    specified above.
+
+   The "TIME_CREATED" field is provided only in versions 0.2.3.2-alpha
+   and later.  Seconds is the tv_sec field of a 'struct timeval';
+   Microseconds is the tv_usec field.  TIME_CREATED is the time at
+   which the circuit was created or cannibalized.
 
    The "REASON" field is provided only for FAILED and CLOSED events, and only
    if extended events are enabled (see 3.19).  Clients MUST accept reasons
@@ -1988,6 +1999,31 @@
   Tor configuration options have changed (such as via a SETCONF or RELOAD
   signal). KEYWORD and VALUE specify the configuration option that was changed.
   Undefined configuration options contain only the KEYWORD.
+
+4.1.19. Circuit status changed slightly
+
+  The syntax is:
+
+    "650" SP "CIRC_MINOR" SP CircuitID SP CircEvent [SP Path]
+          [SP "BUILD_FLAGS=" BuildFlags] [SP "PURPOSE=" Purpose]
+          [SP "HS_STATE=" HSState] [SP "REND_QUERY=" HSAddress]
+          [SP "TIME_CREATED=" TimeCreated]
+          [SP "OLD_PURPOSE=" Purpose [SP "OLD_HS_STATE=" HSState]] CRLF
+
+    CircEvent =
+             "PURPOSE_CHANGED" / ; circuit purpose or HS-related state changed
+             "CANNIBALIZED"      ; circuit cannibalized
+
+  Clients MUST accept circuit events not listed above.
+
+  The "OLD_PURPOSE" field is provided for both PURPOSE_CHANGED and
+  CANNIBALIZED events.  The "OLD_HS_STATE" field is provided whenever
+  the "OLD_PURPOSE" field is provided and is a hidden-service-related
+  purpose.
+
+  Other fields are as specified in section 4.1.1 above.
+
+  [First added in 0.2.3.2-alpha]
 
 5. Implementation notes
 
