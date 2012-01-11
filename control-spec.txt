@@ -189,6 +189,17 @@
   LineItem = NonCR / 1*CR NonCRLF
   NonDotItem = NonDotCR / 1*CR NonCRLF
 
+  ; ISOTime, ISOTime2, and ISOTime2Frac are time formats as specified in
+  ; ISO8601.
+  ;  example ISOTime:      "2012-01-11 12:15:33"
+  ;  example ISOTime2:     "2012-01-11T12:15:33"
+  ;  example ISOTime2Frac: "2012-01-11T12:15:33.51"
+  IsoDatePart = 4*DIGIT "-" 2*DIGIT "-" 2*DIGIT
+  IsoTimePart = 2*DIGIT ":" 2*DIGIT ":" 2*DIGIT
+  ISOTime  = IsoDatePart " " IsoTimePart
+  ISOTime2 = IsoDatePart "T" IsoTimePart
+  ISOTime2Frac = IsoTime2 [ "." 1*DIGIT ]
+
 3. Commands
 
   All commands are case-insensitive, but most keywords are case-sensitive.
@@ -278,7 +289,7 @@
          "AUTHDIR_NEWDESCS" / "DESCCHANGED" / "STATUS_GENERAL" /
          "STATUS_CLIENT" / "STATUS_SERVER" / "GUARD" / "NS" / "STREAM_BW" /
          "CLIENTS_SEEN" / "NEWCONSENSUS" / "BUILDTIMEOUT_SET" / "SIGNAL" /
-         "CIRC2"
+         "CIRC_MINOR"
 
   Any events *not* listed in the SETEVENTS line are turned off; thus, sending
   SETEVENTS with an empty body turns off all event reporting.
@@ -1186,7 +1197,7 @@
       HSAddress = 16*Base32Character
       Base32Character = ALPHA / "2" / "3" / "4" / "5" / "6" / "7"
 
-      TimeCreated = Seconds "," MicroSeconds
+      TimeCreated = ISOTime2Frac
       Seconds = 1*DIGIT
       Microseconds = 1*DIGIT
 
@@ -1250,10 +1261,9 @@
    MUST accept hidden service addresses in formats other than that
    specified above.
 
-   The "TIME_CREATED" field is provided only in versions 0.2.3.2-alpha
-   and later.  Seconds is the tv_sec field of a 'struct timeval';
-   Microseconds is the tv_usec field.  TIME_CREATED is the time at
-   which the circuit was created or cannibalized.
+   The "TIME_CREATED" field is provided only in versions 0.2.3.11-alpha and
+   later.  TIME_CREATED is the time at which the circuit was created or
+   cannibalized.
 
    The "REASON" field is provided only for FAILED and CLOSED events, and only
    if extended events are enabled (see 3.19).  Clients MUST accept reasons
@@ -2023,7 +2033,7 @@
 
   Other fields are as specified in section 4.1.1 above.
 
-  [First added in 0.2.3.2-alpha]
+  [First added in 0.2.3.11-alpha]
 
 5. Implementation notes
 
