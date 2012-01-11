@@ -289,7 +289,7 @@
          "AUTHDIR_NEWDESCS" / "DESCCHANGED" / "STATUS_GENERAL" /
          "STATUS_CLIENT" / "STATUS_SERVER" / "GUARD" / "NS" / "STREAM_BW" /
          "CLIENTS_SEEN" / "NEWCONSENSUS" / "BUILDTIMEOUT_SET" / "SIGNAL" /
-         "CIRC_MINOR"
+         "CONF_CHANGED" / "CIRC_MINOR"
 
   Any events *not* listed in the SETEVENTS line are turned off; thus, sending
   SETEVENTS with an empty body turns off all event reporting.
