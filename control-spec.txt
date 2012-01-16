@@ -1210,7 +1210,7 @@
    The path is provided only when the circuit has been extended at least one
    hop.
 
-   The "BUILD_FLAGS" field is provided only in versions 0.2.3.2-alpha
+   The "BUILD_FLAGS" field is provided only in versions 0.2.3.11-alpha
    and later.  Clients MUST accept build flags not listed above.
    Build flags are defined as follows:
 
@@ -1233,7 +1233,7 @@
       CONTROLLER      (circuit built by a controller)
 
    The "HS_STATE" field is provided only for hidden-service circuits,
-   and only in versions 0.2.3.2-alpha and later.  Clients MUST accept
+   and only in versions 0.2.3.11-alpha and later.  Clients MUST accept
    hidden-service circuit states not listed above.  Hidden-service
    circuit states are defined as follows:
 
@@ -1257,7 +1257,7 @@
         HSSR_JOINED              (connected to client's RP circuit)
 
    The "REND_QUERY" field is provided only for hidden-service-related
-   circuits, and only in versions 0.2.3.2-alpha and later.  Clients
+   circuits, and only in versions 0.2.3.11-alpha and later.  Clients
    MUST accept hidden service addresses in formats other than that
    specified above.
 
