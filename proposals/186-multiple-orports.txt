@@ -119,7 +119,7 @@ New descriptor syntax:
       IPV6ADDR = an ipv6 address, surrounded by square brackets.
       IPV4ADDR = an ipv4 address, represented as a dotted quad.
       PORTLIST = PORTSPEC | PORTSPEC "," PORTLIST
-      PORTSPEC = PORT | PORT "-" PORT
+      PORTSPEC = PORT
       PORT = a number between 1 and 65535 inclusive.
 
   [This is the regular format for specifying sets of addresses and
@@ -251,13 +251,15 @@ Why not extend DirPort this way too?
   That is, clients tunnel their directory requests inside OR
   connections, and don't generally connect to DirPorts at all.
 
-Why not have address ranges?
+Why not have address and port ranges?
 
-  Earlier drafts of this proposal suggested that clients should
-  provide not only ranges of ports, but also ranges of addresses,
-  specified with bitmasks.  That's a neat idea for circumvention,
-  but if we did that, you wouldn't want to advertise publicly that
-  you have an entire address range.
+  Earlier drafts of this proposal suggested that servers should provide
+  ranges of addresses, specified with bitmasks.  That's a neat idea for
+  circumvention, but if we did that, you wouldn't want to advertise
+  publicly that you have an entire address range.
+
+  Port ranges are out because I don't think they would actually get used
+  much, and they add a fair bit of complexity.
 
 Coding impact:
 
