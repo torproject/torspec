@@ -165,7 +165,7 @@ Consensus directories and microdescriptors:
   We will have to define a new voting algorithm version; when using
   this version or later, votes should include a single "a" line for
   every relay that has an IPv6 address, to include the first IPv6
-  line in its descriptor.  (If there are no or-address lines, then
+  line in its descriptor.  (If there are no IPv6 or-address lines, then
   they shouldn't include any "a" lines.)  The remaining or-address
   lines will turn into "a" lines in the microdescriptor.
 
@@ -267,4 +267,13 @@ Coding impact:
   that looks up or compares OR connections and nodes by address:port
   under the assumptions that each node has only a single address or
   ORPort.
+
+TODO:
+
+  * Make it so that authorities can vote on which addresses are working
+    somehow.
+
+  * Specify some way to say "I only want to connect to v4/v6 addresses".
+
+  * Come up with a better alternative to running6 for the longterm?
 
