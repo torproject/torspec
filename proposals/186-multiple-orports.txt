@@ -64,9 +64,9 @@ Configuring additional addresses and ports:
 
   In current operating systems (unless we get into crazy nonportable
   tricks) we need to use one socket for every address:port that Tor
-  binds on.  As a sanity check, we can limit the number of such
-  sockets we use to, say, 64.  If you want to bind lots of
-  address:port combinations, you'll want to do it at the
+  binds on.  As a sanity check, we can limit the number of such sockets
+  we use to, say, something between 8 and 64.  If you want to bind lots
+  of address:port combinations, you'll want to do it at the
   firewall/routing level.
 
   Example: We want to bind on 0.0.0.0:9001
@@ -74,10 +74,10 @@ Configuring additional addresses and ports:
      ORPort 9001
 
   Example: Our firewall is redirecting ports 80, 443, and 7000-8000
-  on all hosts in 18.244.2.0/24 onto our port 2929.
+  on all hosts in 18.244.2.0 onto our port 2929.
 
      ORPort 2929 noadvertise
-     ORPort 18.244.2.0/24:80,443,7000-8000 nolisten
+     ORPort 18.244.2.0:80,443,7000-8000 nolisten
 
   Example: We have a dynamic DNS provider that maps
   tornode.example.com to our current external IPv4 and IPv6
@@ -98,8 +98,10 @@ Self-testing:
   combinations.
 
   It will now be possible for a Tor node to find that some addresses
-  work and others do not.  In this case, the node should only
-  advertise ORPort lines that have been checked.
+  work and others do not.  In this case, the node should only advertise
+  ORPort lines that have been checked.  (As a consequence, the node
+  should not advertise any address unless at least one ORPort without
+  nolisten has been specified.)
 
   {Until support is added for extend cells to IPv6 addresses, it
   will only be possible to test IPv6 addresses by connecting
