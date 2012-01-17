@@ -110,7 +110,7 @@ Proposals by number:
 187  Reserve a cell type to allow client authorization [CLOSED]
 188  Bridge Guards and other anti-enumeration defenses [OPEN]
 189  AUTHORIZE and AUTHORIZED cells [OPEN]
-190  Bridge Client Authorization Based on a Shared Secret [OPEN]
+190  Bridge Client Authorization Based on a Shared Secret [NEEDS-REVISION]
 191  Bridge Detection Resistance against MITM-capable Adversaries [OPEN]
 192  Automatically retrieve and store information about bridges [OPEN]
 
@@ -129,6 +129,7 @@ Proposals by status:
    186  Multiple addresses for one OR or bridge
  NEEDS-REVISION:
    131  Help users to verify they are using Tor
+   190  Bridge Client Authorization Based on a Shared Secret
  NEEDS-RESEARCH:
    145  Separate "suitable as a guard" from "suitable as a new guard"
    146  Add new flag to reflect long-term stability
@@ -144,7 +145,6 @@ Proposals by status:
    185  Directory caches without DirPort
    188  Bridge Guards and other anti-enumeration defenses
    189  AUTHORIZE and AUTHORIZED cells
-   190  Bridge Client Authorization Based on a Shared Secret
    191  Bridge Detection Resistance against MITM-capable Adversaries
    192  Automatically retrieve and store information about bridges [for 0.2.[45].x]
  ACCEPTED:
