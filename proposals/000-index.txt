@@ -30,7 +30,7 @@ Proposals by number:
 107  Uptime Sanity Checking [CLOSED]
 108  Base "Stable" Flag on Mean Time Between Failures [CLOSED]
 109  No more than one server per IP address [CLOSED]
-110  Avoiding infinite length circuits [ACCEPTED]
+110  Avoiding infinite length circuits [CLOSED]
 111  Prioritizing local traffic over relayed traffic [CLOSED]
 112  Bring Back Pathlen Coin Weight [SUPERSEDED]
 113  Simplifying directory authority administration [SUPERSEDED]
@@ -148,7 +148,6 @@ Proposals by status:
    191  Bridge Detection Resistance against MITM-capable Adversaries
    192  Automatically retrieve and store information about bridges [for 0.2.[45].x]
  ACCEPTED:
-   110  Avoiding infinite length circuits [for 0.2.3.x] [in 0.2.1.3-alpha]
    117  IPv6 exits [for 0.2.3.x]
    140  Provide diffs between consensuses
    147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.3.x]
@@ -178,6 +177,7 @@ Proposals by status:
    107  Uptime Sanity Checking [in 0.2.0.x]
    108  Base "Stable" Flag on Mean Time Between Failures [in 0.2.0.x]
    109  No more than one server per IP address [in 0.2.0.x]
+   110  Avoiding infinite length circuits [for 0.2.3.x] [in 0.2.1.3-alpha, 0.2.3.11-alpha]
    111  Prioritizing local traffic over relayed traffic [in 0.2.0.x]
    114  Distributed Storage for Tor Hidden Service Descriptors [in 0.2.0.x]
    119  New PROTOCOLINFO command for controllers [in 0.2.0.x]

@@ -895,7 +895,7 @@ see tor-design.pdf.
    A RELAY_EARLY cell is designed to limit the length any circuit can reach.
    When an OR receives a RELAY_EARLY cell, and the next node in the circuit
    is speaking v2 of the link protocol or later, the OR relays the cell as a
-   RELAY_EARLY cell.  Otherwise, it relays it as a RELAY cell.
+   RELAY_EARLY cell.  Otherwise, older Tors will relay it as a RELAY cell.
 
    If a node ever receives more than 8 RELAY_EARLY cells on a given
    outbound circuit, it SHOULD close the circuit. (For historical reasons,
@@ -908,8 +908,8 @@ see tor-design.pdf.
    RELAY cells that are not targeted at the first hop of any circuit as
    RELAY_EARLY cells too, in order to partially conceal the circuit length.
 
-   [In a future version of Tor, relays will reject any EXTEND cell not
-   received in a RELAY_EARLY cell.  See proposal 110.]
+   [Starting with Tor 0.2.3.11-alpha, future version of Tor, relays should
+   reject any EXTEND cell not received in a RELAY_EARLY cell.]
 
 6. Application connections and stream management
 

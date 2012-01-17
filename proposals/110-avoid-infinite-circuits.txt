@@ -2,9 +2,9 @@ Filename: 110-avoid-infinite-circuits.txt
 Title: Avoiding infinite length circuits
 Author: Roger Dingledine
 Created: 13-Mar-2007
-Status: Accepted
+Status: Closed
 Target: 0.2.3.x
-Implemented-In: 0.2.1.3-alpha
+Implemented-In: 0.2.1.3-alpha, 0.2.3.11-alpha
 
 History:
 
