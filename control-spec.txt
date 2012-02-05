@@ -323,11 +323,12 @@
   For information on how the implementation securely stores authentication
   information on disk, see section 5.1.
 
-  Before the client has authenticated, no command other than PROTOCOLINFO,
-  AUTHENTICATE, or QUIT is valid.  If the controller sends any other command,
-  or sends a malformed command, or sends an unsuccessful AUTHENTICATE
-  command, or sends PROTOCOLINFO more than once, Tor sends an error reply and
-  closes the connection.
+  Before the client has authenticated, no command other than
+  PROTOCOLINFO, AUTHCHALLENGE, AUTHENTICATE, or QUIT is valid.  If the
+  controller sends any other command, or sends a malformed command, or
+  sends an unsuccessful AUTHENTICATE command, or sends PROTOCOLINFO or
+  AUTHCHALLENGE more than once, Tor sends an error reply and closes
+  the connection.
 
   To prevent some cross-protocol attacks, the AUTHENTICATE command is still
   required even if all authentication methods in Tor are disabled.  In this
@@ -949,6 +950,7 @@
       "NULL"           / ; No authentication is required
       "HASHEDPASSWORD" / ; A controller must supply the original password
       "COOKIE"         / ; A controller must supply the contents of a cookie
+      "SAFECOOKIE"       ; A controller must prove knowledge of a cookie
 
      AuthCookieFile = QuotedString
      TorVersion = QuotedString
@@ -970,9 +972,16 @@
   methods that Tor currently accepts.
 
   AuthCookieFile specifies the absolute path and filename of the
-  authentication cookie that Tor is expecting and is provided iff
-  the METHODS field contains the method "COOKIE".  Controllers MUST handle
-  escape sequences inside this string.
+  authentication cookie that Tor is expecting and is provided iff the
+  METHODS field contains the method "COOKIE" and/or "SAFECOOKIE".
+  Controllers MUST handle escape sequences inside this string.
+
+  All authentication cookies are 32 bytes long.  Controllers MUST NOT
+  use the contents of a non-32-byte-long file as an authentication
+  cookie.
+
+  If the METHODS field contains the method "SAFECOOKIE", every
+  AuthCookieFile must contain the same authentication cookie.
 
   The VERSION line contains the Tor version.
 
@@ -1032,6 +1041,45 @@
       will still exit when the control connection ends.
 
   [TAKEOWNERSHIP was added in Tor 0.2.2.28-beta.]
+
+3.24. AUTHCHALLENGE
+
+  The syntax is:
+    "AUTHCHALLENGE" SP "SAFECOOKIE"
+                    SP ClientNonce
+                    CRLF
+
+    ClientNonce = 2*HEXDIG / QuotedString
+
+  If the server accepts the command, the server reply format is:
+    "250 AUTHCHALLENGE"
+            SP "SERVERHASH=" ServerHash
+            SP "SERVERNONCE=" ServerNonce
+            CRLF
+
+    ServerHash = 64*64HEXDIG
+    ServerNonce = 64*64HEXDIG
+
+  The ClientNonce, ServerHash, and ServerNonce values are
+  encoded/decoded in the same way as the argument passed to the
+  AUTHENTICATE command.  ServerNonce MUST be 32 bytes long.
+
+  ServerHash is computed as:
+    HMAC-SHA256("Tor safe cookie authentication server-to-controller hash",
+                CookieString | ClientNonce | ServerNonce)
+  (with the HMAC key as its first argument)
+
+  After a controller sends a successful AUTHCHALLENGE command, the
+  next command sent on the connection must be an AUTHENTICATE command,
+  and the only authentication string which that AUTHENTICATE command
+  will accept is:
+    HMAC-SHA256("Tor safe cookie authentication controller-to-server hash",
+                CookieString | ClientNonce | ServerNonce)
+
+  [Unlike other commands besides AUTHENTICATE, AUTHCHALLENGE may be
+  used (but only once!) before AUTHENTICATE.]
+
+  [AUTHCHALLENGE was added in Tor FIXME.]
 
 4. Replies
 
