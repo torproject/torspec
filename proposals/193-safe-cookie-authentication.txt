@@ -1,0 +1,144 @@
+Filename: 193-safe-cookie-authentication.txt
+Title: Safe cookie authentication for Tor controllers
+Author: Robert Ransom
+Created: 2012-02-04
+Status: Open
+
+Overview:
+
+  Not long ago, all Tor controllers which automatically attempted
+  'cookie authentication' were vulnerable to an information-disclosure
+  attack.  (See https://bugs.torproject.org/4303 for slightly more
+  information.)
+
+  Now, some Tor controllers which automatically attempt cookie
+  authentication are only vulnerable to an information-disclosure
+  attack on any 32-byte files they can read.  But the Ed25519
+  signature scheme (among other cryptosystems) has 32-byte secret
+  keys, and we would like to not worry about Tor controllers leaking
+  our secret keys to whatever can listen on what the controller thinks
+  is Tor's control port.
+
+  Additionally, we would like to not have to remodel Tor's innards and
+  rewrite all of our Tor controllers to use TLS on Tor's control port
+  this week (or deal with the many design issues which that would
+  raise).
+
+Design:
+
+From af6bf472d59162428a1d7f1d77e6e77bda827414 Mon Sep 17 00:00:00 2001
+From: Robert Ransom <rransom.8774@gmail.com>
+Date: Sun, 5 Feb 2012 04:02:23 -0800
+Subject: [PATCH] Add SAFECOOKIE control-port authentication method
+
+---
+ control-spec.txt |   59 ++++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 files changed, 51 insertions(+), 8 deletions(-)
+
+diff --git a/control-spec.txt b/control-spec.txt
+index 66088f7..3651c86 100644
+--- a/control-spec.txt
++++ b/control-spec.txt
+@@ -323,11 +323,12 @@
+   For information on how the implementation securely stores authentication
+   information on disk, see section 5.1.
+ 
+-  Before the client has authenticated, no command other than PROTOCOLINFO,
+-  AUTHENTICATE, or QUIT is valid.  If the controller sends any other command,
+-  or sends a malformed command, or sends an unsuccessful AUTHENTICATE
+-  command, or sends PROTOCOLINFO more than once, Tor sends an error reply and
+-  closes the connection.
++  Before the client has authenticated, no command other than
++  PROTOCOLINFO, AUTHCHALLENGE, AUTHENTICATE, or QUIT is valid.  If the
++  controller sends any other command, or sends a malformed command, or
++  sends an unsuccessful AUTHENTICATE command, or sends PROTOCOLINFO or
++  AUTHCHALLENGE more than once, Tor sends an error reply and closes
++  the connection.
+ 
+   To prevent some cross-protocol attacks, the AUTHENTICATE command is still
+   required even if all authentication methods in Tor are disabled.  In this
+@@ -949,6 +950,7 @@
+       "NULL"           / ; No authentication is required
+       "HASHEDPASSWORD" / ; A controller must supply the original password
+       "COOKIE"         / ; A controller must supply the contents of a cookie
++      "SAFECOOKIE"       ; A controller must prove knowledge of a cookie
+ 
+      AuthCookieFile = QuotedString
+      TorVersion = QuotedString
+@@ -970,9 +972,9 @@
+   methods that Tor currently accepts.
+ 
+   AuthCookieFile specifies the absolute path and filename of the
+-  authentication cookie that Tor is expecting and is provided iff
+-  the METHODS field contains the method "COOKIE".  Controllers MUST handle
+-  escape sequences inside this string.
++  authentication cookie that Tor is expecting and is provided iff the
++  METHODS field contains the method "COOKIE" and/or "SAFECOOKIE".
++  Controllers MUST handle escape sequences inside this string.
+ 
+   The VERSION line contains the Tor version.
+ 
+@@ -1033,6 +1035,47 @@
+ 
+   [TAKEOWNERSHIP was added in Tor 0.2.2.28-beta.]
+ 
++3.24. AUTHCHALLENGE
++
++  The syntax is:
++    "AUTHCHALLENGE" SP "AUTHMETHOD=SAFECOOKIE"
++                    SP "COOKIEFILE=" AuthCookieFile
++                    SP "CLIENTCHALLENGE=" 2*HEXDIG / QuotedString
++                    CRLF
++
++  The server will reject this command with error code 512, then close
++  the connection, if Tor is not using the file specified in the
++  AuthCookieFile argument as a controller authentication cookie file.
++
++  If the server accepts the command, the server reply format is:
++    "250-AUTHCHALLENGE"
++            SP "CLIENTRESPONSE=" 64*64HEXDIG
++            SP "SERVERCHALLENGE=" 2*HEXDIG
++            CRLF
++
++  The CLIENTCHALLENGE, CLIENTRESPONSE, and SERVERCHALLENGE values are
++  encoded/decoded in the same way as the argument passed to the
++  AUTHENTICATE command.
++
++  The CLIENTRESPONSE value is computed as:
++    HMAC-SHA256(HMAC-SHA256("Tor server-to-controller cookie authenticator",
++                            CookieString)
++                ClientChallengeString)
++  (with the HMAC key as its first argument)
++
++  After a controller sends a successful AUTHCHALLENGE command, the
++  next command sent on the connection must be an AUTHENTICATE command,
++  and the only authentication string which that AUTHENTICATE command
++  will accept is:
++    HMAC-SHA256(HMAC-SHA256("Tor controller-to-server cookie authenticator",
++                            CookieString)
++                ServerChallengeString)
++
++  [Unlike other commands besides AUTHENTICATE, AUTHCHALLENGE may be
++  used (but only once!) before AUTHENTICATE.]
++
++  [AUTHCHALLENGE was added in Tor FIXME.]
++
+ 4. Replies
+ 
+   Reply codes follow the same 3-character format as used by SMTP, with the
+-- 
+1.7.8.3
+
+Rationale:
+
+  The weird inner HMAC was meant to ensure that whatever impersonates
+  Tor's control port cannot even abuse a secret key meant to be used
+  with HMAC-SHA256.
+
+  Then I added the server-to-controller challenge-response
+  authentication step, to ensure that the server can only use a
+  controller as an HMAC oracle if it already knows the contents of the
+  cookie file.  Now, the inner HMAC is just a not-very-efficient way
+  to keep controllers from using the server as an oracle for its own
+  challenges (it could be replaced with a hash function).
+

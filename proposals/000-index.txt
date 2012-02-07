@@ -113,6 +113,7 @@ Proposals by number:
 190  Bridge Client Authorization Based on a Shared Secret [NEEDS-REVISION]
 191  Bridge Detection Resistance against MITM-capable Adversaries [OPEN]
 192  Automatically retrieve and store information about bridges [OPEN]
+193  Safe cookie authentication for Tor controllers [OPEN]
 
 
 Proposals by status:
@@ -147,6 +148,7 @@ Proposals by status:
    189  AUTHORIZE and AUTHORIZED cells
    191  Bridge Detection Resistance against MITM-capable Adversaries
    192  Automatically retrieve and store information about bridges [for 0.2.[45].x]
+   193  Safe cookie authentication for Tor controllers
  ACCEPTED:
    117  IPv6 exits [for 0.2.3.x]
    140  Provide diffs between consensuses
