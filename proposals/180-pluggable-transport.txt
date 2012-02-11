@@ -256,11 +256,10 @@ Server behavior
 Managed proxy interface
 
    When the Tor client or relay launches a managed proxy, it communicates
-   via environment variables.  At a minimum, it sets:
+   via environment variables.  At a minimum, it sets (in addition to the
+   normal environment variables inherited from Tor):
 
       {Client and server}
-
-      "HOME", "PATH" -- as you'd expect.
 
       "TOR_PT_STATE_LOCATION" -- A filesystem directory path where the
        proxy should store state if it wants to.  This directory is not
