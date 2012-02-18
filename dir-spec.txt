@@ -1071,7 +1071,7 @@
 
     "consensus-methods" SP IntegerList NL
 
-        [Exactly once for votes; does not occur in consensuses.]
+        [At most once for votes; does not occur in consensuses.]
 
         A space-separated list of supported methods for generating
         consensuses from votes.  See section 3.4.1 for details.  Method "1"
@@ -1079,7 +1079,7 @@
 
     "consensus-method" SP Integer NL
 
-        [Exactly once for consensuses; does not occur in votes.]
+        [At most once for consensuses; does not occur in votes.]
 
         See section 3.4.1 for details.
 
@@ -1228,13 +1228,13 @@
 
     "contact" SP string NL
 
-        [At most once.]
+        [Exactly once.]
 
         An arbitrary string describing how to contact the directory
         server's administrator.  Administrators should include at least an
         email address and a PGP fingerprint.
 
-    "legacy-key" SP FINGERPRINT NL
+    "legacy-dir-key" SP FINGERPRINT NL
 
         [At most once]
 
@@ -1259,7 +1259,7 @@
 
     "contact" SP string NL
 
-        [At most once.]
+        [Exactly once.]
 
         As in the authority section of a vote.
 
@@ -1291,7 +1291,7 @@
 
     "s" SP Flags NL
 
-        [At most once.]
+        [Exactly once.]
 
         A series of space-separated status flags, in lexical order (as ASCII
         byte strings).  Currently documented flags are:
