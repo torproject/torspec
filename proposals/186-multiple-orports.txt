@@ -73,11 +73,11 @@ Configuring additional addresses and ports:
 
      ORPort 9001
 
-  Example: Our firewall is redirecting ports 80, 443, and 7000-8000
+  Example: Our firewall is redirecting ports 80, 443, and 7000
   on all hosts in 18.244.2.0 onto our port 2929.
 
      ORPort 2929 noadvertise
-     ORPort 18.244.2.0:80,443,7000-8000 nolisten
+     ORPort 18.244.2.0:80,443,7000 nolisten
 
   Example: We have a dynamic DNS provider that maps
   tornode.example.com to our current external IPv4 and IPv6
