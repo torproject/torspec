@@ -2101,9 +2101,11 @@
   trusts any local user that connects to the control port.  This is generally
   a poor idea.
 
-  If the 'CookieAuthentication' option is true, Tor writes a "magic cookie"
-  file named "control_auth_cookie" into its data directory.  To authenticate,
-  the controller must send the contents of this file, encoded in hexadecimal.
+  If the 'CookieAuthentication' option is true, Tor writes a "magic
+  cookie" file named "control_auth_cookie" into its data directory (or
+  to another file specified in the 'CookieAuthFile' option).  To
+  authenticate, the controller must send the contents of this file,
+  encoded in hexadecimal.
 
   If the 'HashedControlPassword' option is set, it must contain the salted
   hash of a secret password.  The salted hash is computed according to the
