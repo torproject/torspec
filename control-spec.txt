@@ -2104,8 +2104,26 @@
   If the 'CookieAuthentication' option is true, Tor writes a "magic
   cookie" file named "control_auth_cookie" into its data directory (or
   to another file specified in the 'CookieAuthFile' option).  To
-  authenticate, the controller must send the contents of this file,
-  encoded in hexadecimal.
+  authenticate, the controller must demonstrate that it can read the
+  contents of the cookie file:
+
+  * Versions of Tor before 0.2.4.1-alpha support cookie authentication
+    using the "COOKIE" authentication method: the controller sends the
+    contents of the cookie file, encoded in hexadecimal.  This
+    authentication method exposes the user running a controller to an
+    unintended information disclosure attack whenever the controller
+    has greater filesystem read access than the process that it has
+    connected to.  (Note that a controller may connect to a process
+    other than Tor.)  It is almost never safe to use, even if the
+    controller's user has explicitly specified which filename to read
+    an authentication cookie from.  For this reason, the COOKIE
+    authentication method has been deprecated and will be removed from
+    Tor before version 0.2.4.1-alpha.
+
+  * 0.2.2.x versions of Tor after 0.2.2.XXXX, and all versions of Tor
+    after 0.2.3.XXXX-alpha, support cookie authentication using the
+    "SAFECOOKIE" authentication method, which discloses much less
+    information about the contents of the cookie file.
 
   If the 'HashedControlPassword' option is set, it must contain the salted
   hash of a secret password.  The salted hash is computed according to the
