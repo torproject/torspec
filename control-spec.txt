@@ -983,6 +983,16 @@
   If the METHODS field contains the method "SAFECOOKIE", every
   AuthCookieFile must contain the same authentication cookie.
 
+  The COOKIE authentication method exposes the user running a
+  controller to an unintended information disclosure attack whenever
+  the controller has greater filesystem read access than the process
+  that it has connected to.  (Note that a controller may connect to a
+  process other than Tor.)  It is almost never safe to use, even if
+  the controller's user has explicitly specified which filename to
+  read an authentication cookie from.  For this reason, the COOKIE
+  authentication method has been deprecated and will be removed from
+  Tor before version 0.2.4.1-alpha.
+
   The VERSION line contains the Tor version.
 
   [Unlike other commands besides AUTHENTICATE, PROTOCOLINFO may be used (but
