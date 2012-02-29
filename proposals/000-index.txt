@@ -114,6 +114,7 @@ Proposals by number:
 191  Bridge Detection Resistance against MITM-capable Adversaries [OPEN]
 192  Automatically retrieve and store information about bridges [OPEN]
 193  Safe cookie authentication for Tor controllers [OPEN]
+194  Mnemonic .onion URLs [OPEN]
 
 
 Proposals by status:
@@ -149,6 +150,7 @@ Proposals by status:
    191  Bridge Detection Resistance against MITM-capable Adversaries
    192  Automatically retrieve and store information about bridges [for 0.2.[45].x]
    193  Safe cookie authentication for Tor controllers
+   194  Mnemonic .onion URLs
  ACCEPTED:
    117  IPv6 exits [for 0.2.3.x]
    140  Provide diffs between consensuses
