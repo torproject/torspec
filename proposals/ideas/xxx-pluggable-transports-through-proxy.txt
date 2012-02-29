@@ -1,0 +1,79 @@
+Filename: xxx-pluggable-transports-through-proxy.txt
+Title: Pluggable Transport through SOCKS proxy
+Author: Arturo Filastò
+Created: 28 February 2012
+Status: Draft
+
+Overview
+
+  Tor introduced Pluggable Transports in proposal 180 Pluggable Transports
+  for circumvention.
+
+  The problem is that Tor currently cannot use a Pluggable Transport proxy
+  and a SOCKS proxy at the same time. This has been noticed by users in
+  #5195, where Tor would be failing saying "Unacceptable option value:
+  You have configured more than one proxy type".
+
+
+Trivia
+
+  This comes from a discussion that came up with Nick and I promised
+  to write a proposal for it if I wanted to hear what he had to say.
+  Nick spoke and I am writing this proposal.
+
+Acknowledgements
+
+  Most of the credit goes to Nick Mathewson for the main idea and
+  the rest of it goes to George Kadianakis for helping me out in writing
+  it.
+
+Motivation
+
+  After looking at some options we decided to go for this solution solution
+  since it guarantees backwards compatibility and is not particularly
+  costly to implement.
+
+Design overview
+
+  When Tor is configured to use both a Pluggable Transport proxy and SOCKS
+  proxy it should delegate the proxying to the pluggable transport proxy.
+
+  This can be achieved by setting the environment variables for the SOCKS
+  proxy to that specified inside of the torrc.
+
+  When the pluggable transport proxy starts it will first read the environment
+  variables and if it detects that it should be using a SOCKS proxy make
+  all it's traffic go through it. Once the pluggable transport proxy has successfully
+  established a connection to the SOCKS proxy it should notify Tor of it's
+  success or failure.
+  When both the SOCKS and the PluggableTransport directives are set Tor
+  should set the environemnt variable start the pluggabletransport proxy and wait
+  for it to report back on the SOCKS proxy status. If the pluggable transport
+  reports back a failure or it does not report back at all (maybe because
+  it is an outdated version), Tor should notify the user of the failure
+  and exit with an error.
+
+
+  The environment variables can also contain the credentials for accessing
+  the proxy.
+
+Specifications: Tor Pluggable Transport communication
+
+  When Tor detects a SOCKS proxy directive and a Pluggable Transport
+  proxy directive it sets the environment variable:
+
+    "TOR_PT_PROXY" -- This is the address of the proxy to be used by
+    the pluggable transport proxy. It is in the format:
+    <proxy_type>://<user_name?>:<password?>@<ip>:<port>
+    ex. socks5://tor:test1234@198.51.100.1:8000
+        socks4a://198.51.100.2:8001
+
+
+  If the pluggable transport proxy detects that the TOR_PT_PROXY environment
+  variable is set it attempts connecting to it. On successs it will
+  write to stdout (as specified in 180-pluggable-transport.txt)
+  PROXY true. On failure it should write PROXY-ERROR <errormessage>.
+
+  If Tor does not read any PROXY line or it reads a PROXY-ERROR line
+  and it is configured to use both SOCKS and PluggableTransport it should
+  exit with error.
