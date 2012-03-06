@@ -2,7 +2,7 @@ Filename: 179-TLS-cert-and-parameter-normalization.txt
 Title: TLS certificate and parameter normalization
 Author: Jacob Appelbaum, Gladys Shufflebottom
 Created: 16-Feb-2011
-Status: Draft
+Status: Closed
 Target: 0.2.3.x
 
 
@@ -10,6 +10,12 @@ Target: 0.2.3.x
 
 
                                     Overview
+
+     STATUS NOTE:
+
+     This document is implemented in part in 0.2.3.x, deferred in part, and
+     rejected in part.  See indented bracketed comments in individual
+     sections below for more information. -NM
 
 Scope
 
@@ -135,6 +141,11 @@ covert channel will not lead to an attacker having a method to downgrade client
 behavior. This shouldn't be a risk because the TLS Finished message hashes over
 all the bytes of the handshake, including the certificates.
 
+     [Randomized serial numbers are implemented in 0.2.3.9-alpha. We probably
+     shouldn't do certificate tagging by a covert channel in serial numbers,
+     since doing so would mean we could never have an externally signed
+     cert. -NM]
+
 Certificate fingerprinting issues expressed as base64 encoding
 
 It appears that all deployed Tor certificates have the following strings in
@@ -209,6 +220,8 @@ The expiration time should not be a fixed time that is simple to calculate by
 any Deep Packet Inspection device or it will become a new Tor TLS setup
 fingerprint.
 
+   [Deferred and needs revision; see proposal XXX. -NM]
+
 Proposed certificate form
 
 The following output from openssl asn1parse results from the proposed
@@ -260,6 +273,10 @@ default self-signed certificate:
   383:d=2  hl=2 l=   0 prim: NULL              
   385:d=1  hl=3 l= 129 prim: BIT STRING        
 
+    [Rejected pending more evidence; this pattern is trivially detectable,
+    and there is just not enough reason at the moment to think that this
+    particular certificate pattern is common enough for sites that matter
+    that the censors wouldn't be willing to block it. -NM]
 
 Custom Certificates
 
@@ -270,6 +287,8 @@ authority racket; it will also allow for any other user-supplied certificate.
 This may be desirable in some kinds of filtered networks or when attempting to
 avoid attracting suspicion by blending in with the TLS web server certificate
 crowd.
+
+    [Deferred; see proposal XXX]
 
 Problematic Diffie–Hellman parameters
 
@@ -317,6 +336,8 @@ well for Tor. More research in this area including the applicability of
 Miller-Rabin or AKS primality tests[6] will need to be analyzed and probably
 added to Tor.
 
+      [Randomized DH groups are implemented in 0.2.3.9-alpha. -NM]
+
 Practical key size
 
 Currently we use a 1024 bit long RSA modulus. I propose that we increase the
@@ -326,6 +347,10 @@ Additionally, the increase in modulus size provides a reasonable security boost
 with regard to key security properties.
 
 The implementer should increase the 1024 bit RSA modulus to 2048 bits.
+
+     [Deferred and needs performance analysis.  See proposal
+     XXX. Additionally, DH group strength seems far more crucial. Still, this
+     is out-of-scope for a "normalization" question. -NM]
 
 Possible future filtering nightmares
 

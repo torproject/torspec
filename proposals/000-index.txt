@@ -99,7 +99,7 @@ Proposals by number:
 176  Proposed version-3 link handshake for Tor [CLOSED]
 177  Abstaining from votes on individual flags [OPEN]
 178  Require majority of authorities to vote for consensus parameters [CLOSED]
-179  TLS certificate and parameter normalization [DRAFT]
+179  TLS certificate and parameter normalization [CLOSED]
 180  Pluggable transports for circumvention [OPEN]
 181  Optimistic Data for Tor: Client Side [CLOSED]
 182  Credit Bucket [DRAFT]
@@ -115,6 +115,7 @@ Proposals by number:
 192  Automatically retrieve and store information about bridges [OPEN]
 193  Safe cookie authentication for Tor controllers [OPEN]
 194  Mnemonic .onion URLs [OPEN]
+195  TLS certificate normalization for Tor 0.2.4.x [DRAFT]
 
 
 Proposals by status:
@@ -126,9 +127,9 @@ Proposals by status:
    141  Download server descriptors on demand
    144  Increase the diversity of circuits by detecting nodes belonging the same provider
    175  Automatically promoting Tor clients to nodes
-   179  TLS certificate and parameter normalization [for 0.2.3.x]
    182  Credit Bucket
    186  Multiple addresses for one OR or bridge
+   195  TLS certificate normalization for Tor 0.2.4.x [for 0.2.4.x]
  NEEDS-REVISION:
    131  Help users to verify they are using Tor
    190  Bridge Client Authorization Based on a Shared Secret
@@ -205,6 +206,7 @@ Proposals by status:
    174  Optimistic Data for Tor: Server Side [in 0.2.3.1-alpha]
    176  Proposed version-3 link handshake for Tor [for 0.2.3]
    178  Require majority of authorities to vote for consensus parameters [in 0.2.3.9-alpha]
+   179  TLS certificate and parameter normalization [for 0.2.3.x]
    181  Optimistic Data for Tor: Client Side [in 0.2.3.3-alpha]
    183  Refill Intervals [in 0.2.3.5-alpha]
    184  Miscellaneous changes for a v3 Tor link protocol [for 0.2.3.x]
