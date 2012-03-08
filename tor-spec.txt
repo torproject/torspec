@@ -393,13 +393,11 @@ see tor-design.pdf.
    initiator the certificates it needs to learn the responder's
    identity, an AUTH_CHALLENGE cell (4.3) that the initiator must include
    as part of its answer if it chooses to authenticate, and a NETINFO
-   cell (4.5).  The initiator can use the CERTS cell to confirm whether
-   the responder is correctly authenticated. If the initiator does not wish
-   to authenticate, it can send a NETINFO cell once it has received the
-   VERSIONS cell from the responder. If the initiator does wish to
-   authenticate, it waits until it gets the AUTH_CHALLENGE cell, and then
-   sends a CERTS cell, an AUTHENTICATE cell (4.4), and a NETINFO
-   cell.  When this handshake is in use, the first cell must
+   cell (4.5).  As soon as it gets the CERTS cell, the initiator knows
+   whether the responder is correctly authenticated.  At this point the
+   initiator may send a NETINFO cell if it does not wish to
+   authenticate, or a CERTS cell, an AUTHENTICATE cell (4.4), and a NETINFO
+   cell if it does.  When this handshake is in use, the first cell must
    be VERSIONS, VPADDING or AUTHORIZE, and no other cell type is allowed to
    intervene besides those specified, except for PADDING and VPADDING cells.
 
