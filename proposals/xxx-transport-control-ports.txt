@@ -1,0 +1,185 @@
+Filename: xxx-transport-control-ports.txt
+Title: Extended ORPort and TransportControlPort
+Author: George Kadianakis, Nick Mathewson
+Created: 14 Mar 2012
+Status: Open
+Target: 0.2.4.x
+
+1. Overview
+
+  Proposal 180 defined Tor pluggable transports, a way to decouple
+  protocol-level obfuscation from the core Tor protocol in order to
+  better resist client-bridge censorship. This is achieved by
+  introducing pluggable transport proxies, programs that obfuscate Tor
+  traffic to resist DPI detection.
+
+  Proposal 180 defined a way for pluggable transport proxies to
+  communicate with local Tor clients and bridges, so as to exchange
+  traffic. This document extends this communication protocol, so that
+  pluggable transport proxies can exchange arbitrary operational
+  information and metadata with Tor clients and bridges.
+
+2. Motivation
+
+  The communication protocol specified in Proposal 180 gives a way
+  for transport proxies to announce the IP address of their clients
+  to tor. Still, modern pluggable transports might have more (?)
+  needs than this. For example:
+
+  1. Tor might want to inform pluggable transport proxies on how to
+     rate-limit incoming or outgoing connections.
+
+  2. Server pluggable transport proxies might want to pass client
+     information to an anti-active-probing system controlled by tor.
+
+  3. Tor might want to temporarily stop a transport proxy from
+     obfuscating traffic.
+
+  To satisfy the above use cases, there must be real-time
+  communication between the tor process and the pluggable transport
+  proxy. To achieve this, this proposal refactors the Extended ORPort
+  protocol specified in Proposal 180, and introduces a new port,
+  TransportControlPort, whose sole role is the exchange of control
+  information between transport proxies and tor.
+
+  Specifically, transports proxies deliver each connection to the
+  "Extended ORPort", where they provide metadata and agree on an
+  identifier for each tunneled connection.  Once this handshake
+  occurs, the OR protocol proceeds unchanged.
+
+  Additionally, each transport maintains a single connection to Tor's
+  "TransportControlPort", where it receives instructions from Tor
+  about rate-limiting on individual connections.
+
+3. The new port protocols
+
+3.1. The new extended ORPort protocol
+
+  The extended server port protocol is as follows:
+
+     COMMAND [2 bytes, big-endian]
+     BODYLEN [2 bytes, big-endian]
+     BODY [BODYLEN bytes]
+
+     Commands sent from the transport proxy to the bridge are:
+
+     [0x0000] DONE: There is no more information to give. The next
+       bytes sent by the transport will be those tunneled over it.
+       (body ignored)
+
+     [0x0001] USERADDR: an address:port string that represents the user's
+       address.
+
+     Replies sent from tor to the proxy are:
+
+     [0x1000] OKAY: Send the user's traffic. (body ignored)
+
+     [0x1001] DENY: Tor would prefer not to get more traffic from
+       this address for a while. (body ignored)
+
+     [0x1002] CONTROL: a NUL-terminated "identifier" string. The
+       pluggable transport proxy must use the "identifier" to access
+       the TransportControlPort. See the 'Association and identifier
+       creation' section below.
+
+  Parties should ignore command codes that they do not understand.
+
+3.2. The new TransportControlPort protocol
+
+  The TransportControlPort protocol is as follows:
+
+     CONNECTIONID[16 bytes, big-endian]
+     COMMAND [2 bytes, big-endian]
+     BODYLEN [2 bytes, big-endian]
+     BODY [BODYLEN bytes]
+
+     Commands sent from the transport proxy to the bridge:
+
+     [0x0001] RATE_LIMITED: Message confirming that the rate limiting
+       request of the bridge was carried out successfully (body
+       ignored). See the 'Rate Limiting' section below.
+
+     [0x0002] NOT_RATE_LIMITED: Message notifying that the transport
+       proxy failed to carry out the rate limiting request of the
+       bridge (body ignored). See the 'Rate Limiting' section below.
+
+     Configuration commands sent from the bridge to the transport
+     proxy are:
+
+     [0x1001] NOT_ALLOWED: Message notifying that the CONNECTIONID
+       could not be matched with an authorized connection ID. The
+       bridge SHOULD shutdown the connection.
+
+     [0x1001] RATE_LIMIT: Carries information on how the pluggable
+       transport proxy should rate-limit its traffic. See the 'Rate
+       Limiting' section below.
+
+  CONNECTIONID should carry the connection identifier described in the
+  'Association and identifier creation' section.
+
+  Parties should ignore command codes that they do not understand.
+
+3.3. Association and identifier creation
+
+  For Tor and a transport proxy to communicate using the
+  TransportControlPort, an identifier must have already been negotiated
+  using the 'CONTROL' command of Extended ORPort.
+
+  The TransportControlPort identifier should not be predictable by a
+  user who hasn't received a 'CONTROL' command from the Extended
+  ORPort. For this reason, the TransportControlPort identifier should
+  not be cryptographically-weak or deterministically created.
+
+  Tor MUST create its identifiers by generating 16 bytes of random
+  data.
+
+4. Configuration commands
+
+4.1. Rate Limiting
+
+  A Tor relay should be able to inform a transport proxy in real-time
+  about its rate-limiting needs.
+
+  This can be achieved by using the TransportControlPort and sending a
+  'RATE_LIMIT' command to the transport proxy.
+
+  The body of the 'RATE_LIMIT' command should contain two integers,
+  4 bytes each, in big-endian format. The two numbers should represent
+  the bandwidth rate and bandwidth burst respectively in 'bytes per
+  second' which the transport proxy must set as its overall
+  rate-limiting setting.
+
+  When the transport proxy sets the appropriate rate limiting, it
+  should send back a 'RATE_LIMITED' command. If it fails while setting
+  up rate limiting, it should send back a 'NOT_RATE_LIMITED' command.
+
+  After sending a 'RATE_LIMIT' command. the tor bridge MAY want to
+  stop pushing data to the transport proxy, till it receives a
+  'RATE_LIMITED' command. If, instead, it receives a 'NOT_RATE_LIMITED'
+  command it MAY want to shutdown its connections to the transport
+  proxy.
+
+5. Security Considerations
+
+  Extended ORPort or TransportControlPort do _not_ provide link
+  confidentiality, authentication or integrity. Sensitive data, like
+  cryptographic material, should not be transferred through them.
+
+  An attacker with superuser access, is able to sniff network traffic,
+  and capture TransportControlPort identifiers and any data passed
+  through those ports.
+
+  Tor SHOULD issue a warning if the bridge operator tries to bind
+  Extended ORPort or TransportControlPort to a non-localhost address.
+
+  Pluggable transport proxies SHOULD issue a warning if they are
+  instructed to connect to a non-localhost Extended ORPort or
+  TransportControlPort.
+
+6. Future
+
+  In the future, we might have pluggable transports which require the
+  _client_ transport proxy to use the TransportControlPort and exchange
+  control information with the Tor client. The current proposal doesn't
+  yet support this, but we should not add functionality that will
+  prevent it from being possible.
