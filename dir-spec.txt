@@ -888,6 +888,12 @@
         List of mappings from ports to the number of opened exit streams
         to that port, rounded up to the nearest multiple of 4.
 
+    "transport" transportname address:port [arglist] NL
+        [Any number.]
+
+        Signals that the router supports the 'transportname' pluggable
+        transport in IP address 'address' and TCP port 'port'.
+
     "router-signature" NL Signature NL
         [At end, exactly once.]
 
