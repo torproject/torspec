@@ -234,20 +234,6 @@
   require current clients to understand any KeywordLine not currently
   described.
 
-  The "opt" keyword was used until Tor 0.1.2.5-alpha for non-critical future
-  extensions.  All implementations MUST ignore any item of the form "opt
-  keyword ....." when they would not recognize "keyword ....."; and MUST
-  treat "opt keyword ....."  as synonymous with "keyword ......" when keyword
-  is recognized.
-
-  Implementations before 0.1.2.5-alpha rejected any document with a
-  KeywordLine that started with a keyword that they didn't recognize.
-  When generating documents that need to be read by older versions of Tor,
-  implementations MUST prefix items not recognized by older versions of
-  Tor with an "opt" until those versions of Tor are obsolete.  [Note that
-  key certificates, status vote documents, extra info documents, and
-  status consensus documents will never be read by older versions of Tor.]
-
   Other implementations that want to extend Tor's directory format MAY
   introduce their own items.  The keywords for extension items SHOULD start
   with the characters "x-" or "X-", to guarantee that they will not conflict
@@ -540,10 +526,7 @@
        Present only if this router is a directory cache that provides
        extra-info documents.
 
-       [Versions before 0.2.0.1-alpha don't recognize this, and versions
-        before 0.1.2.5-alpha will reject descriptors containing it unless
-        it is prefixed with "opt"; it should be so prefixed until these
-        versions are obsolete.]
+       [Versions before 0.2.0.1-alpha don't recognize this]
 
    "extra-info-digest" digest NL
 
@@ -554,10 +537,7 @@
        (that is, not including the signature).  (If this field is absent, the
        router is not uploading a corresponding extra-info document.)
 
-       [Versions before 0.2.0.1-alpha don't recognize this, and versions
-        before 0.1.2.5-alpha will reject descriptors containing it unless
-        it is prefixed with "opt"; it should be so prefixed until these
-        versions are obsolete.]
+       [Versions before 0.2.0.1-alpha don't recognize this]
 
    "hidden-service-dir" *(SP VersionNum) NL
 
@@ -568,10 +548,6 @@
        supports those descriptor versions. If none are specified, it
        defaults to version 2 descriptors.
 
-       [Versions of Tor before 0.1.2.5-alpha rejected router descriptors
-        with unrecognized items; the protocols line should be preceded with
-        an "opt" until these Tors are obsolete.]
-
    "protocols" SP "Link" SP LINK-VERSION-LIST SP "Circuit" SP
           CIRCUIT-VERSION-LIST NL
 
@@ -581,10 +557,6 @@
        protocols the server supports.  As of 30 Mar 2008, specified
        protocols are "Link 1 2 Circuit 1".  See section 4.1 of tor-spec.txt
        for more information about link protocol versions.
-
-       [Versions of Tor before 0.1.2.5-alpha rejected router descriptors
-        with unrecognized items; the protocols line should be preceded with
-        an "opt" until these Tors are obsolete.]
 
    "allow-single-hop-exits" NL
 
@@ -2396,8 +2368,7 @@
   apparent IP address of the client connecting to them (as a dotted quad).
   For directory connections tunneled over a BEGIN_DIR stream, servers SHOULD
   report the IP from which the circuit carrying the BEGIN_DIR stream reached
-  them.  [Servers before version 0.1.2.5-alpha reported 127.0.0.1 for all
-  BEGIN_DIR-tunneled connections.]
+  them.
 
   Servers SHOULD disable caching of multiple network statuses or multiple
   router descriptors.  Servers MAY enable caching of single descriptors,
