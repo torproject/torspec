@@ -126,12 +126,12 @@ Discussion and consequences:
   Currently, OpenSSL 1.0.0 (in its default configuration) supports every
   cipher that we would need in order to give the same list as Firefox
   versions 8 through 11 give in their default configuration, with the
-  exception of the FIPS ciphersuite above.  Therefore, wewill be able
+  exception of the FIPS ciphersuite above.  Therefore, we will be able
   to fake the new ciphersuite list correctly in all of our bundles that
   include OpenSSL, and on every version of Unix that keeps up-to-date.
 
   However, versions of Tor compiled to use older versions of OpenSSL, or
-  to use versions of OpenSSL with some ciphersuites disabled, will no
+  versions of OpenSSL with some ciphersuites disabled, will no
   longer give the same ciphersuite lists as other versions of Tor.  On
   these platforms, Tor clients will no longer impersonate Firefox.
   Users who need to do so will have to download one of our bundles, or
@@ -153,8 +153,33 @@ Discussion and consequences:
   some bizarre reason Camellia or Seed or Aria becomes a better bet than
   AES.
 
-Open question:
+Open questions:
 
   Should the client drop connections if the server chooses a bad
   cipher, or a suite without forward secrecy?
+
+  Can we get OpenSSL to support the dubious FIPS suite excluded above,
+  in order to remove a distinguishing opportunity?  It is not so simple
+  as just editing the SSL_CIPHER list in s3_lib.c, since the nonstandard
+  SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA cipher is (IIUC) defined to use the
+  TLS1 KDF, while declaring itself to be an SSL cipher (!).
+
+  Can we do anything to eventually allow the IE7+[**] cipher list as
+  well?  IE does not support TLS_DHE_RSA_WITH_AES_{256,128}_SHA or
+  SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA, and so wouldn't work with current
+  Tor servers, which _only_ support those.  It looks like the only
+  forward-secure ciphersuites that IE7+ *does* support are ECDHE ones,
+  and DHE+DSS ones.  So if we want this flexibility, we could mandate
+  server-side ECDHE, or somehow get DHE+DSS support (which would play
+  havoc with our current certificate generation code IIUC), or say that
+  it is sometimes acceptable to have a non-forward-secure link
+  protocol[***].  None of these answers seems like a great one.  Is one
+  best?  Are there other options?
+
+  [**] Actually, I think it's the Windows SChannel cipher list we
+  should be looking at here.
+  [***] If we did _that_, we'd want to specify that CREATE_FAST could
+  never be used on a non-forward-secure link.  Even so, I don't like the
+  implications of leaking cell types and circuit IDs to a future
+  compromise.
 
