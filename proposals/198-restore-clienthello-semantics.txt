@@ -1,0 +1,160 @@
+Filename: 198-restore-clienthello-semantics.txt
+Title: Restore semantics of TLS ClientHello
+Author: Nick Mathewson
+Created: 19-Mar-2012
+Status: Open
+
+Overview:
+
+   Currently, all supported Tor versions try to imitate an older version
+   of Firefox when advertising ciphers in their TLS ClientHello.  This
+   feature is intended to make it harder for a censor to distinguish a
+   Tor client from other TLS traffic.  Unfortunately, it makes the
+   contents of the ClientHello unreliable: a server cannot conclude that
+   a cipher is really supported by a Tor client simply because it is
+   advertised in the ClientHello.
+
+   This proposal suggests an approach for restoring sanity to our use of
+   ClientHello, so that we still avoid ciphersuite-based fingerprinting,
+   but allow nodes to negotiate better ciphersuites than they are
+   allowed to negotiate today.
+
+Background reading:
+
+   Section 2 of tor-spec.txt 2 describes our current baroque link
+   negotiation scheme.  Proposals 176 and 184 describe more information
+   about how it got that way.
+
+   Bug 4744 is a big part of the motivation for this proposal: we want
+   to allow Tors to advertise even more ciphers, some of which we would
+   actually prefer to the ones we are using now.
+
+   What you need to know about the TLS handshake is that the client
+   sends a list of all the ciphersuites that it supports in its
+   ClientHello message, and then the server chooses one and tells the
+   client which one it picked.
+
+Motivation and constraints:
+
+   We'd like to use some of the ECDHE TLS ciphersuites, since they allow
+   us to get better forward-secrecy at lower cost than our current
+   DH-1024 usage.  But right now, we can't ever use them, since Tor will
+   advertise them whether or not it has a version of OpenSSL that
+   supports them.
+
+   (OpenSSL before 1.0.0 did not support ECDHE ciphersuites; OpenSSL
+   before 1.0.0e or so had some security issues with them.)
+
+   We cannot have the rule be "Tors must only advertise ciphersuites
+   that they can use", since current Tors will advertise such
+   ciphersuites anyway.
+
+   We cannot have the rule be "Tors must support every ECDHE ciphersuite
+   on the following list", since current Tors don't do all that, and
+   since one prominent Linux distribution builds OpenSSL without ECC
+   support because of patent/freedom fears.
+
+   Fortunately, nearly every ciphersuite that we would like to advertise
+   to imitate FF8 (see bug 4744) is currently supported by OpenSSL 1.0.0
+   and later.  This enables the following proposal to work:
+
+Proposed spec changes:
+
+   I propose that the rules for handling ciphersuites at the server side
+   become the following:
+
+   If the ciphersuites in the ClientHello contains no ciphers other than
+   the following[*], they indicate that the Tor v1 link protocol is in use.
+
+     TLS_DHE_RSA_WITH_AES_256_CBC_SHA
+     TLS_DHE_RSA_WITH_AES_128_CBC_SHA
+     SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA
+     SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA
+
+   If the advertised ciphersuites in the ClientHello are _exactly_[*]
+   the following, they indicate that the Tor v2+ link protocol is in
+   use, AND that the ClientHello may have unsupported ciphers.  In this
+   case, the server may choose DHE_RSA_WITH_AES_128_CBC_SHA  or
+   DHE_RSA_WITH_AES_256_SHA, but may not choose any other cipher.
+
+     TLS1_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+     TLS1_ECDHE_RSA_WITH_AES_256_CBC_SHA
+     TLS1_DHE_RSA_WITH_AES_256_SHA
+     TLS1_DHE_DSS_WITH_AES_256_SHA
+     TLS1_ECDH_RSA_WITH_AES_256_CBC_SHA
+     TLS1_ECDH_ECDSA_WITH_AES_256_CBC_SHA
+     TLS1_RSA_WITH_AES_256_SHA
+     TLS1_ECDHE_ECDSA_WITH_RC4_128_SHA
+     TLS1_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+     TLS1_ECDHE_RSA_WITH_RC4_128_SHA
+     TLS1_ECDHE_RSA_WITH_AES_128_CBC_SHA
+     TLS1_DHE_RSA_WITH_AES_128_SHA
+     TLS1_DHE_DSS_WITH_AES_128_SHA
+     TLS1_ECDH_RSA_WITH_RC4_128_SHA
+     TLS1_ECDH_RSA_WITH_AES_128_CBC_SHA
+     TLS1_ECDH_ECDSA_WITH_RC4_128_SHA
+     TLS1_ECDH_ECDSA_WITH_AES_128_CBC_SHA
+     SSL3_RSA_RC4_128_MD5
+     SSL3_RSA_RC4_128_SHA
+     TLS1_RSA_WITH_AES_128_SHA
+     TLS1_ECDHE_ECDSA_WITH_DES_192_CBC3_SHA
+     TLS1_ECDHE_RSA_WITH_DES_192_CBC3_SHA
+     SSL3_EDH_RSA_DES_192_CBC3_SHA
+     SSL3_EDH_DSS_DES_192_CBC3_SHA
+     TLS1_ECDH_RSA_WITH_DES_192_CBC3_SHA
+     TLS1_ECDH_ECDSA_WITH_DES_192_CBC3_SHA
+     SSL3_RSA_FIPS_WITH_3DES_EDE_CBC_SHA
+     SSL3_RSA_DES_192_CBC3_SHA
+
+  [*] The "extended renegotiation is supported" ciphersuite, 0x00ff, is
+      not counted when checking the list of ciphersuites.
+
+  Otherwise, the ClientHello has these semantics: The inclusion of any
+  cipher supported by OpenSSL 1.0.0 means that the client supports it,
+  with the exception of
+      SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA
+  which is never supported. Clients MUST advertise support for at least one of
+  TLS_DHE_RSA_WITH_AES_256_CBC_SHA or TLS_DHE_RSA_WITH_AES_128_CBC_SHA.
+
+  The server MUST choose a ciphersuite with ephemeral keys for forward
+  secrecy; MUST NOT choose a weak or null ciphersuite; and SHOULD NOT
+  choose any cipher other than AES or 3DES.
+
+Discussion and consequences:
+
+
+  Currently, OpenSSL 1.0.0 (in its default configuration) supports every
+  cipher that we would need in order to give the same list as Firefox
+  versions 8 through 11 give in their default configuration, with the
+  exception of the FIPS ciphersuite above.  Therefore, wewill be able
+  to fake the new ciphersuite list correctly in all of our bundles that
+  include OpenSSL, and on every version of Unix that keeps up-to-date.
+
+  However, versions of Tor compiled to use older versions of OpenSSL, or
+  to use versions of OpenSSL with some ciphersuites disabled, will no
+  longer give the same ciphersuite lists as other versions of Tor.  On
+  these platforms, Tor clients will no longer impersonate Firefox.
+  Users who need to do so will have to download one of our bundles, or
+  use a (non-system) OpenSSL.
+
+
+  The proposed spec change above tries to future-proof ourselves by not
+  declaring that we support every declared cipher, in case we someday
+  need to handle a new Firefox version.  If a new Firefox version
+  comes out that uses ciphers not supported by OpenSSL 1.0.0, we will
+  need to define whether clients may advertise its ciphers without
+  supporting them; but existing servers will continue working whether
+  we decide yes or no.
+
+
+  The restriction to "servers SHOULD only pick AES or 3DES" is meant to
+  reflect our current behavior, not to represent a permanent refusal to
+  support other ciphers.  We can revisit it later as appropriate, if for
+  some bizarre reason Camellia or Seed or Aria becomes a better bet than
+  AES.
+
+Open question:
+
+  Should the client drop connections if the server chooses a bad
+  cipher, or a suite without forward secrecy?
+

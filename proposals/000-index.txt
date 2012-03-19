@@ -118,6 +118,7 @@ Proposals by number:
 195  TLS certificate normalization for Tor 0.2.4.x [DRAFT]
 196  Extended ORPort and TransportControlPort [OPEN]
 197  Message-based Inter-Controller IPC Channel [OPEN]
+198  Restore semantics of TLS ClientHello [OPEN]
 
 
 Proposals by status:
@@ -156,6 +157,7 @@ Proposals by status:
    194  Mnemonic .onion URLs
    196  Extended ORPort and TransportControlPort [for 0.2.4.x]
    197  Message-based Inter-Controller IPC Channel [for 0.2.4.x]
+   198  Restore semantics of TLS ClientHello
  ACCEPTED:
    117  IPv6 exits [for 0.2.3.x]
    140  Provide diffs between consensuses
