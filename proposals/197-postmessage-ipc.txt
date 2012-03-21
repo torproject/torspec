@@ -26,7 +26,7 @@ Control Protocol Specification Changes
     Sent from the client to the server. The syntax is:
 
       "CONTROLLERNAME" SP ControllerID
-        ControllerID =3D 1*(ALNUM / "_")
+        ControllerID = 1*(ALNUM / "_")
 
     Server returns "250 OK" and records the ControllerID to use for
     this control port connection for messaging information if successful,
@@ -43,7 +43,7 @@ Control Protocol Specification Changes
     Sent from the client to the server. The syntax is:
 
       "POSTMESSAGE" SP "@" DestControllerID SP LineItem CRLF
-         DestControllerID =3D "all" / 1*(ALNUM / "_")
+         DestControllerID = "all" / 1*(ALNUM / "_")
 
     If DestControllerID is "all", the message will be posted to all
     controllers that have "SETEVENTS POSTMESSAGE" set. Otherwise, the
@@ -60,9 +60,9 @@ Control Protocol Specification Changes
 
       "650" SP "POSTMESSAGE" SP MessageID SP SourceControllerID SP
                         "@" DestControllerID SP LineItem CRLF
-         MessageID =3D 1*DIGIT
-         SourceControllerID =3D "unset" / 1*(ALNUM / "_")
-         DestControllerID =3D "all" / 1*(ALNUM / "_")
+         MessageID = 1*DIGIT
+         SourceControllerID = "unset" / 1*(ALNUM / "_")
+         DestControllerID = "all" / 1*(ALNUM / "_")
 
       MessageID is an incrementing integer identifier that uniquely
       identifies this message to all controllers.
@@ -72,8 +72,8 @@ Control Protocol Specification Changes
       CONTROLLERNAME command was not used or unimplemented.
 
   GETINFO commands
-    "recent-messages" -- Retrieves messages=20
-      sent to ControllerIDs that match the current controller=20
+    "recent-messages" -- Retrieves messages
+      sent to ControllerIDs that match the current controller
       in POSTMESSAGE event format. This list should be generated
       on the fly, to handle disconnecting controllers.
 
@@ -97,36 +97,3 @@ Implementation plan
   needed.  However, Torbutton does not have immediate need for this
   protocol.
 
- =20
-
-
-
---=20
-Mike Perry
-
---GID0FwUMdk1T2AWN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk9j144ACgkQGwyjDN3GwK07dgCdEqImEOU/QeGwdAs9Nxe8vlYO
-H+UAn0/NlNoEwFfRDbnH3fv+3C/MOOF8
-=gs9Z
------END PGP SIGNATURE-----
-
---GID0FwUMdk1T2AWN--
-
---===============7807826766355441436==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-tor-dev mailing list
-tor-dev@lists.torproject.org
-https://lists.torproject.org/cgi-bin/mailman/listinfo/tor-dev
-
---===============7807826766355441436==--
