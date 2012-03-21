@@ -1,0 +1,415 @@
+Filename: 199-bridgefinder-integration.txt
+Title: Integration of BridgeFinder and BridgeFinderHelper
+Author: Mike Perry
+Created: 18-03-2012
+Status: Open
+Target: 0.2.3.x+
+
+
+Overview
+
+  This proposal describes how the Tor client software can interact with
+  an external program that performs bridge discovery based on user input
+  or information extracted from a web page, QR Code, online game, or
+  other transmission medium.
+
+
+Scope and Audience
+
+  This document describes how all of the components involved in bridge
+  discovery communicate this information to the rest of the Tor
+  software. The mechanisms of bridge discovery are not discussed, though
+  the design aims to be generalized enough to allow arbitrary new
+  discovery mechanisms to be added at any time.
+  
+  This document is also written with the hope that those who wish to
+  implement BridgeFinder components and BridgeFinderHelpers can get
+  started immediately after a read of this proposal, so that development
+  of bridge discovery mechanisms can proceed in parallel to supporting
+  functionality improvements in the Tor client software.
+
+
+Components and Responsibilities
+
+ 0. Tor Client
+ 
+    The Tor Client is the piece of software that connects to the Tor
+    network (optionally using bridges) and provides a SOCKS proxy for
+    use by the user.
+ 
+    In initial implementations, the Tor Client will support only
+    standard bridges. In later implementations, it is expected to
+    support pluggable transports as defined by Proposal 180.
+
+ 1. Tor Control Port
+ 
+    The Tor Control Port provides commands to perform operations,
+    configuration, and to obtain status information. It also optionally
+    provides event driven status updates.
+    
+    In initial implementations, it will be used directly by BridgeFinder
+    to configure bridge information via GETINFO and SETCONF. It is covered
+    by control-spec.txt in the tor-specs git repository.
+
+    In later implementations, it will support the inter-controller
+    POSTMESSAGE IPC protocol as defined by Proposal 197 for use
+    in conveying bridge information to the Primary Controller.
+ 
+ 2. Primary Controller
+ 
+    The Primary Controller is the program that launches and configures the
+    Tor client, and monitors its status.
+    
+    On desktop platforms, this program is Vidalia, and it also launches
+    the Tor Browser. On Android, this program is Orbot. Orbot does not
+    launch a browser.
+    
+    On all platforms, this proposal requires that the Primary Controller
+    will launch one or more BridgeFinder child processes and provide
+    them with authentication information through the environment variables
+    TOR_CONTROL_PORT and TOR_CONTROL_PASSWD.
+
+    In later implementations, the Primary Controller will be expected
+    to receive Bridge configuration information via the free-form
+    POSTMESSAGE protocol from Proposal 197, validate that information,
+    and hold that information for user approval.
+ 
+ 3. BridgeFinder
+ 
+    A BridgeFinder is a program that discovers bridges and configures
+    Tor to use them.
+    
+    In initial implementations, it is likely to be very dumb, and its main
+    purpose will be to serve as a layer of abstraction that should free
+    the Primary Controller from having to directly implement numerous ways
+    of retrieving bridges for various pluggable transports.
+    
+    In later implementations, it may perform arbitrary network operations
+    to discover, authenticate to, and/or verify bridges, possibly using
+    informational hints provided by one or more external
+    BridgeFinderHelpers (see next component). It could even go so far as
+    to download new pluggable transport plugins and/or transform
+    definition files from arbitrary urls.
+    
+    It will be launched by the Primary Controller and given access to the
+    Tor Control Port via the environment variables TOR_CONTROL_PORT and
+    TOR_CONTROL_PASSWD.
+    
+    Initial control port interactions can be command driven via GETINFO
+    and SETCONF, and do not need to subscribe to or process control port
+    events. Later implementations will use POSTMESSAGE as defined in
+    Proposal 197 to pass command requests to Vidalia, which will parse
+    them and ask for user confirmation before deploying them. Use of
+    POSTMESSAGE may or may not require event driven operation, depending
+    on POSTMESSAGE implementation status (POSTMESSAGE is designed to
+    support both command and event driven operation, but it is possible 
+    event driven operation will happen first).
+ 
+ 4. BridgeFinderHelper
+ 
+    Each BridgeFinder implementation can optionally communicate with one
+    or more BridgeFinderHelpers. BridgeFinderHelpers are plugins to
+    external 3rd party applications that can inspect traffic, handle mime
+    types, or implement protocol handlers for accepting bridge discovery
+    information to pass to BridgeFinder. Example 3rd party applications
+    include Chrome, World of Warcraft, QR Code readers, or simple cut
+    and paste.
+    
+    Due to the arbitrary nature of sandboxing that may be present in
+    various BridgeFinderHelper host applications, we do not mandate the
+    exact nature of the IPC between BridgeFinder instances and external
+    BridgeFinderHelper addons. However, please see the "Security Concerns"
+    section for common pitfalls to avoid. 
+ 
+ 5. Tor Browser
+ 
+    This is the browser the user uses with Tor. It is not useful until Tor
+    is properly configured to use bridges. It fails closed.
+    
+    It is not expected to run BridgeFinderHelper plugin instances, unless
+    those plugin instances exist to ensure the user always has a pool of
+    working bridges available after successfully configuring an
+    initial bridge. Once all bridges fail, the Tor Browser is useless.
+ 
+ 6. Non-Tor Browser (aka BridgeFinderHelper host)
+ 
+    This is the program the user uses for normal Internet activity to
+    obtain bridges via a BridgeFinderHelper plugin. It does not have to be
+    a browser. In advanced scenarios, this component may not be a browser
+    at all, but may be a program such as World of Warcraft instead.
+
+
+Incremental Deployability
+
+  The system is designed to be incrementally deployable: Simple designs
+  should be possible to develop and test immediately. The design is
+  flexible enough to be easily upgraded as more advanced features become
+  available from both Tor and new pluggable transports.
+
+Initial Implementation
+
+  In the simplest possible initial implementation, BridgeFinder will
+  only discover Tor Bridges as they are deployed today. It will use the
+  Tor Control Port to configure these bridges directly via the SETCONF
+  command. It may or may not receive bridge information from a
+  BridgeFinderHelper. In an even more degenerate case,
+  BridgeFinderHelper may even be Vidalia or Orbot itself, acting upon
+  user input from cut and paste.
+
+ Initial Implementation: BridgeFinder Launch
+ 
+   In the initial implementation, the Primary Controller will launch one
+   or more BridgeFinders, providing control port authentication
+   information to them through the environment variables TOR_CONTROL_PORT
+   and TOR_CONTROL_PASSWD.
+   
+   BridgeFinder will then directly connect to the control port and
+   authenticate. Initial implementations should be able to function
+   without using SETEVENTS, and instead only using command-based
+   status inquiries and configuration (GETINFO and SETCONF).
+ 
+ Initial Implementation: Obtaining Bridge Hint Information
+ 
+   In the initial implementation, to test functionality,
+   BridgeFinderHelper can simply scrape bridges directly from
+   https://bridges.torproject.org.
+   
+   In slightly more advanced implementations, a BridgeFinderHelper
+   instance may be written for use in the user's Non-Tor Browser. This
+   plugin could extract bridges from images, html comments, and other
+   material present in ad banners and slack space on unrelated pages.
+ 
+   BridgeFinderHelper would then communicate with the appropriate
+   BridgeFinder instance over an acceptable IPC mechanism. This proposal
+   does not seek to specify the nature of that IPC channel (because
+   BridgeFinderHelper may be arbitrarily constrained due to host
+   application sandboxing), but we do make several security
+   recommendations under the section "Security Concerns: BridgeFinder and
+   BridgeFinderHelper".
+ 
+ Initial Implementation: Configuring New Bridges
+ 
+   In the initial implementation, Bridge configuration will be done
+   directly though the control port using the SETCONF command.
+   
+   Initial implementations will support only retrieval and configuration
+   of standard Tor Bridges. These are configured using SETCONF on the Tor
+   Control Port as follows:
+     SETCONF Bridge="IP:ORPort [fingerprint]"
+
+
+Future Implementations
+
+  In future implementations, the system can incrementally evolve in a
+  few different directions. As new pluggable transports are created, it
+  is conceivable that BridgeFinder may want to download new plugin
+  binaries (and/or new transport transform definition files) and
+  provide them to Tor.
+  
+  Furthermore, it may prove simpler to deploy multiple concurrent
+  BridgeFinder+BridgeFinderHelper pairs as opposed to adding new
+  functionality to existing prototypes.
+  
+  Finally, it is desirable for BridgeFinder to obtain approval
+  from the user before updating bridge configuration, especially for
+  cases where BridgeFinderHelper is automatically discovering bridges
+  in-band during Non-Tor activity.
+
+  The exact mechanisms for accomplishing these improvements is
+  described in the following subsections.
+
+ Future Implementations: BridgeFinder Launch and POSTMESSAGE handshake
+ 
+   The nature of the BridgeFinder launch and the environment variables
+   provided is not expected to change. However, future Primary Controller
+   implementations may decide to launch more than one BridgeFinder
+   instance side by side.
+ 
+   Additionally, to negotiate the IPC channel created by Proposal 197
+   for purposes of providing user confirmation, it is recommended that
+   BridgeFinder and the Primary Controller perform a handshake using
+   POSTMESSAGE upon launch, to establish that all parties properly
+   support the feature:
+ 
+     Primary Controller: "POSTMESSAGE @all Controller wants POSTMESSAGE v1.1"
+     BridgeFinder: "POSTMESSAGE @all BridgeFinder has POSTMESSAGE v1.0"
+     Primary Controller: "POSTMESSAGE @all Controller expects POSTMESSAGE v1.0"
+     BridgeFinder: "POSTMESSAGE @all BridgeFinder will POSTMESSAGE v1.0"
+ 
+   If this 4 step handshake proceeds with an acceptable version,
+   BridgeFinder must use POSTMESSAGE to transmit SETCONF Bridge lines
+   (see "Future Implementations: Configuring New Bridges" below). If
+   POSTMESSAGE support is expected, but the handshake does not complete
+   for any reason, BridgeFinder should either exit or go dormant.
+ 
+   The exact nature of the version negotiation and exactly how much
+   backwards compatibility must be tolerated is unspecified.
+   "All-or-nothing" is a safe assumption to get started.
+ 
+ Future Implementations: Obtaining Bridge Hint Information
+ 
+   Future BridgeFinder implementations may download additional
+   information based on what is provided by BridgeFinderHelper. They
+   may fetch pluggable transport plugins, transformation parameters,
+   and other material.
+ 
+ Future Implementations: Configuring New Bridges
+ 
+   Future implementations will be concerned with providing two new pieces
+   of functionality with respect to configuring bridges: configuring
+   pluggable transports, and properly prompting the user before altering
+   Tor configuration.
+ 
+   There are two ways to tell Tor clients about pluggable transports
+   (as defined in Proposal 180).
+ 
+   On the control port, an external Proposal 180 transport will be
+   configured with
+     SETCONF ClientTransportPlugin=<method> socks5 <addr:port> [auth=X]
+   as in
+     SETCONF ClientTransportPlugin="trebuchet socks5 127.0.0.1:9999".
+ 
+   A managed proxy is configured with
+     SETCONF ClientTransportPlugin=<methods> exec <path> [options]
+   as in
+     SETCONF ClientTransportPlugin="trebuchet exec /usr/libexec/trebuchet --managed".
+ 
+   This example tells Tor to launch an external program to provide a
+   socks proxy for 'trebuchet' connections. The Tor client only
+   launches one instance of each external program with a given set of
+   options, even if the same executable and options are listed for
+   more than one method.
+ 
+   Pluggable transport bridges discovered for this transport by
+   BridgeFinder would then be set with:
+     SETCONF Bridge="trebuchet 3.2.4.1:8080 keyid=09F911029D74E35BD84156C5635688C009F909F9 rocks=20 height=5.6m".
+
+   For more information on pluggable transports and supporting Tor
+   configuration commands, see Proposal 180.
+ 
+ Future Implementations: POSTMESSAGE and User Confirmation
+ 
+   Because configuring even normal bridges alone can expose the user to
+   attacks, it is strongly desired to provide some mechanism to allow
+   the user to approve new bridges prior to their use, especially for
+   situations where BridgeFinderHelper is extracting them transparently
+   while the user performs unrelated activity.
+ 
+   If BridgeFinderHelper grows to the point where it is downloading new
+   transform definitions or plugins, user confirmation becomes
+   absolutely required.
+ 
+   To achieve user confirmation, we depend upon the POSTMESSAGE command
+   defined in Proposal 197. 
+ 
+   If the POSTMESSAGE handshake succeeds, instead of sending SETCONF
+   commands directly to the control port, the commands will be wrapped
+   inside a POSTMESSAGE:
+     POSTMESSAGE @all SETCONF Bridge="www.example.com:8284"
+ 
+   Upon receiving this POSTMESSAGE, the Primary Controller will
+   validate it, evaluate it, store it to be later enabled by the
+   user, and alert the user that new bridges are available for
+   approval. It is only after the user has approved the new bridges
+   that the Primary Controller should then re-issue the SETCONF commands
+   to configure and deploy them in the tor client.
+ 
+   Additionally, see "Security Concerns: Primary Controller" for more
+   discussion on potential pitfalls with POSTMESSAGE.
+
+Security Concerns
+
+  While automatic bridge discovery and configuration is quite compelling
+  and powerful, there are several serious security concerns that warrant
+  extreme care. We've broken them down by component.
+  
+ Security Concerns: Primary Controller
+ 
+   In the initial implementation, Orbot and Vidalia must take care to
+   transmit the Tor Control password to BridgeFinder in such a way that
+   it does not end up in system logs, process list, or viewable by other
+   system users. The best known strategy for doing this is by passing the
+   information through exported environment variables.
+   
+   Additionally, in future implementations, Orbot and Vidalia will need
+   to validate Proposal 197 POSTMESSAGE input before prompting the user.
+   POSTMESSAGE is a free-form message-passing mechanism. All sorts of
+   unexpected input may be passed through it by any other authenticated
+   Tor Controllers for their own unrelated communication purposes.
+
+   Minimal validation includes verifying that the POSTMESSAGE data is a
+   valid Bridge or ClientTransportPlugin line and is acceptable input for
+   SETCONF. All unexpected characters should be removed through using a
+   whitelist, and format and structure should be checked against a
+   regular expression. Additionally, the POSTMESSAGE string should not be
+   passed through any string processing engines that automatically decode
+   character escape encodings, to avoid arbitrary control port execution.
+   
+   At the same time, POSTMESSAGE validation should be light. While fully
+   untrusted input is not expected due to the need for control port
+   authentication and BridgeFinder sanitation, complicated manual string
+   parsing techniques during validation should be avoided. Perform simple
+   easy-to-verify whitelist-based checks, and ignore unrecognized input.
+   
+   Beyond POSTMESSAGE validation, the manner in which the Primary
+   Controller achieves consent from the user is absolutely crucial to
+   security under this scheme. A simple "OK/Cancel" dialog is
+   insufficient to protect the user from the dangers of switching
+   bridges and running new plugins automatically.
+   
+   Newly discovered bridge lines from POSTMESSAGE should be added to a
+   disabled set that the user must navigate to as an independent window
+   apart from any confirmation dialog. The user must then explicitly
+   enable recently added plugins by checking them off individually. We
+   need the user's brain to be fully engaged and aware that it is
+   interacting with Tor during this step.  If they get an "OK/Cancel"
+   popup that interrupts their online game play, they will almost
+   certainly simply click "OK" just to get back to the game quickly.
+ 
+   The Primary Controller should transmit the POSTMESSAGE content to the
+   control port only after obtaining this out-of-band approval.
+
+Security Concerns: BridgeFinder and BridgeFinderHelper
+
+  The unspecified nature of the IPC channel between BridgeFinder and
+  BridgeFinderHelper makes it difficult to make concrete security
+  suggestions. However, from past experience, the following best
+  practices must be employed to avoid security vulnerabilities:
+
+  1. Define a non-webby handshake and/or perform authentication
+
+     The biggest risk is that unexpected applications will be manipulated
+     into posting malformed data to the BridgeFinder's IPC channel as if it
+     were from BridgeFinderHelper. The best way to defend against this is
+     to require a handshake to properly complete before accepting input. If
+     the handshake fails at any point, the IPC channel must be abandoned
+     and closed. Do not continue scanning for good input after any bad
+     input has been encountered.
+     
+     Additionally, if possible, it is wise to establish a shared secret
+     between BridgeFinder and BridgeFinderHelper through the filesystem or
+     any other means available for use in authentication. For an a good
+     example on how to use such a shared secret properly for
+     authentication, see Trac Ticket #5185 and/or the SafeCookie Tor
+     Control Port authentication mechanism.
+
+  2. Perform validation before parsing 
+
+     Care must be taken before converting BridgeFinderHelper data into
+     Bridge lines, especially for cases where the BridgeFinderHelper data
+     is fed directly to the control port after passing through
+     BridgeFinder.
+
+     The input should be subjected to a character whitelist and possibly
+     also validated against a regular expression to verify format, and if
+     any unexpected or poorly-formed data is encountered, the IPC channel
+     must be closed.
+
+  3. Fail closed on unexpected input
+
+     If the handshake fails, or if any other part of the BridgeFinderHelper
+     input is invalid, the IPC channel must be abandoned and closed. Do
+     *not* continue scanning for good input after any bad input has been
+     encountered.
+
+
