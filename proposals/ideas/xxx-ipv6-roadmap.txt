@@ -77,7 +77,7 @@ Status: Draft
       the user how to work around it, and prefer IPv4 so long as our
       IPv6 address identifies our device.
 
-  There is a UI component here as well.  We must extend Tor Tor
+  There is a UI component here as well.  We must extend the Tor
   controllers to allow IPv6 bridges.  Vidalia, arm, Torflow, TAILS, and
   TorCtl will all need to be tested.
 
