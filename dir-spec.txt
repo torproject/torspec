@@ -1309,7 +1309,7 @@
         "Publication" is the
         publication time of its most recent descriptor, in the form
         YYYY-MM-DD HH:MM:SS, in GMT.  "IP" is its current IP address;
-        ORPort is its current OR port, "DirPort" is it's current directory
+        ORPort is its current OR port, "DirPort" is its current directory
         port, or "0" for "none".
 
     "s" SP Flags NL
