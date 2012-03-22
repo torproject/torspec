@@ -1,0 +1,136 @@
+Filename: xxx-new-create-and-extend-cells.txt
+Title: Adding new, extensible CREATE, EXTEND, and related cells
+Author: Robert Ransom
+Created: 2010-12-27
+Status: Open
+
+Overview and Motivation:
+
+  In Tor's current circuit protocol, every field, including the 'onion
+  skin', in the EXTEND relay cell has a fixed meaning and length.
+  This prevents us from extending the current EXTEND cell to support
+  IPv6 relays, efficient UDP-based link protocols, larger 'onion
+  keys', new circuit-extension handshake protocols, or larger
+  identity-key fingerprints.  We will need to support all of these
+  extensions in the near future.  This proposal specifies a
+  replacement EXTEND2 cell and related cells that provide more room
+  for future extension.
+
+Design:
+
+  FIXME - allocate command ID numbers (non-RELAY commands for CREATE2 and CREATED2; RELAY commands for EXTEND2 and EXTENDED2)                                        
+
+  The CREATE2 cell contains the following payload:
+
+        Handshake type length                 [1 byte]
+        Handshake type                        [variable]
+        Handshake data length                 [2 bytes]
+        Handshake data                        [variable]
+
+  The relay payload for an EXTEND2 relay cell contains the following
+  payload:
+
+        Link target specifier type length     [1 byte]
+        Link target specifier type            [variable]
+        Link target specifier length          [2 bytes]
+        Link target specifier                 [variable]
+        Handshake type length                 [1 byte]
+        Handshake type                        [variable]
+        Handshake data length                 [2 bytes]
+        Handshake data                        [variable]
+
+  The CREATED2 cell and EXTENDED2 relay cell contain the following
+  payload:
+
+        Handshake data length                 [2 bytes]
+        Handshake data                        [variable]
+
+  All four cell types are padded to 512-byte cells.
+
+  When a relay X receives an EXTEND2 relay cell:
+
+  * X finds or opens a link to the relay Y using the link target
+    specifier in the EXTEND2 relay cell; if X fails to open a link, it
+    replies with a TRUNCATED relay cell. (FIXME: what do we do now?)
+
+  * X copies the handshake type and data into a CREATE2 cell and sends
+    it along the link to Y.
+
+  * If the handshake data is valid, Y replies by sending a CREATED2
+    cell along the link to X; otherwise, Y replies with a TRUNCATED
+    relay cell. (XXX: we currently use a DESTROY cell?)
+
+  * X copies the contents of the CREATED2 cell into an EXTENDED2 relay
+    cell and sends it along the circuit to the OP.
+
+
+  A link target specifier of type “legacy” contains the following
+  data:
+
+        Relay IP address (FIXME: byte order?) [4 bytes]
+        Relay OR port (FIXME: byte order?)    [2 bytes]
+        Relay identity key SHA-1 digest       [20 bytes]
+
+  These values are processed as section 5.1 of tor-spec.txt specifies
+  for the current EXTEND relay cell.
+
+
+  The first (client->relay) message in a handshake of type “legacy”
+  contains the following data:
+
+        ‘Onion skin’ (as in CREATE cell)      [DH_LEN+KEY_LEN+PK_PAD_LEN bytes]
+
+  This value is generated and processed as sections 5.1 and 5.2 of
+  tor-spec.txt specify for the current CREATE cell.
+
+  The second (relay->client) message in a handshake of type “legacy”
+  contains the following data:
+
+        Relay DH public key                   [DH_LEN bytes]
+        KH (see section 5.2 of tor-spec.txt)  [HASH_LEN bytes]
+
+  These values are generated and processed as sections 5.1 and 5.2 of
+  tor-spec.txt specify for the current CREATED cell.
+
+  After successfully completing a handshake of type “legacy”, the
+  client and relay use the current relay cryptography protocol.
+
+Bugs:
+
+  This specification does not accommodate:
+
+  * circuit-extension handshakes requiring more than one round
+
+    No circuit-extension handshake should ever require more than one
+    round (i.e. more than one message from the client and one reply
+    from the relay).  We can easily extend the protocol to handle
+    this, but we will never need to.
+
+  * circuit-extension handshakes in which either message cannot fit in
+    a single 512-byte cell along with the other required fields
+
+    This can be handled by specifying a dummy handshake type whose
+    data (sent from the client) consists of another handshake type and
+    the beginning of the data required by that handshake type, and
+    then using several (newly defined) HANDSHAKE_COMPLETION relay
+    cells sent in each direction to transport the remaining handshake
+    data.
+
+    The specification of a HANDSHAKE_COMPLETION relay cell and its
+    associated dummy handshake type can safely be postponed until we
+    develop a circuit-extension handshake protocol that would require
+    it.
+
+  * link target specifiers that cause EXTEND2 cells to exceed 512
+    bytes
+
+    This can be handled by specifying a LONG_COMMAND relay cell type
+    that can be used to transport a large ‘virtual cell’ in multiple
+    512-byte cells.
+
+    The specification of a LONG_COMMAND relay cell can safely be
+    postponed until we develop a link target specifier, a RELAY_BEGIN2
+    relay cell and stream target specifier, or some other relay cell
+    type that would require it.
+
+
