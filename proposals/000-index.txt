@@ -120,6 +120,7 @@ Proposals by number:
 197  Message-based Inter-Controller IPC Channel [OPEN]
 198  Restore semantics of TLS ClientHello [OPEN]
 199  Integration of BridgeFinder and BridgeFinderHelper [OPEN]
+200  Adding new, extensible CREATE, EXTEND, and related cells [OPEN]
 
 
 Proposals by status:
@@ -160,6 +161,7 @@ Proposals by status:
    197  Message-based Inter-Controller IPC Channel [for 0.2.4.x]
    198  Restore semantics of TLS ClientHello
    199  Integration of BridgeFinder and BridgeFinderHelper [for 0.2.3.x+]
+   200  Adding new, extensible CREATE, EXTEND, and related cells
  ACCEPTED:
    117  IPv6 exits [for 0.2.3.x]
    140  Provide diffs between consensuses

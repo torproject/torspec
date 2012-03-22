@@ -1,8 +1,13 @@
-Filename: xxx-new-create-and-extend-cells.txt
+Filename: 200-new-create-and-extend-cells.txt
 Title: Adding new, extensible CREATE, EXTEND, and related cells
 Author: Robert Ransom
-Created: 2010-12-27
+Created: 2012-03-22
 Status: Open
+
+History
+
+  The original draft of this proposal was from 2010-12-27; nickm revised
+  it slightly on 2012-03-22 and added it as proposal 200.
 
 Overview and Motivation:
 
