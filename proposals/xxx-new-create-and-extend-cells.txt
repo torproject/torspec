@@ -18,28 +18,28 @@ Overview and Motivation:
 
 Design:
 
-  FIXME - allocate command ID numbers (non-RELAY commands for CREATE2 and CREATED2; RELAY commands for EXTEND2 and EXTENDED2)                                        
+  FIXME - allocate command ID numbers (non-RELAY commands for CREATE2 and
+  CREATED2; RELAY commands for EXTEND2 and EXTENDED2)
 
   The CREATE2 cell contains the following payload:
 
-        Handshake type length                 [1 byte]
-        Handshake type                        [variable]
+        Handshake type                        [2 bytes]
         Handshake data length                 [2 bytes]
         Handshake data                        [variable]
 
   The relay payload for an EXTEND2 relay cell contains the following
   payload:
 
-        Link target specifier type length     [1 byte]
-        Link target specifier type            [variable]
-        Link target specifier length          [2 bytes]
-        Link target specifier                 [variable]
-        Handshake type length                 [1 byte]
-        Handshake type                        [variable]
+        Number of link specifiers             [1 byte]
+           N times:
+            Link specifier type               [1 byte]
+            Link specifier length             [1 byte]
+            Link specifier                    [variable]
+        Handshake type                        [2 bytes]
         Handshake data length                 [2 bytes]
         Handshake data                        [variable]
 
-  The CREATED2 cell and EXTENDED2 relay cell contain the following
+  The CREATED2 cell and EXTENDED2 relay cell both contain the following
   payload:
 
         Handshake data length                 [2 bytes]
@@ -50,7 +50,7 @@ Design:
   When a relay X receives an EXTEND2 relay cell:
 
   * X finds or opens a link to the relay Y using the link target
-    specifier in the EXTEND2 relay cell; if X fails to open a link, it
+    specifiers in the EXTEND2 relay cell; if X fails to open a link, it
     replies with a TRUNCATED relay cell. (FIXME: what do we do now?)
 
   * X copies the handshake type and data into a CREATE2 cell and sends
@@ -64,16 +64,29 @@ Design:
     cell and sends it along the circuit to the OP.
 
 
-  A link target specifier of type “legacy” contains the following
-  data:
+Link target specifiers:
 
-        Relay IP address (FIXME: byte order?) [4 bytes]
-        Relay OR port (FIXME: byte order?)    [2 bytes]
-        Relay identity key SHA-1 digest       [20 bytes]
+  The list of link target specifiers must include at least one address and
+  at least one identity fingerprint, in a format that the extending node is
+  known to recognize.
 
-  These values are processed as section 5.1 of tor-spec.txt specifies
-  for the current EXTEND relay cell.
+  The extending node MUST NOT accept the connection unless at least one
+  identity matches, and should follow the current rules for making sure that
+  addresses match.
 
+  [00] IPv4 address
+       A four-byte IPv4 address plus two-byte ORPort
+  [01] IPv6 address
+       A sixteen-byte IPv6 address plus two-byte ORPort
+  [02] Legacy identity
+       A 20-byte SHA1 identity fingerprint. At most one may be listed.
+
+  As always, values are sent in network (big-endian) order.
+
+Legacy handshake type:
+
+  The current "onionskin" handshake type is defined to be handshake type
+  [00 00], or "legacy".
 
   The first (client->relay) message in a handshake of type “legacy”
   contains the following data:
