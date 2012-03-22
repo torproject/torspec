@@ -74,9 +74,9 @@ Link target specifiers:
   identity matches, and should follow the current rules for making sure that
   addresses match.
 
-  [00] IPv4 address
+  [00] TLS-over-TCP, IPv4 address
        A four-byte IPv4 address plus two-byte ORPort
-  [01] IPv6 address
+  [01] TLS-over-TCP, IPv6 address
        A sixteen-byte IPv6 address plus two-byte ORPort
   [02] Legacy identity
        A 20-byte SHA1 identity fingerprint. At most one may be listed.
