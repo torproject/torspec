@@ -383,7 +383,7 @@ Managed proxy interface
   proxy should say:
     SMETHOD-ERROR <methodname> <errormessage>
   as in
-    SMETHOD-ERROR could not setup 'trebuchet' method
+    SMETHOD-ERROR trebuchet could not setup 'trebuchet' method
 
   The 'address:port' part of an SMETHOD line is the address to put
   in the bridge line.  The Options part is a list of space-separated
