@@ -113,7 +113,7 @@ Proposals by number:
 190  Bridge Client Authorization Based on a Shared Secret [NEEDS-REVISION]
 191  Bridge Detection Resistance against MITM-capable Adversaries [OPEN]
 192  Automatically retrieve and store information about bridges [OPEN]
-193  Safe cookie authentication for Tor controllers [OPEN]
+193  Safe cookie authentication for Tor controllers [CLOSED]
 194  Mnemonic .onion URLs [OPEN]
 195  TLS certificate normalization for Tor 0.2.4.x [DRAFT]
 196  Extended ORPort and TransportControlPort [OPEN]
@@ -155,7 +155,6 @@ Proposals by status:
    189  AUTHORIZE and AUTHORIZED cells
    191  Bridge Detection Resistance against MITM-capable Adversaries
    192  Automatically retrieve and store information about bridges [for 0.2.[45].x]
-   193  Safe cookie authentication for Tor controllers
    194  Mnemonic .onion URLs
    196  Extended ORPort and TransportControlPort [for 0.2.4.x]
    197  Message-based Inter-Controller IPC Channel [for 0.2.4.x]
@@ -221,6 +220,7 @@ Proposals by status:
    183  Refill Intervals [in 0.2.3.5-alpha]
    184  Miscellaneous changes for a v3 Tor link protocol [for 0.2.3.x]
    187  Reserve a cell type to allow client authorization [for 0.2.3.x]
+   193  Safe cookie authentication for Tor controllers
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration

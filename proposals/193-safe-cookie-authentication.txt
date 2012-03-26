@@ -2,7 +2,7 @@ Filename: 193-safe-cookie-authentication.txt
 Title: Safe cookie authentication for Tor controllers
 Author: Robert Ransom
 Created: 2012-02-04
-Status: Open
+Status: Closed
 
 Overview:
 
