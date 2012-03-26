@@ -135,7 +135,7 @@ Discussion and consequences:
   longer give the same ciphersuite lists as other versions of Tor.  On
   these platforms, Tor clients will no longer impersonate Firefox.
   Users who need to do so will have to download one of our bundles, or
-  use a (non-system) OpenSSL.
+  use a non-system OpenSSL.
 
 
   The proposed spec change above tries to future-proof ourselves by not
