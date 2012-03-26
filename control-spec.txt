@@ -991,7 +991,7 @@
   the controller's user has explicitly specified which filename to
   read an authentication cookie from.  For this reason, the COOKIE
   authentication method has been deprecated and will be removed from
-  Tor before version 0.2.4.1-alpha.
+  a future version of Tor.
 
   The VERSION line contains the Tor version.
 
@@ -2107,7 +2107,7 @@
   authenticate, the controller must demonstrate that it can read the
   contents of the cookie file:
 
-  * Versions of Tor before 0.2.4.1-alpha support cookie authentication
+  * Current versions of Tor support cookie authentication
     using the "COOKIE" authentication method: the controller sends the
     contents of the cookie file, encoded in hexadecimal.  This
     authentication method exposes the user running a controller to an
@@ -2118,10 +2118,10 @@
     controller's user has explicitly specified which filename to read
     an authentication cookie from.  For this reason, the COOKIE
     authentication method has been deprecated and will be removed from
-    Tor before version 0.2.4.1-alpha.
+    Tor before some future version of Tor.
 
-  * 0.2.2.x versions of Tor after 0.2.2.XXXX, and all versions of Tor
-    after 0.2.3.XXXX-alpha, support cookie authentication using the
+  * 0.2.2.x versions of Tor starting with 0.2.2.36, and all versions of
+    Tor after 0.2.3.12-alpha, support cookie authentication using the
     "SAFECOOKIE" authentication method, which discloses much less
     information about the contents of the cookie file.
 
