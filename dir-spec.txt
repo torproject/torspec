@@ -606,10 +606,18 @@
        PORTSPEC = PORT
        PORT = a number between 1 and 65535 inclusive.
 
-       An alternative address that can be used instead of ORListenAddress.
+       An alternative for the address and ORPort of the "router" line, but with
+       two added capabilities:
 
-       A descriptor should not include an or-address line that does nothing but
+         * or-address can be either an IPv4 or IPv6 address
+         * or-address allows for multiple ORPorts and addresses
+
+       A descriptor SHOULD NOT include an or-address line that does nothing but
        duplicate the address:port pair from its "router" line.
+
+       The ordering of or-address lines and their PORT entries matter because
+       Tor MAY accept a limited number of addresses or ports. As of Tor 0.2.3.x
+       only the first address and the first port are used.
 
 2.2. Extra-info documents
 
