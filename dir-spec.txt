@@ -2129,43 +2129,6 @@
         [As in the consensus; the signature object is the same as in the
         consensus document.]
 
-3.8. Consensus index
-
-   Authorities additionally may generate and serve a consensus-index
-   document.  Its format is:
-
-    "consensus-index" SP version NL
-
-        [At start, exactly once.]
-
-    "valid-after" SP YYYY-MM-DD SP HH:MM:SS NL
-    "valid-until" SP YYYY-MM-DD SP HH:MM:SS NL
-
-        [As in the consensus]
-
-    "document" SP flavor SP length 1*(SP algname "=" digest) NL
-
-        [Any number.]
-
-        There must be one "document" line for each generated consensus
-        flavor.  "length" describes the length of the signed portion of
-        a consensus (the signatures themselves are not included), along
-        with one or more "digests" of that signed portion.  Digests are
-        given in hex.  The algorithm "sha256" MUST be included; others
-        are allowed.
-        [What's the reason for using a different format than in the
-        "additional-digest" lines of detached signatures? -KL]
-
-    "directory-signature" SP algname SP identity SP signing-key-digest
-                          NL signature
-
-        [Any number.]
-
-        [As "additional-signature" lines in detached signatures, but
-        without the "flavor" part.]
-
-        [Actually, is it a bug that the "flavor" part is missing? -KL]
-
 4. Directory server operation
 
    All directory authorities and directory caches ("directory servers")
@@ -2275,10 +2238,6 @@
    [XXX possible future features include support for downloading old
     consensuses.]
 
-   An authority further makes the consensus index available at
-      /tor/status-vote/(current|next)/consensus-index[.z] .
-   [The URL above is not implemented as of February 21, 2012. -KL]
-
    The authorities serve another consensus of each flavor "F" from the
    locations
       /tor/status-vote/(current|next)/consensus-F.z. and
@@ -2302,11 +2261,11 @@
     and is fresh until 2:00, that cache will fetch a new consensus at
     a random time between 2:00 and 2:30.]
 
-   Directory caches also fetch the consensus index and the referenced
-   consensus flavors from the authorities.  Caches check the correctness
-   of consensus flavors, but do not check anything about an unrecognized
-   consensus document beyond its digest and length.  Caches serve all
-   consensus flavors from the same locations as the directory authorities.
+   Directory caches also fetch consensus flavors from the authorities.
+   Caches check the correctness of consensus flavors, but do not check
+   anything about an unrecognized consensus document beyond its digest and
+   length.  Caches serve all consensus flavors from the same locations as
+   the directory authorities.
 
 4.4. Downloading and storing router descriptors (authorities and caches)
 
@@ -2367,14 +2326,6 @@
    Directory mirrors should check to make sure that the microdescriptors
    they're about to serve match the right hashes (either the hashes from
    the fetch URL or the hashes from the consensus, respectively).
-
-   [So, with the consensus index, caches can mirror consensus flavors they
-   don't understand.  But there's no such mechanism to mirror unrecognized
-   descriptor types which might be referenced from those unrecognized
-   consensus flavors, right?  Would it make sense to produce a descriptor
-   index to tell caches which descriptors to mirror, even if they don't
-   understand them?  Without that, deploying a new consensus flavor might
-   take the same time as it takes now. -KL]
 
 4.6. Downloading and storing extra-info documents
 
@@ -2499,8 +2450,8 @@
    fingerprints.  Servers MUST accept both upper and lower case fingerprints
    in requests.
 
-   [XXX Add new URLs for microdescriptors, consensus flavors,
-   microdescriptor consensus, and consensus indexes. -KL]
+   [XXX Add new URLs for microdescriptors, consensus flavors, and
+   microdescriptor consensus. -KL]
 
 5. Client operation: downloading information
 
