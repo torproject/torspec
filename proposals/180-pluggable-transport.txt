@@ -286,9 +286,12 @@ Managed proxy interface
 
       {Server only}
 
-      "TOR_PT_EXTENDED_SERVER_PORT" -- An addr:port (probably on localhost)
-       that speaks the extended server protocol. (See the "The extended
-       ORPort protocol" section below.)
+      "TOR_PT_EXTENDED_SERVER_PORT" -- An <address>:<port> where tor
+       should be listening for connections speaking the extended
+       ORPort protocol (See the "The extended ORPort protocol" section
+       below). If tor does not support the extended ORPort protocol,
+       it MUST use the empty string as the value of this environment
+       variable.
       Example: TOR_PT_EXTENDED_SERVER_PORT=127.0.0.1:4200
 
       "TOR_PT_ORPORT" -- Our regular ORPort in a form suitable
