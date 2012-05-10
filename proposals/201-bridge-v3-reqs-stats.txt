@@ -9,7 +9,7 @@ Overview:
 
   Our current approach [0] to estimate daily bridge users is based on
   unique IP addresses reported by bridges, and it is very likely broken.
-  A bridge can connect to two or more bridges, so that unique IP address
+  A bridge user can connect to two or more bridges, so that unique IP address
   sets overlap to an unknown extent.  We should instead count requests for
   v3 network statuses, sum them up for all bridges, and divide by the
   average number of requests that a bridge client makes per day.  This
