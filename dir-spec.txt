@@ -1491,7 +1491,7 @@
    identity.
 
    "Running" -- A router is 'Running' if the authority managed to connect to
-   it successfully within the last 30 minutes.
+   it successfully within the last 45 minutes.
 
    "Stable" -- A router is 'Stable' if it is active, and either its Weighted
    MTBF is at least the median for known active routers or its Weighted MTBF
