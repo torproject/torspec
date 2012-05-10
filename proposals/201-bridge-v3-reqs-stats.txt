@@ -1,0 +1,38 @@
+Filename: 201-bridge-v3-reqs-stats.txt
+Title: Make bridges report statistics on daily v3 network status requests
+Author: Karsten Loesing
+Created: 10-May-2012
+Status: Open
+Target: 0.2.4.x
+
+Overview:
+
+  Our current approach [0] to estimate daily bridge users is based on
+  unique IP addresses reported by bridges, and it is very likely broken.
+  A bridge can connect to two or more bridges, so that unique IP address
+  sets overlap to an unknown extent.  We should instead count requests for
+  v3 network statuses, sum them up for all bridges, and divide by the
+  average number of requests that a bridge client makes per day.  This
+  approach is similar to how we estimate directly connecting users.  This
+  proposal describes how bridges would report v3 network status requests
+  in their extra-info descriptors.
+
+Specification:
+
+  Bridges include a new keyword line in their extra-info descriptors that
+  contains the number of v3 network status requests by country they saw
+  over a period of 24 hours.  The reported numbers refer to the period
+  stated in the "bridge-stats-end" line.  The new keyword line would go
+  after the "bridge-ips" line in dir-spec.txt:
+
+  "bridge-v3-reqs" CC=N,CC=N,... NL
+      [At most once.]
+
+      List of mappings from two-letter country codes to the number of
+      requests for v3 network statuses from that country as seen by the
+      bridge, rounded up to the nearest multiple of 8. Only those requests
+      are counted that the directory can answer with a 200 OK status code.
+
+
+[0] https://metrics.torproject.org/papers/countingusers-2010-11-30.pdf
+

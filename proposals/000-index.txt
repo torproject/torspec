@@ -121,6 +121,7 @@ Proposals by number:
 198  Restore semantics of TLS ClientHello [OPEN]
 199  Integration of BridgeFinder and BridgeFinderHelper [OPEN]
 200  Adding new, extensible CREATE, EXTEND, and related cells [OPEN]
+201  Make bridges report statistics on daily v3 network status requests [OPEN]
 
 
 Proposals by status:
@@ -161,6 +162,7 @@ Proposals by status:
    198  Restore semantics of TLS ClientHello
    199  Integration of BridgeFinder and BridgeFinderHelper [for 0.2.3.x+]
    200  Adding new, extensible CREATE, EXTEND, and related cells
+   201  Make bridges report statistics on daily v3 network status requests [for 0.2.4.x]
  ACCEPTED:
    117  IPv6 exits [for 0.2.3.x]
    140  Provide diffs between consensuses
