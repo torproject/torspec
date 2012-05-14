@@ -903,13 +903,17 @@
 
         List of mappings from ports to the number of kibibytes that the
         relay has written to or read from exit connections to that port,
-        rounded up to the next full kibibyte.
+        rounded up to the next full kibibyte.  Relays may limit the
+        number of listed ports and subsume any remaining kibibytes under
+        port "other".
 
     "exit-streams-opened" port=N,port=N,... NL
         [At most once.]
 
         List of mappings from ports to the number of opened exit streams
-        to that port, rounded up to the nearest multiple of 4.
+        to that port, rounded up to the nearest multiple of 4.  Relays may
+        limit the number of listed ports and subsume any remaining opened
+        streams under port "other".
 
     "router-signature" NL Signature NL
         [At end, exactly once.]
