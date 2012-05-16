@@ -1089,13 +1089,6 @@
 
         The "onion-key" element as specified in 2.1.
 
-        [Should we mention that clients don't learn identity keys anymore
-        with this approach?  Clients only need identity keys for their
-        entry guards, and in that case they learn the identity key from
-        the TLS handshake.  But clients couldn't check identity keys of
-        non-entry nodes with the microdescriptor approach anymore, even if
-        they wanted. -KL]
-
      "family" names NL
 
         [At most once]
@@ -1109,12 +1102,15 @@
         The exit-policy summary as specified in 3.3 and 3.5.2.  A missing
         "p" line is equivalent to "p reject 1-65535".
 
-        [Should we note the downside of this approach that clients never
-        learn exact exit policies now?  Clients can only guess whether a
-        relay accepts their request, try the BEGIN request, and might get
-        end-reason-exit-policy if they guessed wrong, in which case
-        they'll have to try elsewhere.  Or is this too much design
-        discussion for a spec? -KL]
+        [With microdescriptors, clients don't learn exact exit policies:
+        clients can only guess whether a relay accepts their request, try the
+        BEGIN request, and might get end-reason-exit-policy if they guessed
+        wrong, in which case they'll have to try elsewhere.]
+
+   (Note that with microdescriptors, clients do not learn the identity of
+   their routers: they only learn a hash of the identity key.  This is all
+   they need to confirm the actual identity key when doing a TLS handshake,
+   and all they need to put the identity key digest in their cREATE cells.)
 
 3.3. Vote and consensus status documents
 
