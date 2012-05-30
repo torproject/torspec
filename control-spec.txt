@@ -475,6 +475,10 @@
       microdescriptor for a given OR. [First implemented in
       0.2.3.8-alpha.]
 
+    "dormant" -- A nonnegative integer: zero if Tor is currently active and
+      building circuits, and nonzero if Tor has gone idle due to lack of use
+      or some similar reason.  [First implemented in 0.2.3.16-alpha]
+
     "desc-annotations/id/<OR identity>" -- outputs the annotations string
       (source, timestamp of arrival, purpose, etc) for the corresponding
       descriptor. [First implemented in 0.2.0.13-alpha.]
