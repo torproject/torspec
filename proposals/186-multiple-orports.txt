@@ -115,7 +115,7 @@ New descriptor syntax:
 
       or-address SP ADDRESS ":" PORTLIST NL
 
-      ADDRESS = IP6ADDR | IP4ADDR
+      ADDRESS = IPV6ADDR | IPV4ADDR
       IPV6ADDR = an ipv6 address, surrounded by square brackets.
       IPV4ADDR = an ipv4 address, represented as a dotted quad.
       PORTLIST = PORTSPEC | PORTSPEC "," PORTLIST
