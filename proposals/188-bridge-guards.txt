@@ -32,7 +32,7 @@ Status: Open
    same way clients do.  This has been a known attack since early
    versions {XXXX check} of the design document; let's try to fix it.
 
-2.1. Related ideas: Guard nodes
+2.1. Related idea: Guard nodes
 
    The idea of guard nodes isn't new: since 0.1.1, Tor has used guard
    nodes (first designed as "Helper" nodes by Wright et al in {XXXX})
@@ -202,6 +202,12 @@ Status: Open
    also seem like a way to keep the nodes who guard our own traffic
    from learning that we're a bridge... but another set of nodes will
    learn that anyway, so it's not clear what we'd gain.
+
+   One good reason to keep separate guard lists is to prevent the
+   *client* of the bridge from being able to enumerate the guards that
+   the bridge uses to protect its own traffic (by extending a circuit
+   through the bridge to a node it controls, and finding out where the
+   extend request arrives from).
 
 5. Other considerations
 
