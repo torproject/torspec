@@ -108,13 +108,13 @@ Status: Open
 
 4.3. How should multiple round-trip authorization protocols be handled?
 
-   Protocols that require multiple-round trips between the client and
+   Protocols that require multiple round trips between the client and
    the bridge should use AUTHORIZE cells for communication.
 
    The format of the AUTHORIZE cell is flexible enough to support
    messages from the client to the bridge and the reverse.
 
-   At the end of a successful multiple round-trip protocol, an
+   At the end of a successful multiple-round-trip protocol, an
    AUTHORIZED cell must be issued from the bridge to the client.
 
 4.4. AUTHORIZED seems useless. Why not use VPADDING instead?
