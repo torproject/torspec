@@ -14,6 +14,10 @@ Overview
   transport implementations to Tor clients and bridges so that they can
   negotiate a superencipherment for the Tor protocol.
 
+  It is based on Proposal 180: see that document and its discussion for
+  more background and motivation issue, and a discussion of issues in
+  writing pluggable transpots.
+
 Specifications: Client behavior
 
   We extend the bridge line format to allow you to say which method
