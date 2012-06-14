@@ -1,0 +1,296 @@
+
+                           Pluggable Transport Specification
+
+                                     Jacob Appelbaum
+                                     Nick Mathewson
+
+
+
+Overview
+
+  This proposal describes a way to decouple protocol-level obfuscation
+  from the core Tor protocol in order to better resist client-bridge
+  censorship.  Our approach is to specify a means to add pluggable
+  transport implementations to Tor clients and bridges so that they can
+  negotiate a superencipherment for the Tor protocol.
+
+Specifications: Client behavior
+
+  We extend the bridge line format to allow you to say which method
+  to use to connect to a bridge.
+
+  The new format is:
+     Bridge method address:port [[keyid=]id-fingerprint] [k=v] [k=v] [k=v]
+
+  To connect to such a bridge, the Tor program needs to know which
+  SOCKS proxy will support the transport called "method".  It
+  then connects to this proxy, and asks it to connect to
+  address:port.  If [id-fingerprint] is provided, Tor should expect
+  the public identity key on the TLS connection to match the digest
+  provided in [id-fingerprint].  If any [k=v] items are provided,
+  they are configuration parameters for the proxy: Tor should
+  separate them with semicolons and put them in the user and
+  password fields of the request, splitting them across the fields
+  as necessary.  If a key or value value must contain a semicolon or
+  a backslash, it is escaped with a backslash.
+
+  Method names must be C identifiers.
+
+  For reference, the old bridge format was
+    Bridge address[:port] [id-fingerprint]
+  where port defaults to 443 and the id-fingerprint is optional. The
+  new format can be distinguished from the old one by checking if the
+  first argument has any non-C-identifier characters. (Looking for a
+  period should be a simple way.) Also, while the id-fingerprint could
+  optionally include whitespace in the old format, whitespace in the
+  id-fingerprint is not permitted in the new format.
+
+  Example: if the bridge line is "bridge trebuchet www.example.com:3333
+     keyid=09F911029D74E35BD84156C5635688C009F909F9 rocks=20 height=5.6m"
+     AND if the Tor client knows that the 'trebuchet' method is supported,
+     the client should connect to the proxy that provides the 'trebuchet'
+     method, ask it to connect to www.example.com, and provide the string
+     "rocks=20;height=5.6m" as the username, the password, or split
+     across the username and password.
+
+  There are two ways to tell Tor clients about protocol proxies:
+  external proxies and managed proxies.  An external proxy is configured
+  with
+     ClientTransportPlugin <method> socks4 <address:port> [auth=X]
+  or
+     ClientTransportPlugin <method> socks5 <address:port> [username=X] [password=Y]
+  as in
+     "ClientTransportPlugin trebuchet socks5 127.0.0.1:9999".
+  This example tells Tor that another program is already running to handle
+  'trubuchet' connections, and Tor doesn't need to worry about it.
+
+  A managed proxy is configured with
+     ClientTransportPlugin <methods> exec <path> [options]
+  as in
+    "ClientTransportPlugin trebuchet exec /usr/libexec/trebuchet --managed".
+  This example tells Tor to launch an external program to provide a
+  socks proxy for 'trebuchet' connections. The Tor client only
+  launches one instance of each external program with a given set of
+  options, even if the same executable and options are listed for
+  more than one method.
+
+  In managed proxies, <methods> can be a comma-separated list of
+  pluggable transport method names, as in:
+    "ClientTransportPlugin pawn,bishop,rook exec /bin/ptproxy --managed".
+
+  If instead of a transport method, the torrc lists "*" for a managed
+  proxy, Tor uses that proxy for all transport methods that the plugin
+  supports. So "ClientTransportPlugin * exec /usr/libexec/tor/foobar"
+  tells Tor that Tor should use the foobar plugin for every method that
+  the proxy supports. See the "Managed proxy interface" section below
+  for details on how Tor learns which methods a plugin supports.
+
+  If two plugins support the same method, Tor should use whichever
+  one is listed first.
+
+  The same program can implement a managed or an external proxy: it just
+  needs to take an argument saying which one to be.
+
+Server behavior
+
+  Server proxies are configured similarly to client proxies.  When
+  launching a proxy, the server must tell it what ORPort it has
+  configured, and what address (if any) it can listen on.  The
+  server must tell the proxy which (if any) methods it should
+  provide if it can; the proxy needs to tell the server which
+  methods it is actually providing, and on what ports.
+
+  When a client connects to the proxy, the proxy may need a way to
+  tell the server some identifier for the client address.  It does
+  this in-band.
+
+  As before, the server lists proxies in its torrc.  These can be
+  external proxies that run on their own, or managed proxies that Tor
+  launches.
+
+  An external server proxy is configured as
+     ServerTransportPlugin <method> proxy <address:port> <param=val> ...
+  as in
+     "ServerTransportPlugin trebuchet proxy 127.0.0.1:999 rocks=heavy".
+  The param=val pairs and the address are used to make the bridge
+  configuration information that we'll tell users.
+
+  A managed proxy is configured as
+     ServerTransportPlugin <methods> exec </path/to/binary> [options]
+  or
+     ServerTransportPlugin * exec </path/to/binary> [options]
+
+  When possible, Tor should launch only one binary of each binary/option
+  pair configured.  So if the torrc contains
+
+     ClientTransportPlugin foo exec /usr/bin/megaproxy --foo
+     ClientTransportPlugin bar exec /usr/bin/megaproxy --bar
+     ServerTransportPlugin * exec /usr/bin/megaproxy --foo
+
+  then Tor will launch the megaproxy binary twice: once with the option
+  --foo and once with the option --bar.
+
+Managed proxy interface
+
+   When the Tor client or relay launches a managed proxy, it communicates
+   via environment variables.  At a minimum, it sets (in addition to the
+   normal environment variables inherited from Tor):
+
+      {Client and server}
+
+      "TOR_PT_STATE_LOCATION" -- A filesystem directory path where the
+       proxy should store state if it wants to.  This directory is not
+       required to exist, but the proxy SHOULD be able to create it if
+       it doesn't.  The proxy MUST NOT store state elsewhere.
+      Example: TOR_PT_STATE_LOCATION=/var/lib/tor/pt_state/
+
+      "TOR_PT_MANAGED_TRANSPORT_VER" -- To tell the proxy which
+       versions of this configuration protocol Tor supports.  Future
+       versions will give a comma-separated list.  Clients MUST accept
+       comma-separated lists containing any version that they
+       recognize, and MUST work correctly even if some of the versions
+       they don't recognize are non-numeric.  Valid version characters
+       are non-space, non-comma printing ASCII characters.
+      Example: TOR_PT_MANAGED_TRANSPORT_VER=1,1a,2,4B
+
+      {Client only}
+
+      "TOR_PT_CLIENT_TRANSPORTS" -- A comma-separated list of which
+       methods this client should enable, or * if all methods should
+       be enabled.  The proxy SHOULD ignore methods that it doesn't
+       recognize.
+      Example: TOR_PT_CLIENT_TRANSPORTS=trebuchet,battering_ram,ballista
+
+      {Server only}
+
+      "TOR_PT_EXTENDED_SERVER_PORT" -- An <address>:<port> where tor
+       should be listening for connections speaking the extended
+       ORPort protocol (See the "The extended ORPort protocol" section
+       below). If tor does not support the extended ORPort protocol,
+       it MUST use the empty string as the value of this environment
+       variable.
+      Example: TOR_PT_EXTENDED_SERVER_PORT=127.0.0.1:4200
+
+      "TOR_PT_ORPORT" -- Our regular ORPort in a form suitable
+       for local connections, i.e. connections from the proxy to
+       the ORPort.
+      Example: TOR_PT_ORPORT=127.0.0.1:9001
+
+      "TOR_PT_SERVER_BINDADDR" -- A comma seperated list of
+       <key>-<value> pairs, where <key> is a transport name and
+       <value> is the adress:port on which it should listen for client
+       proxy connections.
+       The keys holding transport names must appear on the same order
+       as they appear on TOR_PT_SERVER_TRANSPORTS.
+       This might be the advertised address, or might be a local
+       address that Tor will forward ports to.  It MUST be an address
+       that will work with bind().
+      Example:
+        TOR_PT_SERVER_BINDADDR=trebuchet-127.0.0.1:1984,ballista-127.0.0.1:4891
+
+      "TOR_PT_SERVER_TRANSPORTS" -- A comma-separated list of server
+       methods that the proxy should support, or * if all methods
+       should be enabled.  The proxy SHOULD ignore methods that it
+       doesn't recognize.
+      Example: TOR_PT_SERVER_TRANSPORTS=trebuchet,ballista
+
+  The transport proxy replies by writing NL-terminated lines to
+  stdout.  The line metaformat is
+
+      <Line> ::= <Keyword> <OptArgs> <NL>
+      <Keyword> ::= <KeywordChar> | <Keyword> <KeywordChar>
+      <KeyWordChar> ::= <any US-ASCII alphanumeric, dash, and underscore>
+      <OptArgs> ::= <Args>*
+      <Args> ::= <SP> <ArgChar> | <Args> <ArgChar>
+      <ArgChar> ::= <any US-ASCII character but NUL or NL>
+      <SP> ::= <US-ASCII whitespace symbol (32)>
+      <NL> ::= <US-ASCII newline (line feed) character (10)>
+
+  Tor MUST ignore lines with keywords that it doesn't recognize.
+
+  First, if there's an error parsing the environment variables, the
+  proxy should write:
+    ENV-ERROR <errormessage>
+  and exit.
+
+  If the environment variables were correctly formatted, the proxy
+  should write:
+    VERSION <configuration protocol version>
+  to say that it supports this configuration protocol version (example
+  "VERSION 1"). It must either pick a version that Tor told it about
+  in TOR_PT_MANAGED_TRANSPORT_VER, or pick no version at all, say:
+     VERSION-ERROR no-version
+  and exit.
+
+  The proxy should then open its ports.  If running as a client
+  proxy, it should not use fixed ports; instead it should autoselect
+  ports to avoid conflicts.  A client proxy should by default only
+  listen on localhost for connections.
+
+  A server proxy SHOULD try to listen at a consistent port, though it
+  SHOULD pick a different one if the port it last used is now allocated.
+
+  A client or server proxy then should tell which methods it has
+  made available and how.  It does this by printing zero or more
+  CMETHOD and SMETHOD lines to its stdout.  These lines look like:
+
+   CMETHOD <methodname> socks4/socks5 <address:port> [ARGS=arglist] \
+        [OPT-ARGS=arglist]
+
+  as in
+
+   CMETHOD trebuchet socks5 127.0.0.1:19999 ARGS=rocks,height \
+              OPT-ARGS=tensile-strength
+
+  The ARGS field lists mandatory parameters that must appear in
+  every bridge line for this method. The OPT-ARGS field lists
+  optional parameters.  If no ARGS or OPT-ARGS field is provided,
+  Tor should not check the parameters in bridge lines for this
+  method.
+
+  The proxy should print a single "CMETHODS DONE" line after it is
+  finished telling Tor about the client methods it provides.  If it
+  tries to supply a client method but can't for some reason, it
+  should say:
+    CMETHOD-ERROR <methodname> <errormessage>
+
+  A proxy should also tell Tor about the server methods it is providing
+  by printing zero or more SMETHOD lines.  These lines look like:
+
+    SMETHOD <methodname> <address:port> [options]
+
+  If there's an error setting up a configured server method, the
+  proxy should say:
+    SMETHOD-ERROR <methodname> <errormessage>
+  as in
+    SMETHOD-ERROR trebuchet could not setup 'trebuchet' method
+
+  The 'address:port' part of an SMETHOD line is the address to put
+  in the bridge line.  The Options part is a list of space-separated
+  K:V flags that Tor should know about.  Recognized options are:
+
+  SMETHOD and CMETHOD lines may be interspersed, to allow the proxies to
+  report methods as they become available, even when some methods may
+  require probing your network, connecting to some kind of peers, etc
+  before they are set up. After the final SMETHOD line, the proxy says
+  "SMETHODS DONE".
+
+  The proxy SHOULD NOT tell Tor about a server or client method
+  unless it is actually open and ready to use.
+
+  Tor clients SHOULD NOT use any method from a client proxy or
+  advertise any method from a server proxy UNLESS it is listed as a
+  possible method for that proxy in torrc, and it is listed by the
+  proxy as a method it supports.
+
+  Proxies should respond to a single INT signal by closing their
+  listener ports and not accepting any new connections, but keeping
+  all connections open, then terminating when connections are all
+  closed.  Proxies should respond to a second INT signal by shutting
+  down cleanly.
+
+  The managed proxy configuration protocol version defined in this
+  section is "1".
+  So, for example, if tor supports this configuration protocol it
+  should set the environment variable:
+    TOR_PT_MANAGED_TRANSPORT_VER=1
