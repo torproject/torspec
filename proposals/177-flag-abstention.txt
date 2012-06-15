@@ -3,7 +3,7 @@ Title: Abstaining from votes on individual flags
 Author: Nick Mathewson
 Created: 14 Feb 2011
 Status: Open
-Target: 0.2.3.x
+Target: 0.2.4.x
 
 Overview:
 

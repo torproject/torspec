@@ -3,7 +3,7 @@ Title: Make certificate downloads specific
 Author: Nick Mathewson
 Created: 2-Dec-2008
 Status: Accepted
-Target: 0.2.3.x
+Target: 0.2.4.x
 
 History:
 

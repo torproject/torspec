@@ -100,13 +100,13 @@ Proposals by number:
 177  Abstaining from votes on individual flags [OPEN]
 178  Require majority of authorities to vote for consensus parameters [CLOSED]
 179  TLS certificate and parameter normalization [CLOSED]
-180  Pluggable transports for circumvention [OPEN]
+180  Pluggable transports for circumvention [FINISHED]
 181  Optimistic Data for Tor: Client Side [CLOSED]
 182  Credit Bucket [DRAFT]
 183  Refill Intervals [CLOSED]
 184  Miscellaneous changes for a v3 Tor link protocol [CLOSED]
 185  Directory caches without DirPort [OPEN]
-186  Multiple addresses for one OR or bridge [DRAFT]
+186  Multiple addresses for one OR or bridge [ACCEPTED]
 187  Reserve a cell type to allow client authorization [CLOSED]
 188  Bridge Guards and other anti-enumeration defenses [OPEN]
 189  AUTHORIZE and AUTHORIZED cells [OPEN]
@@ -118,7 +118,7 @@ Proposals by number:
 195  TLS certificate normalization for Tor 0.2.4.x [DRAFT]
 196  Extended ORPort and TransportControlPort [OPEN]
 197  Message-based Inter-Controller IPC Channel [OPEN]
-198  Restore semantics of TLS ClientHello [OPEN]
+198  Restore semantics of TLS ClientHello [ACCEPTED]
 199  Integration of BridgeFinder and BridgeFinderHelper [OPEN]
 200  Adding new, extensible CREATE, EXTEND, and related cells [OPEN]
 201  Make bridges report statistics on daily v3 network status requests [OPEN]
@@ -134,7 +134,6 @@ Proposals by status:
    144  Increase the diversity of circuits by detecting nodes belonging the same provider
    175  Automatically promoting Tor clients to nodes
    182  Credit Bucket
-   186  Multiple addresses for one OR or bridge
    195  TLS certificate normalization for Tor 0.2.4.x [for 0.2.4.x]
  NEEDS-REVISION:
    131  Help users to verify they are using Tor
@@ -149,8 +148,7 @@ Proposals by status:
    164  Reporting the status of server votes
    165  Easy migration for voting authority sets
    168  Reduce default circuit window
-   177  Abstaining from votes on individual flags [for 0.2.3.x]
-   180  Pluggable transports for circumvention [for 0.2.3.x]
+   177  Abstaining from votes on individual flags [for 0.2.4.x]
    185  Directory caches without DirPort
    188  Bridge Guards and other anti-enumeration defenses
    189  AUTHORIZE and AUTHORIZED cells
@@ -159,17 +157,18 @@ Proposals by status:
    194  Mnemonic .onion URLs
    196  Extended ORPort and TransportControlPort [for 0.2.4.x]
    197  Message-based Inter-Controller IPC Channel [for 0.2.4.x]
-   198  Restore semantics of TLS ClientHello
-   199  Integration of BridgeFinder and BridgeFinderHelper [for 0.2.3.x+]
+   199  Integration of BridgeFinder and BridgeFinderHelper [for 0.2.4.x+]
    200  Adding new, extensible CREATE, EXTEND, and related cells
    201  Make bridges report statistics on daily v3 network status requests [for 0.2.4.x]
  ACCEPTED:
-   117  IPv6 exits [for 0.2.3.x]
+   117  IPv6 exits [for 0.2.4.x]
    140  Provide diffs between consensuses
-   147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.3.x]
-   157  Make certificate downloads specific [for 0.2.3.x]
-   172  GETINFO controller option for circuit information [for 0.2.3.x]
-   173  GETINFO Option Expansion [for 0.2.3.x]
+   147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.4.x]
+   157  Make certificate downloads specific [for 0.2.4.x]
+   172  GETINFO controller option for circuit information
+   173  GETINFO Option Expansion
+   186  Multiple addresses for one OR or bridge [for 0.2.4.x+]
+   198  Restore semantics of TLS ClientHello [for 0.2.4.x]
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process
@@ -183,6 +182,7 @@ Proposals by status:
    160  Authorities vote for bandwidth offsets in consensus [for 0.2.1.x]
    161  Computing Bandwidth Adjustments [for 0.2.1.x]
    162  Publish the consensus in multiple flavors [in 0.2.3.1-alpha]
+   180  Pluggable transports for circumvention [in 0.2.3.x]
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]
