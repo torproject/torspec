@@ -122,6 +122,7 @@ Proposals by number:
 199  Integration of BridgeFinder and BridgeFinderHelper [OPEN]
 200  Adding new, extensible CREATE, EXTEND, and related cells [OPEN]
 201  Make bridges report statistics on daily v3 network status requests [OPEN]
+202  Two improved relay encryption protocols for Tor cells [OPEN]
 
 
 Proposals by status:
@@ -160,6 +161,7 @@ Proposals by status:
    199  Integration of BridgeFinder and BridgeFinderHelper [for 0.2.4.x+]
    200  Adding new, extensible CREATE, EXTEND, and related cells
    201  Make bridges report statistics on daily v3 network status requests [for 0.2.4.x]
+   202  Two improved relay encryption protocols for Tor cells
  ACCEPTED:
    117  IPv6 exits [for 0.2.4.x]
    140  Provide diffs between consensuses
