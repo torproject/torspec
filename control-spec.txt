@@ -223,12 +223,14 @@
   "513 syntax error in configuration values" reply on syntax error, or a
   "553 impossible configuration setting" reply on a semantic error.
 
-  When a configuration option takes multiple values, or when multiple
-  configuration keys form a context-sensitive group (see GETCONF below), then
-  setting _any_ of the options in a SETCONF command is taken to reset all of
-  the others.  For example, if two ORBindAddress values are configured, and a
-  SETCONF command arrives containing a single ORBindAddress value, the new
-  command's value replaces the two old values.
+  Some configuration options (e.g. "Bridge") take multiple values. Also,
+  some configuration keys (e.g. for hidden services and for entry
+  guard lists) form a context-sensitive group where order matters (see
+  GETCONF below). In these cases, setting _any_ of the options in a
+  SETCONF command is taken to reset all of the others. For example,
+  if two ORBindAddress values are configured, and a SETCONF command
+  arrives containing a single ORBindAddress value, the new command's
+  value replaces the two old values.
 
   Sometimes it is not possible to change configuration options solely by
   issuing a series of SETCONF commands, because the value of one of the
