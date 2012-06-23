@@ -228,8 +228,8 @@
   guard lists) form a context-sensitive group where order matters (see
   GETCONF below). In these cases, setting _any_ of the options in a
   SETCONF command is taken to reset all of the others. For example,
-  if two ORBindAddress values are configured, and a SETCONF command
-  arrives containing a single ORBindAddress value, the new command's
+  if two ORListenAddress values are configured, and a SETCONF command
+  arrives containing a single ORListenAddress value, the new command's
   value replaces the two old values.
 
   Sometimes it is not possible to change configuration options solely by
