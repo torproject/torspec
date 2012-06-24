@@ -1,0 +1,22 @@
+
+                                  Glossary
+
+                               The Tor Project
+
+Note: This document aims to specify terms, notations or phrases related to Tor and The
+Tor Project.
+
+This glossary is not a design document; it is only a reference.
+
+0. Preliminaries
+
+      The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+      NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+      "OPTIONAL" in this document are to be interpreted as described in
+      RFC 2119.
+
+0.1 Commonly used Tor configuration terms
+
+   ORPort  - Onion Router Port
+   DirPort - Directory Port
+
