@@ -1,0 +1,247 @@
+Filename: 203-https-frontend.txt
+Title: Avoiding censorship by impersonating an HTTPS server
+Author: Nick Mathewson
+Created: 24 Jun 2012
+Status: Draft
+
+
+Overview:
+
+   One frequently proposed approach for censorship resistance is that
+   Tor bridges ought to act like another TLS-based service, and deliver
+   traffic to Tor only if the client can demonstrate some shared
+   knowledge with the bridge.
+
+   In this document, I discuss some design considerations for building
+   such systems, and propose a few possible architectures and designs.
+
+Background:
+
+   Most of our previous work on censorship resistance has focused on
+   preventing passive attackers from identifying Tor bridges, or from
+   doing so cheaply.  But active attackers exist, and exist in the wild:
+   right now, the most sophisticated censors use their anti-Tor passive
+   attacks only as a first round of filtering before launching a
+   secondary active attack to confirm suspected Tor nodes.
+
+   One idea we've been talking about for a while is that of having a
+   service that looks like an HTTPS service unless a client does some
+   particular secret thing to prove it is allowed to use it as a Tor
+   bridge.  Such a system would still succumb to passive traffic
+   analysis attacks (since the packet timings and sizes for HTTPS don't
+   look that much like Tor), but it would be enough to beat many current
+   censors.
+
+Goals and requirements:
+
+   We should make it impossible for a passive attacker who examines only
+   a few packets at a time to distinguish Tor->Bridge traffic from an
+   HTTPS client talking to an HTTPS server.
+
+   We should make it impossible for an active attacker talking to the
+   server to tell a Tor bridge server from regular HTTPS server.
+
+   We should make it impossible for an active attacker who can MITM the
+   server to learn from the client whether it thought it was connecting
+   to an HTTPS server or a Tor bridge.  (This implies that an MITM
+   attacker shouldn't be able to learn anything that would help it
+   convince the server to act like a bridge.)
+
+   It would be nice to minimize the required code changes to Tor, and
+   the required code changes to any other software.
+
+   It would be good to avoid any requirement of close integration with
+   any particular HTTP or HTTPS implementation.
+
+   If we're replacing our own profile with that of an HTTPS service, we
+   should do so in a way that lets us use a the profile of a popular
+   HTTPS implementation.
+
+   Efficiency would be good: layering TLS inside TLS is best avoided if
+   we can.
+
+Discussion:
+
+   We need an actual web server; HTTP and HTTPS are so complicated that
+   there's no practical way to behave in a bug-compatible way with any
+   popular webserver short of running that webserver.
+
+   More obviously, we need a TLS implementation (or we can't implement
+   HTTPS), and we need a Tor bridge (since that's the whole point of
+   this exercise).
+
+   So from a top-level point of view, the question becomes: how shall we
+   wire these together?
+
+   There are three obvious ways; I'll discuss them in turn below.
+
+Design #1: TLS in Tor
+
+   Under this design, Tor accepts HTTPS connections, decides which ones
+   don't look like the Tor protocol, and relays them to a webserver.
+
+                   +--------------------------------------+
+     +------+  TLS |  +------------+  http +-----------+  |
+     | User |<------> | Tor Bridge |<----->| Webserver |  |
+     +------+      |  +------------+       +-----------+  |
+                   |     trusted host/network             |
+                   +--------------------------------------+
+
+   This approach would let us use a completely unmodified webserver
+   implementation, but would require the most extensive changes in Tor:
+   we'd need to add yet another flavor to Tor's TLS ice cream parlor,
+   and try to emulate a popular webserver's TLS behavior even more
+   thoroughly.
+
+   To authenticate, we would need to take a hybrid approach, and begin
+   forwarding traffic to the webserver as soon as soon as a webserver
+   might respond to the traffic.  This could be pretty complicated,
+   since it requires us to have a model of how the webserver would
+   respond to any given set of bytes.  As a workaround, we might try
+   relaying _all_ input to the webserver, and only replying as Tor in
+   the cases where the website hasn't replied.  (This would likely to
+   create recognizable timing patterns, though.)
+
+   The authentication itself could use a system akin to Tor proposals
+   189/190, where an early AUTHORIZE cell shows knowledge of a shared
+   secret if the client is a Tor client.
+
+Design #2: TLS in the web server
+
+                   +----------------------------------+
+     +------+  TLS |  +------------+  tor0   +-----+  |
+     | User |<------> | Webserver  |<------->| Tor |  |
+     +------+      |  +------------+         +-----+  |
+                   |     trusted host/network         |
+                   +----------------------------------+
+
+   In this design, we write an Apache module or something that can
+   recognize an authenticator of some kind in an HTTPS header, or
+   recognize a valid AUTHORIZE cell, and respond by forwarding the
+   traffic to a Tor instance.
+
+   To avoid the efficiency issue of doing an extra local
+   encrypt/decrypt, we need to have the webserver talk to Tor over a
+   local unencrypted connection. (I've denoted this as "tor0" in the
+   diagram above.)  For implementation convenience, we might want to
+   implement that as a NULL TLS connection, so that the Tor server code
+   wouldn't have to change except to allow local NULL TLS connections in
+   this configuration.
+
+   For the Tor handshake to work properly here, we'll need a way for the
+   Tor instance to know which public key the webserver is configured to
+   use.
+
+   We wouldn't need to support the parts of the Tor link protocol used
+   to authenticate clients to servers: relays shouldn't be using this
+   subsystem at all.
+
+   The Tor client would need to connect and prove its status as a Tor
+   client.  If the client uses some means other then AUTHORIZE cells, or
+   if we want to do the authentication in a pluggable transport, and we
+   therefore decided to offload the responsibility TLS itself to the
+   pluggable transport, that would scare me: Supporting pluggable
+   transports that have the responsibility for TLS would make it fairly
+   easy to mess up the crypto, and I'd rather not have it be so easy to
+   write a pluggable transport that accidentally makes Tor less secure.
+
+Design #3: Reverse proxy
+
+
+                   +----------------------------------+
+                   |  +-------+  http  +-----------+  |
+                   |  |       |<------>| Webserver |  |
+     +------+  TLS |  |       |        +-----------+  |
+     | User |<------> | Proxy |                       |
+     +------+      |  |       |  tor0  +-----------+  |
+                   |  |       |<------>|    Tor    |  |
+                   |  +-------+        +-----------+  |
+                   |     trusted host/network         |
+                   +----------------------------------+
+
+   In this design, we write a server-side proxy to sit in front of Tor
+   and a webserver, or repurpose some existing HTTPS proxy. Its role
+   will be to do TLS, and then forward connections to Tor or the
+   webserver as appropriate.  (In the web world, this kind of thing is
+   called a "reverse proxy", so that's the term I'm using here.)
+
+   To avoid fingerprinting, we should choose a proxy that's already in
+   common use as a TLS frontend for webservers -- nginx, perhaps.
+   Unfortunately, the more popular tools here seem to be pretty complex,
+   and the simpler tools less widely deployed.  More investigation would
+   be needed.
+
+   The authorization considerations would be as in Design #2 above; for
+   the reasons discussed there, it's probably a good idea to build the
+   necessary authorization into Tor itself.
+
+   I generally like this design best: it lets us isolate the "Check for
+   a valid authenticator and/or a valid or invalid HTTP header, and
+   react accordingly" question to a single program.
+
+How to authenticate: The easiest way
+
+   Designing a good MITM-resistant AUTHORIZE cell, or an equivalent
+   HTTP header, is an open problem that we should solve in proposals
+   190 and 191 and their successors.  I'm calling it out-of-scope here;
+   please see those proposals, their attendant discussion, and their
+   eventual successors
+
+How to authenticate: a slightly harder way
+
+   Some proposals in this vein have in the past suggested a special
+   HTTP header to distinguish Tor connections from non-Tor connections.
+   This could work too, though it would require substantially larger
+   changes on the Tor client's part, would still require the client
+   take measures to avoid MITM attacks, and would also require the
+   client to implement a particular browser's http profile.
+
+Some considerations on distinguishability
+
+   Against a passive eavesdropper, the easiest way to avoid
+   distinguishability in server responses will be to use an actual web
+   server or reverse web proxy's TLS implementation.
+   (Distinguishability based on client TLS use is another topic
+   entirely.)
+
+   Against an active non-MITM attacker, the best probing attacks will be
+   ones designed to provoke the system in acting in ways different from
+   those in which a webserver would act: responding earlier than a web
+   server would respond, or later, or differently.  We need to make sure
+   that, whatever the front-end program is, it answers anything that
+   would qualify as a well-formed or ill-formed HTTP request whenever
+   the web server would.  This must mean, for example, that whatever the
+   correct form of client authorization turns out to be, no prefix of
+   that authorization is ever something that the webserver would respond
+   to.  With some web servers (I believe), that's as easy as making sure
+   that any valid authenticator isn't too long, and doesn't contain a CR
+   or LF character.  With others, the authenticator would need to be a
+   valid HTTP request, with all the attendant difficulty that would
+   raise.
+
+   Against an attacker who can MITM the bridge, the best attacks will be
+   to wait for clients to connect and see how they behave.  In this
+   case, the client probably needs to be able to authenticate the bridge
+   certificate as presented in the initial TLS handshake -- or some
+   other aspect of the TLS handshake if we're feeling insane.  If the
+   certificate or handshake isn't as expected, the client should behave
+   as a web browser that's just received a bad TLS certificate.  (The
+   alternative there would be to try to impersonate an HTTPS client that
+   has just accepted a self-signed certificate.  But that would probably
+   require the Tor client to impersonate a full web browser, which isn't
+   realistic.)
+
+Side note: What to put on the webserver?
+
+   To credibly pretend not to be ourselves, we must pretend to be
+   something else in particular -- and something not easily identifiable
+   or inherently worthless.  We should not, for example, have all
+   deployments of this kind use a fixed website, even if that website is
+   the default "Welcome to Apache" configuration: A censor would
+   probably feel that they weren't breaking anything important by
+   blocking all unconfigured websites with nothing on them.
+
+   Therefore, we should probably conceive of a system like this as
+   "Something to add to your HTTPS website" rather than as a standalone
+   installation.
+

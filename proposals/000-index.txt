@@ -123,6 +123,7 @@ Proposals by number:
 200  Adding new, extensible CREATE, EXTEND, and related cells [OPEN]
 201  Make bridges report statistics on daily v3 network status requests [OPEN]
 202  Two improved relay encryption protocols for Tor cells [OPEN]
+203  Avoiding censorship by impersonating an HTTPS server [DRAFT]
 
 
 Proposals by status:
@@ -136,6 +137,7 @@ Proposals by status:
    175  Automatically promoting Tor clients to nodes
    182  Credit Bucket
    195  TLS certificate normalization for Tor 0.2.4.x [for 0.2.4.x]
+   203  Avoiding censorship by impersonating an HTTPS server
  NEEDS-REVISION:
    131  Help users to verify they are using Tor
    190  Bridge Client Authorization Based on a Shared Secret
