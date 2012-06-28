@@ -54,7 +54,7 @@ Goals and requirements:
    any particular HTTP or HTTPS implementation.
 
    If we're replacing our own profile with that of an HTTPS service, we
-   should do so in a way that lets us use a the profile of a popular
+   should do so in a way that lets us use the profile of a popular
    HTTPS implementation.
 
    Efficiency would be good: layering TLS inside TLS is best avoided if
@@ -94,12 +94,12 @@ Design #1: TLS in Tor
    thoroughly.
 
    To authenticate, we would need to take a hybrid approach, and begin
-   forwarding traffic to the webserver as soon as soon as a webserver
+   forwarding traffic to the webserver as soon as a webserver
    might respond to the traffic.  This could be pretty complicated,
    since it requires us to have a model of how the webserver would
    respond to any given set of bytes.  As a workaround, we might try
    relaying _all_ input to the webserver, and only replying as Tor in
-   the cases where the website hasn't replied.  (This would likely to
+   the cases where the website hasn't replied.  (This would likely
    create recognizable timing patterns, though.)
 
    The authentication itself could use a system akin to Tor proposals
@@ -137,9 +137,9 @@ Design #2: TLS in the web server
    subsystem at all.
 
    The Tor client would need to connect and prove its status as a Tor
-   client.  If the client uses some means other then AUTHORIZE cells, or
+   client.  If the client uses some means other than AUTHORIZE cells, or
    if we want to do the authentication in a pluggable transport, and we
-   therefore decided to offload the responsibility TLS itself to the
+   therefore decided to offload the responsibility for TLS itself to the
    pluggable transport, that would scare me: Supporting pluggable
    transports that have the responsibility for TLS would make it fairly
    easy to mess up the crypto, and I'd rather not have it be so easy to
@@ -166,7 +166,7 @@ Design #3: Reverse proxy
    called a "reverse proxy", so that's the term I'm using here.)
 
    To avoid fingerprinting, we should choose a proxy that's already in
-   common use as a TLS frontend for webservers -- nginx, perhaps.
+   common use as a TLS front-end for webservers -- nginx, perhaps.
    Unfortunately, the more popular tools here seem to be pretty complex,
    and the simpler tools less widely deployed.  More investigation would
    be needed.
@@ -185,7 +185,7 @@ How to authenticate: The easiest way
    HTTP header, is an open problem that we should solve in proposals
    190 and 191 and their successors.  I'm calling it out-of-scope here;
    please see those proposals, their attendant discussion, and their
-   eventual successors
+   eventual successors.
 
 How to authenticate: a slightly harder way
 
