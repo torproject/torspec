@@ -113,17 +113,6 @@
   require current clients to understand any KeywordLine not currently
   described.
 
-  The "opt" keyword was used until Tor 0.1.2.5-alpha for non-critical future
-  extensions.  All implementations MUST ignore any item of the form "opt
-  keyword ....." when they would not recognize "keyword ....."; and MUST
-  treat "opt keyword ....."  as synonymous with "keyword ......" when keyword
-  is recognized.
-
-  Implementations before 0.1.2.5-alpha rejected any document with a
-  KeywordLine that started with a keyword that they didn't recognize.
-  Implementations MUST prefix items not recognized by older versions of Tor
-  with an "opt" until those versions of Tor are obsolete.
-
   Other implementations that want to extend Tor's directory format MAY
   introduce their own items.  The keywords for extension items SHOULD start
   with the characters "x-" or "X-", to guarantee that they will not conflict
@@ -161,6 +150,10 @@
    but MUST NOT have more than one: "contact", "uptime", "fingerprint",
    "hibernating", "read-history", "write-history", "eventdns", "platform",
    "family".
+
+   For historical reasons some options are prefixed with "opt ", for instance
+   "opt fingerprint". This "opt " prefix should be ignored with the second word
+   used as the keyword instead.
 
    Additionally, a router descriptor MAY contain any number of "accept",
    "reject", and "opt" Items.  Other than "router" and "router-signature",
@@ -206,16 +199,10 @@
        identity key. A descriptor is considered invalid (and MUST be
        rejected) if the fingerprint line does not match the public key.
 
-       [We didn't start parsing this line until Tor 0.1.0.6-rc; it should
-        be marked with "opt" until earlier versions of Tor are obsolete.]
-
     "hibernating" 0|1
 
        If the value is 1, then the Tor server was hibernating when the
        descriptor was published, and shouldn't be used to build circuits.
-
-       [We didn't start parsing this line until Tor 0.1.0.6-rc; it should be
-        marked with "opt" until earlier versions of Tor are obsolete.]
 
     "uptime"
 
@@ -273,9 +260,6 @@
         number of bytes used in the most recent intervals, ordered from
         oldest to newest.
 
-        [We didn't start parsing these lines until Tor 0.1.0.6-rc; they should
-         be marked with "opt" until earlier versions of Tor are obsolete.]
-
     "eventdns" bool NL
 
         Declare whether this version of Tor is using the newer enhanced
@@ -286,10 +270,9 @@
          this option set to 0 if it is not present.  All Tor versions at
          0.1.2.2-alpha or later should be assumed to have this option set to
          1 if it is not present.  Until 0.1.2.1-alpha-dev, this option was
-         not generated, even when eventdns was in use.  Versions of Tor
-         before 0.1.2.1-alpha-dev did not parse this option, so it should be
-         marked "opt".  With 0.2.0.1-alpha, the old 'dnsworker' logic has
-         been removed, rendering this option of historical interest only.]
+         not generated, even when eventdns was in use.  With 0.2.0.1-alpha, the
+         old 'dnsworker' logic has been removed, rendering this option of
+         historical interest only.]
 
 2.2. Nonterminals in router descriptors
 
@@ -414,9 +397,7 @@
       The "r" entry for each router must appear first and is required. The
       "s" entry is optional (see Section 3.1 below for how the flags are
       decided). Unrecognized flags on the "s" line and extra elements
-      on the "r" line must be ignored.  The "v" line is optional; it was not
-      supported until 0.1.2.5-alpha, and it must be preceded with an "opt"
-      until all earlier versions of Tor are obsolete.
+      on the "r" line must be ignored.  The "v" line is optional.
 
    The signature section contains:
 
@@ -882,8 +863,7 @@
   apparent IP address of the client connecting to them (as a dotted quad).
   For directory connections tunneled over a BEGIN_DIR stream, servers SHOULD
   report the IP from which the circuit carrying the BEGIN_DIR stream reached
-  them.  [Servers before version 0.1.2.5-alpha reported 127.0.0.1 for all
-  BEGIN_DIR-tunneled connections.]
+  them.
 
   Servers SHOULD disable caching of multiple network statuses or multiple
   router descriptors.  Servers MAY enable caching of single descriptors,
