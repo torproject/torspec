@@ -481,7 +481,7 @@ Advertising bridge methods
 
   Bridges put the 'method' lines in their extra-info documents.
 
-     method SP <methodname> SP <address:port> [SP arglist] NL
+     transport SP <transportname> SP <address:port> [SP arglist] NL
 
   The address:port are as returned from an SMETHOD line (unless they are
   replaced by the FORWARD: directive).  The arglist is a K=V,... list as
@@ -490,7 +490,7 @@ Advertising bridge methods
   If the SMETHOD line includes a DECLARE: part, the router descriptor gets
   a new line:
 
-     method-info SP <methodname> [SP arglist] NL
+     transport-info SP <transportname> [SP arglist] NL
 
 Bridge authority behavior
 
