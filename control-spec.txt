@@ -623,6 +623,14 @@
            "Dependant" / "Virtual" / "String" / "LineList"
          Documentation = Text
 
+    "config/defaults"
+      A series of lines listing default values for each configuration
+      option. Options which don't have a valid default don't show up
+      in the list.
+         OptionName SP OptionValue CRLF
+         OptionName = Keyword
+         OptionValue = Text
+
     "info/names"
       A series of lines listing the available GETINFO options.  Each is of
       one of these forms:
