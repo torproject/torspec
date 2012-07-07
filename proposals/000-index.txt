@@ -124,6 +124,7 @@ Proposals by number:
 201  Make bridges report statistics on daily v3 network status requests [OPEN]
 202  Two improved relay encryption protocols for Tor cells [OPEN]
 203  Avoiding censorship by impersonating an HTTPS server [DRAFT]
+204  Subdomain support for Hidden Service addresses [OPEN]
 
 
 Proposals by status:
@@ -164,6 +165,7 @@ Proposals by status:
    200  Adding new, extensible CREATE, EXTEND, and related cells
    201  Make bridges report statistics on daily v3 network status requests [for 0.2.4.x]
    202  Two improved relay encryption protocols for Tor cells
+   204  Subdomain support for Hidden Service addresses
  ACCEPTED:
    117  IPv6 exits [for 0.2.4.x]
    140  Provide diffs between consensuses
