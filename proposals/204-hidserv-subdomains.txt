@@ -1,0 +1,29 @@
+Filename: 204-hidserv-subdomains.txt
+Title: Subdomain support for Hidden Service addresses
+Author: Alessandro Preite Martinez
+Created: 6 July 2012
+Status: Open
+
+
+1. Overview
+
+  This proposal aims to extend the .onion naming scheme for Hidden
+  Service addresses with sub-domain components, which will be ignored
+  by the Tor layer but will appear in HTTP Host headers, allowing
+  subdomain-based virtual hosting.
+
+2. Motivation
+
+  Sites doing large-scale HTTP virtual hosting on subdomains currently
+  do not have a good option for exposure via Hidden Services, short of
+  creating a separate HS for every subdomain (which in some cases is
+  simply not possible due to the subdomains not being fully known
+  beforehand).
+
+3. Implementation
+
+  Tor should ignore any subdomain components besides the Hidden
+  Service key, i.e. "foo.aaaaaaaaaaaaaaaa.onion" should be treated
+  simply as "aaaaaaaaaaaaaaaa.onion".
+
+
