@@ -175,8 +175,8 @@ Consensus directories and microdescriptors:
   they shouldn't include any "a" lines.)  The remaining or-address
   lines will turn into "a" lines in the microdescriptor.
 
-  As with other data in the vote derived from the descriptor,
-  the vote will include whichever set of "a" lines are given by the
+  As with other data in the vote derived from the descriptor, the
+  consensus will include whichever set of "a" lines are given by the
   most authorities who voted for the descriptor digest that will be
   used for the router.
 
