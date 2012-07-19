@@ -636,8 +636,9 @@
         OR (in the v3 intro protocol)
           VER    Version byte: set to 3.        [1 octet]
           AUTHT  The auth type that is used     [1 octet]
-          AUTHL  Length of auth data           [2 octets]
-          AUTHD  Auth data                     [variable]
+          If AUTHT != [00]:
+              AUTHL  Length of auth data           [2 octets]
+              AUTHD  Auth data                     [variable]
           TS     A timestamp                   [4 octets]
           IP     Rendezvous point's address    [4 octets]
           PORT   Rendezvous point's OR port    [2 octets]
