@@ -1,0 +1,146 @@
+Filename: 205-local-dnscache.txt
+Title: Remove global client-side DNS caching
+Author: Nick Mathewson
+Created: 20 July 2012
+Status: Open
+
+
+0. Overview
+
+   This proposal suggests that, for reasons of security, we move
+   client-side DNS caching from a global cache to a set of per-circuit
+   caches.
+
+   This will break some things that used to work.  I'll explain how to
+   fix them.
+
+1. Background and Motivation
+
+   Since the earliest Tor releases, we've kept a client-side DNS
+   cache.  This lets us implement exit policies and exit enclaves --
+   if we remember that www.mit.edu is 18.9.22.169 the first time we
+   see it, then we can avoid making future requests for www.mit.edu
+   via any node that blocks net 18.  Also, if there happened to be a
+   Tor node at 18.9.22.169, we could use that node as an exit enclave.
+
+   But there are security issues with DNS caches.  A malicious exit
+   node or DNS server can lie.  And unlike other traffic, where the
+   effect of a lie is confined to the request in question, a malicious
+   exit node can affect the behavior of future circuits when it gives
+   a false DNS reply.  This false reply could be used to keep a client
+   connecting to an MITM'd target, or to make a client use a chosen
+   node as an exit enclave for that node, or so on.
+
+   With IPv6, tracking attacks will become even more possible: A
+   hostile exit node can give every client a different IPv6 address
+   for every hostname they want to resolve, such that every one of
+   those addresses is under the attacker's control.
+
+   And even if the exit node is honest, having a cached DNS result can
+   cause Tor clients to build their future circuits distinguishably:
+   the exit on any subsequent circuit can tell whether the client knew
+   the IP for the address yet or not.
+
+   So client-side DNS caching needs to go away.
+
+2. Design
+
+2.1. The basic idea
+
+   I propose that clients should cache DNS results in per-circuit DNS
+   caches, not in the global address map.
+
+2.2. What about exit policies?
+
+   Microdescriptor-based clients have already dropped the ability to
+   track which nodes declare which exit policies, without much ill
+   effect.  As we go forward, I think that remembering the IP address
+   of each request so that we can match it to exit policies will even
+   less effective, especially if proposals to allow AS-based exit
+   policies can succeed.
+
+2.3. What about exit enclaves?
+
+   Exit enclaves are already borken.  They need to move towards a
+   cross-certification solution where a node advertises that it can
+   exit to a hostname or domain X.Y.Z, and a signed record at X.Y.Z
+   advertises that .  That's out-of-scope for this proposal, except to
+   note that nothing proposed here keeps that design from working.
+
+2.4. What about address mapping?
+
+   Our current address map algorithm is, more or less:
+
+     N = 0
+     while  N < MAX_MAPPING && exists map[address]:
+         address = map[address]
+         N = N + 1
+     if N == MAX_MAPPING:
+         Give up, it's a loop.
+
+   Where 'map' is the union of all mapping entries derived from the
+   controller, the configuration file, trackhostexits maps,
+   virtual-address mps, DNS replies, and so on.
+
+   With this design, the DNS cache will not be part of the address
+   map.  That means that entries in the address map which relied on
+   happening after the DNS cache entries can no longer work so well.
+   These would include:
+
+       A) Mappings from an IP address to a particular exit, either
+          manually declared or inserted by TrackHostExits.
+       B) Mappings from IP addresses to other IP addresses.
+       C) Mappings from IP addresses to hostnames.
+
+   We can try to solve these by introducing an extra step of address
+   mapping after the DNS cache is applied.  In other words, we should
+   apply the address map, then see if we can attach to a circuit.  If
+   we can, we try to apply that circuit's dns cache, then apply the
+   address map again.
+
+
+2.5. What about the performance impact?
+
+   That all depends on application behavior.
+
+   If the application continues to make all of its requests with the
+   hostname, there shouldn't be much trouble.  Exit-side DNS caches and
+   exit-side DNS will avoid any additional round trips across the Tor
+   network; compared to that, the time to do a DNS resolution at the
+   exit node *should* be small.
+
+   That said, this will hurt performance a little in the case where
+   the exit node and its resolver don't have the answer cached, and it
+   takes a long time to resolve the hostname.
+
+
+   If the application is doing "resolve, then connect to an IP", see
+   2.6 below.
+
+2.6. What about DNSPort?
+
+   If the application is doing its own DNS caching, they won't get
+   much security benefit from here.
+
+   If the application is doing a resolve before each connect, there
+   will be a performance hit when the resolver is using a circuit that
+   hadn't previously resolved the address.
+
+   Also, DNSPort users: AutomapHostsOnResolve is your friend.
+
+3. Alternate designs and future directions
+
+3.1. Why keep client-side DNS caching at all?
+
+   A fine question!  I am not sure it actually buys us anything any
+   longer, since exits also have DNS caching.  Shall we discuss that?
+   It would sure simplify matters.
+
+3.2. The impact of DNSSec
+
+   Once we get DNSSec support, clients will be able to verify whether
+   an exit's answers are correctly signed or not.  When that happens,
+   we could get most of the benefits of global DNS caching back,
+   without most of the security issues, if we restrict it to
+   DNSSec-signed answers.
+
