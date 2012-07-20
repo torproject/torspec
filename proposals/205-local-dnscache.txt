@@ -39,7 +39,10 @@ Status: Open
    And even if the exit node is honest, having a cached DNS result can
    cause Tor clients to build their future circuits distinguishably:
    the exit on any subsequent circuit can tell whether the client knew
-   the IP for the address yet or not.
+   the IP for the address yet or not.  Further, if the site's DNS
+   provides different answers to clients from different parts of the
+   world, then the client's cached choice of IP will reveal where it
+   first learned about the website.
 
    So client-side DNS caching needs to go away.
 
@@ -55,8 +58,8 @@ Status: Open
    Microdescriptor-based clients have already dropped the ability to
    track which nodes declare which exit policies, without much ill
    effect.  As we go forward, I think that remembering the IP address
-   of each request so that we can match it to exit policies will even
-   less effective, especially if proposals to allow AS-based exit
+   of each request so that we can match it to exit policies will be
+   even less effective, especially if proposals to allow AS-based exit
    policies can succeed.
 
 2.3. What about exit enclaves?
@@ -64,8 +67,9 @@ Status: Open
    Exit enclaves are already borken.  They need to move towards a
    cross-certification solution where a node advertises that it can
    exit to a hostname or domain X.Y.Z, and a signed record at X.Y.Z
-   advertises that .  That's out-of-scope for this proposal, except to
-   note that nothing proposed here keeps that design from working.
+   advertises that the node is an enclave exit for X.Y.Z.  That's
+   out-of-scope for this proposal, except to note that nothing
+   proposed here keeps that design from working.
 
 2.4. What about address mapping?
 
@@ -80,7 +84,7 @@ Status: Open
 
    Where 'map' is the union of all mapping entries derived from the
    controller, the configuration file, trackhostexits maps,
-   virtual-address mps, DNS replies, and so on.
+   virtual-address maps, DNS replies, and so on.
 
    With this design, the DNS cache will not be part of the address
    map.  That means that entries in the address map which relied on
