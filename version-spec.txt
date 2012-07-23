@@ -21,17 +21,25 @@
 2. The New Way
 
  After 0.1.0, versions are of the format:
-    MAJOR.MINOR.MICRO(.PATCHLEVEL)(-status_tag)
+    MAJOR.MINOR.MICRO[.PATCHLEVEL][-STATUS_TAG][ (EXTRA_INFO)]
  The stuff in parentheses is optional.  As before, MAJOR, MINOR, MICRO,
  and PATCHLEVEL are numbers, with an absent number equivalent to 0.
  All versions should be distinguishable purely by those four
- numbers. The status tag is purely informational, and lets you know how
+ numbers.
+
+ The STATUS_TAG is purely informational, and lets you know how
  stable we think the release is: "alpha" is pretty unstable; "rc" is a
  release candidate; and no tag at all means that we have a final
  release. If the tag ends with "-cvs" or "-dev", you're looking at a
  development snapshot that came after a given release.  If we *do*
  encounter two versions that differ only by status tag, we compare them
- lexically as ASCII byte strings.
+ lexically as ASCII byte strings (ie, reverse-alphabetically so 'b' comes
+ before 'a'). The STATUS_TAG can't contain whitespace.
+
+ The EXTRA_INFO is also purely informational, often containing information
+ about the SCM commit this version came from. It is surrounded by parentheses
+ and can't contain whitespace. Unlike the STATUS_TAG this never impacts the way
+ that versions should be compared.
 
  Now, we start each development branch with (say) 0.1.1.1-alpha.  The
  patchlevel increments consistently as the status tag changes, for
