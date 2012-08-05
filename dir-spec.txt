@@ -891,7 +891,12 @@
         [Any number.]
 
         Signals that the router supports the 'transportname' pluggable
-        transport in IP address 'address' and TCP port 'port'.
+        transport in IP address 'address' and TCP port 'port'. A single
+        descriptor MUST not have more than one transport line with the
+        same 'transportname'.
+
+        Pluggable transports are only relevant to bridges, but these entries
+        can appear in non-bridge relays as well.
 
     "router-signature" NL Signature NL
         [At end, exactly once.]
