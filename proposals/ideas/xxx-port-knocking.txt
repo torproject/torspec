@@ -45,7 +45,7 @@ no longer possible to rebind to those lower ports after they are closed.
 Tor does not know about any OS level packet filtering. Currently there is no
 packet filters that understands the Tor network in real time.
 
-1.x Possible partioning of users by bridge operator
+1.x Possible partitioning of users by bridge operator
 
 Depending on implementation, it may be possible for bridge operators to
 uniquely identify users. This appears to be a general bridge issue when a

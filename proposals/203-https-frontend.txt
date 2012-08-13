@@ -39,7 +39,7 @@ Goals and requirements:
    HTTPS client talking to an HTTPS server.
 
    We should make it impossible for an active attacker talking to the
-   server to tell a Tor bridge server from regular HTTPS server.
+   server to tell a Tor bridge server from a regular HTTPS server.
 
    We should make it impossible for an active attacker who can MITM the
    server to learn from the client whether it thought it was connecting
@@ -205,7 +205,7 @@ Some considerations on distinguishability
    entirely.)
 
    Against an active non-MITM attacker, the best probing attacks will be
-   ones designed to provoke the system in acting in ways different from
+   ones designed to provoke the system into acting in ways different from
    those in which a webserver would act: responding earlier than a web
    server would respond, or later, or differently.  We need to make sure
    that, whatever the front-end program is, it answers anything that
