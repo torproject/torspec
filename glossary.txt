@@ -3,8 +3,8 @@
 
                                The Tor Project
 
-Note: This document aims to specify terms, notations or phrases related to Tor and The
-Tor Project.
+Note: This document aims to specify terms, notations or phrases related
+to Tor and The Tor Project.
 
 This glossary is not a design document; it is only a reference.
 
@@ -19,4 +19,23 @@ This glossary is not a design document; it is only a reference.
 
    ORPort  - Onion Router Port
    DirPort - Directory Port
+
+0.2 Tor network components
+
+   Relay, aka OR (onion router)  -
+     Exit relay
+     Non-exit relay
+     Guard relay
+   Client, aka OP (onion proxy)
+
+   Bridge  -
+   Circuit - 
+   Stream
+   Edge connection:
+
+   TLS connection:
+   
+   Link handshake
+   Circuit handshake
+
 
