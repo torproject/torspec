@@ -1092,11 +1092,11 @@
    (Note that with microdescriptors, clients do not learn the identity of
    their routers: they only learn a hash of the identity key.  This is all
    they need to confirm the actual identity key when doing a TLS handshake,
-   and all they need to put the identity key digest in their cREATE cells.)
+   and all they need to put the identity key digest in their CREATE cells.)
 
 3.3. Vote and consensus status documents
 
-   Votes and consensuses are more strictly formatted then other documents
+   Votes and consensuses are more strictly formatted than other documents
    in this specification, since different authorities must be able to
    generate exactly the same consensus given the same set of votes.
 
