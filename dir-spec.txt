@@ -1763,6 +1763,7 @@
      "10" -- Fixes edge case bugs in router flag selection weights
      "11" -- Don't consider BadExits when calculating bandwidth weights
      "12" -- Params are only included if enough auths voted for them
+     "13" -- Omit router entries with missing microdescriptors.
 
 
    Before generating a consensus, an authority must decide which consensus
