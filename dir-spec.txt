@@ -1097,11 +1097,11 @@
    (Note that with microdescriptors, clients do not learn the identity of
    their routers: they only learn a hash of the identity key.  This is all
    they need to confirm the actual identity key when doing a TLS handshake,
-   and all they need to put the identity key digest in their cREATE cells.)
+   and all they need to put the identity key digest in their CREATE cells.)
 
 3.3. Vote and consensus status documents
 
-   Votes and consensuses are more strictly formatted then other documents
+   Votes and consensuses are more strictly formatted than other documents
    in this specification, since different authorities must be able to
    generate exactly the same consensus given the same set of votes.
 
@@ -1733,6 +1733,9 @@
           parameters that more than half of the total number of
           authorities voted for are included in the consensus.
 
+        * If consensus method 13 or later is used, microdesc consensuses
+          omit any router for which no microdesc was agreed upon.
+
      The signatures at the end of a consensus document are sorted in
      ascending order by identity digest.
 
@@ -2038,7 +2041,7 @@
 
     "m" SP digest NL
 
-        [Exactly once.]
+        [Exactly once.*]
 
         "digest" is the base64 of the SHA256 hash of the router's
         microdescriptor with trailing =s omitted.  For a given router
@@ -2050,6 +2053,9 @@
         consensus should contain whichever microdescriptor digest is
         most common.  If there is no winner, we break ties in the favor
         of the lexically earliest.
+
+        [*Before consensus method 13, this field was sometimes erroneously
+        omitted.]
 
 3.7. Detached signatures
 
