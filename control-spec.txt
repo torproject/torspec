@@ -761,7 +761,7 @@
 3.11. SETCIRCUITPURPOSE
 
   Sent from the client to the server.  The format is:
-      "SETCIRCUITPURPOSE" SP CircuitID SP Purpose CRLF
+      "SETCIRCUITPURPOSE" SP CircuitID SP "purpose=" Purpose CRLF
 
   This changes the circuit's purpose. See EXTENDCIRCUIT above for details.
 
