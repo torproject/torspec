@@ -1076,7 +1076,7 @@
 
         The "onion-key" element as specified in 2.1.
 
-    "a" SP address ":" portlist NL
+     "a" SP address ":" portlist NL
 
         [Any number]
 
