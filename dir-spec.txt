@@ -1370,7 +1370,7 @@
         2.1.
 
         (Only included when the vote or consensus is generated with
-        consensus-method 13 or later.)
+        consensus-method 14 or later.)
 
     "s" SP Flags NL
 
