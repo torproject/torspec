@@ -22,25 +22,37 @@
 
 2.1 Output format
 
- When tor-fw-helper has completed the requested action successfully, it will
- report the following message to standard output:
+2.1.1. Motivation
 
-    tor-fw-helper: SUCCESS
+ tor-fw-helper should be able to signal to tor whether its actions
+ succeeded so that tor can act accordingly. For this reason it's
+ important to standarize the output format of tor-fw-helper.
 
- If tor-fw-helper was unable to complete the requested action successfully, it
- will report the following message to standard error:
+ tor-fw-helper outputs signalling commands to stdout, and debugging
+ messages to stderr. This means that a program that launches
+ tor-fw-helper only needs to monitor stdout to learn its status.
 
-    tor-fw-helper: FAILURE
+2.1.2. TCP forwarding output
 
- All informational messages are printed to standard output; all error messages
- are printed to standard error. Messages other than SUCCESS and FAILURE
- may be printed by any compliant tor-fw-helper.
+ When tor-fw-helper completes a TCP forwarding action, it prints the
+ following message to standard output:
 
-2.2 Output format stability
+    tor-fw-helper tcp-forwarding <external port> <internal port> <status> [<message>]
 
- The above SUCCESS and FAILURE messages are the only stable output formats
- provided by this specification. tor-fw-helper-spec compliant implementations
- must return SUCCESS or FAILURE as defined above.
+ where,
+
+ <external port>, is the TCP port in the external side of the NAT
+                  device that was forwarded.
+ <internal port>, is the TCP port in the internal side of the NAT
+                  device that accepts forwarded traffic.
+ <status>, is either "SUCCESS" or "FAIL".
+ <message>, is an optional supplementary message that can include
+            multiple words.
+
+ For example, upon successfully using NAT-PMP to forward connections from
+ port '4200' to port '4333', tor-fw-helper would output in stdout:
+
+    tor-fw-helper tcp-forwarding 4200 4333 SUCCESS NAT-PMP succeded
 
 3. Security Concerns
 
