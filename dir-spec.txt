@@ -1145,8 +1145,9 @@
         [At most once for votes; does not occur in consensuses.]
 
         A space-separated list of supported methods for generating
-        consensuses from votes.  See section 3.5.1 for details.  Method "1"
-        MUST be included.
+        consensuses from votes.  See section 3.5.1 for details.  If this
+        line is present, method "1" MUST be included.  Absence of the
+        line means that only method "1" is supported.
 
     "consensus-method" SP Integer NL
 
