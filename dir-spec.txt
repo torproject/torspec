@@ -1273,6 +1273,10 @@
         proxies. See trac entry 1751 for details.
         Min: 0, Max: 1
 
+        "bwweightscale" -- Value that bandwidth-weights are divided by. If not
+        present then this defaults to 10000.
+        Min: 1
+
         "cbtdisabled", "cbtnummodes", "cbtrecentcount", "cbtmaxtimeouts",
         "cbtmincircs", "cbtquantile", "cbtclosequantile", "cbttestfreq",
         "cbtmintimeout", and "cbtinitialtimeout" -- see "2.4.5. Consensus
@@ -1480,9 +1484,8 @@
        "Wmb=" INT SP "Wmd=" INT SP "Wme=" INT SP "Wmg=" INT SP "Wmm=" INT NL
 
        These values represent the weights to apply to router bandwidths
-       during path selection. They are sorted in lexical order (as ASCII byte
-       strings). The integer values are divided by BW_WEIGHT_SCALE=10000 or
-       the consensus param "bwweightscale". They are:
+       during path selection. Values are divided by the consensus'
+       "bwweightscale" param. Definition of our entries are...
 
          Wgg - Weight for Guard-flagged nodes in the guard position
          Wgm - Weight for non-flagged nodes in the guard Position
