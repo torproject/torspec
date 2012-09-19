@@ -1327,7 +1327,7 @@
         enough votes were counted for the consensus for an authoritative
         opinion to have been formed about their status.
 
-    "params" SP [Parameters] NL
+    "params" [SP Parameters] NL
 
         [At most once]
 
@@ -1594,16 +1594,16 @@
    The bandwidths-weights line appears At Most Once for a consensus. It does
    not appear in votes.
 
-    "bandwidth-weights" SP
-       "Wbd=" INT SP "Wbe=" INT SP "Wbg=" INT SP "Wbm=" INT SP
-       "Wdb=" INT SP
-       "Web=" INT SP "Wed=" INT SP "Wee=" INT SP "Weg=" INT SP "Wem=" INT SP
-       "Wgb=" INT SP "Wgd=" INT SP "Wgg=" INT SP "Wgm=" INT SP
-       "Wmb=" INT SP "Wmd=" INT SP "Wme=" INT SP "Wmg=" INT SP "Wmm=" INT NL
+    "bandwidth-weights" [SP Weights] NL
 
-       These values represent the weights to apply to router bandwidths
-       during path selection. Values are divided by the consensus'
-       "bwweightscale" param. Definition of our entries are...
+       Weight ::= Keyword '=' Int32
+       Int32 ::= A decimal integer between -2147483648 and 2147483647.
+       Weights ::= Weight | Weights SP Weight
+
+       List of optional weights to apply to router bandwidths during path
+       selection. They are sorted in lexical order (as ASCII byte strings) and
+       values are divided by the consensus' "bwweightscale" param. Definition
+       of our known entries are...
 
          Wgg - Weight for Guard-flagged nodes in the guard position
          Wgm - Weight for non-flagged nodes in the guard Position
