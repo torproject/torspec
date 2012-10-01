@@ -121,7 +121,7 @@
     AsyncReply = *(MidReplyLine / DataReplyLine) EndReplyLine
 
     MidReplyLine = StatusCode "-" ReplyLine
-    DataReplyLine = StatusCode "+" ReplyLine Data
+    DataReplyLine = StatusCode "+" ReplyLine CmdData
     EndReplyLine = StatusCode SP ReplyLine
     ReplyLine = [ReplyText] CRLF
     ReplyText = XXXX
