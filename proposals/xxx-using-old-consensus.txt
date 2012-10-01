@@ -1,0 +1,89 @@
+Title: Allow use of old consensus material
+Author: Mike Perry
+Created: 01-10-2012
+Status: Open
+Target: 0.2.4.x+
+
+Overview
+
+  This proposal aims to extend the duration that clients will accept
+  old consensus material under conditions where the directory authorities
+  are either down or fail to produce a valid consensus for an extended period
+  of time.
+
+Motivation
+
+  Currently, if the directory authorities are down or fail to consense for 
+  24 hours, the entire Tor network will cease to function. Worse, clients
+  will enter into a state where they all need to re-bootstrap directly
+  from the directory authorities, which will likely exacerbate any
+  potential DoS condition that may have triggered the downtime in the first
+  place.
+
+  The Tor network has had such close calls before. In the past, we've been
+  able to mobilize a majority of the directory authority operators within this
+  24 hour window, but that is only because we've been exceedingly lucky and
+  the DoS conditions were accidental rather than deliberate.
+
+  If a DoS attack was deliberately timed to coincide with a major US and
+  European combined holiday such as Christmas Eve, New Years Eve, or Easter,
+  it is very unlikely we would be able to muster the resources to diagnose
+  and deploy a fix to the authorities in time to prevent network collapse.
+
+Description
+
+  Based on the need to survive multi-day holidays and long weekends balanced
+  with the need to ensure clients can't be captured on an old consensus
+  forever, I propose that the consensus liveness constants be set at 5 days
+  rather than 24 hours.
+
+  This requires updating two consensus defines in the source, and one
+  descriptor freshness variable. The descriptor freshness should be
+  set to a function of the consensus freshness.
+
+  See Implementation Nodes for further details.
+
+Security Concerns
+
+  Clients should not trust old consensus data without an attempt to download
+  fresher data from a directory mirror.
+
+  As far as I could tell, the code already does this. The minimum consensus 
+  age before we try to download new data is two hours.
+
+Implementation Notes
+
+  There appear to be at least three constants in the code involved with
+  using potentially expired consensus data. Two of them (REASONABLY_LIVE_TIME
+  and NS_EXPIRY_SLOP) involve the consensus itself, and two
+  (OLD_ROUTER_DESC_MAX_AGE and TOLERATE_MICRODESC_AGE) deal with descriptor
+  liveness.
+
+  Two additional constants ROUTER_MAX_AGE and ROUTER_MAX_AGE_TO_PUBLISH
+  are only used when submitting descriptors for consensus voting.
+
+  FORCE_REGENERATE_DESCRIPTOR_INTERVAL is the maximum age a router descriptor
+  will get before a relay will re-publish. It is set to 18 hours.
+
+  OLD_ROUTER_DESC_MAX_AGE is set at 5 days. TOLERATE_MICRODESC_AGE
+  is set at 7 days.
+
+  The consensus timestamps are used in
+  networkstatus_get_reasonably_live_consensus() and 
+  networkstatus_set_current_consensus().
+
+  OLD_ROUTER_DESC_MAX_AGE is checked in routerlist_remove_old_routers(), 
+  router_add_to_routerlist(), and client_would_use_router().
+
+  It is my opinion that we should combine REASONABLY_LIVE_TIME and 
+  NS_EXPIRY_SLOP into a single define, and make OLD_ROUTER_DESC_MAX_AGE
+  a function of REASONABLY_LIVE_TIME and FORCE_REGENERATE_DESCRIPTOR_INTERVAL:
+
+  #define REASONABLY_LIVE_TIME           (5*24*60*60)
+  #define NS_EXPIRY_SLOP                 REASONABLY_LIVE_TIME
+  #define OLD_ROUTER_DESC_MAX_AGE        \
+          (REASONABLY_LIVE_TIME+FORCE_REGENERATE_DESCRIPTOR_INTERVAL)
+
+  Based on my review of the above code paths, these changes should be all
+  we need to enable clients to use older consensuses for longer while
+  still attempting to fetch new ones.
