@@ -1,0 +1,78 @@
+Title: Faster Headless Consensus Bootstrapping
+Author: Mike Perry
+Created: 01-10-2012
+Status: Open
+Target: 0.2.4.x+
+
+
+Overview
+
+ This proposal describes a way for clients to fetch the initial consensus 
+ more quickly in situations where some or all of the directory authorities
+ are unreachable. It is meant to describe a solution for Bug #4483.
+
+Description
+
+ The core idea is to attempt to establish bootstrap connections in
+ parallel during the bootstrap process, and download the consensus from the
+ first connection that completes.
+
+ Connection attempts will be done in batches of five. Only one connection
+ will be performed to one of the canonical directory authorities. Four
+ connections will be performed to randomly chosen hard coded directory
+ mirrors.
+
+ If no connections complete within 5 seconds, another batch of five
+ connections will be launched. Otherwise, the first connection to complete
+ will be used to download the consensus document, after which
+ bootstrapping will proceed as normal.
+
+ If at any time, the total open bootstrap connection attempts exceeds
+ 25, no new connection attempts are to be launched until existing
+ connection attempts experience full timeout.
+
+Fallback Dir Mirror Selection
+
+ The set of hard coded directory mirrors from #572 shall be chosen using
+ the 50 Guard nodes with the longest uptime.
+
+ The fallback weights will be set using each mirror's fraction of
+ consensus bandwidth out of the total of all 50 mirrors.
+
+ This list of fallback dir mirrors should be updated with every
+ major Tor release.
+
+Implementation Notes
+
+ The implementation of the bootstrap process is unfortunately mixed 
+ in with many types of directory activity.
+
+ The process starts in update_consensus_networkstatus_downloads(),
+ which initiates a single directory connection through
+ directory_get_from_dirserver(). Depending on bootstrap state,
+ a single directory server is selected and a connection is
+ eventually made through directory_initiate_command_rend().
+
+ There appear to be a few options for altering this code to perform
+ multiple connections. Without refactoring, one approach would be
+ to make multiple calls to directory_initiate_command_routerstatus()
+ from directory_get_from_dirserver() if the purpose is
+ DIR_PURPOSE_FETCH_CONSENSUS and the only directory servers available
+ are the authorities and the fallback dir mirrors.
+
+ The code in directory_initiate_command_rend() would then
+ need to be altered to maintain a list of the dircons created for this
+ purpose as well as avoid immediately queuing the directory_send_command()
+ request for the DIR_PURPOSE_FETCH_CONSENSUS purpose. A flag would need to
+ be set on the dircon to be checked in connection_dir_finished_connecting().
+
+ The function connection_dir_finished_connecting() would need to be altered to
+ examine the list of pending dircons, determine if this one is the first to
+ complete, and if so, then call directory_send_command() to download the
+ consensus and close the other pending dircons.
+
+ An additional timer would need to be installed to re-call
+ update_consensus_networkstatus_downloads() or a related helper after 5
+ seconds. connection_dir_finished_connecting() would cancel this timer.
+ The helper would check the list of pending connections and ensure it
+ never exceeds 25.
