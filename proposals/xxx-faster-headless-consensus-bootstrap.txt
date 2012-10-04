@@ -5,13 +5,14 @@ Status: Open
 Target: 0.2.4.x+
 
 
-Overview
+Overview and Motiviation
 
  This proposal describes a way for clients to fetch the initial consensus 
  more quickly in situations where some or all of the directory authorities
- are unreachable. It is meant to describe a solution for Bug #4483.
+ are unreachable. This proposal is meant to describe a solution for bug
+ #4483.
 
-Description
+Design: Bootstrap Process Changes
 
  The core idea is to attempt to establish bootstrap connections in
  parallel during the bootstrap process, and download the consensus from the
@@ -31,7 +32,7 @@ Description
  exceeds 15, no new connection attempts are to be launched until existing
  connection attempts experience full timeout.
 
-Fallback Dir Mirror Selection
+Design: Fallback Dir Mirror Selection
 
  The set of hard coded directory mirrors from #572 shall be chosen using
  the 100 Guard nodes with the longest uptime.
@@ -44,7 +45,7 @@ Fallback Dir Mirror Selection
  should be set at 20% of the current Guard nodes, rather than fixed at
  100.
 
-Additional Load with Current Parameter Choices
+Performance: Additional Load with Current Parameter Choices
 
  This design and the connection count parameters were chosen such that no
  additional bandwidth load would be placed on the directory authorities. In
@@ -60,7 +61,7 @@ Additional Load with Current Parameter Choices
 
  The dangerous case is in the event of a prolonged consensus failure
  that induces all clients to enter into the bootstrap process. In this case,
- the number of TLS connections to the fallback dir mirrors would be between
+ the number of initial TLS connections to the fallback dir mirrors would be
  2*C/100, or 10,000 for C=500,000 users. If no connections complete before
  the five retries, this could reach as high as 50,000 connection attempts,
  but this is extremely unlikely to happen in full aggregate.
