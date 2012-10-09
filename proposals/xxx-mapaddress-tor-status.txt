@@ -85,6 +85,10 @@ Design: Request Servicing
 
  In particular: 
 
+ Any requests that contain the Origin: header MUST be ignored,
+ as the Origin: header is only included for third party web content
+ (CORS).
+
  dns-nonce fields MUST be omitted if the HTTP Host: header does not
  match the IP address 127.84.111.114.
 
