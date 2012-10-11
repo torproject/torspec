@@ -7,10 +7,11 @@ Target: 0.2.4.x+
 
 Overview
 
- This proposal describes how we can use the results of network scans to
- set reasonable limits for the Path Bias defense, which causes clients to
- be informed about and ideally rotate away from Guards that provide
- extremely low circuit success rates.
+ This proposal describes how we can use the results of simulations in
+ combination with network scans to set reasonable limits for the Path
+ Bias defense, which causes clients to be informed about and ideally
+ rotate away from Guards that provide extremely low circuit success
+ rates.
 
 Motivation
 
@@ -114,34 +115,36 @@ Future Analysis: Deployed Clients
 
 Security Considerations
 
- Circuit failure can occur for many reasons. The most common of which is
- CPU resource exhaustion at high speed relays.
+ While the scaling window does provide freshness and can help mitigate
+ "bait-and-switch" attacks, it also creates the possibility of conditions
+ where clients can be forced off their Guards due to temporary
+ network-wide CPU DoS. This provides another reason beyond false positive
+ concerns to set the scaling window as large as is reasonable.
 
- While the scaling window does provide freshness, it also creates the
- possibility of conditions where clients can be forced off their Guards
- due to temporary network-wide or Guard-specific CPU DoS. This provides
- another reason beyond false positive concerns to set the window as
- large is reasonable.
+ A DoS directed at specific Guard nodes is unlikely to allow an
+ adversary to cause clients to rotate away from that Guard, because it
+ is unlikely that the DoS can be precise enough to allow first hops to
+ that Guard to succeed, but also cause extends to fail. This leaves
+ network-wide DoS as the primary vector for influencing clients.
 
- In my mind, the value to aim for here is a number of circuits large
- enough to put this attack vector on par with the timescales used by
- the bandwidth authorities to redirect client activity away from
- loaded (ie DoSed) nodes.
-
- Simulation results show that a Guard node that previously
- succeeded 80% of its circuits would need to be DoSed down to
- 5% success rate for around 230 circuit attempts before the client
- would reject it, using a scaling window of 300 circuits.
+ Simulation results show that in order to cause clients to rotate away
+ from a Guard node that previously succeeded 80% of its circuits, an
+ adversary would need to induce a 25% success rate for around 350 circuit
+ attempts before the client would reject it or a 5% success rate
+ for around 215 attempts, using a scaling window of 300 circuits.
 
  Assuming one circuit per Guard per 10 minutes of normal client
- activity, this is a sustained DoS attack of around 38 hours,
- which is on the order of the bandwidth authority measurement 
- interval (nodes are measured every 1-2 days).
+ activity, this is a sustained network-wide DoS attack of 60 hours
+ for the 25% case, or 38 hours for the 5% case.
 
- The converse of this, though, is that larger values allow
- Guard nodes to compromise clients for duty cycles of around the
- size of this window (up to the (c/n)^2 * 100/CUTOFF_PERCENT
- limit in aggregate), so we do have to consider that trade off.
+ Presumably this is enough time for the directory authorites to respond
+ by altering the pb_disablepct consensus parameter before clients
+ rotate.
+
+ The converse of this, though, is that larger values allow Guard nodes
+ to compromise clients for duty cycles of around the size of this window
+ (up to the (c/n)^2 * 100/CUTOFF_PERCENT limit in aggregate), so we do
+ have to consider that trade off.
 
 Implementation Notes: Log Messages
 
