@@ -1,0 +1,200 @@
+Title: Tuning the Parameters for the Path Bias Defense
+Author: Mike Perry
+Created: 01-10-2012
+Status: Open
+Target: 0.2.4.x+
+
+
+Overview
+
+ This proposal describes how we can use the results of simulations in
+ combination with network scans to set reasonable limits for the Path
+ Bias defense, which causes clients to be informed about and ideally
+ rotate away from Guards that provide extremely low circuit success
+ rates.
+
+Motivation
+
+ The Path Bias defense is designed to defend against a type of route capture
+ where malicious Guard nodes deliberately fail circuits that extend to
+ non-colluding Exit nodes to maximize their network utilization in favor of
+ carrying only compromised traffic.
+
+ This attack was explored in the academic literature in [1], and a
+ variant involving cryptographic tagging was posted to tor-dev[2] in
+ March.
+
+ In the extreme, the attack allows an adversary that carries c/n
+ of the network capacity to deanonymize c/n of the network
+ connections, breaking the O((c/n)^2) property of Tor's original
+ threat model.
+
+Design Description
+
+ The Path Bias defense is a client-side accounting mechanism in Tor that
+ tracks the circuit failure rate for each of the client's guards.
+
+ Clients maintain two integers for each of their guards: a count of the
+ number of times a circuit was extended at least one hop through that
+ guard, and a count of the number of circuits that successfully complete
+ through that guard. The ratio of these two numbers is used to determine
+ a circuit success rate for that Guard.
+
+ The system should issue a notice log message when Guard success rate
+ falls below 70%, a warn when Guard success rate falls below 50%, and
+ should drop the Guard when the success rate falls below 30%.
+
+ To ensure correctness, checks are performed to ensure that
+ we do not count successes without also counting the first hop.
+
+ Similarly, to provide a moving average of recent Guard activity while
+ still preserving the ability to ensure correctness, we "scale" the
+ success counts by an integer divisor (currently 2) when the counts
+ exceed the moving average window (300) and when the division
+ does not produce integer truncation.
+
+ No log messages should be displayed, nor should any Guard be
+ dropped until it has completed at least 150 first hops (inclusive).
+
+Analysis: Simulation
+
+ To test the defense in the face of various types of malicious and
+ non-malicious Guard behavior, I wrote a simulation program in
+ Python[3].
+
+ The simulation confirmed that without any defense, an adversary
+ that provides c/n of the network capacity is able to observe c/n
+ of the network flows using circuit failure attacks.
+
+ It also showed that with the defense, an adversary that wishes to
+ evade detection has compromise rates bounded by:
+
+   P(compromise) <= (c/n)^2 * (100/CUTOFF_PERCENT)
+   circs_per_client <= circuit_attempts*(c/n)
+
+ In this way, the defense restores the O((c/n)^2) compromise property,
+ but unfortunately only over long periods of time (see Security
+ Considerations below).
+
+ The spread between the cutoff values and the normal rate of circuit
+ success has a substantial effect on false positives. From the
+ simulation's results, the sweet spot for the size of this spread appears
+ to be 10%. In other words, we want to set the cutoffs such that they are
+ 10% below the success rate we expect to see in normal usage.
+
+ The simulation also demonstrates that larger "scaling window" sizes
+ reduce false positives for instances where non-malicious guards
+ experience some ambient rate of circuit failure.
+
+Analysis: Live Scan
+
+ Preliminary Guard node scanning using the txtorcon circuit scanner[4]
+ shows normal circuit completion rates between 80-90% for most Guard
+ nodes.
+ 
+ However, it also showed that CPU overload conditions can easily push
+ success rates as low as 45%. Even more concerning is that for a brief
+ period during the live scan, success rates dropped to 50-60%
+ network-wide (regardless of Guard node choice).
+
+ Based on these results, the notice condition should be 70%, the warn 
+ condition should be 50%, and the drop condition should be 30%.
+
+Future Analysis: Deployed Clients
+
+ It's my belief that further analysis should be done by deploying 
+ loglines for all three thresholds in clients in the live network
+ to utilize user reports on how often high rates of circuit failure
+ are seen before we deploy changes to rotate away from failing Guards.
+
+ I believe these log lines should be deployed in 0.2.3.x clients,
+ to maximize the exposure of the code to varying network conditions,
+ so that we have enough data to consider deploying the Guard-dropping
+ cutoff in 0.2.4.x.
+
+Security Considerations
+
+ While the scaling window does provide freshness and can help mitigate
+ "bait-and-switch" attacks, it also creates the possibility of conditions
+ where clients can be forced off their Guards due to temporary
+ network-wide CPU DoS. This provides another reason beyond false positive
+ concerns to set the scaling window as large as is reasonable.
+
+ A DoS directed at specific Guard nodes is unlikely to allow an
+ adversary to cause clients to rotate away from that Guard, because it
+ is unlikely that the DoS can be precise enough to allow first hops to
+ that Guard to succeed, but also cause extends to fail. This leaves
+ network-wide DoS as the primary vector for influencing clients.
+
+ Simulation results show that in order to cause clients to rotate away
+ from a Guard node that previously succeeded 80% of its circuits, an
+ adversary would need to induce a 25% success rate for around 350 circuit
+ attempts before the client would reject it or a 5% success rate
+ for around 215 attempts, both using a scaling window of 300 circuits.
+ 
+ Assuming one circuit per Guard per 10 minutes of active client
+ activity, this is a sustained network-wide DoS attack of 60 hours
+ for the 25% case, or 38 hours for the 5% case.
+
+ Presumably this is enough time for the directory authorities to respond by
+ altering the pb_disablepct consensus parameter before clients rotate,
+ especially given that most clients are not active for even 38 hours on end,
+ and will tend to stop building circuits while idle.
+
+ If we raised the scaling window to 500 circuits, it would require 1050
+ circuits if the DoS brought circuit success down to 25% (175 hours), and
+ 415 circuits if the DoS brought the circuit success down to 5% (69 hours).
+
+ The tradeoff, though, is that larger scaling window values allow Guard nodes
+ to compromise clients for duty cycles of around the size of this window (up to
+ the (c/n)^2 * 100/CUTOFF_PERCENT limit in aggregate), so we do have to find
+ balance between these concerns.
+
+Implementation Notes: Log Messages
+
+ Log messages need to be chosen with care to avoid alarming users.
+ I suggest:
+
+ Notice: "Your Guard %s is failing more circuits than usual. Most likely
+ this means the Tor network is overloaded. Success counts are %d/%d."
+
+ Warn: "Your Guard %s is failing a very large amount of circuits. Most likely
+ this means the Tor network is overloaded, but it could also mean an attack
+ against you or potentially the Guard itself. Success counts are %d/%d."
+
+ Drop: "Your Guard %s is failing an extremely large amount of circuits. [Tor
+ has disabled use of this Guard.] Success counts are %d/%d."
+
+ The second piece of the Drop message would not be present in 0.2.3.x,
+ since the Guard won't actually be dropped.
+
+Implementation Notes: Consensus Parameters
+
+ The following consensus parameters reflect the constants listed
+ in the proposal. These parameters should also be available 
+ for override in torrc.
+
+ pb_mincircs=150
+   The minimum number of first hops before we log or drop Guards.
+
+ pb_noticepct=70
+   The threshold of circuit success below which we display a notice.
+
+ pb_warnpct=50
+   The threshold of circuit success below which we display a warn.
+
+ pb_disablepct=30
+   The threshold of circuit success below which we disable the guard.
+
+ pb_scalecircs=300
+   The number of first hops at which we scale the counts down.
+
+ pb_scalefactor=2
+   The integer divisor by which we scale.
+
+
+
+1. http://freehaven.net/anonbib/cache/ccs07-doa.pdf
+2. https://lists.torproject.org/pipermail/tor-dev/2012-March/003347.html
+3. https://gitweb.torproject.org/torflow.git/tree/HEAD:/CircuitAnalysis/PathBias
+4. https://github.com/meejah/txtorcon/blob/exit_scanner/apps/exit_scanner/failure-rate-scanner.py
