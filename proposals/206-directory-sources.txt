@@ -9,8 +9,8 @@ Target: 0.2.4.x
 Motivation and History:
 
    We've long wanted a way for clients to do their initial
-   bootstrapping, not from the directory authorities, but from some
-   other set of nodes expected to probably be up as the client is
+   bootstrapping not from the directory authorities, but from some
+   other set of nodes expected to probably be up when future clients are
    starting.
 
    We tried to solve this a while ago by adding a feature where we could
@@ -23,7 +23,7 @@ Motivation and History:
 
    Then for a while we considered an "Extra-Stable" flag so that clients
    could use only nodes with a long history of existence from these
-   fallback networkstatus files.  We never built it, though.x
+   fallback networkstatus files.  We never built it, though.
 
    Instead, we can do this so much more simply.  If we want to ship Tor
    with a list of initial locations to go for directory information, why
@@ -33,21 +33,24 @@ Proposal:
 
    In the same way that Tor currently ships with a list of directory
    authorities, Tor should also ship with a list of directory sources --
-   places to go for an initial consensus if you don't have a remotely
+   places to go for an initial consensus if you don't have a somewhat
    recent one.
 
    These need to include an address for the cache's ORPort, and its
    identity key.  Additionally, they should include a selection weight.
 
-   Whenever Tor is starting without a consensus, and it would currently
+   They can be configured with a torrc option, just like directory
+   authorities are now.
+
+   Whenever Tor is starting without a consensus, if it would currently
    ask a directory authority for a consensus, it should instead ask one
    of these preconfigured directory sources.
 
    I have code for this (see git branch fallback_dirsource_v2) in my
    public repository.
 
-   When we deploy this, we can (and should) rip out the Fallback-
-   NetworkstatusFile logic.
+   When we deploy this, we can (and should) rip out the Fallback
+   Networkstatus File logic.
 
 
 How to find nodes to make into directory sources:
@@ -56,8 +59,8 @@ How to find nodes to make into directory sources:
    directory sources.
 
    First, we could try to vet them a little, with a light variant of the
-   authority stuff.  We'd want to look for nodes where we knew the
-   operators, verify that they were okay with keeping the same IP for a
+   process we use for authorities.  We'd want to look for nodes where we knew
+   the operators, verify that they were okay with keeping the same IP for a
    very long time, and so forth.
 
    Second, we could try to pick nodes for listing with each Tor release
@@ -74,11 +77,12 @@ How to find nodes to make into directory sources:
 
 Some notes on security:
 
-   Directory source nodes have an opportunity to learn about more users
+   Directory source nodes have an opportunity to learn about new users
    connecting to the network for the first time.  Once we have directory
    guards, that's going to be a fairly uncommon ability.  We should be
    careful in any directory guard design to make sure that we don't fall
-   back to the directory sources any more than we need to.
+   back to the directory sources any more than we need to.  See proposal 207.
+
 
 
 

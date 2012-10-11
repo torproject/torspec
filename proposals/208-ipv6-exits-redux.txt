@@ -8,7 +8,7 @@ Target: 0.2.4.x
 
 1. Obligatory Motivation Section
 
-   Insert motivations for IPv6 here.  Mention IPv4 address exhaustion.
+   [Insert motivations for IPv6 here.  Mention IPv4 address exhaustion.
 
    Insert official timeline for official IPv6 adoption here.
 
@@ -17,11 +17,11 @@ Target: 0.2.4.x
 
    Insert profession of firm conviction that eventually there will be
    something somebody wants to connect to which requires the ability to
-   connect to an IPv6 address.
+   connect to an IPv6 address.]
 
 2. Proposal
 
-   Proposal 117 has been there since coderman wrote it 2007, and it's
+   Proposal 117 has been there since coderman wrote it in 2007, and it's
    still mostly right.  Rather than replicate it in full, I'll describe
    this proposal as a patch to it.
 
@@ -31,7 +31,7 @@ Target: 0.2.4.x
    been moving with IPv4 addresses) to summaries of which IPv6 ports
    are generally permitted.  So let's allow server descriptors to include
    a list of accepted IPv6 ports, using the same format as the "p" line
-   in microdecsriptors, using the "ipv6-policy" keyword.
+   in microdescriptors, using the "ipv6-policy" keyword.
 
         "ipv6-policy" SP ("accept" / "reject") SP PortList NL
 
@@ -43,7 +43,7 @@ Target: 0.2.4.x
    "p6" line in microdescriptors.
 
 
-   This change breaks the existing exit enclave idea for IPv6; but the
+   This change breaks the existing exit enclave idea for IPv6, but the
    exiting exit enclave implementation never worked right in the first
    place.  If we can come up with a good way to support it, we can add
    that back in.
@@ -118,7 +118,7 @@ Target: 0.2.4.x
 
 
 
-   IPv6 addresses are plentiful, which makes cacheing them dangerous
+   IPv6 addresses are plentiful, which makes caching them dangerous
    if you're hoping to avoid tracking over time.  (With IPv4 addresses,
    it's harder to give every user a different IPv4 address for a target
    hostname with a long TTL, and then accept connections to those IPv4
