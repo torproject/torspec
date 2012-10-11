@@ -15,11 +15,10 @@ Overview
 
 Motivation
 
- The Path Bias defense is designed to defend against a type of route
- capture where malicious Guard nodes deliberately fail circuits that
- are determined to extend to non-colluding Exit nodes to maximize
- their network utilization in favor of carrying only compromised
- traffic.
+ The Path Bias defense is designed to defend against a type of route capture
+ where malicious Guard nodes deliberately fail circuits that extend to
+ non-colluding Exit nodes to maximize their network utilization in favor of
+ carrying only compromised traffic.
 
  This attack was explored in the academic literature in [1], and a
  variant involving cryptographic tagging was posted to tor-dev[2] in
@@ -55,7 +54,7 @@ Design Description
  does not produce integer truncation.
 
  No log messages should be displayed, nor should any Guard be
- dropped until it has completed more than 150 first hops.
+ dropped until it has completed at least 150 first hops (inclusive).
 
 Analysis: Simulation
 
@@ -105,7 +104,7 @@ Future Analysis: Deployed Clients
 
  It's my belief that further analysis should be done by deploying 
  loglines for all three thresholds in clients in the live network
- and utilize user reports on how often high rates of circuit failure
+ to utilize user reports on how often high rates of circuit failure
  are seen before we deploy changes to rotate away from failing Guards.
 
  I believe these log lines should be deployed in 0.2.3.x clients,
@@ -131,38 +130,40 @@ Security Considerations
  from a Guard node that previously succeeded 80% of its circuits, an
  adversary would need to induce a 25% success rate for around 350 circuit
  attempts before the client would reject it or a 5% success rate
- for around 215 attempts, using a scaling window of 300 circuits.
-
- Assuming one circuit per Guard per 10 minutes of normal client
+ for around 215 attempts, both using a scaling window of 300 circuits.
+ 
+ Assuming one circuit per Guard per 10 minutes of active client
  activity, this is a sustained network-wide DoS attack of 60 hours
  for the 25% case, or 38 hours for the 5% case.
 
- Presumably this is enough time for the directory authorites to respond
- by altering the pb_disablepct consensus parameter before clients
- rotate.
+ Presumably this is enough time for the directory authorities to respond by
+ altering the pb_disablepct consensus parameter before clients rotate,
+ especially given that most clients are not active for even 38 hours on end,
+ and will tend to stop building circuits while idle.
 
- The converse of this, though, is that larger values allow Guard nodes
- to compromise clients for duty cycles of around the size of this window
- (up to the (c/n)^2 * 100/CUTOFF_PERCENT limit in aggregate), so we do
- have to consider that trade off.
+ If we raised the scaling window to 500 circuits, it would require 1050
+ circuits if the DoS brought circuit success down to 25% (175 hours), and
+ 415 circuits if the DoS brought the circuit success down to 5% (69 hours).
+
+ The tradeoff, though, is that larger scaling window values allow Guard nodes
+ to compromise clients for duty cycles of around the size of this window (up to
+ the (c/n)^2 * 100/CUTOFF_PERCENT limit in aggregate), so we do have to find
+ balance between these concerns.
 
 Implementation Notes: Log Messages
 
  Log messages need to be chosen with care to avoid alarming users.
  I suggest:
 
- Notice: "It appears that your Guard %s is failing a larger number of
- circuits than usual. This could mean that the Guard is overloaded, or
- the Tor network is overloaded. Success counts are %d/%d."
+ Notice: "Your Guard %s is failing more circuits than usual. Most likely
+ this means the Tor network is overloaded. Success counts are %d/%d."
 
- Warn: "It appears that your Guard %s is failing a very large number of
- circuits. Most likely, this could mean that the Guard is overloaded,
- or the Tor network is overloaded, but it could also mean an attack
- against you or the Guard. Success counts are %d/%d."
+ Warn: "Your Guard %s is failing a very large amount of circuits. Most likely
+ this means the Tor network is overloaded, but it could also mean an attack
+ against you or potentially the Guard itself. Success counts are %d/%d."
 
- Drop: "It appears that your Guard %s is failing an extremely large
- number of circuits. [Tor has disabled use of this Guard.] Success
- counts are %d/%d."
+ Drop: "Your Guard %s is failing an extremely large amount of circuits. [Tor
+ has disabled use of this Guard.] Success counts are %d/%d."
 
  The second piece of the Drop message would not be present in 0.2.3.x,
  since the Guard won't actually be dropped.
@@ -177,13 +178,13 @@ Implementation Notes: Consensus Parameters
    The minimum number of first hops before we log or drop Guards.
 
  pb_noticepct=70
-   The threshhold of circuit success below which we display a notice.
+   The threshold of circuit success below which we display a notice.
 
  pb_warnpct=50
-   The threshhold of circuit success below which we display a warn.
+   The threshold of circuit success below which we display a warn.
 
  pb_disablepct=30
-   The threshhold of circuit success below which we disable the guard.
+   The threshold of circuit success below which we disable the guard.
 
  pb_scalecircs=300
    The number of first hops at which we scale the counts down.
