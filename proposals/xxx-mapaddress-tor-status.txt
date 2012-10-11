@@ -37,6 +37,11 @@ Design Overview
  it is removed from the list of valid nonces. Nonces are only valid
  for 60 seconds or until SIGNAL NEWNYM, which ever comes first.
 
+ The list of pending nonces should not be allowed to grow beyond 10
+ entries. 
+
+ The timeout period and nonce limit should be configurable in torrc.
+
 Design: XML document format for http://127.84.111.114
 
  To avoid the need to localize the message in Tor, Tor will only provide
