@@ -1,0 +1,85 @@
+Filename: 206-directory-sources.txt
+Title: Preconfigured directory sources for bootstrapping
+Author: Nick Mathewson
+Created: 10-Oct-2012
+Status: Open
+Target: 0.2.4.x
+
+
+Motivation and History:
+
+   We've long wanted a way for clients to do their initial
+   bootstrapping, not from the directory authorities, but from some
+   other set of nodes expected to probably be up as the client is
+   starting.
+
+   We tried to solve this a while ago by adding a feature where we could
+   ship a 'fallback' networkstatus file -- one that would get parsed
+   when we had no current networkstatus file, and which we would use to
+   learn about possible directory sources.  But we couldn't actually use
+   it, since it turns out that a randomly chosen list of directory
+   caches from 4-5 months ago is a terrible place to go when
+   bootstrapping.
+
+   Then for a while we considered an "Extra-Stable" flag so that clients
+   could use only nodes with a long history of existence from these
+   fallback networkstatus files.  We never built it, though.x
+
+   Instead, we can do this so much more simply.  If we want to ship Tor
+   with a list of initial locations to go for directory information, why
+   not just do so?
+
+Proposal:
+
+   In the same way that Tor currently ships with a list of directory
+   authorities, Tor should also ship with a list of directory sources --
+   places to go for an initial consensus if you don't have a remotely
+   recent one.
+
+   These need to include an address for the cache's ORPort, and its
+   identity key.  Additionally, they should include a selection weight.
+
+   Whenever Tor is starting without a consensus, and it would currently
+   ask a directory authority for a consensus, it should instead ask one
+   of these preconfigured directory sources.
+
+   I have code for this (see git branch fallback_dirsource_v2) in my
+   public repository.
+
+   When we deploy this, we can (and should) rip out the Fallback-
+   NetworkstatusFile logic.
+
+
+How to find nodes to make into directory sources:
+
+   We could take any of three approaches for selecting these initial
+   directory sources.
+
+   First, we could try to vet them a little, with a light variant of the
+   authority stuff.  We'd want to look for nodes where we knew the
+   operators, verify that they were okay with keeping the same IP for a
+   very long time, and so forth.
+
+   Second, we could try to pick nodes for listing with each Tor release
+   based entirely on how long those nodes have been up.  Anything that's
+   been a high-reliability directory for a long time on the same IP
+   (like, say, a year) could be a good choice.
+
+   Third, we could blend the approach and start by looking for
+   up-for-a-long-time nodes, and then also ask the operators whether
+   their nodes are likely to stay running for a long time.
+
+   I think the third model is best.
+
+
+Some notes on security:
+
+   Directory source nodes have an opportunity to learn about more users
+   connecting to the network for the first time.  Once we have directory
+   guards, that's going to be a fairly uncommon ability.  We should be
+   careful in any directory guard design to make sure that we don't fall
+   back to the directory sources any more than we need to.
+
+
+
+

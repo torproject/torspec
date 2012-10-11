@@ -1,0 +1,128 @@
+Filename: 208-ipv6-exits-redux.txt
+Title: IPv6 Exits Redux
+Author: Nick Mathewson
+Created: 10-Oct-2012
+Status: Open
+Target: 0.2.4.x
+
+
+1. Obligatory Motivation Section
+
+   Insert motivations for IPv6 here.  Mention IPv4 address exhaustion.
+
+   Insert official timeline for official IPv6 adoption here.
+
+   Insert general desirability of being able to connect to whatever
+   address there is here.
+
+   Insert profession of firm conviction that eventually there will be
+   something somebody wants to connect to which requires the ability to
+   connect to an IPv6 address.
+
+2. Proposal
+
+   Proposal 117 has been there since coderman wrote it 2007, and it's
+   still mostly right.  Rather than replicate it in full, I'll describe
+   this proposal as a patch to it.
+
+2.1. Exit policies
+
+   Rather than specify IPv6 policies in full, we should move (as we have
+   been moving with IPv4 addresses) to summaries of which IPv6 ports
+   are generally permitted.  So let's allow server descriptors to include
+   a list of accepted IPv6 ports, using the same format as the "p" line
+   in microdecsriptors, using the "ipv6-policy" keyword.
+
+        "ipv6-policy" SP ("accept" / "reject") SP PortList NL
+
+   Exits should still, of course, be able to configure more complex
+   policies, but they should no longer need to tell the whole world
+   about them.
+
+   After this ipv6-policy line is validated, it should get copied into a
+   "p6" line in microdescriptors.
+
+
+   This change breaks the existing exit enclave idea for IPv6; but the
+   exiting exit enclave implementation never worked right in the first
+   place.  If we can come up with a good way to support it, we can add
+   that back in.
+
+2.2. Which addresses should we connect to?
+
+   One issue that's tripped us up a few times is how to decide whether
+   we can use IPv6 addresses.  You can't use them with SOCKS4 or
+   SOCKS4a, IIUC.  With SOCKS5, there's no way to indicate that you
+   prefer IPv4 or IPv6.  It's possible that some SOCKS5 users won't
+   understand IPv6 addresses.
+
+   With this in mind, I'm going to suggest that with SOCKS4 or SOCKS4a,
+   clients should always require IPv4.  With SOCKS5, clients should
+   accept IPv6.
+
+   If it proves necessary, we can also add per-SOCKSPort configuration
+   flags to override the above default behavior.
+
+   See also partitioning discussion in Security Notes below.
+
+2.3. Extending BEGIN cells.
+
+   Prop117 (and the section above) says that clients should prefer one
+   address or another, but doesn't give them a means to tell the exit to
+   do so.  Here's one.
+
+   We define an extension to the BEGIN cell as follows.  After the
+   ADDRESS | ':' | PORT | [00] portion, the cell currently contains all
+   [00] bytes.  We add a 32-bit flags field, stored as an unsigned 32
+   bit value, after the [00].  All these flags default to 0, obviously.
+   We define the following flags:
+
+     bit
+      1 -- IPv6 okay.  We support learning about IPv6 addresses and
+           connecting to IPv6 addresses.
+      2 -- IPv4 not okay.  We don't want to learn about IPv4 addresses
+           or connect to them.
+      3 -- IPv6 preferred.  If there are both IPv4 and IPv6 addresses,
+           we want to connect to the IPv6 one.  (By default, we connect
+           to the IPv4 address.)
+      4..32 -- Reserved.
+
+   As with so much else, clients should look at the platform version of
+   the exit they're using to see if it supports these flags before
+   sending them.
+
+2.4. Minor changes to proposal 117
+
+   GETINFO commands that return an address, and which should return two,
+   should not in fact begin returning two addresses separated by CRLF.
+   They should retain their current behavior, and there should be a new
+   "all my addresses" GETINFO target.
+
+3. Security notes:
+
+   Letting clients signal that they want or will accept IPv6 addresses
+   creates two partitioning issues that didn't exist before.  One is the
+   version partitioning issue: anybody who supports IPv6 addresses is
+   obviously running the new software.  Another is option partitioning:
+   anybody who is using a SOCKS4a application will look different from
+   somebody who is using a SOCKS5 application.
+
+   We can't do much about version partitioning, I think.  If we felt
+   especially clever, we could have a flag day.  Is that necessary?
+
+   For option partitioning, are there many applications whose behavior
+   is indistinguishable except that they are sometimes configured to use
+   SOCKS4a and sometimes to use SOCKS5?  If so, the answer may well be
+   to persuade as many users as possible to switch those to SOCKS5, so
+   that they get IPv6 support and have a large anonymity set.
+
+
+
+   IPv6 addresses are plentiful, which makes cacheing them dangerous
+   if you're hoping to avoid tracking over time.  (With IPv4 addresses,
+   it's harder to give every user a different IPv4 address for a target
+   hostname with a long TTL, and then accept connections to those IPv4
+   addresses from different exits over time.  With IPv6, it's easy.)
+   This makes proposal 205 especially necessary here.
+
+

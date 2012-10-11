@@ -1,0 +1,62 @@
+Filename: 207-directory-guards.txt
+Title: Directory guards
+Author: Nick Mathewson
+Created: 10-Oct-2012
+Status: Open
+Target: 0.2.4.x
+
+
+Motivation:
+
+   When we added guard nodes to resist profiling attacks, we made it so
+   that clients won't build general-purpose circuits through just any
+   node.  But clients don't use their guard nodes when downloading
+   general-purpose directory information from the Tor network.  This
+   allows a directory cache, over time, to learn a large number of IPs
+   for non-bridge-using users of the Tor network.
+
+Proposal:
+
+   In the same way as they currently pick guard nodes as needed, adding
+   more as those nodes are down, clients should also pick a small-ish
+   set of directory guard nodes, to persist in Tor's state file.
+
+   Clients should not pick their own guards as directory guards, or pick
+   their directory guards as regular guards.
+
+   When downloading a regular directory object (i.e., not a hidden
+   service descriptor), clients should prefer their directory guards
+   first.  Then they should try more directories from a recent consensus
+   (if they have one) and pick one of those as a new guard if the
+   existing guards are down and a new one is up.  Failing that, they
+   should fall back to a directory authority (or a directory source, if
+   those get implemented).
+
+
+   When fetching multiple descriptors in parallel from their guards,
+   clients should add new guards and try them if only one of the
+   client's directory guards is running.
+
+Discussion:
+
+   The rule that the set of guards and the set directory guards need to
+   be disjoint, and the rule that multiple directory guards need to be
+   providing descriptors, are both attempts to make it harder for a
+   single node to capture route.
+
+Open questions and notes:
+
+   What properties does a node need to be a suitable directory guard?
+   If we require that it have the Guard flag, we'll lose some nodes;
+   only 74% of the directory caches have it (weighted by bandwidth).
+
+   We may want to tune the algorithm used to update guards.
+
+   For future-proofing, we may want to have the DirCache flag from 185
+   be the one that nodes must have in order to be directory guards.  For
+   now, we could have authorities set it to Guard && DirPort!=0, with a
+   better algorithm to follow.  Authorities should never get the
+   DirCache flag.
+
+
+

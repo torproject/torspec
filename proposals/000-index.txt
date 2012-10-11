@@ -126,6 +126,9 @@ Proposals by number:
 203  Avoiding censorship by impersonating an HTTPS server [DRAFT]
 204  Subdomain support for Hidden Service addresses [OPEN]
 205  Remove global client-side DNS caching [OPEN]
+206  Preconfigured directory sources for bootstrapping [OPEN]
+207  Directory guards [OPEN]
+208  IPv6 Exits Redux [OPEN]
 
 
 Proposals by status:
@@ -168,6 +171,9 @@ Proposals by status:
    202  Two improved relay encryption protocols for Tor cells
    204  Subdomain support for Hidden Service addresses
    205  Remove global client-side DNS caching
+   206  Preconfigured directory sources for bootstrapping [for 0.2.4.x]
+   207  Directory guards [for 0.2.4.x]
+   208  IPv6 Exits Redux [for 0.2.4.x]
  ACCEPTED:
    117  IPv6 exits [for 0.2.4.x]
    140  Provide diffs between consensuses
