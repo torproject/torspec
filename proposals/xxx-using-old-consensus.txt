@@ -41,9 +41,9 @@ Description
   descriptor freshness variable. The descriptor freshness should be
   set to a function of the consensus freshness.
 
-  See Implementation Nodes for further details.
+  See Implementation Notes for further details.
 
-Security Concerns
+Security Concerns: Using an Old Consensus
 
   Clients should not trust old consensus data without an attempt to download
   fresher data from a directory mirror.
