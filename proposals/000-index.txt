@@ -129,6 +129,8 @@ Proposals by number:
 206  Preconfigured directory sources for bootstrapping [OPEN]
 207  Directory guards [OPEN]
 208  IPv6 Exits Redux [OPEN]
+209  Limit reported bandwidth of unmeasured nodes [OPEN]
+209  Tuning the Parameters for the Path Bias Defense [OPEN]
 
 
 Proposals by status:
@@ -174,6 +176,8 @@ Proposals by status:
    206  Preconfigured directory sources for bootstrapping [for 0.2.4.x]
    207  Directory guards [for 0.2.4.x]
    208  IPv6 Exits Redux [for 0.2.4.x]
+   209  Limit reported bandwidth of unmeasured nodes [for 0.2.4.x]
+   209  Tuning the Parameters for the Path Bias Defense [for 0.2.4.x+]
  ACCEPTED:
    117  IPv6 exits [for 0.2.4.x]
    140  Provide diffs between consensuses
