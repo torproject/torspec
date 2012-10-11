@@ -1,0 +1,144 @@
+Title: Internal Mapaddress for Tor Configuration Testing
+Author: Mike Perry
+Created: 08-10-2012
+Status: Open
+Target: 0.2.4.x+
+
+
+Overview
+
+ This proposal describes a method by which we can replace the
+ https://check.torproject.org/ testing service with an internal XML
+ document provided by the Tor client.
+
+Motivation
+
+ The Tor Check service is a central point of failure in terms of Tor
+ usability. If it is ever out of sync with the set of exit nodes on the
+ Tor network or down, user experience is degraded considerably. Moreover,
+ the check itself is very time-consuming. Users must wait seconds or more
+ for the result to come back. Worse still, if the user's software *was*
+ in fact misconfigured, the check.torproject.org DNS resolution and
+ request leaks out on to the network.
+
+Design Overview
+
+ The system will have three parts: an internal hard-coded IP address
+ mapping (127.84.111.114:80), a hard-coded mapaddress to a DNS name
+ (selftest.torproject.org:80), and a DirPortFrontPage-style simple
+ HTTP server that serves an XML document for both addresses.
+
+ Upon receipt of a request to the IP address mapping, the system will 
+ create a new 128 bit randomly generated nonce and provide it
+ in the XML document.
+ 
+ Requests to http://selftest.torproject.org/ must include a valid,
+ recent nonce as the GET url path. Upon receipt of a valid nonce,
+ it is removed from the list of valid nonces. Nonces are only valid
+ for 60 seconds or until SIGNAL NEWNYM, which ever comes first.
+
+ The list of pending nonces should not be allowed to grow beyond 10
+ entries. 
+
+ The timeout period and nonce limit should be configurable in torrc.
+
+Design: XML document format for http://127.84.111.114
+
+ To avoid the need to localize the message in Tor, Tor will only provide
+ a XML object with connectivity information. Here is an example form:
+
+ <tor-test>
+  <tor-bootstrap-percent>100</tor-bootstrap-percent>
+  <tor-version-current>true</tor-version-current>
+  <dns-nonce>4977eb4842c7c59fa5b830ac4da896d9</dns-nonce>
+ <tor-test/>
+
+ The tor-bootstrap-percent field represents the results of the Tor client
+ bootstrap status as integer percentages from bootstrap_status_t.
+
+ The tor-version-current field represents the results of the Tor client
+ consensus version check. If the bootstrap process has not yet
+ downloaded a consensus document, this field will have the value
+ null.
+
+ The dns-nonce field contains a 128-bit secret, encoded in base16. This
+ field is only present for requests that list the Host: header as
+ 127.84.111.114.
+
+Design: XML document format for http://selftest.torproject.org/nonce
+
+ <tor-test>
+  <tor-bootstrap-percent>100</tor-bootstrap-percent>
+  <tor-version-current>true</tor-version-current>
+  <dns-nonce-valid>true</dns-nonce-valid>
+ <tor-test/>
+
+ The first two fields are the same as for the IP address version.
+
+ The dns-nonce-valid field is only true if the Host header matches
+ selftest.torproject.org and the nonce is current and valid. Upon
+ receipt of a valid nonce, that nonce is removed from the list of
+ valid nonces.
+
+Design: Request Servicing
+
+ Care must be taken with the dns-nonce generation and usage, to prevent
+ users from being tracked through leakage of nonce value to application
+ content. While the usage of XML appears to make this impossible
+ due to stricter same-origin policy enforcement than JSON, same-origin
+ enforcement is still fraught with exceptions and loopholes.
+
+ In particular: 
+
+ Any requests that contain the Origin: header MUST be ignored,
+ as the Origin: header is only included for third party web content
+ (CORS).
+
+ dns-nonce fields MUST be omitted if the HTTP Host: header does not
+ match the IP address 127.84.111.114.
+
+ Requests to selftest.torproject.org MUST return false for the
+ dns-nonce-valid field if the HTTP Host: header does not match
+ selftest.torproject.org, regardless of nonce value.
+
+ Further, requests to selftest.torproject.org MUST validate that
+ 'selftest.torproject.org' was the actual hostname provided to
+ SOCKS4A, and not some alternate address mapping (due to DNS rebinding
+ attacks, for example).
+
+Design: Application Usage
+
+ Applications will use the system in two steps. First, they will make an
+ HTTP request to http://127.84.111.114:80/ over Tor's SOCKS port and
+ parse the resulting XML, if any.
+
+ If the request at this stage fails, the application should inform the
+ user that either their Tor client is too old, or that it is
+ misconfigured, depending upon the nature of the failure.
+
+ If the request succeeds and valid XML is returned, the application
+ will record the value of the dns-nonce field, and then perform a second
+ request to http://selftest.torproject.org/nonce_value. If the second
+ request succeeds, and the dns-nonce-valid field is true, the application
+ may inform the user that their Tor settings are valid.
+
+ If the second request fails, or does not provide the correct dns-nonce,
+ the application will inform the user that their Tor DNS proxy settings
+ are incorrect.
+ 
+ If either tor-bootstrap-percent is not 100, or tor-version-current is
+ false, applications may choose to inform the user of these facts using
+ properly localized strings and appropriate UI.
+
+Security Considerations
+
+ XML was chosen over JSON due to the risks of the identifier leaking
+ in a way that could enable websites to track the user[1].
+
+ Because there are many exceptions and circumvention techniques
+ to the same-origin policy, we have also opted for strict controls
+ on dns-nonce lifetimes and usage, as well as validation of the Host
+ header and SOCKS4A request hostnames.
+
+
+1. http://www.hpenterprisesecurity.com/vulncat/en/vulncat/dotnet/javascript_hijacking_vulnerable_framework.html
