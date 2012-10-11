@@ -131,6 +131,7 @@ Proposals by number:
 208  IPv6 Exits Redux [OPEN]
 209  Limit reported bandwidth of unmeasured nodes [OPEN]
 209  Tuning the Parameters for the Path Bias Defense [OPEN]
+210  Faster Headless Consensus Bootstrapping [OPEN]
 
 
 Proposals by status:
@@ -178,6 +179,7 @@ Proposals by status:
    208  IPv6 Exits Redux [for 0.2.4.x]
    209  Limit reported bandwidth of unmeasured nodes [for 0.2.4.x]
    209  Tuning the Parameters for the Path Bias Defense [for 0.2.4.x+]
+   210  Faster Headless Consensus Bootstrapping [for 0.2.4.x+]
  ACCEPTED:
    117  IPv6 exits [for 0.2.4.x]
    140  Provide diffs between consensuses
