@@ -16,10 +16,10 @@ Overview
 
 Motivation
 
- The Path Bias defense is designed to defend against a type of route capture
- where malicious Guard nodes deliberately fail circuits that extend to
- non-colluding Exit nodes to maximize their network utilization in favor of
- carrying only compromised traffic.
+ The Path Bias defense is designed to defend against a type of route
+ capture where malicious Guard nodes deliberately fail circuits that
+ extend to non-colluding Exit nodes to maximize their network
+ utilization in favor of carrying only compromised traffic.
 
  This attack was explored in the academic literature in [1], and a
  variant involving cryptographic tagging was posted to tor-dev[2] in
@@ -29,6 +29,17 @@ Motivation
  of the network capacity to deanonymize c/n of the network
  connections, breaking the O((c/n)^2) property of Tor's original
  threat model.
+
+ In this case, however, the adversary is only carrying circuits
+ for which either the entry and exit are compromised, or all
+ three nodes are compromised. This means that the adversary fails
+ all but (c/n)^2 + (c/n)^3 of their circuits. For 20% c/n compromise,
+ such an adversary would only succeed 4.8% of their circuit attempts.
+ For 33% c/n compromise, such an adversary would still only succeed
+ 11.7% of their circuits.
+
+ It is this property which leads me to believe that a simple local
+ accounting defense is indeed possible and worthwhile.
 
 Design Description
 
@@ -45,14 +56,23 @@ Design Description
  falls below 70%, a warn when Guard success rate falls below 50%, and
  should drop the Guard when the success rate falls below 30%.
 
+ Circuit build timeouts are only counted as path failures if the
+ circuit fails to complete before the 95% "right-censored" (aka
+ "MEASUREMENT_EXPIRED") timeout interval, not the 80% timeout
+ condition. See 2.4.1 of path-spec for further details on circuit
+ timeout calculations.
+
  To ensure correctness, checks are performed to ensure that
- we do not count successes without also counting the first hop.
+ we do not count successes without also counting the first hop (see
+ usage of path_state_t as well as pathbias_* in the source).
 
  Similarly, to provide a moving average of recent Guard activity while
- still preserving the ability to ensure correctness, we "scale" the
- success counts by an integer divisor (currently 2) when the counts
- exceed the moving average window (300) and when the division
- does not produce integer truncation.
+ still preserving the ability to ensure correctness, we periodically
+ "scale" the success counts by first multiplying by a numerator
+ (currently 1) and then dividing by an integer divisor (currently 2). 
+
+ Scaling is performed when when the counts exceed the moving average
+ window (300) and when the division does not produce integer truncation.
 
  No log messages should be displayed, nor should any Guard be
  dropped until it has completed at least 150 first hops (inclusive).
@@ -79,9 +99,9 @@ Analysis: Simulation
 
  The spread between the cutoff values and the normal rate of circuit
  success has a substantial effect on false positives. From the
- simulation's results, the sweet spot for the size of this spread appears
- to be 10%. In other words, we want to set the cutoffs such that they are
- 10% below the success rate we expect to see in normal usage.
+ simulation's results, the sweet spot for the size of this spread
+ appears to be 10%. In other words, we want to set the cutoffs such that
+ they are 10% below the success rate we expect to see in normal usage.
 
  The simulation also demonstrates that larger "scaling window" sizes
  reduce false positives for instances where non-malicious guards
@@ -101,6 +121,9 @@ Analysis: Live Scan
  Based on these results, the notice condition should be 70%, the warn 
  condition should be 50%, and the drop condition should be 30%.
 
+ However, see the Security Considerations sections for reasons
+ to choose more lenient bounds.
+
 Future Analysis: Deployed Clients
 
  It's my belief that further analysis should be done by deploying 
@@ -113,7 +136,7 @@ Future Analysis: Deployed Clients
  so that we have enough data to consider deploying the Guard-dropping
  cutoff in 0.2.4.x.
 
-Security Considerations
+Security Considerations: DoS Conditions
 
  While the scaling window does provide freshness and can help mitigate
  "bait-and-switch" attacks, it also creates the possibility of conditions
@@ -150,6 +173,39 @@ Security Considerations
  to compromise clients for duty cycles of around the size of this window (up to
  the (c/n)^2 * 100/CUTOFF_PERCENT limit in aggregate), so we do have to find
  balance between these concerns.
+
+Security Considerations: Targeted Failure Attacks
+
+ If an adversary controls a significant portion of the network, they
+ may be able to target a Guard node by failing their circuits. In the
+ context of cryptographic tagging, both the Middle node and the Exit
+ node are able to recognize their colluding peers. The Middle node sees
+ the Guard directly, and the Exit node simply reverses a non-existent
+ tag, causing a failure.
+
+ P(EvilMiddle) || P(EvilExit) = 1.0 - P(HonestMiddle) && P(HonestExit)
+                              = 1.0 - (1.0-(c/n))*(1.0-(c/n))
+
+ For 10% compromise, this works out to the ability to fail an
+ additional 19% of honest Guard circuits, and for 20% compromise,
+ it works out to 36%.
+
+ When added to the ambient circuit failure rates (10-20%), this is
+ within range of the notice and warn conditions, but not the guard
+ failure condition.
+
+ However, this attack does become feasible if a network-wide DoS
+ (or simply CPU load) is able to elevate the ambient failure
+ rate to 51% for the 10% compromise case, or 34% for the 20%
+ compromise case.
+
+ Since both conditions would elicit notices and/or warns from all
+ clients, this attack should be detectable. It can also be detected
+ through the bandwidth authorities, should we deploy #7023.
+
+ We could also conceivably lower pb_disablepct from 30 as a
+ potential mitigation, based on the fact that a 20% c/n adversary
+ would only carry 5% of their circuits in the extreme case.
 
 Implementation Notes: Log Messages
 
@@ -190,9 +246,27 @@ Implementation Notes: Consensus Parameters
  pb_scalecircs=300
    The number of first hops at which we scale the counts down.
 
+ pb_multfactor=1
+   The integer numerator by which we scale.
+
  pb_scalefactor=2
    The integer divisor by which we scale.
 
+ pb_dropguards=0
+   If non-zero, we should actually drop guards as opposed to warning.
+
+Implementation Notes: Differences between this proposal and source
+
+ This proposal adds a few changes over the implementation currently
+ deployed in origin/master.
+
+ The log messages suggested above are different than those in the
+ source.
+
+ Also, the following consensus parameters are additions:
+   pb_multfactor
+   pb_warnpct
+   pb_dropguards
 
 
 1. http://freehaven.net/anonbib/cache/ccs07-doa.pdf
