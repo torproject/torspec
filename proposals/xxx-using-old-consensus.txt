@@ -1,4 +1,4 @@
-Title: Allow use of old consensus material
+Title: Increase Acceptable Consensus Age
 Author: Mike Perry
 Created: 01-10-2012
 Status: Open
