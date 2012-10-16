@@ -30,13 +30,13 @@ Motivation
  connections, breaking the O((c/n)^2) property of Tor's original
  threat model.
 
- In this case, however, the adversary is only carrying circuits
- for which either the entry and exit are compromised, or all
- three nodes are compromised. This means that the adversary fails
- all but (c/n)^2 + (c/n)^3 of their circuits. For 20% c/n compromise,
- such an adversary would only succeed 4.8% of their circuit attempts.
- For 33% c/n compromise, such an adversary would still only succeed
- 11.7% of their circuits.
+ In this case, however, the adversary is only carrying circuits for
+ which either the entry and exit are compromised, or all three nodes are
+ compromised.  This means that the adversary's Guards will fail all but 
+ (c/n) + (c/n)^2 of their circuits for clients that select it. For 10%
+ c/n compromise, such an adversary succeeds only 11% of their circuits
+ that start at their compromised Guards. For 20% c/n compromise, such
+ an adversary would only succeed 24% of their circuit attempts.
 
  It is this property which leads me to believe that a simple local
  accounting defense is indeed possible and worthwhile.
@@ -201,11 +201,13 @@ Security Considerations: Targeted Failure Attacks
 
  Since both conditions would elicit notices and/or warns from all
  clients, this attack should be detectable. It can also be detected
- through the bandwidth authorities, should we deploy #7023.
+ through the bandwidth authorities (who could possibly even
+ set pathbias parameters directly based on measured ambient circuit
+ failure rates), should we deploy #7023.
 
- We could also conceivably lower pb_disablepct from 30 as a
+ We could also conceivably lower pb_disablepct to 25% as a
  potential mitigation, based on the fact that a 20% c/n adversary
- would only carry 5% of their circuits in the extreme case.
+ would only carry 24% of their circuits in the extreme case.
 
 Implementation Notes: Log Messages
 
