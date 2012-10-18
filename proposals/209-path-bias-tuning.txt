@@ -59,8 +59,11 @@ Design Description
  Circuit build timeouts are only counted as path failures if the
  circuit fails to complete before the 95% "right-censored" (aka
  "MEASUREMENT_EXPIRED") timeout interval, not the 80% timeout
- condition. See 2.4.1 of path-spec for further details on circuit
- timeout calculations.
+ condition[5]. This was done based on the assumption that destructive
+ cryptographic tagging is the primary vector for the path bias attack,
+ until such time as Tor's circuit crypto can be upgraded. Therefore,
+ being more lenient with timeout makes us more resilient to network
+ conditions.
 
  To ensure correctness, checks are performed to ensure that
  we do not count successes without also counting the first hop (see
@@ -199,15 +202,11 @@ Security Considerations: Targeted Failure Attacks
  rate to 51% for the 10% compromise case, or 34% for the 20%
  compromise case.
 
- Since both conditions would elicit notices and/or warns from all
+ Since both conditions would elicit notices and/or warns from *all*
  clients, this attack should be detectable. It can also be detected
  through the bandwidth authorities (who could possibly even
  set pathbias parameters directly based on measured ambient circuit
  failure rates), should we deploy #7023.
-
- We could also conceivably lower pb_disablepct to 25% as a
- potential mitigation, based on the fact that a 20% c/n adversary
- would only carry 24% of their circuits in the extreme case.
 
 Implementation Notes: Log Messages
 
@@ -257,7 +256,7 @@ Implementation Notes: Consensus Parameters
  pb_dropguards=0
    If non-zero, we should actually drop guards as opposed to warning.
 
-Implementation Notes: Differences between this proposal and source
+Implementation Notes: Differences between proposal and current source
 
  This proposal adds a few changes over the implementation currently
  deployed in origin/master.
@@ -265,13 +264,25 @@ Implementation Notes: Differences between this proposal and source
  The log messages suggested above are different than those in the
  source.
 
+ The following consensus parameters had changes to their default
+ values, based on results from simulation and scanning:
+   pb_mincircs=150
+   pb_noticepct=70
+   pb_disablepct=30
+   pb_scalecircs=300
+
  Also, the following consensus parameters are additions:
-   pb_multfactor
-   pb_warnpct
-   pb_dropguards
+   pb_multfactor=1
+   pb_warnpct=50
+   pb_dropguards=0
+
+ Finally, 0.2.3.x needs to be synced with origin/master, but should
+ also ignore the pb_dropguards parameter (but ideally still provide
+ the equivalent pb_dropguards torrc option).
 
 
 1. http://freehaven.net/anonbib/cache/ccs07-doa.pdf
 2. https://lists.torproject.org/pipermail/tor-dev/2012-March/003347.html
 3. https://gitweb.torproject.org/torflow.git/tree/HEAD:/CircuitAnalysis/PathBias
 4. https://github.com/meejah/txtorcon/blob/exit_scanner/apps/exit_scanner/failure-rate-scanner.py
+5. See 2.4.1 of path-spec.txt for further details on circuit timeout calculations.
