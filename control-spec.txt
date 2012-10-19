@@ -1978,7 +1978,8 @@
 4.1.14. Per-country client stats
 
   The syntax is:
-     "650" SP "CLIENTS_SEEN" SP TimeStarted SP CountrySummary CRLF
+     "650" SP "CLIENTS_SEEN" SP TimeStarted SP CountrySummary SP
+     IPVersions CRLF
 
   We just generated a new summary of which countries we've seen clients
   from recently. The controller could display this for the user, e.g.
@@ -1997,6 +1998,10 @@
   linebreak),
   650-CLIENTS_SEEN TimeStarted="2008-12-25 23:50:43"
   CountrySummary=us=16,de=8,uk=8
+
+  The IPVersions keyword has as its argument a comma-separated set of
+  "protocol-family=count" pairs. For example,
+  IPVersions=v4=16,v6=40
 
 4.1.15. New consensus networkstatus has arrived
 
