@@ -620,8 +620,14 @@
     "geoip-db-digest" Digest NL
         [At most once.]
 
-        SHA1 digest of the GeoIP database file that is used to resolve IP
-        addresses to country codes.
+        SHA1 digest of the IPv4 GeoIP database file that is used to
+        resolve IPv4 addresses to country codes.
+
+    "geoip6-db-digest" Digest NL
+        [At most once.]
+
+        SHA1 digest of the IPv6 GeoIP database file that is used to
+        resolve IPv6 addresses to country codes.
 
     ("geoip-start-time" YYYY-MM-DD HH:MM:SS NL)
     ("geoip-client-origins" CC=N,CC=N,... NL)
@@ -663,6 +669,12 @@
         unique IP addresses that have connected from that country to the
         bridge and which are no known relays, rounded up to the nearest
         multiple of 8.
+
+    "bridge-ip-versions" FAM=N,FAM=N,... NL
+        [At most once.]
+
+        List of unique IP addresses that have connected to the bridge
+        per protocol family.
 
     "dirreq-stats-end" YYYY-MM-DD HH:MM:SS (NSEC s) NL
         [At most once.]
