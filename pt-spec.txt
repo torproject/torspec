@@ -134,6 +134,20 @@ Server behavior
   then Tor will launch the megaproxy binary twice: once with the option
   --foo and once with the option --bar.
 
+  The address that a managed proxy will use to bind can be configured with:
+      ServerTransportListenAddr <method> <address:port>
+
+  For example, a valid configuration would be:
+      ServerTransportPlugin obfs2,obfs3,stegotorus exec /usr/bin/obfsproxy --managed
+      ServerTransportListenAddr obfs2 0.0.0.0:4200
+      ServerTransportListenAddr stegotorus 98.23.4.45:6559
+
+  If no ServerTransportListenAddr is specified and it's the first time
+  that Tor encounters that transport, Tor will instruct the managed
+  proxy to bind to a random TCP port on 0.0.0.0. If Tor has seen the
+  trasport before, it will instruct the managed proxy to bind to the
+  same TCP port that the transport used last time.
+
 Managed proxy interface
 
    When the Tor client or relay launches a managed proxy, it communicates
