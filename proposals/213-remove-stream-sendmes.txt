@@ -1,0 +1,122 @@
+Filename: 213-remove-stream-sendmes.txt
+Title: Remove stream-level sendmes from the design
+Author: Roger Dingledine
+Created: 4-Nov-2012
+Status: Open
+
+1. Motivation
+
+  Tor uses circuit-level sendme cells to handle congestion / flow
+  fairness at the circuit level, but it has a second stream-level
+  flow/congestion/fairness layer under that to share a given circuit
+  between multiple streams.
+
+  The circuit-level flow control, or something like it, is needed
+  because different users are competing for the same resources. But the
+  stream-level flow control has a different threat model, since all the
+  streams belong to the same user.
+
+  When the circuit has only one active stream, the downsides are a)
+  that we waste 2% of our bandwidth sending stream-level sendmes, and b)
+  because of the circuit-level and stream-level window parameters we
+  picked, we end up sending only half the cells we might otherwise send.
+
+  When the circuit has two active streams, they each get to send 500
+  cells for their window, because the circuit window is 1000. We still
+  spend the 2% overhead.
+
+  When the circuit has three or more active streams, they're all typically
+  limited by the circuit window, since the stream-level window won't
+  kick in. We still spend the 2% overhead though. And depending on their
+  sending pattern, we could experience cases where a given stream might
+  be able to send more data on the circuit, but it chooses not to because
+  its stream-level window is empty.
+
+  More generally, we don't have a good handle on the interactions between
+  all the layers of congestion control in Tor. It would behoove us to
+  simplify in the case where we're not clear on what it buys us.
+
+2. Design
+
+  We should strip all aspects of this stream-level flow control from
+  the Tor design and code.
+
+2.1. But doesn't having a lower stream window than circuit window save
+     room for new streams?
+
+  It could be that a feature of the stream window is that there's always
+  space in the circuit window for another begin cell, so new streams
+  will open faster than otherwise. But first, if there are two or more
+  active streams going, there won't be any extra space. Second, since
+  begin cells are client-to-exit, and typical circuits don't fill their
+  outbound circuit windows very often anyway, and also since we're hoping
+  to move to a world where we isolate more activities between circuits,
+  I'm not inclined to worry much about losing this maybe-feature.
+
+  See also proposal 168, "reduce default circuit window" -- it's
+  interesting to note that proposal 168 was unknowingly dabbling in
+  exactly this question, since reducing the default circuit window to
+  500 or less made stream windows moot. It might be worth resurrecting
+  the proposal 168 experiments once this proposal is implemented.
+
+2.2. If we dump stream windows, we're effectively doubling them.
+
+  Right now the circuit window starts at 1000, and the stream window
+  starts at 500. So if we just rip out stream windows, we'll effectively
+  change the stream window default to 1000, doubling the amount of data
+  in flight and potentially clogging up the network more.
+
+  We could either live with that, or we could change the default circuit
+  window to 500 (which is easy to do even in a backward compatible way,
+  since the edge connection can simply choose to not send as many cells).
+
+3. Evaluation
+
+  It would be wise to have some plan for making sure we didn't screw
+  up the network too much with this change. The main trouble there is
+  that torperf et al only do one stream at a time, so we really have no
+  good baseline, or measurement tools, to capture network performance
+  for multiple parallel streams.
+
+  Maybe we should resolve task 7168 before the transition, so we're
+  more prepared.
+
+4. Transition
+
+  Option one is to do a two-phase transition. In the first phase,
+  edges stop enforcing the deliver window (i.e. stop closing circuits
+  when the stream deliver goes negative, but otherwise they send and
+  receive stream-level sendmes as now). In the second phase (once all
+  old versions are gone), we can start disobeying the deliver window,
+  and also stop sending stream-level sendmes back.
+
+  That approach takes a while before it will matter. As an optimization,
+  since clients can know which relay versions support the new behavior,
+  we could have relays interpret violating the deliver window as signaling
+  support for removed stream-level sendmes: the relay would then stop
+  sending or expecting sendmes. That optimization is somewhat klunky
+  though, first because web-browsing clients don't generally finish out
+  a stream window in the upstream direction (so the klunky trick will
+  probably never happen by accident), and second because if we lower
+  the circuit window to 500 (see Sec 2.2), there's now no way to violate
+  stream deliver windows.
+
+  Option two is to introduce another relay cell type, which the client
+  sends before opening any streams to let the other side know that
+  it shouldn't use or expect stream-level sendmes. A variation here
+  is to extend either the create cell or the begin cell (ha -- and they
+  thought I was crazy when I included the explicit \0 at the end of the
+  current begin cell payload), so we can specify our circuit preferences
+  without any extra overhead.
+
+  Option three is to wait until we switch to a new circuit protocol
+  (e.g. when we move to ntor or ace), and use that as the signal to
+  drop stream-level sendmes from the design. And hey, if we're lucky,
+  by then we'll have sorted out the n23 questions (see ticket 4506)
+  and we might be dumping circuit-level sendmes at that point too.
+
+  Options two or three seem way better than option one.
+
+  And since it's not super-urgent, I suggest we hold off on option two
+  to see if option three makes sense.
+
