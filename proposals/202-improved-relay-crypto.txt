@@ -135,7 +135,7 @@ Overview:
       * It permits tagging attacks. Because AES_CTR is an XOR-based
         stream cipher, an adversary who controls the first node in a
         circuit can XOR anything he likes into the relay cell, and
-        then see whether he/she encounters an correspondingly
+        then see whether he/she encounters a correspondingly
         defaced cell at some exit that he also controls.
 
         That is, the attacker picks some pattern P, and when he
@@ -469,7 +469,7 @@ Overview:
 
    This approach is also simple and (given good parameter choices)
    can achieve our goals.  The trickiest part is the algorithm that
-   clients must follow to package cells, but that's no so bad.
+   clients must follow to package cells, but that's not so bad.
 
    It's not necessary to check MACs on inbound traffic, because
    nobody but the client can tell scrambled messages from good ones,
@@ -496,7 +496,7 @@ Overview:
    tweak with each cell (possibly based on the unused portion of the
    MAC).
 
-   This protocol does support loose source routing, so long as the
+   This protocol does support loose source routing, so long as
    no padding bytes are added by any router-added nodes.
 
    In a circuit, every node has at least one relay cell sent to it:
