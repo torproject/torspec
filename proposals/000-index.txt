@@ -129,11 +129,11 @@ Proposals by number:
 206  Preconfigured directory sources for bootstrapping [OPEN]
 207  Directory guards [OPEN]
 208  IPv6 Exits Redux [OPEN]
-209  Limit reported bandwidth of unmeasured nodes [OPEN]
 209  Tuning the Parameters for the Path Bias Defense [OPEN]
 210  Faster Headless Consensus Bootstrapping [OPEN]
 211  Internal Mapaddress for Tor Configuration Testing [OPEN]
 212  Increase Acceptable Consensus Age [OPEN]
+213  Remove stream-level sendmes from the design [OPEN]
 
 
 Proposals by status:
@@ -179,11 +179,11 @@ Proposals by status:
    206  Preconfigured directory sources for bootstrapping [for 0.2.4.x]
    207  Directory guards [for 0.2.4.x]
    208  IPv6 Exits Redux [for 0.2.4.x]
-   209  Limit reported bandwidth of unmeasured nodes [for 0.2.4.x]
    209  Tuning the Parameters for the Path Bias Defense [for 0.2.4.x+]
    210  Faster Headless Consensus Bootstrapping [for 0.2.4.x+]
    211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
+   213  Remove stream-level sendmes from the design
  ACCEPTED:
    117  IPv6 exits [for 0.2.4.x]
    140  Provide diffs between consensuses
