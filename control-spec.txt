@@ -291,7 +291,7 @@
          "AUTHDIR_NEWDESCS" / "DESCCHANGED" / "STATUS_GENERAL" /
          "STATUS_CLIENT" / "STATUS_SERVER" / "GUARD" / "NS" / "STREAM_BW" /
          "CLIENTS_SEEN" / "NEWCONSENSUS" / "BUILDTIMEOUT_SET" / "SIGNAL" /
-         "CONF_CHANGED" / "CIRC_MINOR"
+         "CONF_CHANGED" / "CIRC_MINOR" / "TRANSPORT_LAUNCHED"
 
   Any events *not* listed in the SETEVENTS line are turned off; thus, sending
   SETEVENTS with an empty body turns off all event reporting.
@@ -2106,6 +2106,19 @@
   Other fields are as specified in section 4.1.1 above.
 
   [First added in 0.2.3.11-alpha]
+
+4.1.20. Pluggable transport launched
+
+  The syntax is:
+
+    "650" SP "TRANSPORT_LAUNCHED" SP Type SP Name SP Address SP Port
+    Type = "server" | "client"
+    Name = The name of the pluggable transport
+    Address = The IP address on which it is listening for connections
+    Port = The TCP port on which it is listening for connections.
+
+    A pluggable transport called 'Name' of type 'Type' was launched
+    successfully and is now listening for connections on 'Address':'Port'.
 
 5. Implementation notes
 
