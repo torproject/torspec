@@ -120,3 +120,33 @@ Status: Open
   And since it's not super-urgent, I suggest we hold off on option two
   to see if option three makes sense.
 
+5. Discussion
+
+  Based on feedback from Andreas Krey on tor-dev, I believe this proposal
+  is flawed, and should likely move to Status: Dead.
+
+  Looking at it from the exit relay's perspective (which is where it matters
+  most, since most use of Tor is sending a little bit and receiving a lot):
+  when a create cell shows up to establish a circuit, that circuit is
+  allowed to send back at most 1000 cells. When a begin relay cell shows
+  up to ask that circuit to open a new stream, that stream is allowed to
+  send back at most 500 cells.
+
+  Whenever the Tor client has received 100 cells on that circuit, she
+  immediately sends a circuit-level sendme back towards the exit, to let
+  it know to increment its "number of cells it's allowed to send on the
+  circuit" by 100.
+
+  However, a stream-level sendme is only sent when both a) the Tor client
+  has received 50 cells on a particular stream, *and* b) the application
+  that initiated the stream is willing to accept more data.
+
+  If we ripped out stream-level sendmes, then as you say, we'd have to
+  choose between "queue all the data for the stream, no matter how big it
+  gets" and "tell the whole circuit to shut up".
+
+  I believe you have just poked a hole in the n23 ("defenestrator") design
+  as well: http://freehaven.net/anonbib/#pets2011-defenestrator
+  since it lacks any stream-level pushback for streams that are blocking
+  on writes. Nicely done!
+
