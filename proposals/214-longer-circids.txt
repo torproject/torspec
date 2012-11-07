@@ -21,7 +21,7 @@ Status: Open
       Payload [509 bytes]
 
     Variable-length cell [Length+5 bytes]
-       CircID   [4 bytes]
+       CircID   [2 bytes]
        Command  [1 byte]
        Length   [2 bytes]
        Payload  [Length bytes]
@@ -58,7 +58,7 @@ Status: Open
    whose RSA public key has the lower modulus.  How ridiculous!
    Instead, I propose that when the version 4 link protocol is in use,
    the connection initiator use the low half of the circuit ID space,
-   and the responder use the low half of the circuit ID space.
+   and the responder use the high half of the circuit ID space.
 
 3. Discussion
 
