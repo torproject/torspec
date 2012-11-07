@@ -1,0 +1,93 @@
+Filename: 214-longer-circids.txt
+Title: Allow 4-byte circuit IDs in a new link protocol
+Author: Nick Mathewson
+Created: 6 Nov 2012
+Status: Open
+
+
+0. Overview
+
+   Relays are running out of circuit IDs.  It's time to make the field
+   bigger.
+
+1. Background and Motivation
+
+   Long ago, we thought that 65535 circuit IDs would be enough for anybody.
+   It wasn't.  But our cell format in link protocols is still:
+
+    Cell [512 bytes]
+      CircuitID [2 bytes]
+      Command [1 byte]
+      Payload [509 bytes]
+
+    Variable-length cell [Length+5 bytes]
+       CircID   [4 bytes]
+       Command  [1 byte]
+       Length   [2 bytes]
+       Payload  [Length bytes]
+
+   This means that a relay can run out of circuit IDs pretty easily.
+
+2. Design
+
+   I propose a new link cell format for relays that support it.  It should
+   be:
+
+    Cell [514 bytes]
+       CircuitID [4 bytes]
+       Command [1 byte]
+       Payload [509 bytes]
+
+    Variable cell (Length+7 bytes)
+       CircID   [4 bytes]
+       Command  [1 byte]
+       Length   [2 bytes]
+       Payload  [Length bytes]
+
+   We need to keep the payload size in fixed-length cells to its current
+   value, since otherwise the relay protocol won't work.
+
+   This new cell format should be used only when the link protocol is 4.
+   (To negotiation link protocol 4, both sides need to use the "v3"
+   handshake, and include "4" in their version cells.  If version 4 or
+   later is negotiated, this is the cell format to use.)
+
+2.1. Better allocation of circuitID space
+
+   In the current Tor design, circuit ID allocation is determined by
+   whose RSA public key has the lower modulus.  How ridiculous!
+   Instead, I propose that when the version 4 link protocol is in use,
+   the connection initiator use the low half of the circuit ID space,
+   and the responder use the low half of the circuit ID space.
+
+3. Discussion
+
+   * Why 4 bytes?
+
+     Because 3 would result in an odd cell size, and 8 seems like
+     overkill.
+
+   * Will this be distinguishable from the v3 protocol?
+
+     Yes. Anybody who knows they're seeing the Tor protocol can probably
+     tell by the TLS record sizes which version of the protocol is in
+     use.  Probably not a huge deal though; which approximate range of
+     versions of Tor a client or server is running is not something
+     we've done much to hide in the past.
+
+   * Why a new link protocol and not a new cell type?
+
+     Because pretty much every cell has a meaningful circuit ID.
+
+   * Okay, why a new link protocol and not a new _set of_ cell types?
+
+     Because it's a bad idea to mix short and long circIDs on the same
+     channel.  (That would leak which cells go with what kind of
+     circuits ID, potentially.)
+
+   * How hard is this to implement?
+
+     I wasn't sure, so I coded it up.  I've got a probably-buggy
+     implementation in branch "wide_cird_ids" in my public repository.
+     Be afraid!  More testing is needed!
+

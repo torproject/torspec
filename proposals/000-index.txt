@@ -134,6 +134,7 @@ Proposals by number:
 211  Internal Mapaddress for Tor Configuration Testing [OPEN]
 212  Increase Acceptable Consensus Age [OPEN]
 213  Remove stream-level sendmes from the design [OPEN]
+214  Allow 4-byte circuit IDs in a new link protocol [OPEN]
 
 
 Proposals by status:
@@ -184,6 +185,7 @@ Proposals by status:
    211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    213  Remove stream-level sendmes from the design
+   214  Allow 4-byte circuit IDs in a new link protocol
  ACCEPTED:
    117  IPv6 exits [for 0.2.4.x]
    140  Provide diffs between consensuses
