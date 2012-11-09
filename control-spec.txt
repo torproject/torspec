@@ -643,8 +643,8 @@
       Tor's SETEVENTS.
 
     "features/names"
-      A space-separated list of all the events supported by this version of
-      Tor's USEFEATURE.
+      A space-separated list of all the features supported by this version
+      of Tor's USEFEATURE.
 
     "ip-to-country/*"
       Maps IP addresses to 2-letter country codes.  For example,
@@ -1221,7 +1221,7 @@
   recognize, and SHOULD process those events as if any unrecognized
   arguments and keywords were not present.
 
-  Clients SHOULD NOT depend on the order of keywords=value arguments,
+  Clients SHOULD NOT depend on the order of keyword=value arguments,
   and SHOULD NOT depend on there being no new keyword=value arguments
   appearing between existing keyword=value arguments, though as of this
   writing (Jun 2011) some do.  Thus, extensions to this protocol should
