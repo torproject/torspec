@@ -1186,8 +1186,9 @@ see tor-design.pdf.
    RELAY_RESOLVE cell containing the hostname to be resolved with a NUL
    terminating byte. (For a reverse lookup, the OP sends a RELAY_RESOLVE
    cell containing an in-addr.arpa address.) The OR replies with a
-   RELAY_RESOLVED cell containing a status byte, and any number of
-   answers. Each answer is of the form:
+   RELAY_RESOLVED cell containing any number of answers. Each answer is
+   of the form:
+
        Type   (1 octet)
        Length (1 octet)
        Value  (variable-width)
@@ -1201,6 +1202,9 @@ see tor-design.pdf.
       0xF1 -- Error, nontransient
 
     If any answer has a type of 'Error', then no other answer may be given.
+
+    For backward compatibility, if there are any IPv4 answers, one of those
+    must be given as the first answer.
 
     The RELAY_RESOLVE cell must use a nonzero, distinct streamID; the
     corresponding RELAY_RESOLVED cell must use the same streamID.  No stream
