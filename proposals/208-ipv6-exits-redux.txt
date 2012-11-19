@@ -39,9 +39,8 @@ Target: 0.2.4.x
    policies, but they should no longer need to tell the whole world
    about them.
 
-   After this ipv6-policy line is validated, it should get copied into a
-   "p6" line in microdescriptors.
-
+   After this ipv6-policy line is validated, its numeric ports and ranges
+   should get copied into a "p6" line in microdescriptors.
 
    This change breaks the existing exit enclave idea for IPv6, but the
    exiting exit enclave implementation never worked right in the first
