@@ -135,6 +135,7 @@ Proposals by number:
 212  Increase Acceptable Consensus Age [OPEN]
 213  Remove stream-level sendmes from the design [OPEN]
 214  Allow 4-byte circuit IDs in a new link protocol [OPEN]
+215  Let the minimum consensus method change with time [OPEN]
 
 
 Proposals by status:
@@ -186,6 +187,7 @@ Proposals by status:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    213  Remove stream-level sendmes from the design
    214  Allow 4-byte circuit IDs in a new link protocol
+   215  Let the minimum consensus method change with time
  ACCEPTED:
    117  IPv6 exits [for 0.2.4.x]
    140  Provide diffs between consensuses

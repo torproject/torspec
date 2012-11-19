@@ -1,0 +1,94 @@
+Filename: 215-update-min-consensus-ver.txt
+Title: Let the minimum consensus method change with time
+Author: Nick Mathewson
+Created: 15 Nov 2012
+Status: Open
+
+
+0. Overview
+
+   This proposal suggests that we drop the requirement that
+   authorities support the very old consensus method "1", and instead
+   move to a wider window of recognized consensus methods as Tor
+   evolves.
+
+1. Background and Motivation
+
+   When we designed the directory voting system, we added the notion
+   of "consensus method" so that we could smoothly upgrade the voting
+   process over time.  We also said that all authorities must support
+   the consensus method '1', and must fall back to it if they don't
+   support the method that the supermajority of authorities will
+   choose.
+
+   Consensus method 1 is no longer viable for the Tor network.  It
+   doesn't result in a microdescriptor consensus, and omits other
+   fields that clients need in order to work well.  Consensus methods
+   under 12 have security issues, since they let a single authority
+   set a consensus parameter.
+
+   In the future, new consensus methods will be needed so that
+   microdescriptor-using clients can use IPv6 exits and ECC
+   onion-keys.  Rolling back from those would degrade functionality.
+
+   We need a way to change the minimum consensus method over time.
+
+2. Design
+
+   I propose that we change the minimum consensus method about once
+   per release cycle, or once per ever other release cycle.
+
+   As a rule of thumb, let the minimum consensus method in Tor series
+   X be the highest method supported by the oldest version that
+   "anybody reasonable" would use for running an authority.
+   Typically, that's the stable version of the previous release
+   series.
+
+   For flexibility, it might make sense to choose a slightly older
+   method, if falling back to that method wouldn't cause security
+   problems.
+
+
+   For example, while Tor 0.2.4.x is under development, authorities
+   should really not be running anything before Tor 0.2.3.x.  Tor
+   0.2.3.x has supported consensus method 13 since 0.2.3.21-rc, so
+   it's okay for 0.2.4.x to require 13 as the minimum method.  We even
+   might go back to method 12, since the worst outcome of not using 13
+   would be some warnings in client logs.  Consensus method 12 was a
+   security improvement, so we don't want to roll back before that.
+
+2.1. Behavior when the method used is one we don't know
+
+   The spec currently says that if an authority sees that a method
+   will be used that it doesn't support, it should act as if the
+   consensus method will be "1".  This attempt will be doomed, since
+   the other authorities will be computing the consensus with a more
+   recent method, and any attempt to use method "1" won't get enough
+   signatures.
+
+   Instead, let's say that authorities fall back to the most recent
+   method that they *do* support.  This isn't any likelier to reach
+   consensus, but it is less likely to result in anybody signing
+   something they don't like.
+
+
+3. Likely outcomes
+
+   If a bunch of authorities were to downgrade to a much older
+   version, all at once, then newer authorities would not be able to
+   sign the consensus they made.  That's probably for the best: if a
+   bunch of authorities were to suddenly start running 0.2.0.x,
+   consensing along with them would be a poor idea.
+
+4. Alternatives
+
+   We might choose a less narrow window of allowable method, when we
+   can do so securely.  Maybe two release series, rather than one,
+   would be a good interval to do when the consensus format isn't
+   changing rapidly.
+
+   We might want to have the behavior when we see that everybody else
+   will be using a method we don't support be "Don't make a consensus
+   at all."  That's harder to program, though.
+
+
