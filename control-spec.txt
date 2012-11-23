@@ -637,6 +637,9 @@
          OptionName SP Documentation CRLF
          OptionPrefix SP Documentation CRLF
          OptionPrefix = OptionName "/*"
+      The OptionPrefix form indicates a number of options beginning with the
+      prefix. So if "config/*" is listed, other options beginning with
+      "config/" will work, but "config/*" itself is not an option.
 
     "events/names"
       A space-separated list of all the events supported by this version of
@@ -708,6 +711,9 @@
     "status/version/current"
       Status of the current version. One of: new, old, unrecommended,
       recommended, new in series, obsolete, unknown.
+    "status/version/num-concurring"
+    "status/version/num-versioning"
+      These options are deprecated; they no longer give useful information.
     "status/clients-seen"
       A summary of which countries we've seen clients from recently,
       formatted the same as the CLIENTS_SEEN status event described in
@@ -723,6 +729,13 @@
     "net/listeners/control"
       A space-separated list of the addresses at which Tor is listening for
       connections of each specified type.  [New in Tor 0.2.2.26-beta.]
+
+    "dir-usage"
+      A newline-separated list of how many bytes we've served to answer
+      each type of directory request. The format of each line is:
+         Keyword 1*SP Integer 1*SP Integer
+      where the first integer is the number of bytes written, and the second
+      is the number of requests answered.
 
   Examples:
      C: GETINFO version desc/name/moria1
