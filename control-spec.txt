@@ -1574,11 +1574,22 @@
 
 4.1.8. Descriptors uploaded to us in our role as authoritative dirserver
 
+  Tor generates this event when it's an directory authority, and
+  somebody has just uploaded a router descriptor.
+
   Syntax:
      "650" "+" "AUTHDIR_NEWDESCS" CRLF Action CRLF Message CRLF
        Descriptor CRLF "." CRLF "650" SP "OK" CRLF
      Action = "ACCEPTED" / "DROPPED" / "REJECTED"
      Message = Text
+
+  The Descriptor field is the text of the router descriptor; the Action
+  field is "ACCEPTED" if we're accepting the descriptor as the new
+  best valid descriptor for its router, "REJECTED" if we aren't taking
+  the descriptor and we're complaining to the uploading relay about
+  it, and "DROPPED" if we decide to drop the descriptor without
+  complaining.  The Message field is a human-readable string
+  explaining why we chose the Action.  (It doesn't contain newlines.)
 
 4.1.9. Our descriptor changed
 
