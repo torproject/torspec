@@ -1550,7 +1550,8 @@
   Tor's address map cache, or when the answer for a RESOLVE command is
   found.  Entries can be created by a successful or failed DNS lookup,
   a successful or failed connection attempt, a RESOLVE command,
-  a MAPADDRESS command, or the AutomapHostsOnResolve feature.
+  a MAPADDRESS command, the AutomapHostsOnResolve feature, or the
+  TrackHostExits feature.
 
   Syntax:
      "650" SP "ADDRMAP" SP Address SP NewAddress SP Expiry
