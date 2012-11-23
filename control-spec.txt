@@ -530,7 +530,7 @@
       via the control interface; the 'all' target returns the mappings
       set through any mechanism.
       Expiry is formatted as with ADDRMAP events, except that "expiry" is
-      always a time in GMT or the string "NEVER"; see section 4.1.7.
+      always a time in UTC or the string "NEVER"; see section 4.1.7.
       First introduced in 0.2.0.3-alpha.
 
     "addr-mappings/*" -- as for address-mappings/*, but without the
@@ -611,7 +611,7 @@
       start and the rest of the interval respectively.  The 'interval-start'
       and 'interval-end' fields are the borders of the current interval; the
       'interval-wake' field is the time within the current interval (if any)
-      where we plan[ned] to start being active. The times are GMT.
+      where we plan[ned] to start being active. The times are UTC.
 
     "config/names"
       A series of lines listing the available configuration options. Each is
@@ -1484,19 +1484,19 @@
 
   Syntax:
      "650" SP "ADDRMAP" SP Address SP NewAddress SP Expiry
-       [SP Error] SP GMTExpiry CRLF
+       [SP Error] SP UTCExpiry CRLF
 
      NewAddress = Address / "<error>"
      Expiry = DQUOTE ISOTime DQUOTE / "NEVER"
 
      Error = "error=" ErrorCode
      ErrorCode = XXXX
-     GMTExpiry = "EXPIRES=" DQUOTE IsoTime DQUOTE
+     UTCExpiry = "EXPIRES=" DQUOTE IsoTime DQUOTE
 
-  Error and GMTExpiry are only provided if extended events are enabled.
+  Error and UTCExpiry are only provided if extended events are enabled.
 
-  Expiry is expressed as the local time (rather than GMT).  This is a bug,
-  left in for backward compatibility; new code should look at GMTExpiry
+  Expiry is expressed as the local time (rather than UTC).  This is a bug,
+  left in for backward compatibility; new code should look at UTCExpiry
   instead.
 
   These events are generated when a new address mapping is entered in the
@@ -1991,7 +1991,7 @@
   main relays, we might start sending these events in other cases too.
 
   TimeStarted is a quoted string indicating when the reported summary
-  counts from (in GMT).
+  counts from (in UTCS).
 
   The CountrySummary keyword has as its argument a comma-separated,
   possibly empty set of "countrycode=count" pairs. For example (without

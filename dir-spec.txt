@@ -405,7 +405,7 @@
 
        [Exactly once]
 
-       The time, in GMT, when this descriptor (and its corresponding
+       The time, in UTC, when this descriptor (and its corresponding
        extra-info document if any)  was generated.
 
     "fingerprint" fingerprint NL
@@ -606,7 +606,7 @@
 
        [Exactly once.]
 
-       The time, in GMT, when this document (and its corresponding router
+       The time, in UTC, when this document (and its corresponding router
        descriptor if any) was generated.  It MUST match the published time
        in the corresponding router descriptor.
 
@@ -1010,14 +1010,14 @@
 
         [Exactly once.]
 
-        The time (in GMT) when this document and corresponding key were
+        The time (in UTC) when this document and corresponding key were
         last generated.
 
     "dir-key-expires" YYYY-MM-DD HH:MM:SS NL
 
         [Exactly once.]
 
-        A time (in GMT) after which this key is no longer valid.
+        A time (in UTC) after which this key is no longer valid.
 
     "dir-signing-key" NL a key in PEM format
 
@@ -1373,7 +1373,7 @@
         signed (that is, not including the signature), encoded in base64.
         "Publication" is the
         publication time of its most recent descriptor, in the form
-        YYYY-MM-DD HH:MM:SS, in GMT.  "IP" is its current IP address;
+        YYYY-MM-DD HH:MM:SS, in UTC.  "IP" is its current IP address;
         ORPort is its current OR port, "DirPort" is its current directory
         port, or "0" for "none".
 
@@ -2213,7 +2213,7 @@
    Authorities MUST take pains to ensure that their clocks remain accurate
    within a few seconds.  (Running NTP is usually sufficient.)
 
-   The first voting period of each day begins at 00:00 (midnight) GMT.  If
+   The first voting period of each day begins at 00:00 (midnight) UTC.  If
    the last period of the day would be truncated by one-half or more, it is
    merged with the second-to-last period.
 
