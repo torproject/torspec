@@ -2,8 +2,9 @@ Filename: 117-ipv6-exits.txt
 Title: IPv6 exits
 Author: coderman
 Created: 10-Jul-2007
-Status: Accepted
+Status: Finished
 Target: 0.2.4.x
+Implemented-In: 0.2.4.7-alpha
 
 Overview
 

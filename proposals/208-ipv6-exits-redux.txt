@@ -2,9 +2,9 @@ Filename: 208-ipv6-exits-redux.txt
 Title: IPv6 Exits Redux
 Author: Nick Mathewson
 Created: 10-Oct-2012
-Status: Open
+Status: Finished
 Target: 0.2.4.x
-
+Implemented-In: 0.2.4.7-alpha
 
 1. Obligatory Motivation Section
 

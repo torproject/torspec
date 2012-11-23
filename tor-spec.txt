@@ -1060,7 +1060,6 @@ see tor-design.pdf.
        An address type (6)     [1 octet]
        The IPv6 address to which the connection was made [16 octets]
        A number of seconds (TTL) for which the address may be cached [4 octets]
-   [XXXX No version of Tor currently generates the IPv6 format.]
 
    [Tor exit nodes before 0.1.2.0 set the TTL field to a fixed value.  Later
    versions set the TTL to the last value seen from a DNS server, and expire
@@ -1286,10 +1285,4 @@ see tor-design.pdf.
    cells when both a) the window is <= 450, and b) there are less than
    ten cell payloads remaining to be flushed at that edge.
 
-A.1. Differences between spec and implementation
-
-- The current specification requires all ORs to have IPv4 addresses, but
-  allows relays to exit and resolve to IPv6 addresses, and to declare IPv6
-  addresses in their exit policies.  The current codebase has no IPv6
-  support at all.
 

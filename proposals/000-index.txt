@@ -37,7 +37,7 @@ Proposals by number:
 114  Distributed Storage for Tor Hidden Service Descriptors [CLOSED]
 115  Two Hop Paths [DEAD]
 116  Two hop paths from entry guards [DEAD]
-117  IPv6 exits [ACCEPTED]
+117  IPv6 exits [FINISHED]
 118  Advertising multiple ORPorts at once [SUPERSEDED]
 119  New PROTOCOLINFO command for controllers [CLOSED]
 120  Shutdown descriptors when Tor servers stop [DEAD]
@@ -128,7 +128,7 @@ Proposals by number:
 205  Remove global client-side DNS caching [OPEN]
 206  Preconfigured directory sources for bootstrapping [OPEN]
 207  Directory guards [OPEN]
-208  IPv6 Exits Redux [OPEN]
+208  IPv6 Exits Redux [FINISHED]
 209  Tuning the Parameters for the Path Bias Defense [OPEN]
 210  Faster Headless Consensus Bootstrapping [OPEN]
 211  Internal Mapaddress for Tor Configuration Testing [OPEN]
@@ -180,7 +180,6 @@ Proposals by status:
    205  Remove global client-side DNS caching
    206  Preconfigured directory sources for bootstrapping [for 0.2.4.x]
    207  Directory guards [for 0.2.4.x]
-   208  IPv6 Exits Redux [for 0.2.4.x]
    209  Tuning the Parameters for the Path Bias Defense [for 0.2.4.x+]
    210  Faster Headless Consensus Bootstrapping [for 0.2.4.x+]
    211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]
@@ -189,7 +188,6 @@ Proposals by status:
    214  Allow 4-byte circuit IDs in a new link protocol
    215  Let the minimum consensus method change with time
  ACCEPTED:
-   117  IPv6 exits [for 0.2.4.x]
    140  Provide diffs between consensuses
    147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.4.x]
    157  Make certificate downloads specific [for 0.2.4.x]
@@ -203,6 +201,7 @@ Proposals by status:
    098  Proposals that should be written
    099  Miscellaneous proposals
  FINISHED:
+   117  IPv6 exits [for 0.2.4.x] [in 0.2.4.7-alpha]
    121  Hidden Service Authentication [in 0.2.1.x]
    151  Improving Tor Path Selection
    155  Four Improvements of Hidden Service Performance [in 0.2.1.x]
@@ -211,6 +210,7 @@ Proposals by status:
    161  Computing Bandwidth Adjustments [for 0.2.1.x]
    162  Publish the consensus in multiple flavors [in 0.2.3.1-alpha]
    180  Pluggable transports for circumvention [in 0.2.3.x]
+   208  IPv6 Exits Redux [for 0.2.4.x] [in 0.2.4.7-alpha]
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]
