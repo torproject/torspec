@@ -1432,7 +1432,18 @@
 
    The "PURPOSE" field is provided only for NEW and NEWRESOLVE events, and
    only if extended events are enabled (see 3.19).  Clients MUST accept
-   purposes not listed above.
+   purposes not listed above.  The purposes above are defined as:
+
+       "DIR_FETCH" -- This stream is generated internally to Tor for
+         fetching directory information.
+       "UPLOAD_DESC" -- Obsolete.
+       "DIR_UPLOAD" -- An internal stream for uploading information to
+         a directory authority.
+       "DIRPORT_TEST" -- A stream we're using to test our own directory
+         port to make sure it's reachable.
+       "DNS_REQUEST" -- A user-initiated DNS request.
+       "USER" -- This stream is handling user traffic, OR it's internal
+         to Tor, but it doesn't match one of the purposes above.
 
 4.1.3. OR Connection status changed
 
