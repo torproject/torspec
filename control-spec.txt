@@ -466,6 +466,11 @@
 
     "config-file" -- The location of Tor's configuration file ("torrc").
 
+    "config-defaults-file" -- The location of Tor's configuration
+      defaults file ("torrc.defaults").  This file gets parsed before
+      torrc, and is typically used to replace Tor's default
+      configuration values.
+
     "config-text" -- The contents that Tor would write if you send it
       a SAVECONF command, so the controller can write the file to
       disk itself. [First implemented in 0.2.2.7-alpha.]
@@ -658,6 +663,10 @@
     "features/names"
       A space-separated list of all the features supported by this version
       of Tor's USEFEATURE.
+
+    "signal/names"
+      A space-separated list of all the values supported by the SIGNAL
+      command.
 
     "ip-to-country/*"
       Maps IP addresses to 2-letter country codes.  For example,
