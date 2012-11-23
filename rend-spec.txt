@@ -533,7 +533,7 @@
          2. Let H' = the first 80 bits of H, considering each octet from
             most significant bit to least significant bit.
          3. Generate a 16-character encoding of H', using base32 as defined
-            in RFC 3548.
+            in RFC 4648.
 
    (We only use 80 bits instead of the 160 bits from SHA1 because we
    don't need to worry about arbitrary collisions, and because it will
