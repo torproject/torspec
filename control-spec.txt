@@ -1479,6 +1479,35 @@
 
   NumCircuits counts both established and pending circuits.
 
+  The ORStatus values are as follows:
+     NEW -- We have received a new incoming OR connection, and are starting
+       the server-side handshake.
+     LAUNCHED -- We have launched a new outgoing OR connection, and are
+       starting the client-side handshake.
+     CONNECTED -- The OR connection has been connected and the handshake is
+       done.
+     FAILED -- Our attempt to open the OR connection failed.
+     CLOSED -- The OR connection closed in an unremarkable way.
+
+  The Reason values for closed/failed OR connections are:
+     DONE -- The OR connection has shut down cleanly.
+     CONNECTREFUSED -- We got an ECONNREFUSED while connecting to the target
+        OR.
+     IDENTITY -- We connected to the OR, but found that its identity was
+        not what we expected.
+     CONNECTRESET -- We got an ECONNRESET or similar IO error from the
+        connection with the OR.
+     TIMEOUT -- We got an ETIMEOUT or similar IO error from the connection
+        with the OR, or we're closing the connection for being idle for too
+        long.
+     NOROUTE -- We got an ENOTCONN, ENETUNREACH, ENETDOWN, EHOSTUNREACH, or
+        similar error while connecting to the OR.
+     IOERROR -- We got some other IO error on our connection to the OR.
+     RESOURCELIMIT -- We don't have enough operating system resources (file
+        descriptors, buffers, etc) to connect to the OR.
+     MISC -- The OR connection closed for some other reason.
+
+
 4.1.4. Bandwidth used in the last second
 
   The syntax is:
