@@ -1546,25 +1546,30 @@
 
 4.1.7. New Address mapping
 
+  These events are generated when a new address mapping is entered in
+  Tor's address map cache, or when the answer for a RESOLVE command is
+  found.  Entries can be created by a successful or failed DNS lookup,
+  a successful or failed connection attempt, a RESOLVE command,
+  a MAPADDRESS command, or the AutomapHostsOnResolve feature.
+
   Syntax:
      "650" SP "ADDRMAP" SP Address SP NewAddress SP Expiry
-       [SP Error] [SP UTCExpiry] CRLF
+       [SP "error=" ErrorCode] [SP "EXPIRES=" UTCExpiry] CRLF
 
      NewAddress = Address / "<error>"
      Expiry = DQUOTE ISOTime DQUOTE / "NEVER"
 
-     Error = "error=" ErrorCode
-     ErrorCode = XXXX
-     UTCExpiry = "EXPIRES=" DQUOTE IsoTime DQUOTE
+     ErrorCode = "yes" / "internal" / "Unable to launch resolve request"
+     UTCExpiry = DQUOTE IsoTime DQUOTE
 
   Error and UTCExpiry are only provided if extended events are enabled.
+  The values for Error are mostly useless.  Future values will be
+  chosen to match 1*(ALNUM / "_"); the "Unable to launch resolve request"
+  value is a bug in Tor before 0.2.4.7-alpha.
 
   Expiry is expressed as the local time (rather than UTC).  This is a bug,
   left in for backward compatibility; new code should look at UTCExpiry
   instead.  (If Expiry is "NEVER", UTCExpiry is omitted.)
-
-  These events are generated when a new address mapping is entered in the
-  cache, or when the answer for a RESOLVE command is found.
 
 4.1.8. Descriptors uploaded to us in our role as authoritative dirserver
 
