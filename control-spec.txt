@@ -97,10 +97,12 @@
 
   We define the following general-use nonterminals:
 
-     String = DQUOTE *qcontent DQUOTE
+     QuotedString = DQUOTE *qcontent DQUOTE
 
-  There are explicitly no limits on line length.  All 8-bit characters are
-  permitted unless explicitly disallowed.
+  There are explicitly no limits on line length.  All 8-bit characters
+  are permitted unless explicitly disallowed.  In QuotedStrings,
+  backslashes and quotes must be escaped; other characters need not be
+  escaped.
 
   Wherever CRLF is specified to be accepted from the controller, Tor MAY also
   accept LF.  Tor, however, MUST NOT generate LF instead of CRLF.
