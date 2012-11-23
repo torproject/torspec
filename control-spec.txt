@@ -1543,7 +1543,7 @@
 
   Syntax:
      "650" SP "ADDRMAP" SP Address SP NewAddress SP Expiry
-       [SP Error] SP UTCExpiry CRLF
+       [SP Error] [SP UTCExpiry] CRLF
 
      NewAddress = Address / "<error>"
      Expiry = DQUOTE ISOTime DQUOTE / "NEVER"
@@ -1556,7 +1556,7 @@
 
   Expiry is expressed as the local time (rather than UTC).  This is a bug,
   left in for backward compatibility; new code should look at UTCExpiry
-  instead.
+  instead.  (If Expiry is "NEVER", UTCExpiry is omitted.)
 
   These events are generated when a new address mapping is entered in the
   cache, or when the answer for a RESOLVE command is found.
