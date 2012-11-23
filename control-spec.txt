@@ -471,7 +471,10 @@
       *append* to the ExitPolicy config option.
 
     "desc/id/<OR identity>" or "desc/name/<OR nickname>" -- the latest
-      server descriptor for a given OR.
+      server descriptor for a given OR.  (Note that modern Tor clients
+      do not download server descriptors by default, but download
+      microdescriptors instead.  If microdescriptors are enabled, you'll
+      need to use md/* instead.)
 
     "md/id/<OR identity>" or "md/name/<OR nickname>" -- the latest
       microdescriptor for a given OR. [First implemented in
@@ -508,7 +511,7 @@
       queries. [First implemented in 0.2.0.13-alpha.]
 
     "desc/all-recent" -- the latest server descriptor for every router that
-      Tor knows about.
+      Tor knows about.  (See note about desc/id/* and desc/name/* above.)
 
     "network-status" -- a space-separated list (v1 directory style)
       of all known OR identities. This is in the same format as the
