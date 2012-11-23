@@ -1443,7 +1443,7 @@
    that requested the connection, and can be (e.g.) used to look up the
    requesting program.
 
-      Purpose = "DIR_FETCH" / "UPLOAD_DESC" / "DNS_REQUEST" /
+      Purpose = "DIR_FETCH" / "DIR_UPLOAD" / "DNS_REQUEST" /
                 "USER" /  "DIRPORT_TEST"
 
    The "PURPOSE" field is provided only for NEW and NEWRESOLVE events, and
@@ -1452,7 +1452,6 @@
 
        "DIR_FETCH" -- This stream is generated internally to Tor for
          fetching directory information.
-       "UPLOAD_DESC" -- Obsolete.
        "DIR_UPLOAD" -- An internal stream for uploading information to
          a directory authority.
        "DIRPORT_TEST" -- A stream we're using to test our own directory
