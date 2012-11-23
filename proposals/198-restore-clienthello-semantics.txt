@@ -75,7 +75,6 @@ Proposed spec changes:
      TLS_DHE_RSA_WITH_AES_256_CBC_SHA
      TLS_DHE_RSA_WITH_AES_128_CBC_SHA
      SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA
-     SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA
 
    If the advertised ciphersuites in the ClientHello are _exactly_[*]
    the following, they indicate that the Tor v2+ link protocol is in
