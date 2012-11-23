@@ -1354,7 +1354,10 @@
    if extended events are enabled (see 3.19).  Clients MUST accept reasons
    not listed above.  Reasons are as given in tor-spec.txt, except for:
 
-      NOPATH          (Not enough nodes to make circuit)
+      NOPATH              (Not enough nodes to make circuit)
+      MEASUREMENT_EXPIRED (As "TIMEOUT", except that we had left the circuit
+                           open for measurement purposes to see how long it
+                           would take to finish.)
 
    The "REMOTE_REASON" field is provided only when we receive a DESTROY or
    TRUNCATE cell, and only if extended events are enabled.  It contains the
