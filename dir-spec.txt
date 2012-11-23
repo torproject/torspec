@@ -1532,7 +1532,8 @@
    The signature contains the following item, which appears Exactly Once
    for a vote, and At Least Once for a consensus.
 
-    "directory-signature" SP identity SP signing-key-digest NL Signature
+    "directory-signature" [SP Algorithm] SP identity SP signing-key-digest
+        NL Signature
 
         This is a signature of the status document, with the initial item
         "network-status-version", and the signature item
@@ -1542,6 +1543,20 @@
         "identity" is the hex-encoded digest of the authority identity key of
         the signing authority, and "signing-key-digest" is the hex-encoded
         digest of the current authority signing key of the signing authority.
+
+        The Algorithm is one of "sha1" or "sha256" if it is present;
+        implementations MUST ignore directory-signature entries with an
+        unrecognized Algorithm.  "sha1" is the default, if no Algorithm is
+        given.  The algorithm describes how to compute the hash of the
+        document before signing it.
+
+        "ns"-flavored consensus documents must contain only sha1 signatures.
+        Votes and microdescriptor documents may contain other signature
+        types. Note that only one signature from each authority should be
+        "counted" as meaning that the authority has signed the consensus.
+
+        (Tor clients before 0.2.3.x did not understand the 'algorithm'
+        field.)
 
 3.4. Assigning flags in a vote
 
@@ -2100,6 +2115,9 @@
 
         [*Before consensus method 13, this field was sometimes erroneously
         omitted.]
+
+   Additionally, a microdescriptor consensus MAY use the sha256 digest
+   algorithm for its signatures.
 
 3.7. Detached signatures
 
