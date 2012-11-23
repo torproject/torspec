@@ -81,6 +81,11 @@
     a stream closed for an unrecognized reason is nevertheless closed,
     and should be reported as such.
 
+    (If some list of alternatives is given, and there isn't an explicit
+    statement that clients must tolerate unexpected values, clients still
+    must tolerate unexpected values. The only exception would be if there
+    were an explicit statement that no future values will ever be added.)
+
 2. Message format
 
 2.1. Description format
