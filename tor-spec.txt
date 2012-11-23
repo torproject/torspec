@@ -181,7 +181,6 @@ see tor-design.pdf.
      TLS_DHE_RSA_WITH_AES_256_CBC_SHA
      TLS_DHE_RSA_WITH_AES_128_CBC_SHA
      SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA
-     SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA
 
    In "renegotiation" (a.k.a. "the v2 handshake"),
    the connection initiator sends no certificates, and
@@ -335,9 +334,8 @@ see tor-design.pdf.
 
    If the client sends the Fixed Ciphersuite List, the responder MUST NOT
    select any ciphersuite besides TLS_DHE_RSA_WITH_AES_256_CBC_SHA,
-   TLS_DHE_RSA_WITH_AES_128_CBC_SHA, SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA, and
-   SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA: such ciphers might not actually be
-   supported by the client.
+   TLS_DHE_RSA_WITH_AES_128_CBC_SHA, and SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA:
+   such ciphers might not actually be supported by the client.
 
    If the client sends a v2+ ClientHello with a list of ciphers other then
    the Fixed Ciphersuite List, the responder can trust that the client
