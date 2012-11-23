@@ -354,8 +354,9 @@
 
       http://<hostname:port>/tor/
 
-   Neither router descriptors nor extra-info documents may exceed 20,000
-   bytes in length. If they do, the authorities SHOULD reject them.
+   Router descriptors may not exceed 20,000 bytes in length; extra-info
+   documents may not exceed 50,000 bytes in length. If they do, the
+   authorities SHOULD reject them.
 
 2.1. Router descriptor format
 
