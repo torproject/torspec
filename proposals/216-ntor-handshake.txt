@@ -1,17 +1,17 @@
-Filename: xxx-ntor-handshake.txt
+Filename: 216-ntor-handshake.txt
 Title: Improved circuit-creation key exchange
 Author:  Nick Mathewson
 Created: 11-May-2011
-Status: Draft
+Status: Open
 
+Summary:
 
-This is an attempt to translate the proposed circuit handshake from
-"Anonymity and one-way authentication in key-exchange protocols" by
-Goldberg, Stebila, and Ustaoglu, into a Tor proposal format.
+  This is an attempt to translate the proposed circuit handshake from
+  "Anonymity and one-way authentication in key-exchange protocols" by
+  Goldberg, Stebila, and Ustaoglu, into a Tor proposal format.
 
-It assumes something like Robert Ransom's proposal draft is in place to
-provide an extended CREATE cell format that can indicate what type of
-handshake is in use.
+  It assumes that proposal 200 is implemented, to provide an extended CREATE
+  cell format that can indicate what type of handshake is in use.
 
 Notation:
 
@@ -67,35 +67,25 @@ Protocol:
     NODEID:     ID             -- H_LENGTH bytes
     KEYID:      KEYID(B)       -- H_LENGTH bytes
     CLIENT_PK:  X              -- G_LENGTH bytes
-    PARAMSLEN:                 -- 2 bytes
-    PARMS:                     -- PARAMSLEN byets
-
-  (The "PARAMS" component is used to encode any additional authenticated
-  information that's needed for establishing the right kind of circuit.
-   XXXXX nickm added it; we need to ask if it's safe!!!!)
 
   The server generates a keypair of y,Y = KEYGEN(), and computes
 
-    secret_input = EXP(X,y) | EXP(X,b) | ID | B | X | Y | PARAMSLEN | PARAMS
-                     | PROTOID
+    secret_input = EXP(X,y) | EXP(X,b) | ID | B | X | Y | PROTOID
     KEY_SEED = H(secret_input, t_key)
     verify = H(secret_input, t_verify)
-    auth_input = verify | ID | B | Y | X | PARAMSLEN | PARAMS | PROTOID
-                     | "Server"
+    auth_input = verify | ID | B | Y | X | PROTOID | "Server"
 
   The server sends a CREATED cell containing:
 
     SERVER_PK:  Y                     -- G_LENGTH bytes
     AUTH:       H(auth_input, t_mac)  -- H_LENGTH byets
 
-  The client then checks Y is in G^* [see below], and computes
+  The client then checks Y is in G^* [see NOTE below], and computes
 
-    secret_input = EXP(Y,x) | EXP(B,x) | ID | B | X | Y | PARAMSLEN | PARAMS
-                     | PROTOID
+    secret_input = EXP(Y,x) | EXP(B,x) | ID | B | X | Y | PROTOID
     KEY_SEED = H(secret_input, t_key)
     verify = H(secret_input, t_verify)
-    auth_input = verify | ID | B | Y | X | PARAMLENS | PARAMS | PROTOID
-                     | "Server"
+    auth_input = verify | ID | B | Y | X | PROTOID | "Server"
 
     The client verifies that AUTH == H(auth_input, t_mac).
 
@@ -125,6 +115,8 @@ Key expansion:
   Ian says this is due to a construction from Krawczyk at
   http://eprint.iacr.org/2010/264 .
 
+  Let m_expand be PROTOID | ":key_expand"
+
 Performance notes:
 
   In Tor's current circuit creation handshake, the client does:
@@ -148,4 +140,25 @@ Performance notes:
      A private-half of a DH handshake
      3 H operations for the handshake
      3 H operations for the key expansion
+
+Integrating with the rest of Tor:
+
+  Add a new optional entry to router descriptors and microdescriptors:
+
+     "onion-key-ntor" SP Base64Key NL
+
+  where Base64Key is a base-64 encoded 32-byte value, with padding
+  omitted.
+
+  Add a new consensus method to tell servers to copy "onion-key-ntor"
+  entries to from router descriptors to microdescriptors.
+
+  Add a "UseNTorHandshake" configuration option and a corresponding
+  consensus parameter to control whether clients use the ntor
+  handshake.  If the configuration option is "auto", clients should
+  obey the consensus parameter.  Have the configuration default be
+  "auto" and the consensus value initially be "0".
+
+  Reserve the handshake type [00 01] for this handshake in CREATE2 and
+  EXTEND2 cells.
 
