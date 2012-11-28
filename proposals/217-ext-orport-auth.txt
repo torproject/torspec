@@ -1,0 +1,177 @@
+Filename: 217-ext-orport-auth.txt
+Title: Tor Extended ORPort Authentication
+Author: George Kadianakis
+Created: 28-11-2012
+Status: Open
+Target: 0.2.5.x
+
+1. Overview
+
+  This proposal defines a scheme for Tor components to authenticate to
+  each other using a shared-secret.
+
+2. Motivation
+
+  Proposal 196 introduced new ways for pluggable transport proxies to
+  communicate with Tor. The communication happens using TCP in the same
+  fashion that controllers speak to the ControlPort.
+
+  To defend against cross-protocol attacks [0] on the transport ports,
+  we need to define an authentication scheme that will restrict passage
+  to unknown clients.
+
+  Tor's ControlPort uses an authentication scheme called safe-cookie
+  authentication [1]. Unfortunately, the design of the safe-cookie
+  authentication was influenced by the protocol structure of the
+  ControlPort and the need for backwards compatibility of the
+  cookie-file and can't be easily reused in other use cases.
+
+3. Goals
+
+  The general goal of Extended ORPort authentication is to authenticate
+  the client based on a shared-secret that only authorized clients
+  should know.
+
+  Furthermore, its implementation should be flexible and easy to reuse,
+  so that it can be used as the authentication mechanism in front of
+  future Tor helper ports (for example, in proposal 199).
+
+  Finally, the protocol is able to support multiple authentication
+  schemes and each of them has different goals.
+
+4. Protocol Specification
+
+4.1. Initial handshake
+
+  When a client connects to the Extended ORPort, the server sends:
+
+    AuthTypes                                   [variable]
+    EndAuthTypes                                [1 octet]
+
+  Where,
+
+  + AuthTypes are the authentication schemes that the server supports
+    for this session. They are multiple concatenated 1-octet values that
+    take values from 1 to 255.
+  + EndAuthTypes is the special value 0.
+
+  The client reads the list of supported authentication schemes and
+  replies with the one he prefers to use:
+
+    AuthType                                    [1 octet]
+
+  Where,
+
+  + AuthType is the authentication scheme that the client wants to use
+    for this session. A valid authentication type takes values from 1 to
+    255. A value of 0 means that the client did not like the
+    authentication types offered by the server.
+
+  If the client sent an AuthType of value 0, or an AuthType that the
+  server does not support, the server MUST close the connection.
+
+4.2. Authentication types
+
+4.2.1 SAFE_COOKIE handshake
+
+  Authentication type 1 is called SAFE_COOKIE.
+
+4.2.1.1. Motivation and goals
+
+  The SAFE_COOKIE scheme is pretty-much identical to the authentication
+  scheme that was introduced for the ControlPort in proposal 193.
+
+  An additional goal of the SAFE_COOKIE authentication scheme (apart
+  from the goals of section 2), is that it should not leak the contents
+  of the cookie-file to untrusted parties.
+
+  Specifically, the SAFE_COOKIE protocol will never leak the actual
+  contents of the file. Instead, it uses a challenge-response protocol
+  (similar to the HTTP digest authentication of RFC2617) to ensure that
+  both parties know the cookie without leaking it.
+
+4.2.1.2. Cookie-file format
+
+  The format of the cookie-file is:
+
+     StaticHeader                                [32 octets]
+     Cookie                                      [32 octets]
+
+  Where,
+  + StaticHeader is the following string:
+    "! Extended ORPort Auth Cookie !\x0a"
+  + Cookie is the shared-secret. During the SAFE_COOKIE protocol, the
+    cookie is called CookieString.
+
+  Extended ORPort clients MUST make sure that the StaticHeader is
+  present in the cookie file, before proceeding with the
+  authentication protocol.
+
+  Details on how Tor locates the cookie file can be found in section 5
+  of proposal 196. Details on how transport proxies locate the cookie
+  file can be found in pt-spec.txt.
+
+4.2.1.3. Protocol specification
+
+  A client that performs the SAFE_COOKIE handshake begins by sending:
+
+     ClientNonce                                 [32 octets]
+
+  Where,
+  + ClientNonce is 32 octets of random data.
+
+  Then, the server replies with:
+
+     ServerHash                                  [32 octets]
+     ServerNonce                                 [32 octets]
+
+  Where,
+  + ServerHash is computed as:
+      HMAC-SHA256(CookieString,
+        "ExtORPort authentication server-to-client hash" | ClientNonce | ServerNonce)
+  + ServerNonce is 32 random octets.
+
+  Upon receiving that data, the client computers ServerHash herself and
+  validates it against the ServerHash provided by the server.
+
+  If the server-provided ServerHash is invalid, the client MUST
+  terminate the connection.
+
+  Otherwise the client replies with:
+
+     ClientHash                                  [32 octets]
+
+  Where,
+  + ClientHash is computed as:
+      HMAC-SHA256(CookieString,
+        "ExtORPort authentication client-to-server hash" | ClientNonce | ServerNonce)
+
+  Upon receiving that data, the server computers ClientHash herself and
+  validates it against the ClientHash provided by the client.
+
+  Finally, the server replies with:
+
+     Status                                      [1 octet]
+
+  Where,
+  + Status is 1 if the authentication was successfull. If the
+    authentication failed, Status is 0.
+
+4.3. Post-authentication
+
+  After completing the Extended ORPort authentication successfully, the
+  two parties should proceed with the Extended ORPort protocol on the
+  same TCP connection.
+
+5. Acknowledgments
+
+  Thanks to Robert Ransom for helping with the proposal and designing
+  the original safe-cookie authentication scheme. Thanks to Nick
+  Mathewson for advices and reviews of the proposal.
+
+[0]:
+http://archives.seul.org/or/announce/Sep-2007/msg00000.html
+
+[1]:
+https://gitweb.torproject.org/torspec.git/blob/79f488c32c43562522e5592f2c19952dc7681a65:/control-spec.txt#l1069
+

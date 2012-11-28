@@ -137,6 +137,7 @@ Proposals by number:
 214  Allow 4-byte circuit IDs in a new link protocol [OPEN]
 215  Let the minimum consensus method change with time [OPEN]
 216  Improved circuit-creation key exchange [OPEN]
+217  Tor Extended ORPort Authentication [OPEN]
 
 
 Proposals by status:
@@ -189,6 +190,7 @@ Proposals by status:
    214  Allow 4-byte circuit IDs in a new link protocol
    215  Let the minimum consensus method change with time
    216  Improved circuit-creation key exchange
+   217  Tor Extended ORPort Authentication [for 0.2.5.x]
  ACCEPTED:
    140  Provide diffs between consensuses
    147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.4.x]
