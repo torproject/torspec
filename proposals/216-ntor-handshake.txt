@@ -103,19 +103,22 @@ Key expansion:
 
        where K0==g^xy, and K is divvied up into Df, Db, Kf, and Kb portions.
 
-  Instead, let's have it be
+  Instead, let's have it be HKDF-SHA256 as defined in RFC5869:
 
-       K = K_0 | K_1 | K_2 | K_3 | ...
+       K = K_1 | K_2 | K_3 | ...
 
-       Where K_0     = H(m_expand | INT8(i) , KEY_SEED )
+       Where K_1     = H(m_expand | INT8(1) , KEY_SEED )
          and K_(i+1) = H(K_i | m_expand | INT8(i) , KEY_SEED )
-         and m_expend is an arbitrarily chosen value,
+         and m_expand is an arbitrarily chosen value,
          and INT8(i) is a octet with the value "i".
 
   Ian says this is due to a construction from Krawczyk at
   http://eprint.iacr.org/2010/264 .
 
   Let m_expand be PROTOID | ":key_expand"
+
+  In RFC5869's vocabulary, this is HKDF-SHA256 with info == m_expand,
+  salt == t_key, and IKM == secret_input.
 
 Performance notes:
 
