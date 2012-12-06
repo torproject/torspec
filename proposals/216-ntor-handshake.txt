@@ -36,6 +36,8 @@ Notation:
   Let KEYID be a collision-resistant (but not necessarily preimage-resistant)
      hash function on members of G, of output length H_LENGTH bytes.
 
+  Let each node have a unique identifier, ID_LENGTH bytes in length.
+
 Instantiation:
 
   Let's call this PROTOID "ntor-curve25519-sha256-1"  (We might want to make
@@ -43,7 +45,7 @@ Instantiation:
 
   Set H(x,t) == HMAC_SHA256 with message x and key t. So H_LENGTH == 32.
   Set t_mac   == PROTOID | ":mac"
-      t_key  == PROTOID | ":key"
+      t_key  == PROTOID | ":key_extract"
       t_verify  == PROTOID | ":verify"
 
   Set EXP(a,b) == curve25519(.,b,a), and g == 9 .  Let KEYGEN() do the
@@ -64,7 +66,7 @@ Protocol:
   To send a create cell, the client generates a keypair x,X = KEYGEN(), and
   sends a CREATE cell with contents:
 
-    NODEID:     ID             -- H_LENGTH bytes
+    NODEID:     ID             -- ID_LENGTH bytes
     KEYID:      KEYID(B)       -- H_LENGTH bytes
     CLIENT_PK:  X              -- G_LENGTH bytes
 
@@ -148,13 +150,16 @@ Integrating with the rest of Tor:
 
   Add a new optional entry to router descriptors and microdescriptors:
 
-     "onion-key-ntor" SP Base64Key NL
+     "ntor-onion-key" SP Base64Key NL
 
   where Base64Key is a base-64 encoded 32-byte value, with padding
   omitted.
 
-  Add a new consensus method to tell servers to copy "onion-key-ntor"
+  Add a new consensus method to tell servers to copy "ntor-onion-key"
   entries to from router descriptors to microdescriptors.
+
+  In microdescriptors, "ntor-onion-key" can go right after the "onion-key"
+  line.
 
   Add a "UseNTorHandshake" configuration option and a corresponding
   consensus parameter to control whether clients use the ntor
@@ -162,6 +167,43 @@ Integrating with the rest of Tor:
   obey the consensus parameter.  Have the configuration default be
   "auto" and the consensus value initially be "0".
 
-  Reserve the handshake type [00 01] for this handshake in CREATE2 and
+  Reserve the handshake type [00 02] for this handshake in CREATE2 and
   EXTEND2 cells.
+
+  Specify that this handshake type can be used in EXTEND/EXTENDED/
+  CREATE/CREATED cells as follows: instead of a 190-byte TAP onionskin, send
+  the 16-byte string "ntorNTORntorNTOR", followed by the client's ntor
+  message.  Instead of a 148-byte TAP response, send the server's ntor
+  response.  (We need this so that a client can extend from an 0.2.3 server,
+  which doesn't know about CREATE2/CREATED2/EXTEND/EXTENDED2.)
+
+Test vectors for HKDF-SHA256:
+
+ These are some test vectors for HKDF-SHA256 using the values for M_EXPAND
+ and T_KEY above, taking 100 bytes of key material.
+
+  INPUT: "" (The empty string)
+  OUTPUT: d3490ed48b12a48f9547861583573fe3f19aafe3
+          f81dc7fc75eeed96d741b3290f941576c1f9f0b2
+          d463d1ec7ab2c6bf71cdd7f826c6298c00dbfe67
+          11635d7005f0269493edf6046cc7e7dcf6abe0d2
+          0c77cf363e8ffe358927817a3d3e73712cee28d8
+
+  INPUT: "Tor" (546f72)
+  OUTPUT: 5521492a85139a8d9107a2d5c0d9c91610d0f959
+          89975ebee6c02a4f8d622a6cfdf9b7c7edd3832e
+          2760ded1eac309b76f8d66c4a3c4d6225429b3a0
+          16e3c3d45911152fc87bc2de9630c3961be9fdb9
+          f93197ea8e5977180801926d3321fa21513e59ac
+
+  INPUT: "AN ALARMING ITEM TO FIND ON YOUR CREDIT-RATING STATEMENT"
+         (414e20414c41524d494e47204954454d20544f2046494e44204f4e20
+          594f5552204352454449542d524154494e472053544154454d454e54)
+  OUTPUT: a2aa9b50da7e481d30463adb8f233ff06e9571a0
+          ca6ab6df0fb206fa34e5bc78d063fc291501beec
+          53b36e5a0e434561200c5f8bd13e0f88b3459600
+          b4dc21d69363e2895321c06184879d94b18f0784
+          11be70b767c7fc40679a9440a0c95ea83a23efbf
+
+
 
