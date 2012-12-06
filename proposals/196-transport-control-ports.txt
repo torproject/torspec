@@ -159,7 +159,27 @@ Target: 0.2.4.x
   command it MAY want to shutdown its connections to the transport
   proxy.
 
-5. Security Considerations
+5. Authentication
+
+  To defend against cross-protocol attacks on the Extended ORPOrt,
+  proposal 213 defines an authentication scheme that should be used to
+  protect it.
+
+  If the Extended ORPort is enabled, Tor should regenerate the cookie
+  file of proposal 213 on startup and store it in
+  $DataDirectory/extended_orport_auth_cookie.
+
+  The location of the cookie can be overriden by using the
+  configuration file parameter ExtORPortCookieAuthFile, which is
+  defined as:
+
+    ExtORPortCookieAuthFile <path>
+
+  where <path> is a filesystem path.
+
+  XXX should we also add an ExtORPortCookieFileGroupReadable torrc option?
+
+6. Security Considerations
 
   Extended ORPort or TransportControlPort do _not_ provide link
   confidentiality, authentication or integrity. Sensitive data, like
@@ -176,7 +196,7 @@ Target: 0.2.4.x
   instructed to connect to a non-localhost Extended ORPort or
   TransportControlPort.
 
-6. Future
+7. Future
 
   In the future, we might have pluggable transports which require the
   _client_ transport proxy to use the TransportControlPort and exchange

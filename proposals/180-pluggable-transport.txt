@@ -443,39 +443,9 @@ Managed proxy interface
   should set the environment variable:
     TOR_PT_MANAGED_TRANSPORT_VER=1
 
-The extended ORPort protocol
+The Extended ORPort protocol
 
-  Server transports may need to connect to the bridge and pass
-  additional information about client connections that the bridge
-  would ordinarily receive from the kernel's TCP stack.  To do this,
-  they connect to the "extended server port" as given in
-  EXTENDED_SERVER_PORT, send a short amount of information, wait for a
-  response, and then send the user traffic on that port.
-
-  The extended server port protocol is as follows:
-
-     COMMAND [2 bytes, big-endian]
-     BODYLEN [2 bytes, big-endian]
-     BODY [BODYLEN bytes]
-
-     Commands sent from the transport to the server are:
-
-     [0x0000] DONE: There is no more information to give. (body ignored)
-
-     [0x0001] USERADDR: an address:port string that represents the user's
-       address.  If the transport doesn't actually do addresses,
-       this shouldn't be sent.
-
-     Replies sent from tor to the proxy are:
-
-     [0x1001] OKAY: Send the user's traffic. (body ignored)
-
-     [0x1002] DENY: Tor would prefer not to get more traffic from
-       this address for a while. (body ignored)
-
-  [We could also use an out-of-band signalling method to tell Tor
-  about client addresses, but that's a historically error-prone way
-  to go about annotating connections.]
+  The Extended ORPort protocol is described in proposal 196.
 
 Advertising bridge methods
 
