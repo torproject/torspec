@@ -469,7 +469,7 @@
     "config-defaults-file" -- The location of Tor's configuration
       defaults file ("torrc.defaults").  This file gets parsed before
       torrc, and is typically used to replace Tor's default
-      configuration values.
+      configuration values. [First implemented in 0.2.3.9-alpha.]
 
     "config-text" -- The contents that Tor would write if you send it
       a SAVECONF command, so the controller can write the file to
