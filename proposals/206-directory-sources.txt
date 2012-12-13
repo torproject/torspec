@@ -2,8 +2,8 @@ Filename: 206-directory-sources.txt
 Title: Preconfigured directory sources for bootstrapping
 Author: Nick Mathewson
 Created: 10-Oct-2012
-Status: Open
-Target: 0.2.4.x
+Status: Closed
+Implemented-In: 0.2.4.7-alpha
 
 
 Motivation and History:

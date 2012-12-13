@@ -126,7 +126,7 @@ Proposals by number:
 203  Avoiding censorship by impersonating an HTTPS server [DRAFT]
 204  Subdomain support for Hidden Service addresses [OPEN]
 205  Remove global client-side DNS caching [OPEN]
-206  Preconfigured directory sources for bootstrapping [OPEN]
+206  Preconfigured directory sources for bootstrapping [CLOSED]
 207  Directory guards [OPEN]
 208  IPv6 Exits Redux [FINISHED]
 209  Tuning the Parameters for the Path Bias Defense [OPEN]
@@ -180,7 +180,6 @@ Proposals by status:
    202  Two improved relay encryption protocols for Tor cells
    204  Subdomain support for Hidden Service addresses
    205  Remove global client-side DNS caching
-   206  Preconfigured directory sources for bootstrapping [for 0.2.4.x]
    207  Directory guards [for 0.2.4.x]
    209  Tuning the Parameters for the Path Bias Defense [for 0.2.4.x+]
    210  Faster Headless Consensus Bootstrapping [for 0.2.4.x+]
@@ -255,6 +254,7 @@ Proposals by status:
    184  Miscellaneous changes for a v3 Tor link protocol [for 0.2.3.x]
    187  Reserve a cell type to allow client authorization [for 0.2.3.x]
    193  Safe cookie authentication for Tor controllers
+   206  Preconfigured directory sources for bootstrapping [in 0.2.4.7-alpha]
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration
