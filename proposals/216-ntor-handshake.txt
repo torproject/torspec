@@ -91,8 +91,9 @@ Protocol:
 
     The client verifies that AUTH == H(auth_input, t_mac).
 
-  [NOTE: It may be adequate to check that EXP(Y,x) is not the point at
-  infinity.  See tor-dev thread.]
+  Both parties check that none of the EXP() operations produced the point at
+  infinity. [NOTE: This is an adequate replacement for checking Y for group
+  membership, if the group is curve25519.]
 
   Both parties now have a shared value for KEY_SEED.  They expand this into
   the keys needed for the Tor relay protocol.
