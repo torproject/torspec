@@ -28,7 +28,7 @@ Notation:
   generator g for this group.
 
   Let a,A=KEYGEN() yield a new private-public keypair in G, where a is the
-  secret key and A = EXP(g,a).  If additional checks are needed to insure
+  secret key and A = EXP(g,a).  If additional checks are needed to ensure
   a valid keypair, they should be performed.
 
   Let PROTOID be a string designating this variant of the protocol.
@@ -55,6 +55,10 @@ Instantiation:
   Set KEYID(B) == B.  (We don't need to use a hash function here, since our
      keys are already very short.  It is trivially collision-resistant, since
      KEYID(A)==KEYID(B) iff A==B.)
+
+  When representing an element of the curve25519 subgroup as a byte string,
+  use the standard (32-byte, little-endian, x-coordinate-only) representation
+  for curve25519 points.
 
 Protocol:
 
