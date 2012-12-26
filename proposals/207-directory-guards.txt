@@ -2,7 +2,7 @@ Filename: 207-directory-guards.txt
 Title: Directory guards
 Author: Nick Mathewson
 Created: 10-Oct-2012
-Status: Open
+Status: Closed
 Target: 0.2.4.x
 
 
@@ -21,8 +21,8 @@ Proposal:
    guards as those nodes are down, clients should also pick a small-ish set
    of directory guard nodes, to persist in Tor's state file.
 
-   Clients should not pick their own guards as directory guards, or pick
-   their directory guards as regular guards.
+   Clients should, as much as possible, use their regular guards as their
+   directory guards.
 
    When downloading a regular directory object (that is, not a hidden
    service descriptor), clients should prefer their directory guards
@@ -35,13 +35,6 @@ Proposal:
    If a client has only one directory guard running, they should add new
    guards and try them, and then use their directory guards to fetch multiple
    descriptors in parallel.
-
-Discussion:
-
-   The rule that the set of guards and the set of directory guards need to
-   be disjoint, and the rule that multiple directory guards need to be
-   providing descriptors, are both attempts to make it harder for a
-   single node to capture a route.
 
 Open questions and notes:
 

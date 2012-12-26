@@ -118,16 +118,16 @@ Proposals by number:
 195  TLS certificate normalization for Tor 0.2.4.x [DRAFT]
 196  Extended ORPort and TransportControlPort [OPEN]
 197  Message-based Inter-Controller IPC Channel [OPEN]
-198  Restore semantics of TLS ClientHello [ACCEPTED]
+198  Restore semantics of TLS ClientHello [FINISHED]
 199  Integration of BridgeFinder and BridgeFinderHelper [OPEN]
 200  Adding new, extensible CREATE, EXTEND, and related cells [OPEN]
 201  Make bridges report statistics on daily v3 network status requests [OPEN]
 202  Two improved relay encryption protocols for Tor cells [OPEN]
 203  Avoiding censorship by impersonating an HTTPS server [DRAFT]
 204  Subdomain support for Hidden Service addresses [OPEN]
-205  Remove global client-side DNS caching [OPEN]
+205  Remove global client-side DNS caching [CLOSED]
 206  Preconfigured directory sources for bootstrapping [CLOSED]
-207  Directory guards [OPEN]
+207  Directory guards [CLOSED]
 208  IPv6 Exits Redux [FINISHED]
 209  Tuning the Parameters for the Path Bias Defense [OPEN]
 210  Faster Headless Consensus Bootstrapping [OPEN]
@@ -179,8 +179,6 @@ Proposals by status:
    201  Make bridges report statistics on daily v3 network status requests [for 0.2.4.x]
    202  Two improved relay encryption protocols for Tor cells
    204  Subdomain support for Hidden Service addresses
-   205  Remove global client-side DNS caching
-   207  Directory guards [for 0.2.4.x]
    209  Tuning the Parameters for the Path Bias Defense [for 0.2.4.x+]
    210  Faster Headless Consensus Bootstrapping [for 0.2.4.x+]
    211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]
@@ -197,7 +195,6 @@ Proposals by status:
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
    186  Multiple addresses for one OR or bridge [for 0.2.4.x+]
-   198  Restore semantics of TLS ClientHello [for 0.2.4.x]
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process
@@ -213,6 +210,7 @@ Proposals by status:
    161  Computing Bandwidth Adjustments [for 0.2.1.x]
    162  Publish the consensus in multiple flavors [in 0.2.3.1-alpha]
    180  Pluggable transports for circumvention [in 0.2.3.x]
+   198  Restore semantics of TLS ClientHello [for 0.2.4.x]
    208  IPv6 Exits Redux [for 0.2.4.x] [in 0.2.4.7-alpha]
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
@@ -254,7 +252,9 @@ Proposals by status:
    184  Miscellaneous changes for a v3 Tor link protocol [for 0.2.3.x]
    187  Reserve a cell type to allow client authorization [for 0.2.3.x]
    193  Safe cookie authentication for Tor controllers
+   205  Remove global client-side DNS caching [in 0.2.4.7-alpha.]
    206  Preconfigured directory sources for bootstrapping [in 0.2.4.7-alpha]
+   207  Directory guards [for 0.2.4.x]
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration

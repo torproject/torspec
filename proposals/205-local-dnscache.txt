@@ -2,8 +2,16 @@ Filename: 205-local-dnscache.txt
 Title: Remove global client-side DNS caching
 Author: Nick Mathewson
 Created: 20 July 2012
-Status: Open
+Implemented-In: 0.2.4.7-alpha.
+Status: Closed
 
+
+-1. STATUS
+
+   In 0.2.4.7-alpha, client-side DNS caching is off by default; there
+   didn't seem to be much benefit in having per-circuit caches.  I'm
+   leaving the original proposal below in tact for historical reasons.
+     -Nick
 
 0. Overview
 
