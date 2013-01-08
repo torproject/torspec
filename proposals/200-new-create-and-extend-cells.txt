@@ -2,7 +2,7 @@ Filename: 200-new-create-and-extend-cells.txt
 Title: Adding new, extensible CREATE, EXTEND, and related cells
 Author: Robert Ransom
 Created: 2012-03-22
-Status: Open
+Status: Finished
 
 History
 

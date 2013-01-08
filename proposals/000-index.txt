@@ -120,7 +120,7 @@ Proposals by number:
 197  Message-based Inter-Controller IPC Channel [OPEN]
 198  Restore semantics of TLS ClientHello [FINISHED]
 199  Integration of BridgeFinder and BridgeFinderHelper [OPEN]
-200  Adding new, extensible CREATE, EXTEND, and related cells [OPEN]
+200  Adding new, extensible CREATE, EXTEND, and related cells [FINISHED]
 201  Make bridges report statistics on daily v3 network status requests [OPEN]
 202  Two improved relay encryption protocols for Tor cells [OPEN]
 203  Avoiding censorship by impersonating an HTTPS server [DRAFT]
@@ -136,7 +136,7 @@ Proposals by number:
 213  Remove stream-level sendmes from the design [OPEN]
 214  Allow 4-byte circuit IDs in a new link protocol [OPEN]
 215  Let the minimum consensus method change with time [OPEN]
-216  Improved circuit-creation key exchange [OPEN]
+216  Improved circuit-creation key exchange [FINISHED]
 217  Tor Extended ORPort Authentication [OPEN]
 
 
@@ -175,7 +175,6 @@ Proposals by status:
    196  Extended ORPort and TransportControlPort [for 0.2.4.x]
    197  Message-based Inter-Controller IPC Channel [for 0.2.4.x]
    199  Integration of BridgeFinder and BridgeFinderHelper [for 0.2.4.x+]
-   200  Adding new, extensible CREATE, EXTEND, and related cells
    201  Make bridges report statistics on daily v3 network status requests [for 0.2.4.x]
    202  Two improved relay encryption protocols for Tor cells
    204  Subdomain support for Hidden Service addresses
@@ -186,7 +185,6 @@ Proposals by status:
    213  Remove stream-level sendmes from the design
    214  Allow 4-byte circuit IDs in a new link protocol
    215  Let the minimum consensus method change with time
-   216  Improved circuit-creation key exchange
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
  ACCEPTED:
    140  Provide diffs between consensuses
@@ -211,7 +209,9 @@ Proposals by status:
    162  Publish the consensus in multiple flavors [in 0.2.3.1-alpha]
    180  Pluggable transports for circumvention [in 0.2.3.x]
    198  Restore semantics of TLS ClientHello [for 0.2.4.x]
+   200  Adding new, extensible CREATE, EXTEND, and related cells
    208  IPv6 Exits Redux [for 0.2.4.x] [in 0.2.4.7-alpha]
+   216  Improved circuit-creation key exchange
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]
