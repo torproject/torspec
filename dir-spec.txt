@@ -1487,7 +1487,9 @@
     "directory-footer" NL
 
    It contains two subsections, a bandwidths-weights line and a
-   directory-signature.
+   directory-signature. (Prior to conensus method 9, footers only contained
+   directory-signatures without a 'directory-footer' line or
+   bandwidth-weights.)
 
    The bandwidths-weights line appears At Most Once for a consensus. It does
    not appear in votes.
