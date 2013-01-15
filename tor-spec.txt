@@ -685,12 +685,13 @@ see tor-design.pdf.
          DH data (g^y)                 [DH_LEN bytes]
          Derivative key data (KH)      [HASH_LEN bytes]   <see 5.2 below>
 
-   The CircID for a CREATE cell is an arbitrarily chosen 2-byte integer,
-   selected by the node (OP or OR) that sends the CREATE cell.  To prevent
-   CircID collisions, when one node sends a CREATE cell to another, it chooses
-   from only one half of the possible values based on the ORs' public
-   identity keys: if the sending node has a lower key, it chooses a CircID with
-   an MSB of 0; otherwise, it chooses a CircID with an MSB of 1.
+   The CircID for a CREATE cell is an arbitrarily chosen nonzero 2-byte
+   integer, selected by the node (OP or OR) that sends the CREATE cell.
+   To prevent CircID collisions, when one node sends a CREATE cell to
+   another, it chooses from only one half of the possible values based
+   on the ORs' public identity keys: if the sending node has a lower
+   key, it chooses a CircID with an MSB of 0; otherwise, it chooses a
+   CircID with an MSB of 1.
 
    (An OP with no public key MAY choose any CircID it wishes, since an OP
    never needs to process a CREATE cell.)
@@ -1014,13 +1015,14 @@ see tor-design.pdf.
    digest does not match, the running digest at that node should
    not be updated, and the cell should be forwarded on.)
 
-   All RELAY cells pertaining to the same tunneled stream have the
-   same stream ID.  StreamIDs are chosen arbitrarily by the OP.  RELAY
-   cells that affect the entire circuit rather than a particular
-   stream use a StreamID of zero -- they are marked in the table above
-   as "[control]" style cells. (Sendme cells are marked as "sometimes
-   control" because they can take include a StreamID or not depending
-   on their purpose -- see Section 7.)
+   All RELAY cells pertaining to the same tunneled stream have the same
+   stream ID.  StreamIDs are chosen arbitrarily by the OP.  No stream
+   may have a StreamID of zero. Rather, RELAY cells that affect the
+   entire circuit rather than a particular stream use a StreamID of zero
+   -- they are marked in the table above as "[control]" style
+   cells. (Sendme cells are marked as "sometimes control" because they
+   can take include a StreamID or not depending on their purpose -- see
+   Section 7.)
 
    The 'Length' field of a relay cell contains the number of bytes in
    the relay payload which contain real payload data. The remainder of
