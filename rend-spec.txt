@@ -220,7 +220,7 @@
    addition to (or instead of) "V0" descriptors. The format of a "V2"
    descriptor is as follows:
 
-     "rendezvous-service-descriptor" descriptor-id NL
+     "rendezvous-service-descriptor" SP descriptor-id NL
 
        [At start, exactly once]
 
@@ -274,7 +274,7 @@
        multiple descriptors with different descriptor IDs in order to
        distribute them to different places on the ring.
 
-     "version" version-number NL
+     "version" SP version-number NL
 
        [Exactly once]
 
@@ -287,7 +287,7 @@
        The public key of the hidden service which is required to verify the
        "descriptor-id" and the "signature".
 
-     "secret-id-part" secret-id-part NL
+     "secret-id-part" SP secret-id-part NL
 
        [Exactly once]
 
@@ -297,13 +297,13 @@
 
          secret-id-part = H(time-period | descriptor-cookie | replica)
 
-     "publication-time" YYYY-MM-DD HH:MM:SS NL
+     "publication-time" SP YYYY-MM-DD HH:MM:SS NL
 
        [Exactly once]
 
        A timestamp when this descriptor has been created.
 
-     "protocol-versions" version-string NL
+     "protocol-versions" SP version-string NL
 
        [Exactly once]
 
@@ -341,20 +341,20 @@
        Subsequently, an arbitrary number of introduction point entries may
        follow, each containing the following data:
 
-         "introduction-point" identifier NL
+         "introduction-point" SP identifier NL
 
            [At start, exactly once]
 
            The identifier of this introduction point: the base-32 encoded
            hash of this introduction point's identity key.
 
-         "ip-address" ip-address NL
+         "ip-address" SP ip-address NL
 
            [Exactly once]
 
            The IP address of this introduction point.
 
-         "onion-port" port NL
+         "onion-port" SP port NL
 
            [Exactly once]
 
