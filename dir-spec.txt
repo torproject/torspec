@@ -1142,7 +1142,7 @@
    The preamble contains the following items.  They MUST occur in the
    order given here:
 
-    "network-status-version" SP version NL.
+    "network-status-version" SP version NL
 
         [At start, exactly once.]
 
