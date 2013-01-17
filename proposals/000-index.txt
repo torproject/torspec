@@ -124,7 +124,7 @@ Proposals by number:
 201  Make bridges report statistics on daily v3 network status requests [OPEN]
 202  Two improved relay encryption protocols for Tor cells [OPEN]
 203  Avoiding censorship by impersonating an HTTPS server [DRAFT]
-204  Subdomain support for Hidden Service addresses [OPEN]
+204  Subdomain support for Hidden Service addresses [FINISHED]
 205  Remove global client-side DNS caching [CLOSED]
 206  Preconfigured directory sources for bootstrapping [CLOSED]
 207  Directory guards [CLOSED]
@@ -177,7 +177,6 @@ Proposals by status:
    199  Integration of BridgeFinder and BridgeFinderHelper [for 0.2.4.x+]
    201  Make bridges report statistics on daily v3 network status requests [for 0.2.4.x]
    202  Two improved relay encryption protocols for Tor cells
-   204  Subdomain support for Hidden Service addresses
    209  Tuning the Parameters for the Path Bias Defense [for 0.2.4.x+]
    210  Faster Headless Consensus Bootstrapping [for 0.2.4.x+]
    211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]
@@ -210,6 +209,7 @@ Proposals by status:
    180  Pluggable transports for circumvention [in 0.2.3.x]
    198  Restore semantics of TLS ClientHello [for 0.2.4.x]
    200  Adding new, extensible CREATE, EXTEND, and related cells
+   204  Subdomain support for Hidden Service addresses
    208  IPv6 Exits Redux [for 0.2.4.x] [in 0.2.4.7-alpha]
    216  Improved circuit-creation key exchange
  CLOSED:

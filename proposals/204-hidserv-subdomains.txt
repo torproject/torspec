@@ -2,7 +2,7 @@ Filename: 204-hidserv-subdomains.txt
 Title: Subdomain support for Hidden Service addresses
 Author: Alessandro Preite Martinez
 Created: 6 July 2012
-Status: Open
+Status: Finished
 
 
 1. Overview
