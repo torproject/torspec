@@ -223,7 +223,7 @@
     KeywordChar ::= 'A' ... 'Z' | 'a' ... 'z' | '0' ... '9' | '-'
     ArgumentChar ::= any printing ASCII character except NL.
     WS = (SP | TAB)+
-    Object ::= BeginLine Base-64-encoded-data EndLine
+    Object ::= BeginLine Base64-encoded-data EndLine
     BeginLine ::= "-----BEGIN " Keyword "-----" NL
     EndLine ::= "-----END " Keyword "-----" NL
 
@@ -2363,7 +2363,7 @@
    at:
      http://<hostname>/tor/micro/d/<D1>-<D2>-<D3>[.z]
 
-   <Dn> are base-64 encoded with trailing =s omitted for size and for
+   <Dn> are base64 encoded with trailing =s omitted for size and for
    consistency with the microdescriptor consensus format.  -s are used
    instead of +s to separate items, since the + character is used in
    base64 encoding.
@@ -2398,7 +2398,7 @@
 
 4.7. General-use HTTP URLs
 
-   "Fingerprints" in these URLs are base-16-encoded SHA1 hashes.
+   "Fingerprints" in these URLs are base16-encoded SHA1 hashes.
 
    The most recent v3 consensus should be available at:
       http://<hostname>/tor/status-vote/current/consensus.z

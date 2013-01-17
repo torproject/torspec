@@ -345,7 +345,7 @@
 
            [At start, exactly once]
 
-           The identifier of this introduction point: the base-32 encoded
+           The identifier of this introduction point: the base32 encoded
            hash of this introduction point's identity key.
 
          "ip-address" SP ip-address NL
@@ -526,7 +526,7 @@
 1.5. Alice receives a z.onion address.
 
    When Alice receives a pointer to a location-hidden service, it is as a
-   hostname of the form "z.onion", where z is a base-32 encoding of a
+   hostname of the form "z.onion", where z is a base32 encoding of a
    10-octet hash of Bob's service's public key, computed as follows:
 
          1. Let H = H(PK).

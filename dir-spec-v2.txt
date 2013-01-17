@@ -102,7 +102,7 @@
     KeywordChar ::= 'A' ... 'Z' | 'a' ... 'z' | '0' ... '9' | '-'
     ArgumentChar ::= any printing ASCII character except NL.
     WS = (SP | TAB)+
-    Object ::= BeginLine Base-64-encoded-data EndLine
+    Object ::= BeginLine Base64-encoded-data EndLine
     BeginLine ::= "-----BEGIN " Keyword "-----" NL
     EndLine ::= "-----END " Keyword "-----" NL
 
@@ -552,7 +552,7 @@
 
 4.4. HTTP URLs
 
-   "Fingerprints" in these URLs are base-16-encoded SHA1 hashes.
+   "Fingerprints" in these URLs are base16-encoded SHA1 hashes.
 
    The authoritative network-status published by a host should be available at:
       http://<hostname>/tor/status/authority.z
