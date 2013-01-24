@@ -38,7 +38,10 @@ Specifications: Client behavior
   as necessary.  If a key or value value must contain a semicolon or
   a backslash, it is escaped with a backslash.
 
-  Method names must be C identifiers.
+  Method names MUST be C identifiers. That is, method names must begin
+  with a letter or underscore and the rest of the characters can be
+  letters, numbers or underscores. No length limit is imposed. The
+  relevant regular expression is: "[a-zA-Z_][a-zA-Z0-9_]*".
 
   For reference, the old bridge format was
     Bridge address[:port] [id-fingerprint]

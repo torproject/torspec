@@ -680,6 +680,28 @@
         List of unique IP addresses that have connected to the bridge
         per protocol family.
 
+    "bridge-ip-transports" PT=N,PT=N,... NL
+        [At most once.]
+
+        List of mappings from pluggable transport names to the number
+        of unique IP addresses that have connected using that
+        pluggable transport. Unobfuscated connections are counted
+        using the reserved pluggable transport name "<OR>" (without
+        quotes). If we received a connection from a transport proxy
+        but we couldn't figure out the name of the pluggable
+        transport, we use the reserved pluggable transport name
+        "<??>".
+
+        ("<OR>" and "<??>" are reserved because normal pluggable
+        transport names MUST match the following regular expression:
+        "[a-zA-Z_][a-zA-Z0-9_]*" )
+
+        The pluggable transport name list is sorted into lexically
+        ascending order.
+
+        If no clients have connected to the bridge yet, we only write
+        "bridge-ip-transports" to the stats file.
+
     "dirreq-stats-end" YYYY-MM-DD HH:MM:SS (NSEC s) NL
         [At most once.]
 
