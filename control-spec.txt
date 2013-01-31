@@ -702,10 +702,12 @@
       information for which this Tor is not authoritative, Tor replies with
       an empty string.
 
-      Note that, as of Tor 0.2.3.3-alpha, Tor doesn't download server
+      Note that, as of Tor 0.2.3.3-alpha, Tor clients don't download server
       descriptors anymore, but microdescriptors.  So, a "551 Servers
       unavailable" reply to all "GETINFO dir/server/*" requests is actually
-      correct.
+      correct.  If you have an old program which absolutely requires server
+      descriptors to work, try setting UseMicrodescriptors 0 or
+      FetchUselessDescriptors 1 in your client's torrc.
 
     "status/circuit-established"
     "status/enough-dir-info"
