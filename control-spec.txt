@@ -1411,10 +1411,15 @@
                "CLOSED"       / ; Stream closed
                "DETACHED"       ; Detached from circuit; still retriable
 
-       Target = Address ":" Port
+       Target = TargetAddress ":" Port
+       Port = an integer from 0 to 65535 inclusive
+       TargetAddress = Address / "(Tor_internal)"
 
   The circuit ID designates which circuit this stream is attached to.  If
-  the stream is unattached, the circuit ID "0" is given.
+  the stream is unattached, the circuit ID "0" is given.  The target
+  indicates the address which the stream is meant to resolve or connect to;
+  it can be "(Tor_internal)" for a virtual stream created by the Tor program
+  to talk to itself.
 
       Reason = "MISC" / "RESOLVEFAILED" / "CONNECTREFUSED" /
                "EXITPOLICY" / "DESTROY" / "DONE" / "TIMEOUT" /
