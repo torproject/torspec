@@ -1200,7 +1200,7 @@
             Thresholds = Threshold | Threshold SP Thresholds
             Threshold = ThresholdKey '=' ThresholdVal
             ThresholdKey = (KeywordChar | "_") +
-            ThresholdVal = [0-9]+("."[0-9]*)? "%"?
+            ThresholdVal = [0-9]+("."[0-9]+)? "%"?
 
          Commonly used Thresholds at this point include:
 
