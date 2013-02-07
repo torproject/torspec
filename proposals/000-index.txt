@@ -138,6 +138,7 @@ Proposals by number:
 215  Let the minimum consensus method change with time [OPEN]
 216  Improved circuit-creation key exchange [FINISHED]
 217  Tor Extended ORPort Authentication [OPEN]
+218  Controller events to better understand connection/circuit usage [OPEN]
 
 
 Proposals by status:
@@ -185,6 +186,7 @@ Proposals by status:
    214  Allow 4-byte circuit IDs in a new link protocol
    215  Let the minimum consensus method change with time
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
+   218  Controller events to better understand connection/circuit usage [for 0.2.5.x]
  ACCEPTED:
    140  Provide diffs between consensuses
    147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.4.x]

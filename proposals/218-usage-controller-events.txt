@@ -1,0 +1,156 @@
+Filename: 218-usage-controller-events.txt
+Title: Controller events to better understand connection/circuit usage
+Author: Rob Jansen, Karsten Loesing
+Created: 2013-02-06
+Status: Open
+Target: 0.2.5.x
+
+1. Overview
+
+  This proposal defines three new controller events that shall help
+  understand connection and circuit usage.  These events are designed
+  to be emitted in private Tor networks only.  This proposal also
+  defines a tweak to an existing event for the same purpose.
+
+2. Motivation
+
+  We need to better understand connection and circuit usage in order to
+  better simulate Tor networks.  Existing controller events are a fine
+  start, but we need more detailed information about per-connection
+  bandwidth, processed cells by circuit, and token bucket refills.  This
+  proposal defines controller events containing the desired information.
+
+  Most of these usage data are too sensitive to be captured in the
+  public network, unless aggregated sufficiently.  That is why we're
+  focusing on private Tor networks first, that is, relays that have
+  TestingTorNetwork set.  The new controller events described in this
+  proposal shall all be restricted to private Tor networks.  In the next
+  step we might define aggregate statistics to be gathered by public
+  relays, but that will require a new proposal.
+
+3. Design
+
+  The proposed new event types use Tor's asynchronous event mechanism
+  where a controller registers for events by type and processes events
+  received from the Tor process.
+
+  Tor controllers can register for any of the new event types, but
+  events will only be emitted if the Tor process is running in
+  TestingTorNetwork mode.
+
+4. Security implications
+
+  There should be no security implications from the new event types,
+  because they are only emitted in private Tor networks.
+
+5. Specification
+
+5.1. Adding an ID field to ORCONN events
+
+  The new syntax for ORCONN events is:
+
+    "650" SP "ORCONN" SP (LongName / Target) SP ORStatus
+             [ SP "ID=" ConnId ] [ SP "REASON=" Reason ]
+             [ SP "NCIRCS=" NumCircuits ] CRLF
+
+    ConnID is the connection ID which is locally unique among all
+    connection types and which is only included in TestingTorNetwork
+    mode.
+
+  The remaining specification of that event type stays unchanged.
+
+5.2. Bandwidth used on an OR or DIR or EXIT connection
+
+  The syntax is:
+     "650" SP "CONN_BW" SP ConnID SP ConnType SP BytesRead SP
+              BytesWritten CRLF
+     BytesRead = 1*DIGIT
+     BytesWritten = 1*DIGIT
+
+  ConnID is the connection ID which is locally unique among all
+  connection types.
+
+  ConnType is the connection type, which can be "OR" or "DIR" or "EXIT".
+
+  BytesWritten and BytesRead are the number of bytes written and read
+  by Tor since the last CONN_BW event on this connection.
+
+  These events are generated about once per second per connection; no
+  events are generated for connections that have not read or written.
+  These events are only generated if TestingTorNetwork is set.
+
+5.3. Per-circuit cell stats
+
+  The syntax is:
+     "650" SP "CELL_STATS" SP
+              PCircID SP PConnID SP PAdded SP PRemoved SP PTime SP
+              NCircID SP NConnID SP NAdded SP NRemoved SP NTime CRLF
+
+  PCircID and NCircID are the locally unique IDs of the app-ward
+  (PCircID) and exit-ward (NCircID) circuit.
+
+  PConnID and NConnID are the locally unique IDs of the app-ward
+  (PConnID) and exit-ward (NConnID) OR connection.
+
+  PAdded and NAdded are the total number of cells added to the app-ward
+  (PAdded) and exit-ward (NAdded) queues of this circuit.
+
+  PRemoved and NRemoved are the total number of cells processed from the
+  app-ward (PRemoved) and exit-ward (NRemoved) queues of this circuit.
+
+  PTime and NTime are the total waiting times in milliseconds of all
+  processed cells in the app-ward (PTime) and exit-ward (NTime) queues
+  of this circuit.
+
+  PAdded, NAdded, PRemoved, NRemoved, PTime, and NTime are
+  semicolon-separated key-value lists with keys being lower-case cell
+  types and values being cell numbers or waiting times.
+
+  These events are generated about once per second per circuit; no
+  events are generated for circuits that have not added or processed any
+  cell.  These events are only generated if TestingTorNetwork is set.
+
+5.4. Token buckets refilled
+
+  The syntax is:
+     "650" SP "TB_EMPTY" SP ["GLOBAL" || "RELAY" || "ORCONN" SP ConnID]
+              SP ReadBucketEmpty SP WriteBucketEmpty SP LastRefill CRLF
+
+  This event is generated when refilling a previously empty token
+  bucket.  The "GLOBAL" and "RELAY" keywords are used for the global or
+  relay token buckets, the "ORCONN" keyword together with a ConnID is
+  used for the token buckets of an OR connection.
+
+  If both global and relay buckets and/or the buckets of one or more OR
+  connections run out of tokens at the same time, multiple separate
+  events are generated.
+
+  ReadBucketEmpty (WriteBucketEmpty) is the time in millis that the read
+  (write) bucket was empty.  LastRefill is the time in millis since the
+  last refill.  ReadBucketEmpty or WriteBucketEmpty are capped at
+  LastRefill in order not to report empty times more than once.
+
+  These events are only generated if TestingTorNetwork is set.
+
+6. Compatibility
+
+  There should not be any compatibility issues with other Tor versions.
+
+7. Implementation
+
+  Most of the implementation should be straight-forward.
+
+  There's one exception: we pondered adding a unique circuit ID to
+  CELL_STATS events, but so far, only origin circuits have a unique ID.
+  We could move that field from origin_circuit_t to circuit_t and
+  update all references in the code.  But this may have undesired side
+  effects which we're not yet aware of.  We don't have a good answer
+  yet if we need this ID or not.
+
+8. Performance and scalability notes
+
+  Most of the new code won't be executed in normal Tor mode.  Wherever
+  we needed new fields in existing structs, we tried hard to keep them
+  as small as possible.  Still, we should make sure that memory
+  requirements won't grow significantly on busy relays.
+
