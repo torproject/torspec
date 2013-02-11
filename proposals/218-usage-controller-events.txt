@@ -88,13 +88,12 @@ Target: 0.2.5.x
 
   The syntax is:
      "650" SP "CELL_STATS"
-              [ SP "PCircID=" PCircID ] [ SP "PConnID=" ConnID ]
+              [ SP "PCircID=" CircuitID ] [ SP "PConnID=" ConnID ]
               [ SP "PAdded=" PAdded ] [ SP "PRemoved=" PRemoved ]
               [ SP "PTime=" PTime ]
-              [ SP "NCircID=" NCircID ] [ SP "NConnID=" ConnID ]
+              [ SP "NCircID=" CircuitID ] [ SP "NConnID=" ConnID ]
               [ SP "NAdded=" NAdded ] [ SP "NRemoved=" NRemoved ]
               [ SP "NTime=" NTime ] CRLF
-     PCircID, NCircID = 1*16 IDChar
      PAdded, PRemoved, PTime, NAdded, NRemoved, NTime =
               CellType ":" 1*DIGIT 0*( "," CellType ":" 1*DIGIT )
      CellType = 1*( "a" - "z" / "0" - "9" / "_" )

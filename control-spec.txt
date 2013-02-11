@@ -567,7 +567,7 @@
 
     "stream-status"
       A series of lines as for a stream status event.  Each is of the form:
-         StreamID SP StreamStatus SP CircID SP Target CRLF
+         StreamID SP StreamStatus SP CircuitID SP Target CRLF
 
     "orconn-status"
       A series of lines as for an OR connection status event.  In Tor
@@ -1394,7 +1394,7 @@
 
     The syntax is:
 
-      "650" SP "STREAM" SP StreamID SP StreamStatus SP CircID SP Target
+      "650" SP "STREAM" SP StreamID SP StreamStatus SP CircuitID SP Target
           [SP "REASON=" Reason [ SP "REMOTE_REASON=" Reason ]]
           [SP "SOURCE=" Source] [ SP "SOURCE_ADDR=" Address ":" Port ]
           [SP "PURPOSE=" Purpose]
