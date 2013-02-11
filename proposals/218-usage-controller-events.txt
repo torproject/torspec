@@ -50,8 +50,9 @@ Target: 0.2.5.x
   The new syntax for ORCONN events is:
 
     "650" SP "ORCONN" SP (LongName / Target) SP ORStatus
-             [ SP "ID=" ConnId ] [ SP "REASON=" Reason ]
+             [ SP "ID=" ConnID ] [ SP "REASON=" Reason ]
              [ SP "NCIRCS=" NumCircuits ] CRLF
+    ConnID = 1*16 IDChar
 
     ConnID is the connection ID which is locally unique among all
     connection types and which is only included in TestingTorNetwork
@@ -62,15 +63,19 @@ Target: 0.2.5.x
 5.2. Bandwidth used on an OR or DIR or EXIT connection
 
   The syntax is:
-     "650" SP "CONN_BW" SP ConnID SP ConnType SP BytesRead SP
-              BytesWritten CRLF
+     "650" SP "CONN_BW" [ SP "ID=" ConnID ] [ SP "TYPE=" ConnType ]
+              [ SP "READ=" BytesRead ] [ SP "WRITTEN=" BytesWritten ]
+              CRLF
+     ConnID = 1*16 IDChar
+     ConnType = 1*( "a" - "z" / "0" - "9" / "_" )
      BytesRead = 1*DIGIT
      BytesWritten = 1*DIGIT
 
   ConnID is the connection ID which is locally unique among all
   connection types.
 
-  ConnType is the connection type, which can be "OR" or "DIR" or "EXIT".
+  ConnType is the lower-case connection type name, which can be "or",
+  "dir", "exit", or something else.
 
   BytesWritten and BytesRead are the number of bytes written and read
   by Tor since the last CONN_BW event on this connection.
@@ -82,9 +87,17 @@ Target: 0.2.5.x
 5.3. Per-circuit cell stats
 
   The syntax is:
-     "650" SP "CELL_STATS" SP
-              PCircID SP PConnID SP PAdded SP PRemoved SP PTime SP
-              NCircID SP NConnID SP NAdded SP NRemoved SP NTime CRLF
+     "650" SP "CELL_STATS"
+              [ SP "PCircID=" PCircID ] [ SP "PConnID=" PConnID ]
+              [ SP "PAdded=" PAdded ] [ SP "PRemoved=" PRemoved ]
+              [ SP "PTime=" PTime ]
+              [ SP "NCircID=" NCircID ] [ SP "NConnID=" NConnID ]
+              [ SP "NAdded=" NAdded ] [ SP "NRemoved=" NRemoved ]
+              [ SP "NTime=" NTime ] CRLF
+     PCircID, PConnID, NCircID, NConnID = 1*16 IDChar
+     PAdded, PRemoved, PTime, NAdded, NRemoved, NTime =
+              CellType ":" 1*DIGIT 0*( "," CellType ":" 1*DIGIT )
+     CellType = 1*( "a" - "z" / "0" - "9" / "_" )
 
   PCircID and NCircID are the locally unique IDs of the app-ward
   (PCircID) and exit-ward (NCircID) circuit.
@@ -92,19 +105,16 @@ Target: 0.2.5.x
   PConnID and NConnID are the locally unique IDs of the app-ward
   (PConnID) and exit-ward (NConnID) OR connection.
 
-  PAdded and NAdded are the total number of cells added to the app-ward
-  (PAdded) and exit-ward (NAdded) queues of this circuit.
+  PAdded and NAdded are the total number of cells by cell type added to
+  the app-ward (PAdded) and exit-ward (NAdded) queues of this circuit.
 
-  PRemoved and NRemoved are the total number of cells processed from the
-  app-ward (PRemoved) and exit-ward (NRemoved) queues of this circuit.
+  PRemoved and NRemoved are the total number of cells by cell type
+  processed from the app-ward (PRemoved) and exit-ward (NRemoved)
+  queues of this circuit.
 
   PTime and NTime are the total waiting times in milliseconds of all
-  processed cells in the app-ward (PTime) and exit-ward (NTime) queues
-  of this circuit.
-
-  PAdded, NAdded, PRemoved, NRemoved, PTime, and NTime are
-  semicolon-separated key-value lists with keys being lower-case cell
-  types and values being cell numbers or waiting times.
+  processed cells by cell type in the app-ward (PTime) and exit-ward
+  (NTime) queues of this circuit.
 
   These events are generated about once per second per circuit; no
   events are generated for circuits that have not added or processed any
@@ -113,13 +123,24 @@ Target: 0.2.5.x
 5.4. Token buckets refilled
 
   The syntax is:
-     "650" SP "TB_EMPTY" SP ["GLOBAL" || "RELAY" || "ORCONN" SP ConnID]
-              SP ReadBucketEmpty SP WriteBucketEmpty SP LastRefill CRLF
+     "650" SP "TB_EMPTY" SP "BUCKET=" BucketName [ SP "ID=" ConnID ]
+              [ SP "READ=" ReadBucketEmpty ]
+              [ SP "WRITTEN=" WriteBucketEmpty ]
+              [ SP "LAST=" LastRefill ] CRLF
+
+     BucketName = "global" / "relay" / "orconn"
+     ConnID = 1*16 IDChar
+     ReadBucketEmpty = 1*DIGIT
+     WriteBucketEmpty = 1*DIGIT
+     LastRefill = 1*DIGIT
 
   This event is generated when refilling a previously empty token
-  bucket.  The "GLOBAL" and "RELAY" keywords are used for the global or
-  relay token buckets, the "ORCONN" keyword together with a ConnID is
-  used for the token buckets of an OR connection.
+  bucket.  BucketNames "global" and "relay" keywords are used for the
+  global or relay token buckets, BucketName "orconn" is used for the
+  token buckets of an OR connection.
+
+  ConnID is the connection ID and is only given if BucketName is
+  "orconn".
 
   If both global and relay buckets and/or the buckets of one or more OR
   connections run out of tokens at the same time, multiple separate
