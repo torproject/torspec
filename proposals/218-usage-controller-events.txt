@@ -70,12 +70,11 @@ Target: 0.2.5.x
      "650" SP "CONN_BW" [ SP "ID=" ConnID ] [ SP "TYPE=" ConnType ]
               [ SP "READ=" BytesRead ] [ SP "WRITTEN=" BytesWritten ]
               CRLF
-     ConnType = 1*( "a" - "z" / "0" - "9" / "_" )
+     ConnType = "OR" / "DIR" / "EXIT"
      BytesRead = 1*DIGIT
      BytesWritten = 1*DIGIT
 
-  ConnType is the lower-case connection type name, which can be "or",
-  "dir", "exit", or something else.
+  Controllers MUST tolerate unrecognized connection types.
 
   BytesWritten and BytesRead are the number of bytes written and read
   by Tor since the last CONN_BW event on this connection.
@@ -127,17 +126,18 @@ Target: 0.2.5.x
               [ SP "WRITTEN=" WriteBucketEmpty ]
               [ SP "LAST=" LastRefill ] CRLF
 
-     BucketName = "global" / "relay" / "orconn"
+     BucketName = "GLOBAL" / "RELAY" / "ORCONN"
      ReadBucketEmpty = 1*DIGIT
      WriteBucketEmpty = 1*DIGIT
      LastRefill = 1*DIGIT
 
   This event is generated when refilling a previously empty token
-  bucket.  BucketNames "global" and "relay" keywords are used for the
-  global or relay token buckets, BucketName "orconn" is used for the
-  token buckets of an OR connection.
+  bucket.  BucketNames "GLOBAL" and "RELAY" keywords are used for the
+  global or relay token buckets, BucketName "ORCONN" is used for the
+  token buckets of an OR connection. Controllers MUST tolerate unrecognized
+  bucket names.
 
-  ConnID is only included if the BucketName is "orconn".
+  ConnID is only included if the BucketName is "ORCONN".
 
   If both global and relay buckets and/or the buckets of one or more OR
   connections run out of tokens at the same time, multiple separate
