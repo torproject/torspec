@@ -45,34 +45,34 @@ Target: 0.2.5.x
 
 5. Specification
 
-5.1. Adding an ID field to ORCONN events
+5.1. ConnID Token
+
+  Addition for section 2.4 of the control-spec (General-use tokens).
+
+  ; Connection ID which is locally unique among all connection types and which
+  ; is only included in TestingTorNetwork mode.
+
+  ConnID = 1*16 IDChar
+
+5.2. Adding an ID field to ORCONN events
 
   The new syntax for ORCONN events is:
 
     "650" SP "ORCONN" SP (LongName / Target) SP ORStatus
              [ SP "ID=" ConnID ] [ SP "REASON=" Reason ]
              [ SP "NCIRCS=" NumCircuits ] CRLF
-    ConnID = 1*16 IDChar
-
-    ConnID is the connection ID which is locally unique among all
-    connection types and which is only included in TestingTorNetwork
-    mode.
 
   The remaining specification of that event type stays unchanged.
 
-5.2. Bandwidth used on an OR or DIR or EXIT connection
+5.3. Bandwidth used on an OR or DIR or EXIT connection
 
   The syntax is:
      "650" SP "CONN_BW" [ SP "ID=" ConnID ] [ SP "TYPE=" ConnType ]
               [ SP "READ=" BytesRead ] [ SP "WRITTEN=" BytesWritten ]
               CRLF
-     ConnID = 1*16 IDChar
      ConnType = 1*( "a" - "z" / "0" - "9" / "_" )
      BytesRead = 1*DIGIT
      BytesWritten = 1*DIGIT
-
-  ConnID is the connection ID which is locally unique among all
-  connection types.
 
   ConnType is the lower-case connection type name, which can be "or",
   "dir", "exit", or something else.
@@ -84,17 +84,17 @@ Target: 0.2.5.x
   events are generated for connections that have not read or written.
   These events are only generated if TestingTorNetwork is set.
 
-5.3. Per-circuit cell stats
+5.4. Per-circuit cell stats
 
   The syntax is:
      "650" SP "CELL_STATS"
-              [ SP "PCircID=" PCircID ] [ SP "PConnID=" PConnID ]
+              [ SP "PCircID=" PCircID ] [ SP "PConnID=" ConnID ]
               [ SP "PAdded=" PAdded ] [ SP "PRemoved=" PRemoved ]
               [ SP "PTime=" PTime ]
-              [ SP "NCircID=" NCircID ] [ SP "NConnID=" NConnID ]
+              [ SP "NCircID=" NCircID ] [ SP "NConnID=" ConnID ]
               [ SP "NAdded=" NAdded ] [ SP "NRemoved=" NRemoved ]
               [ SP "NTime=" NTime ] CRLF
-     PCircID, PConnID, NCircID, NConnID = 1*16 IDChar
+     PCircID, NCircID = 1*16 IDChar
      PAdded, PRemoved, PTime, NAdded, NRemoved, NTime =
               CellType ":" 1*DIGIT 0*( "," CellType ":" 1*DIGIT )
      CellType = 1*( "a" - "z" / "0" - "9" / "_" )
@@ -120,7 +120,7 @@ Target: 0.2.5.x
   events are generated for circuits that have not added or processed any
   cell.  These events are only generated if TestingTorNetwork is set.
 
-5.4. Token buckets refilled
+5.5. Token buckets refilled
 
   The syntax is:
      "650" SP "TB_EMPTY" SP "BUCKET=" BucketName [ SP "ID=" ConnID ]
@@ -129,7 +129,6 @@ Target: 0.2.5.x
               [ SP "LAST=" LastRefill ] CRLF
 
      BucketName = "global" / "relay" / "orconn"
-     ConnID = 1*16 IDChar
      ReadBucketEmpty = 1*DIGIT
      WriteBucketEmpty = 1*DIGIT
      LastRefill = 1*DIGIT
@@ -139,8 +138,7 @@ Target: 0.2.5.x
   global or relay token buckets, BucketName "orconn" is used for the
   token buckets of an OR connection.
 
-  ConnID is the connection ID and is only given if BucketName is
-  "orconn".
+  ConnID is only included if the BucketName is "orconn".
 
   If both global and relay buckets and/or the buckets of one or more OR
   connections run out of tokens at the same time, multiple separate
