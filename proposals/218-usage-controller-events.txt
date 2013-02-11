@@ -121,7 +121,7 @@ Target: 0.2.5.x
 5.5. Token buckets refilled
 
   The syntax is:
-     "650" SP "TB_EMPTY" SP "BUCKET=" BucketName [ SP "ID=" ConnID ]
+     "650" SP "TB_EMPTY" SP BucketName [ SP "ID=" ConnID ]
               [ SP "READ=" ReadBucketEmpty ]
               [ SP "WRITTEN=" WriteBucketEmpty ]
               [ SP "LAST=" LastRefill ] CRLF
