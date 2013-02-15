@@ -2,7 +2,7 @@ Filename: 214-longer-circids.txt
 Title: Allow 4-byte circuit IDs in a new link protocol
 Author: Nick Mathewson
 Created: 6 Nov 2012
-Status: Open
+Status: Finished
 
 
 0. Overview
