@@ -844,6 +844,9 @@
         determined in "cell-processed-cells". Numbers have a precision of
         two decimal places.
 
+        Note that this statistic can be inaccurate for circuits that had
+        queued cells at the start or end of the measurement interval.
+
     "cell-time-in-queue" num,...,num NL
         [At most once.]
 
@@ -852,6 +855,9 @@
         queue of a single circuit and 2) calculating the mean for all
         circuits in a given decile as determined in
         "cell-processed-cells".
+
+        Note that this statistic can be inaccurate for circuits that had
+        queued cells at the start or end of the measurement interval.
 
     "cell-circuits-per-decile" num NL
         [At most once.]
