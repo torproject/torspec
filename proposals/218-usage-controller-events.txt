@@ -49,10 +49,11 @@ Target: 0.2.5.x
 
   Addition for section 2.4 of the control-spec (General-use tokens).
 
-  ; Connection ID which is locally unique among all connection types and which
-  ; is only included in TestingTorNetwork mode.
+  ; Unique identifiers for connections or queues.  Only included in
+  ; TestingTorNetwork mode.
 
   ConnID = 1*16 IDChar
+  QueueID = 1*16 IDChar
 
 5.2. Adding an ID field to ORCONN events
 
@@ -67,9 +68,8 @@ Target: 0.2.5.x
 5.3. Bandwidth used on an OR or DIR or EXIT connection
 
   The syntax is:
-     "650" SP "CONN_BW" [ SP "ID=" ConnID ] [ SP "TYPE=" ConnType ]
-              [ SP "READ=" BytesRead ] [ SP "WRITTEN=" BytesWritten ]
-              CRLF
+     "650" SP "CONN_BW" SP "ID=" ConnID SP "TYPE=" ConnType
+              SP "READ=" BytesRead SP "WRITTEN=" BytesWritten CRLF
      ConnType = "OR" / "DIR" / "EXIT"
      BytesRead = 1*DIGIT
      BytesWritten = 1*DIGIT
@@ -83,48 +83,77 @@ Target: 0.2.5.x
   events are generated for connections that have not read or written.
   These events are only generated if TestingTorNetwork is set.
 
-5.4. Per-circuit cell stats
+5.4. Bandwidth used by all streams attached to a circuit
+
+  The syntax is:
+     "650" SP "CIRC_BW" SP "ID=" CircuitID SP "READ=" BytesRead SP
+              "WRITTEN=" BytesWritten CRLF
+     BytesRead = 1*DIGIT
+     BytesWritten = 1*DIGIT
+
+  BytesRead and BytesWritten are the number of bytes read and written by
+  all applications with streams attached to this circuit since the last
+  CIRC_BW event.
+
+  These events are generated about once per second per circuit; no events
+  are generated for circuits that had no attached stream writing or read.
+
+5.5. Per-circuit cell stats
 
   The syntax is:
      "650" SP "CELL_STATS"
-              [ SP "PCircID=" CircuitID ] [ SP "PConnID=" ConnID ]
-              [ SP "PAdded=" PAdded ] [ SP "PRemoved=" PRemoved ]
-              [ SP "PTime=" PTime ]
-              [ SP "NCircID=" CircuitID ] [ SP "NConnID=" ConnID ]
-              [ SP "NAdded=" NAdded ] [ SP "NRemoved=" NRemoved ]
-              [ SP "NTime=" NTime ] CRLF
-     PAdded, PRemoved, PTime, NAdded, NRemoved, NTime =
-              CellType ":" 1*DIGIT 0*( "," CellType ":" 1*DIGIT )
+              [ SP "ID=" CircuitID ]
+              [ SP "InboundQueue=" QueueID SP "InboundConn=" ConnID ]
+              [ SP "InboundAdded=" CellsByType ]
+              [ SP "InboundRemoved=" CellsByType SP
+                   "InboundTime=" MsecByType ]
+              [ SP "OutboundQueue=" QueueID SP "OutboundConn=" ConnID ]
+              [ SP "OutboundAdded=" CellsByType ]
+              [ SP "OutboundRemoved=" CellsByType SP
+                   "OutboundTime=" MsecByType ] CRLF
+     CellsByType, MsecByType = CellType ":" 1*DIGIT
+                               0*( "," CellType ":" 1*DIGIT )
      CellType = 1*( "a" - "z" / "0" - "9" / "_" )
 
-  PCircID and NCircID are the locally unique IDs of the app-ward
-  (PCircID) and exit-ward (NCircID) circuit.
+  ID is the locally unique circuit identifier that is only included if the
+  circuit originates at this node.
 
-  PConnID and NConnID are the locally unique IDs of the app-ward
-  (PConnID) and exit-ward (NConnID) OR connection.
+  Inbound and outbound refer to the direction of cell flow through the
+  circuit which is either to origin (inbound) or from origin (outbound).
 
-  PAdded and NAdded are the total number of cells by cell type added to
-  the app-ward (PAdded) and exit-ward (NAdded) queues of this circuit.
+  InboundQueue and OutboundQueue are identifiers of the inbound and
+  outbound circuit queues of this circuit.  These identifiers are only
+  unique per OR connection.  OutboundQueue is chosen by this node and
+  matches InboundQueue of the next node in the circuit.
 
-  PRemoved and NRemoved are the total number of cells by cell type
-  processed from the app-ward (PRemoved) and exit-ward (NRemoved)
-  queues of this circuit.
+  InboundConn and OutboundConn are locally unique IDs of inbound and
+  outbound OR connection.  OutboundConn does not necessarily match
+  InboundConn of the next node in the circuit.
 
-  PTime and NTime are the total waiting times in milliseconds of all
-  processed cells by cell type in the app-ward (PTime) and exit-ward
-  (NTime) queues of this circuit.
+  InboundQueue and InboundConn are not present if the circuit originates
+  at this node.  OutboundQueue and OutboundConn are not present if the
+  circuit (currently) ends at this node.
+
+  InboundAdded and OutboundAdded are total number of cells by cell type
+  added to inbound and outbound queues.  Only present if at least one cell
+  was added to a queue.
+
+  InboundRemoved and OutboundRemoved are total number of cells by
+  cell type processed from inbound and outbound queues.  InboundTime and
+  OutboundTime are total waiting times in milliseconds of all processed
+  cells by cell type.  Only present if at least one cell was removed from
+  a queue.
 
   These events are generated about once per second per circuit; no
   events are generated for circuits that have not added or processed any
   cell.  These events are only generated if TestingTorNetwork is set.
 
-5.5. Token buckets refilled
+5.6. Token buckets refilled
 
   The syntax is:
-     "650" SP "TB_EMPTY" SP BucketName [ SP "ID=" ConnID ]
-              [ SP "READ=" ReadBucketEmpty ]
-              [ SP "WRITTEN=" WriteBucketEmpty ]
-              [ SP "LAST=" LastRefill ] CRLF
+     "650" SP "TB_EMPTY" SP BucketName [ SP "ID=" ConnID ] SP
+              "READ=" ReadBucketEmpty SP "WRITTEN=" WriteBucketEmpty SP
+              "LAST=" LastRefill CRLF
 
      BucketName = "GLOBAL" / "RELAY" / "ORCONN"
      ReadBucketEmpty = 1*DIGIT
@@ -157,13 +186,6 @@ Target: 0.2.5.x
 7. Implementation
 
   Most of the implementation should be straight-forward.
-
-  There's one exception: we pondered adding a unique circuit ID to
-  CELL_STATS events, but so far, only origin circuits have a unique ID.
-  We could move that field from origin_circuit_t to circuit_t and
-  update all references in the code.  But this may have undesired side
-  effects which we're not yet aware of.  We don't have a good answer
-  yet if we need this ID or not.
 
 8. Performance and scalability notes
 
