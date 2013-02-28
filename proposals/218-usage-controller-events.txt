@@ -96,7 +96,8 @@ Target: 0.2.5.x
   CIRC_BW event.
 
   These events are generated about once per second per circuit; no events
-  are generated for circuits that had no attached stream writing or read.
+  are generated for circuits that had no attached stream writing or
+  reading.
 
 5.5. Per-circuit cell stats
 
@@ -114,6 +115,20 @@ Target: 0.2.5.x
      CellsByType, MsecByType = CellType ":" 1*DIGIT
                                0*( "," CellType ":" 1*DIGIT )
      CellType = 1*( "a" - "z" / "0" - "9" / "_" )
+
+  Examples are:
+     650 CELL_STATS ID=14 OutboundQueue=19403 OutboundConn=15
+         OutboundAdded=create_fast:1,relay_early:2
+         OutboundRemoved=create_fast:1,relay_early:2
+         OutboundTime=create_fast:0,relay_early:0
+     650 CELL_STATS InboundQueue=19403 InboundConn=32
+         InboundAdded=relay:1,created_fast:1
+         InboundRemoved=relay:1,created_fast:1
+         InboundTime=relay:0,created_fast:0
+         OutboundQueue=6710 OutboundConn=18
+         OutboundAdded=create:1,relay_early:1
+         OutboundRemoved=create:1,relay_early:1
+         OutboundTime=create:0,relay_early:0
 
   ID is the locally unique circuit identifier that is only included if the
   circuit originates at this node.
@@ -160,11 +175,16 @@ Target: 0.2.5.x
      WriteBucketEmpty = 1*DIGIT
      LastRefill = 1*DIGIT
 
+  Examples are:
+     650 TB_EMPTY ORCONN ID=16 READ=0 WRITTEN=0 LAST=100
+     650 TB_EMPTY GLOBAL READ=93 WRITTEN=93 LAST=100
+     650 TB_EMPTY RELAY READ=93 WRITTEN=93 LAST=100
+
   This event is generated when refilling a previously empty token
   bucket.  BucketNames "GLOBAL" and "RELAY" keywords are used for the
   global or relay token buckets, BucketName "ORCONN" is used for the
-  token buckets of an OR connection. Controllers MUST tolerate unrecognized
-  bucket names.
+  token buckets of an OR connection.  Controllers MUST tolerate
+  unrecognized bucket names.
 
   ConnID is only included if the BucketName is "ORCONN".
 
@@ -173,9 +193,14 @@ Target: 0.2.5.x
   events are generated.
 
   ReadBucketEmpty (WriteBucketEmpty) is the time in millis that the read
-  (write) bucket was empty.  LastRefill is the time in millis since the
-  last refill.  ReadBucketEmpty or WriteBucketEmpty are capped at
-  LastRefill in order not to report empty times more than once.
+  (write) bucket was empty since the last refill.  LastRefill is the
+  time in millis since the last refill.
+
+  If a bucket went negative and if refilling tokens didn't make it go
+  positive again, there will be multiple consecutive TB_EMPTY events for
+  each refill interval during which the bucket contained zero tokens or
+  less.  In such a case, ReadBucketEmpty or WriteBucketEmpty are capped
+  at LastRefill in order not to report empty times more than once.
 
   These events are only generated if TestingTorNetwork is set.
 
