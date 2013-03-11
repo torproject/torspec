@@ -270,9 +270,10 @@
   empty string, Tor may reply with a reply line of the form:
       250 keyword
 
-  Value may be a raw value or a quoted string.  Tor will try to use
-  unquoted values except when the value could be misinterpreted through
-  not being quoted.
+  Value may be a raw value or a quoted string.  Tor will try to use unquoted
+  values except when the value could be misinterpreted through not being
+  quoted. (Right now, Tor supports no such misinterpretable values for
+  configuration options.)
 
   If some of the listed keywords can't be found, Tor replies with a
   "552 unknown configuration keyword" message.
