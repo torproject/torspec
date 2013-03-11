@@ -1297,7 +1297,7 @@
 
       Purpose = "GENERAL" / "HS_CLIENT_INTRO" / "HS_CLIENT_REND" /
                 "HS_SERVICE_INTRO" / "HS_SERVICE_REND" / "TESTING" /
-                "CONTROLLER"
+                "CONTROLLER" / "MEASURE_TIMEOUT"
 
       HSState = "HSCI_CONNECTING" / "HSCI_INTRO_SENT" / "HSCI_DONE" /
                 "HSCR_CONNECTING" / "HSCR_ESTABLISHED_IDLE" /
@@ -1342,6 +1342,7 @@
       HS_SERVICE_REND (HS service-side rendezvous circuit)
       TESTING         (reachability-testing circuit; carries no traffic)
       CONTROLLER      (circuit built by a controller)
+      MEASURE_TIMEOUT (circuit being kept around to see how long it takes)
 
    The "HS_STATE" field is provided only for hidden-service circuits,
    and only in versions 0.2.3.11-alpha and later.  Clients MUST accept
