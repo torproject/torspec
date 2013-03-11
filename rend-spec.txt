@@ -683,7 +683,20 @@
    determined later; the current implementation sends a single '1' byte on
    failure.)
 
-   When Bob's OP receives the RELAY_COMMAND_INTRODUCE2 cell, it decrypts it
+   When Bob's OP receives the RELAY_COMMAND_INTRODUCE2 cell, it first checks
+   for a replay.  Because of the (undesirable!) malleability of the hybrid
+   encryption, Bob's OP should only check whether the RSA-encrypted part is
+   replayed.  It does this by keeping, for each introduction key, a list of
+   cryptographic digests of all the RSA-encrypted parts of the INTRODUCE2
+   cells that it's seen, and dropping any INTRODUCE2 cell whose RSA-encrypted
+   part it has seen before.  When Bob's OP stops using a given introduction
+   key, it drops the replay cache corresponding to that key.
+
+   (Versions of Tor before 0.2.3.9-alpha used the timestamp in the INTRODUCE2
+   cell to limit the lifetime of entries in the replay cache. This proved to
+   be fragile, due to insufficiently synchronized clients.)
+
+   Assuming that the cell has not been replayed, Bob's server decrypts it
    with the private key for the corresponding hidden service, and extracts the
    rendezvous point's nickname, the rendezvous cookie, and the value of g^x
    chosen by Alice.
