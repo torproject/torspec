@@ -1252,14 +1252,27 @@ see tor-design.pdf.
    and constructs a RELAY_BEGIN cell with a payload encoding the address
    and port of the destination host.  The payload format is:
 
-         ADDRESS | ':' | PORT | [00]
+         ADDRPORT [nul-terminated string]
+         FLAGS    [4 bytes]
+
+   ADDRPORT is made of ADDRESS | ':' | PORT | [00]
 
    where  ADDRESS can be a DNS hostname, or an IPv4 address in
    dotted-quad format, or an IPv6 address surrounded by square brackets;
    and where PORT is a decimal integer between 1 and 65535, inclusive.
 
-   [What is the [00] for? -NM]
-   [It's so the payload is easy to parse out with string funcs -RD]
+   The FLAGS value has one or more of the following bits set, where
+   "bit 1" is the LSB of the 32-bit value, and "bit 32" is the MSB.
+     bit   meaning
+      1 -- IPv6 okay.  We support learning about IPv6 addresses and
+           connecting to IPv6 addresses.
+      2 -- IPv4 not okay.  We don't want to learn about IPv4 addresses
+           or connect to them.
+      3 -- IPv6 preferred.  If there are both IPv4 and IPv6 addresses,
+           we want to connect to the IPv6 one.  (By default, we connect
+           to the IPv4 address.)
+      4..32 -- Reserved. Current clients MUST NOT set these. Servers
+           MUST ignore them.
 
    Upon receiving this cell, the exit node resolves the address as
    necessary, and opens a new TCP connection to the target port.  If the

@@ -476,6 +476,14 @@
        the address will be accepted.  For clarity, the last such entry SHOULD
        be accept *:* or reject *:*.
 
+    "ipv6-policy" SP ("accept" / "reject") SP PortList NL
+
+       [At most once.]
+
+       An exit-policy summary as specified in 3.3 and 3.5.2, summarizing
+       the router's rules for connecting to IPv6 addresses. A missing
+       "ipv6-policy" line is equivalent to "ipv6-policy reject 1-65535".
+
     "router-signature" NL Signature NL
 
        [At end, exactly once]
@@ -1114,7 +1122,7 @@
 
         The "ntor-onion-key" element as specified in 2.1.
 
-        (Only included when the vote or consensus is generated with
+        (Only included when generating microdescriptors for
         consensus-method 16 or later.)
 
      "a" SP address ":" portlist NL
@@ -1140,6 +1148,17 @@
         clients can only guess whether a relay accepts their request, try the
         BEGIN request, and might get end-reason-exit-policy if they guessed
         wrong, in which case they'll have to try elsewhere.]
+
+     "p6" SP ("accept" / "reject") SP PortList NL
+
+        [At most once]
+
+        The IPv6 exit policy summary as specified in 3.3 and 3.5.2. A
+        missing "p6" line is equivalent to "p6 reject 1-65535".
+
+        (Only included when generating microdescriptors for
+        consensus-method 15 or later.)
+
 
    (Note that with microdescriptors, clients do not learn the identity of
    their routers: they only learn a hash of the identity key.  This is all
@@ -1855,7 +1874,8 @@
           consensuses may include "a" lines listing additional OR
           ports.
 
-        * XXXXX 15
+        * If consensus method 15 or later is used, microdescriptors
+          include "p6" lines including IPv6 exit policies.
 
         * If consensus method 16 or later is used, ntor-onion-key
           are included in microdescriptors
