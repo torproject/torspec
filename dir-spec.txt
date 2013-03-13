@@ -1467,7 +1467,7 @@
           "Unnamed" if another router has bound the name used by this
              router, and this authority binds names.
           "Valid" if the router has been 'validated'.
-          "V2Dir" if the router implements the v2 directory protocol or later.
+          "V2Dir" if the router implements the v2 directory protocol.
 
     "v" SP version NL
 
