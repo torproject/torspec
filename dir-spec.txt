@@ -1388,6 +1388,11 @@
         received a RELAY_CONNECTED cell.
         Min: 0, Max: 1
 
+        "maxunmeasuredbw" -- Used by authorities during voting with
+        method 17 or later. The maximum value to give for any Bandwidth=
+        entry for a router that isn't based on at least three
+        measurements.
+
    The authority section of a vote contains the following items, followed
    in turn by the authority's current key certificate:
 
@@ -1523,7 +1528,7 @@
         descriptors if they would cause "v" lines to be over 128 characters
         long.
 
-    "w" SP "Bandwidth=" INT [SP "Measured=" INT] NL
+    "w" SP "Bandwidth=" INT [SP "Measured=" INT] [SP "Unmeasured=1"] NL
 
         [At most once.]
 
@@ -1534,7 +1539,11 @@
         Additionally, the Measured= keyword is present in votes by
         participating bandwidth measurement authorities to indicate
         a measured bandwidth currently produced by measuring stream
-        capacities.
+        capacities. It does not occur in consensuses.
+
+        The "Unmeasured=1" value is included in consensuses generated
+        with method 17 or later when the 'Bandwidth=' value is not
+        based on a threshold of 3 or more measurements.
 
         Other weighting keywords may be added later.
         Clients MUST ignore keywords they do not recognize.
@@ -1880,7 +1889,11 @@
         * If consensus method 16 or later is used, ntor-onion-key
           are included in microdescriptors
 
-        * XXXXX 17
+        * If consensus method 17 or later is used, authorities impose a
+          maximum on the Bandwidth= values that they'll put on a 'w'
+          line for any router that doesn't have at least 3 measured
+          bandwidth values in votes. They also add an "Unmeasured=1"
+          flag to such 'w' lines.
 
      The signatures at the end of a consensus document are sorted in
      ascending order by identity digest.
