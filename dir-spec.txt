@@ -444,9 +444,19 @@
 
        [Exactly once]
 
-       This key is used to encrypt EXTEND cells for this OR.  The key MUST be
+       This key is used to encrypt CREATE cells for this OR.  The key MUST be
        accepted for at least 1 week after any new key is published in a
        subsequent descriptor. It MUST be 1024 bits.
+
+    "ntor-onion-key" base-64-encoded-key
+
+       [At most once]
+
+       A public key used for the ntor circuit extended handshake.  It's the
+       standard encoding of the OR's curve25519 public key, encoded in base
+       64.  The trailing = sign may be omitted from the base64 encoding.  The
+       key MUST be accepted for at least 1 week after any new key is
+       published in a subsequent descriptor.
 
     "signing-key" NL a public key in PEM format
 
@@ -1097,6 +1107,15 @@
         [Exactly once, at start]
 
         The "onion-key" element as specified in 2.1.
+
+    "ntor-onion-key" base-64-encoded-key
+
+        [At most once]
+
+        The "ntor-onion-key" element as specified in 2.1.
+
+        (Only included when the vote or consensus is generated with
+        consensus-method 16 or later.)
 
      "a" SP address ":" portlist NL
 
@@ -1835,6 +1854,13 @@
         * If consensus method 14 or later is used, votes and
           consensuses may include "a" lines listing additional OR
           ports.
+
+        * XXXXX 15
+
+        * If consensus method 16 or later is used, ntor-onion-key
+          are included in microdescriptors
+
+        * XXXXX 17
 
      The signatures at the end of a consensus document are sorted in
      ascending order by identity digest.

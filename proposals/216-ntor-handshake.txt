@@ -2,7 +2,8 @@ Filename: 216-ntor-handshake.txt
 Title: Improved circuit-creation key exchange
 Author:  Nick Mathewson
 Created: 11-May-2011
-Status: Finished
+Status: Closed
+Implemented-In: 0.2.4.8-alpha
 
 Summary:
 
