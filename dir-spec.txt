@@ -1467,8 +1467,7 @@
           "Unnamed" if another router has bound the name used by this
              router, and this authority binds names.
           "Valid" if the router has been 'validated'.
-          "V2Dir" if the router implements the v2 directory protocol.
-          "V3Dir" if the router implements this protocol.
+          "V2Dir" if the router implements the v2 directory protocol or later.
 
     "v" SP version NL
 
@@ -1690,11 +1689,6 @@
    directory port, and it is running a version of the directory protocol that
    supports the functionality clients need.  (Currently, this is
    0.1.1.9-alpha or later.)
-
-   "V3Dir" -- A router supports the v3 directory protocol if it has an open
-   directory port, and it is running a version of the directory protocol that
-   supports the functionality clients need.  (Currently, this is
-   0.2.0.?????-alpha or later.)
 
    "HSDir" -- A router is a v2 hidden service directory if it stores and
    serves v2 hidden service descriptors, and the authority believes that it's
