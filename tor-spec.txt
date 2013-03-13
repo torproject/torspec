@@ -57,7 +57,10 @@ see tor-design.pdf.
 
    PAYLOAD_LEN -- The longest allowable cell payload, in bytes. (509)
 
-   CELL_LEN -- The length of a Tor cell, in bytes.
+   CELL_LEN(v) -- The length of a Tor cell, in bytes, for link protocol
+      version v.
+       CELL_LEN(v) = 512    if v is less than 4;
+                   = 514    otherwise.
 
 0.3. Ciphers
 
@@ -116,10 +119,6 @@ see tor-design.pdf.
    allows attackers to modify the bytes not covered by the OAEP --
    see Goldberg's PET2006 paper for details. We will add a MAC to this
    scheme one day. -RD]
-
-0.4. Other parameter values
-
-   CELL_LEN=512
 
 1. System overview
 
@@ -274,11 +273,11 @@ see tor-design.pdf.
 
    Once a TLS connection is established, the two sides send cells
    (specified below) to one another.  Cells are sent serially.  Standard
-   cells are CELL_LEN bytes long, but variable-length cells also exist; see
-   Section 3.  Cells may be sent embedded in TLS
-   records of any size or divided across TLS records, but the framing
-   of TLS records MUST NOT leak information about the type or contents
-   of the cells.
+   cells are CELL_LEN(link_proto) bytes long, but variable-length cells
+   also exist; see Section 3.  Cells may be sent embedded in TLS records
+   of any size or divided across TLS records, but the framing of TLS
+   records MUST NOT leak information about the type or contents of the
+   cells.
 
    TLS connections are not permanent. Either side MAY close a connection
    if there are no circuits running over it and an amount of time
@@ -357,14 +356,14 @@ see tor-design.pdf.
    On a version 1 connection, each cell contains the following
    fields:
 
-        CircID                                [2 bytes]
+        CircID                                [CIRCID_LEN bytes]
         Command                               [1 byte]
         Payload (padded with 0 bytes)         [PAYLOAD_LEN bytes]
 
-   On a version 2 or 3 connection, all cells are as in version 1 connections,
-   except for variable-length cells, whose format is:
+   On a version 2 or higher connection, all cells are as in version 1
+   connections, except for variable-length cells, whose format is:
 
-        CircID                                [2 octets]
+        CircID                                [CIRCID_LEN octets]
         Command                               [1 octet]
         Length                                [2 octets; big-endian integer]
         Payload                               [Length bytes]
@@ -373,6 +372,10 @@ see tor-design.pdf.
    command byte equal to 7 ("VERSIONS").  On a version 3 or
    higher connection, variable-length cells are indicated by a command
    byte equal to 7 ("VERSIONS"), or greater than or equal to 128.
+
+   CIRCID_LEN is 2 for link protocol versions 1, 2, and 3.  CIRCID_LEN
+   is 4 for link protocol version 4 or higher.  The VERSIONS cell itself
+   always has CIRCID_LEN == 2 for backward compatibility.
 
    The CircID field determines which circuit, if any, the cell is
    associated with.
@@ -492,6 +495,13 @@ see tor-design.pdf.
    MUST list only the version 2.  When the "in-protocol" handshake is
    used, implementations MUST NOT list any version before 3, and SHOULD
    list at least version 3.
+
+   Link protocols differences are:
+     1 -- The "certs up front" handshake.
+     2 -- Uses the renegotiation-based handshake. Introduces
+          varible-length cells.
+
+
 
 4.2. CERTS cells
 
@@ -710,20 +720,24 @@ see tor-design.pdf.
 
 5.1.1. Choosing circuit IDs in create cells
 
-   The CircID for a CREATE cell is an arbitrarily chosen nonzero 2-byte
-   integer, selected by the node (OP or OR) that sends the CREATE cell.
+   The CircID for a CREATE cell is an arbitrarily chosen nonzero integer,
+   selected by the node (OP or OR) that sends the CREATE cell.  In link
+   protocol 3 or lower, CircIDs are 2 bytes long; in protocol 4 or
+   higher, CircIDs are 4 bytes long.
+
    To prevent CircID collisions, when one node sends a CREATE cell to
    another, it chooses from only one half of the possible values based
-   on the ORs' public identity keys: if the sending node has a lower
-   key, it chooses a CircID with an MSB of 0; otherwise, it chooses a
-   CircID with an MSB of 1.
-      [XXXX fix this when documenting link protocol 4.]
+   on the ORs' public identity keys.  In link protocol version 3 or
+   lower, if the sending node has a lower key, it chooses a CircID with
+   an MSB of 0; otherwise, it chooses a CircID with an MSB of 1. (Public
+   keys are compared numerically by modulus.)
+
+   In link protocol version 4 or higher, whichever node initiated the
+   connection sets its MSB to 0, and whichever node didn't initiate the
+   connection sets its MSB to 1.
 
    (An OP with no public key MAY choose any CircID it wishes, since an OP
    never needs to process a CREATE cell.)
-      [XXXX fix this when documenting link protocol 4.]
-
-   Public keys are compared numerically by modulus.
 
 5.1.2. EXTEND and EXTENDED cells
 
@@ -1183,7 +1197,7 @@ see tor-design.pdf.
          StreamID                [2 bytes]
          Digest                  [4 bytes]
          Length                  [2 bytes]
-         Data                    [CELL_LEN-14 bytes]
+         Data                    [PAYLOAD_LEN-11 bytes]
 
    The relay commands are:
          1 -- RELAY_BEGIN     [forward]
