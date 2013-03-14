@@ -37,7 +37,7 @@ Proposals by number:
 114  Distributed Storage for Tor Hidden Service Descriptors [CLOSED]
 115  Two Hop Paths [DEAD]
 116  Two hop paths from entry guards [DEAD]
-117  IPv6 exits [FINISHED]
+117  IPv6 exits [CLOSED]
 118  Advertising multiple ORPorts at once [SUPERSEDED]
 119  New PROTOCOLINFO command for controllers [CLOSED]
 120  Shutdown descriptors when Tor servers stop [DEAD]
@@ -120,7 +120,7 @@ Proposals by number:
 197  Message-based Inter-Controller IPC Channel [OPEN]
 198  Restore semantics of TLS ClientHello [FINISHED]
 199  Integration of BridgeFinder and BridgeFinderHelper [OPEN]
-200  Adding new, extensible CREATE, EXTEND, and related cells [FINISHED]
+200  Adding new, extensible CREATE, EXTEND, and related cells [CLOSED]
 201  Make bridges report statistics on daily v3 network status requests [OPEN]
 202  Two improved relay encryption protocols for Tor cells [OPEN]
 203  Avoiding censorship by impersonating an HTTPS server [DRAFT]
@@ -128,15 +128,15 @@ Proposals by number:
 205  Remove global client-side DNS caching [CLOSED]
 206  Preconfigured directory sources for bootstrapping [CLOSED]
 207  Directory guards [CLOSED]
-208  IPv6 Exits Redux [FINISHED]
+208  IPv6 Exits Redux [CLOSED]
 209  Tuning the Parameters for the Path Bias Defense [OPEN]
 210  Faster Headless Consensus Bootstrapping [OPEN]
 211  Internal Mapaddress for Tor Configuration Testing [OPEN]
 212  Increase Acceptable Consensus Age [OPEN]
 213  Remove stream-level sendmes from the design [OPEN]
-214  Allow 4-byte circuit IDs in a new link protocol [OPEN]
+214  Allow 4-byte circuit IDs in a new link protocol [CLOSED]
 215  Let the minimum consensus method change with time [OPEN]
-216  Improved circuit-creation key exchange [FINISHED]
+216  Improved circuit-creation key exchange [CLOSED]
 217  Tor Extended ORPort Authentication [OPEN]
 218  Controller events to better understand connection/circuit usage [OPEN]
 
@@ -183,7 +183,6 @@ Proposals by status:
    211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    213  Remove stream-level sendmes from the design
-   214  Allow 4-byte circuit IDs in a new link protocol
    215  Let the minimum consensus method change with time
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
    218  Controller events to better understand connection/circuit usage [for 0.2.5.x]
@@ -200,7 +199,6 @@ Proposals by status:
    098  Proposals that should be written
    099  Miscellaneous proposals
  FINISHED:
-   117  IPv6 exits [for 0.2.4.x] [in 0.2.4.7-alpha]
    121  Hidden Service Authentication [in 0.2.1.x]
    151  Improving Tor Path Selection
    155  Four Improvements of Hidden Service Performance [in 0.2.1.x]
@@ -210,10 +208,7 @@ Proposals by status:
    162  Publish the consensus in multiple flavors [in 0.2.3.1-alpha]
    180  Pluggable transports for circumvention [in 0.2.3.x]
    198  Restore semantics of TLS ClientHello [for 0.2.4.x]
-   200  Adding new, extensible CREATE, EXTEND, and related cells
    204  Subdomain support for Hidden Service addresses
-   208  IPv6 Exits Redux [for 0.2.4.x] [in 0.2.4.7-alpha]
-   216  Improved circuit-creation key exchange
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]
@@ -227,6 +222,7 @@ Proposals by status:
    110  Avoiding infinite length circuits [for 0.2.3.x] [in 0.2.1.3-alpha, 0.2.3.11-alpha]
    111  Prioritizing local traffic over relayed traffic [in 0.2.0.x]
    114  Distributed Storage for Tor Hidden Service Descriptors [in 0.2.0.x]
+   117  IPv6 exits [for 0.2.4.x] [in 0.2.4.7-alpha]
    119  New PROTOCOLINFO command for controllers [in 0.2.0.x]
    122  Network status entries need a new Unnamed flag [in 0.2.0.x]
    123  Naming authorities automatically create bindings [in 0.2.0.x]
@@ -254,9 +250,13 @@ Proposals by status:
    184  Miscellaneous changes for a v3 Tor link protocol [for 0.2.3.x]
    187  Reserve a cell type to allow client authorization [for 0.2.3.x]
    193  Safe cookie authentication for Tor controllers
+   200  Adding new, extensible CREATE, EXTEND, and related cells [in 0.2.4.8-alpha]
    205  Remove global client-side DNS caching [in 0.2.4.7-alpha.]
    206  Preconfigured directory sources for bootstrapping [in 0.2.4.7-alpha]
    207  Directory guards [for 0.2.4.x]
+   208  IPv6 Exits Redux [for 0.2.4.x] [in 0.2.4.7-alpha]
+   214  Allow 4-byte circuit IDs in a new link protocol [in 0.2.4.11-alpha]
+   216  Improved circuit-creation key exchange [in 0.2.4.8-alpha]
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration
