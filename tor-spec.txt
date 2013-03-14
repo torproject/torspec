@@ -33,9 +33,16 @@ see tor-design.pdf.
    [A0 B1 C2] -- a three-byte sequence, containing the bytes with
    hexadecimal values A0, B1, and C2, in that order.
 
-   All numeric values are encoded in network (big-endian) order.
-
    H(m) -- a cryptographic hash of m.
+
+   We use "byte" and "octet" interchangeably.  Possibly we shouldn't.
+
+0.1.1. Encoding integers
+
+   Unless we explicitly say otherwise below, all numeric values in the
+   Tor protocol are encoded in network (big-endian) order.  So a "32-bit
+   integer" means a big-endian 32-bit integer; a "2-byte" integer means
+   a big-endian 16-bit integer, and so forth.
 
 0.2. Security parameters
 
@@ -1277,6 +1284,10 @@ see tor-design.pdf.
 
    The FLAGS value has one or more of the following bits set, where
    "bit 1" is the LSB of the 32-bit value, and "bit 32" is the MSB.
+   (Remember that all values in Tor are big-endian (see 0.1.1 above), so
+   the MSB of a 4-byte value is the MSB of the first byte, and the LSB
+   of a 4-byte value is the LSB of its last byte.)
+
      bit   meaning
       1 -- IPv6 okay.  We support learning about IPv6 addresses and
            connecting to IPv6 addresses.
