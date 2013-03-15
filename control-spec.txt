@@ -2043,10 +2043,26 @@
   Syntax:
      "650" SP "GUARD" SP Type SP Name SP Status ... CRLF
      Type = "ENTRY"
-     Name = The (possibly verbose) nickname of the guard affected.
+     Name = ServerSpec
+       (Identifies the guard affected)
      Status = "NEW" | "UP" | "DOWN" | "BAD" | "GOOD" | "DROPPED"
 
-  [explain states. XXX]
+  The ENTRY type indicates a guard used for connections to the Tor
+  network.
+
+  The Status values are:
+    "NEW"  -- This node was not previously used as a guard; now we have
+              picked it as one.
+    "DROPPED" -- This node is one we previously picked as a guard; we
+              no longer consider it to be a member of our guard list.
+    "UP"   -- The guard now seems to be reachable.
+    "DOWN" -- The guard now seems to be unreachable.
+    "BAD"  -- Because of flags set in the consensus and/or values in the
+              configuration, this node is now unusable as a guard.
+    "GOOD" -- Because of flags set in the consensus and/or values in the
+              configuration, this node is now usable as a guard.
+
+  Controllers must accept unrecognized types and unrecognized statuses.
 
 4.1.12. Network status has changed
 
