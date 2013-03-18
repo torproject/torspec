@@ -1450,6 +1450,12 @@
         consensus, as signed (that is, not including the signature).
         (Hex, upper-case.)
 
+   For each "legacy-dir-key" in the vote, there is an additional "dir-source"
+   line containing that legacy key's fingerprint, the authority's nickname
+   with "-legacy" appended, and all other fields as in the main "dir-source"
+   line for that authority.  These "dir-source" lines do not have
+   corresponding "contact" or "vote-digest" entries.
+
    Each router status entry contains the following items.  Router status
    entries are sorted in ascending order by identity digest.
 
