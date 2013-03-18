@@ -589,15 +589,13 @@
        included for specialized controllers designed to support perspective
        access and such.
 
-   "or-address" SP ADDRESS ":" PORTLIST NL
+   "or-address" SP ADDRESS ":" PORT NL
 
        [Any number]
 
        ADDRESS = IP6ADDR | IP4ADDR
        IPV6ADDR = an ipv6 address, surrounded by square brackets.
        IPV4ADDR = an ipv4 address, represented as a dotted quad.
-       PORTLIST = PORTSPEC | PORTSPEC "," PORTLIST
-       PORTSPEC = PORT
        PORT = a number between 1 and 65535 inclusive.
 
        An alternative for the address and ORPort of the "router" line, but with
@@ -1125,7 +1123,7 @@
         (Only included when generating microdescriptors for
         consensus-method 16 or later.)
 
-     "a" SP address ":" portlist NL
+     "a" SP address ":" port NL
 
         [Any number]
 
@@ -1470,7 +1468,7 @@
         ORPort is its current OR port, "DirPort" is its current directory
         port, or "0" for "none".
 
-    "a" SP address ":" portlist NL
+    "a" SP address ":" port NL
 
         [Any number.]
 

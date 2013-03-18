@@ -106,7 +106,7 @@ Proposals by number:
 183  Refill Intervals [CLOSED]
 184  Miscellaneous changes for a v3 Tor link protocol [CLOSED]
 185  Directory caches without DirPort [OPEN]
-186  Multiple addresses for one OR or bridge [ACCEPTED]
+186  Multiple addresses for one OR or bridge [CLOSED]
 187  Reserve a cell type to allow client authorization [CLOSED]
 188  Bridge Guards and other anti-enumeration defenses [OPEN]
 189  AUTHORIZE and AUTHORIZED cells [OPEN]
@@ -192,7 +192,6 @@ Proposals by status:
    157  Make certificate downloads specific [for 0.2.4.x]
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
-   186  Multiple addresses for one OR or bridge [for 0.2.4.x+]
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process
@@ -248,6 +247,7 @@ Proposals by status:
    181  Optimistic Data for Tor: Client Side [in 0.2.3.3-alpha]
    183  Refill Intervals [in 0.2.3.5-alpha]
    184  Miscellaneous changes for a v3 Tor link protocol [for 0.2.3.x]
+   186  Multiple addresses for one OR or bridge [for 0.2.4.x+]
    187  Reserve a cell type to allow client authorization [for 0.2.3.x]
    193  Safe cookie authentication for Tor controllers
    200  Adding new, extensible CREATE, EXTEND, and related cells [in 0.2.4.8-alpha]

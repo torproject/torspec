@@ -3,7 +3,7 @@ Title: Multiple addresses for one OR or bridge
 Author: Nick Mathewson
 Created: 19-Sep-2011
 Supersedes: 118
-Status: Accepted
+Status: Closed
 Target: 0.2.4.x+
 
 Status:
