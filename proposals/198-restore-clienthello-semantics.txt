@@ -2,7 +2,7 @@ Filename: 198-restore-clienthello-semantics.txt
 Title: Restore semantics of TLS ClientHello
 Author: Nick Mathewson
 Created: 19-Mar-2012
-Status: Finished
+Status: Closed
 Target: 0.2.4.x
 
 Status:

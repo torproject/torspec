@@ -2,7 +2,7 @@ Filename: 180-pluggable-transport.txt
 Title: Pluggable transports for circumvention
 Author: Jacob Appelbaum, Nick Mathewson
 Created: 15-Oct-2010
-Status: Finished
+Status: Closed
 Implemented-In: 0.2.3.x
 
 Overview
