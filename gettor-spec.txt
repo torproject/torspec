@@ -10,7 +10,7 @@
 
  GetTor was created to resolve direct and indirect censorship of Tor's
  software.  In many countries and networks Tor's main website is blocked and
- would be Tor users are unable to download even the source code to the Tor
+ would-be Tor users are unable to download even the source code to the Tor
  program. Other software hosted by the Tor Project is similarly censored. The
  filtering of the possible download sites is sometimes easy to bypass by using
  our TLS enabled website. In other cases the website and all of the mirrors are
