@@ -928,13 +928,17 @@
 
 2.4. Client configuration
 
-   Clients need to make their authorization data known to Tor using another
-   configuration option that contains a service name (mainly for the sake of
-   convenience), the service address, and the descriptor cookie that is
-   required to access a hidden service (the authorization protocol number is
-   encoded in the descriptor cookie):
+   To specify the cookie to use to access a given hidden service,
+   clients use the following syntax:
 
-     HidServAuth service-name service-address descriptor-cookie
+    HidServAuth onion-address auth-cookie [service-name]:
+
+     Valid onion addresses contain 16 characters in a-z2-7 plus
+     ".onion", and valid auth cookies contain 22 characters in
+     A-Za-z0-9+/. The service name is only used for internal purposes,
+     e.g., for Tor controllers; nothing in Tor itself requires or uses
+     it.
+
 
 3. Hidden service directory operation
 
