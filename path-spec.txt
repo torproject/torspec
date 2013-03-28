@@ -615,7 +615,8 @@ of their choices.
   In the extreme, the attack allows an adversary that carries c/n
   of the network capacity to deanonymize c/n of the network
   connections, breaking the O((c/n)^2) property of Tor's original
-  threat model.
+  threat model. It also allows targeted attacks aimed at monitoring
+  the activity of specific users, bridges, or Guard nodes.
 
   There are two points where path selection can be manipulated: 
   during construction, and during usage. Circuit construction
@@ -628,8 +629,8 @@ of their choices.
   will also transparently retry the stream on a new path.
 
   The defense as deployed therefore makes two independent sets of
-  measurements of successful path use: one during construction, and
-  one during usage.
+  measurements of successful path use: one during circuit construction,
+  and one during circuit usage.
 
   The intended behavior is for clients to ultimately disable the use
   of Guards responsible for excessive circuit failure of either type
@@ -701,6 +702,86 @@ of their choices.
   scaling, and added back after scaling.
 
 7.4. Parametrization
+
+   The following consensus parameters tune various aspects of the
+   defense.
+
+     pb_mincircs
+       Default: 150
+       Min: 5
+       Effect: This is the minimum number of circuits that must complete
+               at least 2 hops before we begin evaluating construction rates.
+
+
+     pb_noticepct
+       Default: 70
+       Min: 0
+       Max: 100
+       Effect: If the circuit success rate falls below this percentage,
+               we emit a notice log message.
+
+     pb_warnpct
+       Default: 50
+       Min: 0
+       Max: 100
+       Effect: If the circuit success rate falls below this percentage,
+               we emit a warn log message.
+
+     pb_extremepct
+       Default: 30
+       Min: 0
+       Max: 100
+       Effect: If the circuit success rate falls below this percentage,
+               we emit a more alarmist warning log message. If 
+               pb_dropguard is set to 1, we also disable the use of the
+               guard.
+
+     pb_dropguards
+       Default: 0
+       Min: 0
+       Max: 1
+       Effect: If the circuit success rate falls below pb_extremepct,
+               when pb_dropguard is set to 1, we disable use of that
+               guard.
+
+     pb_scalecircs
+       Default: 300
+       Min: 10
+       Effect: After this many circuits have completed at least two hops,
+               Tor performs the scaling described in Section 7.3.
+
+     pb_multfactor and pb_scalefactor
+       Default: 1/2
+       Min: 0.0
+       Max: 1.0
+       Effect: The double-precision result obtained from
+               pb_multfactor/pb_scalefactor is multiplied by our current
+               counts to scale them.
+
+     pb_minuse
+       Default: 20
+       Min: 3
+       Effect: This is the minimum number of circuits that we must attempt to
+               use before we begin evaluating construction rates.
+
+     pb_noticeusepct
+       Default: 80
+       Min: 3
+       Effect: If the circuit usage success rate falls below this percentage,
+               we emit a notice log message.
+
+     pb_extremeusepct
+       Default: 60
+       Min: 3
+       Effect: If the circuit usage success rate falls below this percentage,
+               we emit a warning log message. We also disable the use of the
+               guard if pb_dropguards is set.
+
+     pb_scaleuse
+       Default: 100
+       Min: 10
+       Effect: After we have attempted to use this many circuits,
+               Tor performs the scaling described in Section 7.3.
 
 7.5. Known barriers to enforcement
 
