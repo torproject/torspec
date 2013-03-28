@@ -512,7 +512,8 @@ of their choices.
    so we treat the exit node as if it were a non-exit until we retrieve
    a fresh descriptor for it.
 
-   XXXX
+   Excessive amounts of either type of failure can indicate an
+   attack on anonymity. See section 7 for how excessive failure is handled.
 
 3. Attaching streams to circuits
 
@@ -603,6 +604,193 @@ of their choices.
   doc/design-paper/blocking.pdf for more design explanation, or proposal
   125 for specific details. Currently bridge descriptors are used in place
   of normal entry guards, for Tor clients that have UseBridges enabled.
+
+7. Detecting route manipulation by Guard nodes (Path Bias)
+
+  The Path Bias defense is designed to defend against a type of route
+  capture where malicious Guard nodes deliberately fail or choke circuits
+  that extend to non-colluding Exit nodes to maximize their network
+  utilization in favor of carrying only compromised traffic.
+
+  In the extreme, the attack allows an adversary that carries c/n
+  of the network capacity to deanonymize c/n of the network
+  connections, breaking the O((c/n)^2) property of Tor's original
+  threat model. It also allows targeted attacks aimed at monitoring
+  the activity of specific users, bridges, or Guard nodes.
+
+  There are two points where path selection can be manipulated: 
+  during construction, and during usage. Circuit construction
+  can be manipulated by inducing circuit failures during circuit
+  extend steps, which causes the Tor client to transparently retry
+  the circuit construction with a new path. Circuit usage can be
+  manipulated by abusing the stream retry features of Tor (for
+  example by withholding stream attempt responses from the client
+  until the stream timeout has expired), at which point the tor client
+  will also transparently retry the stream on a new path.
+
+  The defense as deployed therefore makes two independent sets of
+  measurements of successful path use: one during circuit construction,
+  and one during circuit usage.
+
+  The intended behavior is for clients to ultimately disable the use
+  of Guards responsible for excessive circuit failure of either type
+  (see section 7.4); however known issues with the Tor network currently
+  restrict the defense to being informational only at this stage (see
+  section 7.5).
+
+7.1. Measuring path construction success rates
+
+  Clients maintain two counts for each of their guards: a count of the
+  number of times a circuit was extended to at least two hops through that
+  guard, and a count of the number of circuits that successfully complete
+  through that guard. The ratio of these two numbers is used to determine
+  a circuit success rate for that Guard.
+
+  Circuit build timeouts are counted as construction failures if the
+  circuit fails to complete before the 95% "right-censored" timeout
+  interval, not the 80% timeout condition (see section 2.4).
+
+  If a circuit closes prematurely after construction but before being
+  requested to close by the client, this is counted as a failure.
+
+7.2. Measuring path usage success rates
+
+  Clients maintain two usage counts for each of their guards: a count
+  of the number of usage attempts, and a count of the number of
+  successful usages.
+  
+  A usage attempt means any attempt to attach a stream to a circuit.
+
+  Usage success status is temporarily recorded by state flags on circuits.
+  Guard usage success counts are not incremented until circuit close. A
+  circuit is marked as successfully used if we receive a properly 
+  recognized RELAY cell on that circuit that was expected for the current
+  circuit purpose.
+
+  If subsequent stream attachments fail or time out, the successfully used
+  state of the circuit is cleared, causing it once again to be regarded
+  as a usage attempt only.
+
+  Upon close by the client, all circuits that are still marked as usage
+  attempts are probed using a RELAY_BEGIN cell constructed with a
+  destination of the form 0.a.b.c:25, where a.b.c is a 24 bit random
+  nonce. If we get a RELAY_COMMAND_END in response matching our nonce,
+  the circuit is counted as successfully used.
+
+  If any unrecognized RELAY cells arrive after the probe has been sent,
+  the circuit is counted as a usage failure.
+
+  If the stream failure reason codes DESTROY, TORPROTOCOL, or INTERNAL
+  are received in response to any stream attempt, such circuits are not
+  probed and are declared usage failures.
+
+  Prematurely closed circuits are not probed, and are counted as usage
+  failures.
+
+7.3. Scaling success counts
+
+  To provide a moving average of recent Guard activity while
+  still preserving the ability to verify correctness, we periodically
+  "scale" the success counts by multiplying them by a scale factor
+  between 0 and 1.0.
+
+  Scaling is performed when either usage or construction attempt counts
+  exceed a parametrized value.
+
+  To avoid error due to scaling during circuit construction and use,
+  currently open circuits are subtracted from the usage counts before
+  scaling, and added back after scaling.
+
+7.4. Parametrization
+
+   The following consensus parameters tune various aspects of the
+   defense.
+
+     pb_mincircs
+       Default: 150
+       Min: 5
+       Effect: This is the minimum number of circuits that must complete
+               at least 2 hops before we begin evaluating construction rates.
+
+
+     pb_noticepct
+       Default: 70
+       Min: 0
+       Max: 100
+       Effect: If the circuit success rate falls below this percentage,
+               we emit a notice log message.
+
+     pb_warnpct
+       Default: 50
+       Min: 0
+       Max: 100
+       Effect: If the circuit success rate falls below this percentage,
+               we emit a warn log message.
+
+     pb_extremepct
+       Default: 30
+       Min: 0
+       Max: 100
+       Effect: If the circuit success rate falls below this percentage,
+               we emit a more alarmist warning log message. If 
+               pb_dropguard is set to 1, we also disable the use of the
+               guard.
+
+     pb_dropguards
+       Default: 0
+       Min: 0
+       Max: 1
+       Effect: If the circuit success rate falls below pb_extremepct,
+               when pb_dropguard is set to 1, we disable use of that
+               guard.
+
+     pb_scalecircs
+       Default: 300
+       Min: 10
+       Effect: After this many circuits have completed at least two hops,
+               Tor performs the scaling described in Section 7.3.
+
+     pb_multfactor and pb_scalefactor
+       Default: 1/2
+       Min: 0.0
+       Max: 1.0
+       Effect: The double-precision result obtained from
+               pb_multfactor/pb_scalefactor is multiplied by our current
+               counts to scale them.
+
+     pb_minuse
+       Default: 20
+       Min: 3
+       Effect: This is the minimum number of circuits that we must attempt to
+               use before we begin evaluating construction rates.
+
+     pb_noticeusepct
+       Default: 80
+       Min: 3
+       Effect: If the circuit usage success rate falls below this percentage,
+               we emit a notice log message.
+
+     pb_extremeusepct
+       Default: 60
+       Min: 3
+       Effect: If the circuit usage success rate falls below this percentage,
+               we emit a warning log message. We also disable the use of the
+               guard if pb_dropguards is set.
+
+     pb_scaleuse
+       Default: 100
+       Min: 10
+       Effect: After we have attempted to use this many circuits,
+               Tor performs the scaling described in Section 7.3.
+
+7.5. Known barriers to enforcement
+
+  Due to intermittent CPU overload at relays, the normal rate of
+  successful circuit completion is highly variable. The Guard-dropping
+  version of the defense is unlikely to be deployed until the ntor
+  circuit handshake is enabled, or the nature of CPU overload induced
+  failure is better understood.
+  
 
 
 X. Old notes
