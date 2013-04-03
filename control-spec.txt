@@ -1579,13 +1579,16 @@
 
   Syntax:
      "650" SP "ADDRMAP" SP Address SP NewAddress SP Expiry
-       [SP "error=" ErrorCode] [SP "EXPIRES=" UTCExpiry] CRLF
+       [SP "error=" ErrorCode] [SP "EXPIRES=" UTCExpiry] [SP "CACHED=" Cached]
+       CRLF
 
      NewAddress = Address / "<error>"
      Expiry = DQUOTE ISOTime DQUOTE / "NEVER"
 
      ErrorCode = "yes" / "internal" / "Unable to launch resolve request"
      UTCExpiry = DQUOTE IsoTime DQUOTE
+
+     Cached = "YES" / "NO"
 
   Error and UTCExpiry are only provided if extended events are enabled.
   The values for Error are mostly useless.  Future values will be
@@ -1595,6 +1598,9 @@
   Expiry is expressed as the local time (rather than UTC).  This is a bug,
   left in for backward compatibility; new code should look at UTCExpiry
   instead.  (If Expiry is "NEVER", UTCExpiry is omitted.)
+
+  Cached indicates whether the mapping will be stored until it expires, or if
+  it is just a notification in response to a RESOLVE command.
 
 4.1.8. Descriptors uploaded to us in our role as authoritative dirserver
 
