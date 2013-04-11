@@ -395,14 +395,10 @@ of their choices.
    We attempt to detect both network connectivity loss and drastic
    changes in the timeout characteristics.
 
-   We assume that we've had network connectivity loss if 3 circuits
-   timeout and we've received no cells or TLS handshakes since those
-   circuits began. We then temporarily set the timeout to 60 seconds
-   and stop counting timeouts.
-
-   If 3 more circuits timeout and the network still has not been
-   live within this new 60 second timeout window, we then discard
-   the previous timeouts during this period from our history.
+   We assume that we've had network connectivity loss if a circuit
+   times out and we've received no cells or TLS handshakes since that
+   circuit began. We then temporarily stop counting timeouts until
+   network activity resumes.
 
    To detect changing network conditions, we keep a history of
    the timeout or non-timeout status of the past 20 circuits that
