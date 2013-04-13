@@ -1588,7 +1588,7 @@
      ErrorCode = "yes" / "internal" / "Unable to launch resolve request"
      UTCExpiry = DQUOTE IsoTime DQUOTE
 
-     Cached = "YES" / "NO"
+     Cached = DQUOTE "YES" DQUOTE / DQUOTE "NO" DQUOTE
 
   Error and UTCExpiry are only provided if extended events are enabled.
   The values for Error are mostly useless.  Future values will be
