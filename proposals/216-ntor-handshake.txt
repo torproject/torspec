@@ -85,7 +85,7 @@ Protocol:
   The server sends a CREATED cell containing:
 
     SERVER_PK:  Y                     -- G_LENGTH bytes
-    AUTH:       H(auth_input, t_mac)  -- H_LENGTH byets
+    AUTH:       H(auth_input, t_mac)  -- H_LENGTH bytes
 
   The client then checks Y is in G^* [see NOTE below], and computes
 
@@ -210,6 +210,4 @@ Test vectors for HKDF-SHA256:
           53b36e5a0e434561200c5f8bd13e0f88b3459600
           b4dc21d69363e2895321c06184879d94b18f0784
           11be70b767c7fc40679a9440a0c95ea83a23efbf
-
-
 

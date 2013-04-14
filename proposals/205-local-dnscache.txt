@@ -28,8 +28,9 @@ Status: Closed
    cache.  This lets us implement exit policies and exit enclaves --
    if we remember that www.mit.edu is 18.9.22.169 the first time we
    see it, then we can avoid making future requests for www.mit.edu
-   via any node that blocks net 18.  Also, if there happened to be a
-   Tor node at 18.9.22.169, we could use that node as an exit enclave.
+   via any node whose exit policy refuses net 18.  Also, if there
+   happened to be a Tor node at 18.9.22.169, we could use that node as
+   an exit enclave.
 
    But there are security issues with DNS caches.  A malicious exit
    node or DNS server can lie.  And unlike other traffic, where the
@@ -94,7 +95,7 @@ Status: Closed
    controller, the configuration file, trackhostexits maps,
    virtual-address maps, DNS replies, and so on.
 
-   With this design, the DNS cache will not be part of the address
+   With this proposed design, the DNS cache will not be part of the address
    map.  That means that entries in the address map which relied on
    happening after the DNS cache entries can no longer work so well.
    These would include:
