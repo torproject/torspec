@@ -1766,10 +1766,11 @@
    Directory server administrators may label some relays or IPs as
    blacklisted, and elect not to include them in their network-status lists.
 
-   Authorities SHOULD 'disable' any relays in excess of 3 on any single IP.
-   When there are more than 3 to choose from, authorities should first prefer
-   authorities to non-authorities, then prefer Running to non-Running, and
-   then prefer high-bandwidth to low-bandwidth[*].  To 'disable' a relay, the
+   Authorities SHOULD 'disable' any relays in excess of 2 on any single
+   IP.  When there are more than 2 (or AuthDirMaxServersPerAddr) to
+   choose from, authorities should first prefer authorities to
+   non-authorities, then prefer Running to non-Running, and then prefer
+   high-bandwidth to low-bandwidth[*].  To 'disable' a relay, the
    authority *should* advertise it without the Running or Valid flag.
 
       [*] In this comparison, measured bandwidth is used unless it is not
