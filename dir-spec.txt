@@ -1659,12 +1659,29 @@
 3.4. Assigning flags in a vote
 
    (This section describes how directory authorities choose which status
-   flags to apply to routers, as of Tor 0.2.0.0-alpha-dev. Later directory
-   authorities MAY do things differently, so long as clients keep working
-   well.  Clients MUST NOT depend on the exact behaviors in this section.)
+   flags to apply to routers. Later directory authorities MAY do things
+   differently, so long as clients keep working well.  Clients MUST NOT
+   depend on the exact behaviors in this section.)
 
    In the below definitions, a router is considered "active" if it is
    running, valid, and not hibernating.
+
+   When we speak of a router's bandwidth in this section, we mean either
+   its measured bandwidth, or its advertised bandwidth. If a sufficient
+   threshold (configurable with MinMeasuredBWsForAuthToIgnoreAdvertised,
+   500 by default) of routers have measured bandwidth values, then the
+   authority bases flags on _measured_ bandwidths, and treats nodes with
+   non-measured bandwidths as if their bandwidths were zero. Otherwise,
+   it uses measured bandwidths for nodes that have them, and advertised
+   bandwidths for other nodes.
+
+   When computing thresholds based on percentiles of nodes, an authority
+   only considers nodes that are active, nodes that have not been
+   omitted as a sybil (see below), and nodes whose bandwidth is at least
+   4 KB.  Nodes that don't meet these criteria do not influence any
+   threshold calculations (including calculation of stability and uptime
+   and bandwidth thresholds) and also do not have their Exit status
+   change.
 
    "Valid" -- a router is 'Valid' if it is running a version of Tor not
    known to be broken, and the directory authority has not blacklisted
@@ -1752,8 +1769,12 @@
    Authorities SHOULD 'disable' any relays in excess of 3 on any single IP.
    When there are more than 3 to choose from, authorities should first prefer
    authorities to non-authorities, then prefer Running to non-Running, and
-   then prefer high-bandwidth to low-bandwidth.  To 'disable' a relay, the
+   then prefer high-bandwidth to low-bandwidth[*].  To 'disable' a relay, the
    authority *should* advertise it without the Running or Valid flag.
+
+      [*] In this comparison, measured bandwidth is used unless it is not
+          present for a router, in which case advertised bandwidth is used.
+          Bug 8710 has a patch to change this behavior.
 
    Thus, the network-status vote includes all non-blacklisted,
    non-expired, non-superseded descriptors.
