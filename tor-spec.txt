@@ -8,7 +8,7 @@ Note: This document aims to specify Tor as currently implemented, though it
 may take it a little time to become fully up to date. Future versions of Tor
 may implement improved protocols, and compatibility is not guaranteed.
 Compatibility notes are given for versions 0.1.1.15-rc and later.  We may or
-may remove compatibility notes for other obsolete versions of Tor as they
+may not remove compatibility notes for other obsolete versions of Tor as they
 become obsolete.
 
 This specification is not a design document; most design criteria
