@@ -836,9 +836,10 @@
   circuit as the exit node, rather than the last node in the circuit.
   Hops are 1-indexed; generally, it is not permitted to attach to hop 1.
 
-  Tor responds with "250 OK" if it can attach the stream, 552 if the circuit
-  or stream didn't exist, or 551 if the stream couldn't be attached for
-  another reason.
+  Tor responds with "250 OK" if it can attach the stream, 552 if the
+  circuit or stream didn't exist, 555 if the stream isn't in an
+  appropriate state to be attached (e.g. it's already open), or 551 if
+  the stream couldn't be attached for another reason.
 
   {Implementation note: Tor will close unattached streams by itself,
   roughly two minutes after they are born. Let the developers know if
