@@ -188,7 +188,8 @@ of their choices.
    we generate obey the following constraints:
      - We do not choose the same router twice for the same path.
      - We do not choose any router in the same family as another in the same
-       path.
+       path. (Two routers are in the same family if each one lists the other
+       in the "family" entries of its descriptor.)
      - We do not choose more than one router in a given /16 subnet
        (unless EnforceDistinctSubnets is 0).
      - We don't choose any non-running or non-valid router unless we have
