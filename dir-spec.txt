@@ -1680,8 +1680,8 @@
    bandwidths for other nodes.
 
    When computing thresholds based on percentiles of nodes, an authority
-   only considers nodes that are active, nodes that have not been
-   omitted as a sybil (see below), and nodes whose bandwidth is at least
+   only considers nodes that are active, that have not been
+   omitted as a sybil (see below), and whose bandwidth is at least
    4 KB.  Nodes that don't meet these criteria do not influence any
    threshold calculations (including calculation of stability and uptime
    and bandwidth thresholds) and also do not have their Exit status
