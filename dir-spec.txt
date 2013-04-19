@@ -1270,6 +1270,10 @@
          "guard-bw-exc-exits" -- If exits can't be guards, then all guards
                                  guards must have a bandwidth this high.
 
+         "ignoring-advertised-bws" -- 1 if we have enough measured bandwidths
+                                 that we'll ignore the advertised bandwidth
+                                 claims of routers without measured bandwidth.
+
     "fresh-until" SP YYYY-MM-DD SP HH:MM:SS NL
 
         [Exactly once.]
