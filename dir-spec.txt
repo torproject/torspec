@@ -1327,7 +1327,7 @@
         enough votes were counted for the consensus for an authoritative
         opinion to have been formed about their status.
 
-    "params" [SP Parameters] NL
+    "params" SP [Parameters] NL
 
         [At most once]
 
