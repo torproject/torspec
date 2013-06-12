@@ -37,6 +37,8 @@ Specifications: Client behavior
   password fields of the request, splitting them across the fields
   as necessary.  If a key or value value must contain a semicolon or
   a backslash, it is escaped with a backslash.
+  Example of SOCKS parameters encoding:
+    shared-secret=rahasia;secrets-file=/tmp/blob
 
   Method names MUST be C identifiers. That is, method names must begin
   with a letter or underscore and the rest of the characters can be
@@ -151,6 +153,16 @@ Server behavior
   trasport before, it will instruct the managed proxy to bind to the
   same TCP port that the transport used last time.
 
+  Further configuration parameters (like the k=v values passed to
+  client-transports using the Bridge line) can be passed to
+  server-transports using the ServerTransportOptions option.
+
+  The format of the ServerTransportOptions line is:
+     ServerTransportOptions <method> <k=v> ...
+
+  For example, a valid instance of this line would be:
+     ServerTransportOptions trebuchet secret=nou cache=/tmp/cache
+
 Managed proxy interface
 
    When the Tor client or relay launches a managed proxy, it communicates
@@ -220,6 +232,20 @@ Managed proxy interface
       communicate with the Extended ORPort and TransportControlPort.
       TOR_PT_AUTH_COOKIE_FILE is optional and might not be present in
       the environment of the proxy.
+
+      "TOR_PT_SERVER_TRANSPORT_OPTIONS" -- A comma seperated list
+       of <key>:<value> pairs, where <key> is a transport name and
+       <value> is a k=v string value with options that are to be
+       passed to the transport. Colons, semicolons, equal signs and
+       backslashes must be escaped with a backslash.
+       The TOR_PT_SERVER_TRANSPORT_OPTIONS is optional and might not
+       be present in the environment of the proxy if no options need
+       to be passed to transports.
+       Example:
+         TOR_PT_SERVER_TRANSPORT_OPTIONS=trebuchet:secret=nou;trebuchet:cache=/tmp/cache;ballista:secret=yes
+       will pass to 'trebuchet' the arguments "secret=nou" and
+       "cache=/tmp/cache" and will pass to 'ballista' the argument
+       "secret=yes".
 
   The transport proxy replies by writing NL-terminated lines to
   stdout.  The line metaformat is
