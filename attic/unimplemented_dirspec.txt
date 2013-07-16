@@ -1,0 +1,15 @@
+The following contains portions of the dir-spec that were not implemented in
+tor. They're still fine ideas, but do not belong in the specs before they...
+well, exist.
+
+Dirport Methods, Section 4.5 (https://trac.torproject.org/9271)
+
+   All the microdescriptors from the current consensus should also be
+   available at:
+     http://<hostname>/tor/micro/all[.z]
+   so a client that's bootstrapping doesn't need to send a 70KB URL just
+   to name every microdescriptor it's looking for.
+   [Note that /tor/micro/all[.z] is not implemented as of February 21,
+   2012. -KL]
+
+

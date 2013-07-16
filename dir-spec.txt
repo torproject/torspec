@@ -2500,14 +2500,6 @@
    instead of +s to separate items, since the + character is used in
    base64 encoding.
 
-   All the microdescriptors from the current consensus should also be
-   available at:
-     http://<hostname>/tor/micro/all[.z]
-   so a client that's bootstrapping doesn't need to send a 70KB URL just
-   to name every microdescriptor it's looking for.
-   [Note that /tor/micro/all[.z] is not implemented as of February 21,
-   2012. -KL]
-
    Directory mirrors should check to make sure that the microdescriptors
    they're about to serve match the right hashes (either the hashes from
    the fetch URL or the hashes from the consensus, respectively).
