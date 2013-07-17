@@ -2504,6 +2504,9 @@
    they're about to serve match the right hashes (either the hashes from
    the fetch URL or the hashes from the consensus, respectively).
 
+   (NOTE: Due to squid proxy url limitations at most 92 microdescrriptor hashes
+   can be retrieved in a single request.)
+
 4.6. Downloading and storing extra-info documents
 
    All authorities, and any cache that chooses to cache extra-info documents,
@@ -2529,6 +2532,9 @@
 
    Starting with Tor version 0.2.1.1-alpha is also available at:
       http://<hostname>/tor/status-vote/current/consensus/<F1>+<F2>+<F3>.z
+
+   (NOTE: Due to squid proxy url limitations at most 96 fingerprints can be
+   retrieved in a single request.)
 
    Where F1, F2, etc. are authority identity fingerprints the client trusts.
    Servers will only return a consensus if more than half of the requested
@@ -2577,7 +2583,10 @@
    <F1>,<F2>,<F3> should be available at:
       http://<hostname>/tor/server/fp/<F1>+<F2>+<F3>.z
 
-   (NOTE: Implementations SHOULD NOT download descriptors by identity key
+   (NOTE: Due to squid proxy url limitations at most 96 fingerprints can be
+   retrieved in a single request.
+
+   Implementations SHOULD NOT download descriptors by identity key
    fingerprint. This allows a corrupted server (in collusion with a cache) to
    provide a unique descriptor to a client, and thereby partition that client
    from the rest of the network.)
