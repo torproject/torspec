@@ -54,7 +54,7 @@ Status: Draft
 
   [XXXX We need to specify the exact behavior here: saying "Just do what
   Libunbound does!" would make it impossible to implement a
-  Tor-compatible client without reverse-engineering libunbound.]
+  Tor-compatible client without reverse-engineering libunbound. - NM]
 
   The FLAGS field is reserved, and should be set to 0 by all clients.
 
@@ -89,8 +89,10 @@ Status: Draft
   cells, with contents: [00 04 00] R2[0:495], [00] R2[495:992], and
   [01] R2[992:1024] respectively.
 
+  The server should 
+
   [NOTE: I'm using the length field and the is-this-the-last-cell
-  field to allow multi-packet responses in the future.]
+  field to allow multi-packet responses in the future. -NM]
 
   AXFR and IXRF are not supported in this cell by design (see
   specialized tool below in section 5).
@@ -107,28 +109,38 @@ Status: Draft
 
 2. Interfaces to applications
 
-  DNSPort evdns - existing implementation will be updated to use DNS_BEGIN.
+  DNSPort evdns - existing implementation will be updated to use
+  DNS_BEGIN.
+
+  [XXXX we should add a dig-like tool that can work over the socksport
+  via some extension, as tor-resolve does now. -NM]
 
 3. Limitations on DNS query
 
-  Query class is limited to IN (INTERNET) since the only other useful class
-  CHAOS is practical for directly querying authoritative servers (OR in this
-  case acts as a recursive resolver). Query for class other than IN will
-  return REFUSED in the inner DNS packet.
+  Clients must only set query class to IN (INTERNET), since the only
+  other useful class CHAOS is practical for directly querying
+  authoritative servers (OR in this case acts as a recursive resolver).
+  Servers MUST return REFUSED for any for class other than IN.
 
-  Multiple questions in a single packet are not supported and OR will respond
-  with REFUSED as the DNS error code.
+  Multiple questions in a single packet are not supported and OR will
+  respond with REFUSED as the DNS error code.
 
   All query RR types are allowed.
 
   [XXXX I originally thought about some exit policy like "basic RR types" and
   "all RRs", but managing such list in deployed nodes with extra directory
-  flags outweighs the benefit. Maybe disallow ANY RR type? ]
+  flags outweighs the benefit. Maybe disallow ANY RR type? -OM]
 
-  Client as well as OR MUST block attempts to resolve local RFC 1918, 4193,
-  4291 adresses (PTR). REFUSED will be returned as DNS error code from OR.
+  Client as well as OR MUST block attempts to resolve local RFC 1918,
+  4193, or 4291 adresses (PTR). REFUSED will be returned as DNS error
+  code from OR.  [XXXX Must they also refuse to report addresses that
+  resolve to these? -NM]
 
-  Request for special names (.onion, .exit, .noconnect) will return REFUSED.
+  Request for special names (.onion, .exit, .noconnect) must never be
+  sent, and will return REFUSED.
+
+  The DNS transaction ID field MUST be set to zero in all requests and
+  replies; the stream ID field plays the same function in Tor.
 
 4. Implementation notes
 
@@ -187,8 +199,6 @@ Status: Draft
 
 6. Security implications
 
-  Transaction ID is provided randomly by libunbound, no need to modify.
-
   As proposal 171 mentions, we need mitigate circuit correlation. One solution
   would be keeping multiple streams to multiple exit nodes and picking one at
   random for DNS resolution. Other would be keeping DNS-resolving circuit open
@@ -196,6 +206,9 @@ Status: Draft
   however means that it would probably incur additional latency since there
   would likely be a few cache misses on the newly selected exits.
 
+  [This needs more analysis; We need to consider the possible attacks
+  here.  It would be good to have a way to tie requests to
+  SocksPorts, perhaps? -NM]
 
 7. TTL normalization idea
 
