@@ -1,13 +1,13 @@
-Filename: xxx-dns-dnssec.txt
+Filename: 219-expanded-dns.txt
 Title: Support for full DNS and DNSSEC resolution in Tor
 Authors: Ondrej Mikle
 Created: 4 February 2012
-Modified: 19 August 2012
+Modified: 2 August 2013
 Status: Draft
 
 0. Overview
 
-  Adding support for any DNS query type to Tor, as well as DNSSEC support.
+  Adding support for any DNS query type to Tor.
 
 0.1. Motivation
 
@@ -17,13 +17,23 @@ Status: Draft
   XMPP). TLS connections will benefit from planned TLSA record that provides
   certificate pinning to avoid another Diginotar-like fiasco.
 
-  DNSSEC is part of the DNS protocol and the most appropriate place for DNSSEC
-  API would be probably in OS libraries (e.g. libc). However that will
-  probably take time until it becomes widespread.
+0.2. What about DNSSEC?
 
-  On the Tor's side (as opposed to application's side), DNSSEC will provide
-  protection against DNS cache-poisoning attacks (provided that exit is not
-  malicious itself, but still reduces attack surface).
+  Routine DNSSEC resolution is not practical with this proposal alone,
+  because of round-trip issues: a single name lookup can require
+  dozens of round trips across a circuit, rendering it very slow. (We
+  don't want to add minutes to every webpage load time!)
+
+  For records like TLSA that need extra signing, this might not be an
+  unacceptable amount of overhead, but routine hostname lookup, it's
+  probably overkill.
+
+  [Further, thanks to the changes of proposal 205, DNSSEC for routine
+  hostname lookup is less useful in Tor than it might have been back
+  when we cached IPv4 and IPv6 addresses and used them across multiple
+  circuits and exit nodes.]
+
+  See section 8 below for more discussion of DNSSEC issues.
 
 1. Design
 
@@ -162,7 +172,19 @@ Status: Draft
   - does not pose "ghost-cache-attack", since once RR is flushed from
     libunbound's cache, it must be fetched anew
 
-8. Round trips and serialization
+8. DNSSEC notes
+
+8.1. Where to do the resolution?
+
+  DNSSEC is part of the DNS protocol and the most appropriate place for DNSSEC
+  API would be probably in OS libraries (e.g. libc). However that will
+  probably take time until it becomes widespread.
+
+  On the Tor's side (as opposed to application's side), DNSSEC will provide
+  protection against DNS cache-poisoning attacks (provided that exit is not
+  malicious itself, but still reduces attack surface).
+
+8.2. Round trips and serialization
 
   Following are two examples of resolving two A records. The one for
   addons.mozila.org is an example of a "common" RR without CNAME/DNAME, the
