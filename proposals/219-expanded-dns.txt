@@ -1,0 +1,267 @@
+Filename: xxx-dns-dnssec.txt
+Title: Support for full DNS and DNSSEC resolution in Tor
+Authors: Ondrej Mikle
+Created: 4 February 2012
+Modified: 19 August 2012
+Status: Draft
+
+0. Overview
+
+  Adding support for any DNS query type to Tor, as well as DNSSEC support.
+
+0.1. Motivation
+
+  Many applications running over Tor need more than just resolving FQDN to
+  IPv4 and vice versa. Sometimes to prevent DNS leaks the applications have to
+  be hacked around to be supplied necessary data by hand (e.g. SRV records in
+  XMPP). TLS connections will benefit from planned TLSA record that provides
+  certificate pinning to avoid another Diginotar-like fiasco.
+
+  DNSSEC is part of the DNS protocol and the most appropriate place for DNSSEC
+  API would be probably in OS libraries (e.g. libc). However that will
+  probably take time until it becomes widespread.
+
+  On the Tor's side (as opposed to application's side), DNSSEC will provide
+  protection against DNS cache-poisoning attacks (provided that exit is not
+  malicious itself, but still reduces attack surface).
+
+1. Design
+
+1.1 New cells
+
+  There will be two new cells, RELAY_DNS_BEGIN and RELAY_DNS_RESPONSE (we'll
+  use DNS_BEGIN and DNS_RESPONSE for short below).
+
+  DNS_BEGIN payload:
+
+    DNS packet data (variable length)
+
+  The DNS packet must be generated internally by libunbound to avoid
+  fingerprinting users by differences in client resolvers' behavior.
+
+  DNS_RESPONSE payload:
+
+    total length (2 octets)
+    data         (variable)
+
+  Data contains the reply DNS packet or its part if packet would not fit into
+  the cell. Total length describes length of complete response packet, thus
+  one DNS_BEGIN may be answered by multiple DNS_RESPONSE cells.
+
+  DNS_BEGIN must use a non-zero, distinct StreamID, corresponding DNS_RESPONSE
+  will use the same StreamID. Similarly to RELAY_RESOLVE(D), no actual stream
+  is created.
+
+  AXFR and IXRF are not supported in this cell by design (see specialized tool
+  below).
+
+2. Interfaces to applications
+
+  DNSPort evdns - existing implementation will be updated to use DNS_BEGIN.
+
+3. Limitations on DNS query
+
+  Query class is limited to IN (INTERNET) since the only other useful class
+  CHAOS is practical for directly querying authoritative servers (OR in this
+  case acts as a recursive resolver). Query for class other than IN will
+  return REFUSED in the inner DNS packet.
+
+  Multiple questions in a single packet are not supported and OR will respond
+  with REFUSED as the DNS error code.
+
+  All query RR types are allowed.
+
+  [XXXX I originally thought about some exit policy like "basic RR types" and
+  "all RRs", but managing such list in deployed nodes with extra directory
+  flags outweighs the benefit. Maybe disallow ANY RR type? ]
+
+  Client as well as OR MUST block attempts to resolve local RFC 1918, 4193,
+  4291 adresses (PTR). REFUSED will be returned as DNS error code from OR.
+
+  Request for special names (.onion, .exit, .noconnect) will return REFUSED.
+
+4. Implementation notes
+
+  Client will periodically purge incomplete DNS replies. Any unexpected
+  DNS_RESPONSE will be dropped.
+
+  AD flag must be zeroed out on client unless validation is performed.
+
+  [XXXX libunbound lowlevel API, Tor+libunbound libevent loop
+
+  libunbound doesn't publicly expose all the necessary parts of low-level API.
+  It can return the received DNS packet, but not let you construct a packet
+  and get it in wire-format, for example.
+
+  Options I see:
+
+  a) patch libunbound to be able feed wire-format DNS packets and add API to
+  obtain constructed packets instead of sending over network
+
+  b) replace bufferevents for sockets in unbound with something like
+  libevent's paired bufferevents. This means that data extracted from
+  DNS_RESPONSE/DNS_BEGIN cells would be fed directly to some evbuffers that
+  would be picked up by libunbound. It could possibly result in avoiding
+  background thread of libunbound's ub_resolve_async running separate libevent
+  loop.
+
+  c) bind to some arbitrary local address like 127.1.2.3:53 and use it as
+  forwarder for libunbound. The code there would pack/unpack the DNS packets
+  from/to libunbound into DNS_BEGIN/DNS_RESPONSE cells. It wouldn't require
+  modification of libunbound code, but it's not pretty either. Also the bind
+  port must be 53 which usually requires superuser privileges.
+
+  Code of libunbound is fairly complex for me to see outright what would the
+  best approach be.
+  ]
+
+5. Separate tool for AXFR
+
+  The AXFR tool will have similar interface like tor-resolve, but will
+  return raw DNS data.
+
+  Parameters are: query domain, server IP of authoritative DNS.
+
+  The tool will transfer the data through "ordinary" tunnel using RELAY_BEGIN
+  and related cells.
+
+  This design decision serves two goals:
+
+  - DNS_BEGIN and DNS_RESPONSE will be simpler to implement (lower chance of
+    bugs)
+  - in practice it's often useful do AXFR queries on secondary authoritative
+    DNS servers
+
+  IXFR will not be supported (infrequent corner case, can be done by manual
+  tunnel creation over Tor if truly necessary).
+
+6. Security implications
+
+  Transaction ID is provided randomly by libunbound, no need to modify.
+
+  As proposal 171 mentions, we need mitigate circuit correlation. One solution
+  would be keeping multiple streams to multiple exit nodes and picking one at
+  random for DNS resolution. Other would be keeping DNS-resolving circuit open
+  only for a short time (e.g. 1-2 minutes). Randomly changing the circuits
+  however means that it would probably incur additional latency since there
+  would likely be a few cache misses on the newly selected exits.
+
+
+7. TTL normalization idea
+
+  A bit complex on implementation, because it requires parsing DNS packets at
+  exit node.
+
+  TTL in reply DNS packet MUST be normalized at exit node so that client won't
+  learn what other clients queried. The normalization is done in following
+  way:
+
+  - for a RR, the original TTL value received from authoritative DNS server
+    should be used when sending DNS_RESPONSE, trimming the values to interval
+    [5, 600]
+  - does not pose "ghost-cache-attack", since once RR is flushed from
+    libunbound's cache, it must be fetched anew
+
+8. Round trips and serialization
+
+  Following are two examples of resolving two A records. The one for
+  addons.mozila.org is an example of a "common" RR without CNAME/DNAME, the
+  other for www.gov.cn an extreme example chained through 5 CNAMEs and 3 TLDs.
+  The examples below are shown for resolving that started with an empty DNS
+  cache.
+
+  Note that multiple queries are made by libunbound as it tries to adjust for
+  the latency of network. "Standard query response" below that does not list
+  RR type is a negative NOERROR reply with NSEC/NSEC3 (usually reply to DS
+  query).
+
+  The effect of DNS cache plays a great role - once DS/DNSKEY for root and a
+  TLD is cached, at most 3 records usually need to be fetched for a record
+  that does not utilize CNAME/DNAME (3 roundtrips for DS, DNSKEY and the
+  record itself if there are no zone cuts below).
+
+  Query for addons.mozilla.org, 6 roundtrips (not counting retries):
+
+    Standard query A addons.mozilla.org
+    Standard query A addons.mozilla.org
+    Standard query A addons.mozilla.org
+    Standard query A addons.mozilla.org
+    Standard query A addons.mozilla.org
+    Standard query response A 63.245.217.112 RRSIG
+    Standard query response A 63.245.217.112 RRSIG
+    Standard query response A 63.245.217.112 RRSIG
+    Standard query A addons.mozilla.org
+    Standard query response A 63.245.217.112 RRSIG
+    Standard query response A 63.245.217.112 RRSIG
+    Standard query A addons.mozilla.org
+    Standard query response A 63.245.217.112 RRSIG
+    Standard query response A 63.245.217.112 RRSIG
+    Standard query DNSKEY <Root>
+    Standard query DNSKEY <Root>
+    Standard query response DNSKEY DNSKEY RRSIG
+    Standard query response DNSKEY DNSKEY RRSIG
+    Standard query DS org
+    Standard query response DS DS RRSIG
+    Standard query DNSKEY org
+    Standard query response DNSKEY DNSKEY DNSKEY DNSKEY RRSIG RRSIG
+    Standard query DS mozilla.org
+    Standard query response DS RRSIG
+    Standard query DNSKEY mozilla.org
+    Standard query response DNSKEY DNSKEY DNSKEY RRSIG RRSIG
+
+  Query for www.gov.cn, 16 roundtrips (not counting retries):
+
+    Standard query A www.gov.cn
+    Standard query A www.gov.cn
+    Standard query A www.gov.cn
+    Standard query A www.gov.cn
+    Standard query A www.gov.cn
+    Standard query response CNAME www.gov.chinacache.net CNAME www.gov.cncssr.chinacache.net CNAME www.gov.foreign.ccgslb.com CNAME wac.0b51.edgecastcdn.net CNAME gp1.wac.v2cdn.net A 68.232.35.119
+    Standard query response CNAME www.gov.chinacache.net CNAME www.gov.cncssr.chinacache.net CNAME www.gov.foreign.ccgslb.com CNAME wac.0b51.edgecastcdn.net CNAME gp1.wac.v2cdn.net A 68.232.35.119
+    Standard query A www.gov.cn
+    Standard query response CNAME www.gov.chinacache.net CNAME www.gov.cncssr.chinacache.net CNAME www.gov.foreign.ccgslb.com CNAME wac.0b51.edgecastcdn.net CNAME gp1.wac.v2cdn.net A 68.232.35.119
+    Standard query response CNAME www.gov.chinacache.net CNAME www.gov.cncssr.chinacache.net CNAME www.gov.foreign.ccgslb.com CNAME wac.0b51.edgecastcdn.net CNAME gp1.wac.v2cdn.net A 68.232.35.119
+    Standard query response CNAME www.gov.chinacache.net CNAME www.gov.cncssr.chinacache.net CNAME www.gov.foreign.ccgslb.com CNAME wac.0b51.edgecastcdn.net CNAME gp1.wac.v2cdn.net A 68.232.35.119
+    Standard query A www.gov.cn
+    Standard query response CNAME www.gov.chinacache.net CNAME www.gov.cncssr.chinacache.net CNAME www.gov.foreign.ccgslb.com CNAME wac.0b51.edgecastcdn.net CNAME gp1.wac.v2cdn.net A 68.232.35.119
+    Standard query response CNAME www.gov.chinacache.net CNAME www.gov.cncssr.chinacache.net CNAME www.gov.foreign.ccgslb.com CNAME wac.0b51.edgecastcdn.net CNAME gp1.wac.v2cdn.net A 68.232.35.119
+    Standard query A www.gov.chinacache.net
+    Standard query response CNAME www.gov.cncssr.chinacache.net CNAME www.gov.foreign.ccgslb.com CNAME wac.0b51.edgecastcdn.net CNAME gp1.wac.v2cdn.net A 68.232.35.119
+    Standard query A www.gov.cncssr.chinacache.net
+    Standard query response CNAME www.gov.foreign.ccgslb.com CNAME wac.0b51.edgecastcdn.net CNAME gp1.wac.v2cdn.net A 68.232.35.119
+    Standard query A www.gov.foreign.ccgslb.com
+    Standard query response CNAME wac.0b51.edgecastcdn.net CNAME gp1.wac.v2cdn.net A 68.232.35.119
+    Standard query A wac.0b51.edgecastcdn.net
+    Standard query response CNAME gp1.wac.v2cdn.net A 68.232.35.119
+    Standard query A gp1.wac.v2cdn.net
+    Standard query response A 68.232.35.119
+    Standard query DNSKEY <Root>
+    Standard query response DNSKEY DNSKEY RRSIG
+    Standard query DS cn
+    Standard query response
+    Standard query DS net
+    Standard query response DS RRSIG
+    Standard query DNSKEY net
+    Standard query response DNSKEY DNSKEY RRSIG
+    Standard query DS chinacache.net
+    Standard query response
+    Standard query DS com
+    Standard query response DS RRSIG
+    Standard query DNSKEY com
+    Standard query response DNSKEY DNSKEY RRSIG
+    Standard query DS ccgslb.com
+    Standard query response
+    Standard query DS edgecastcdn.net
+    Standard query response
+    Standard query DS v2cdn.net
+    Standard query response
+
+  An obvious idea to avoid so many roundtrips is to serialize them together.
+  There has been an attempt to standardize such "DNSSEC stapling" [1], however
+  it's incomplete for the general case, mainly due to various intricacies -
+  proofs of non-existence, NSEC3 opt-out zones, TTL handling (see RFC 4035
+  section 5).
+
+References:
+
+  [1] https://www.ietf.org/mail-archive/web/dane/current/msg02823.html
