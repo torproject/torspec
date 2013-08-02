@@ -42,28 +42,68 @@ Status: Draft
   There will be two new cells, RELAY_DNS_BEGIN and RELAY_DNS_RESPONSE (we'll
   use DNS_BEGIN and DNS_RESPONSE for short below).
 
+1.1.1. DNS_BEGIN
+
   DNS_BEGIN payload:
 
-    DNS packet data (variable length)
+    FLAGS        [2 octets]
+    DNS packet data (variable length, up to length of relay cell.)
 
-  The DNS packet must be generated internally by libunbound to avoid
+  The DNS packet must be generated internally by Tor to avoid
   fingerprinting users by differences in client resolvers' behavior.
 
+  [XXXX We need to specify the exact behavior here: saying "Just do what
+  Libunbound does!" would make it impossible to implement a
+  Tor-compatible client without reverse-engineering libunbound.]
+
+  The FLAGS field is reserved, and should be set to 0 by all clients.
+
+  Because of the maximum length of the RELAY cell, the DNS packet may
+  not be longer than 496 bytes.  [XXXX Is this enough?]
+
+  Some fields in the query must be omitted or set to zero: see section 3
+  below.
+
+1.1.2. DNS_RESPONSE
+
   DNS_RESPONSE payload:
+
+    STATUS [1 octet]
+    CONTENT [variable, up to length of relay cell]
+
+  If the low bit of STATUS is set, this is the last DNS_RESPONSE that
+  the server will send in response to the given DNS_BEGIN.  Otherwise,
+  there will be more DNS_RESPONSE packets.  The other bits are reserved,
+  and should be set to zero for now.
+
+  The CONTENT fields of the DNS_RESPONSE cells contain a DNS record,
+  split across multiple cells as needed, encoded as:
+
 
     total length (2 octets)
     data         (variable)
 
-  Data contains the reply DNS packet or its part if packet would not fit into
-  the cell. Total length describes length of complete response packet, thus
-  one DNS_BEGIN may be answered by multiple DNS_RESPONSE cells.
+  So for example, if the DNS record R1 is only 300 bytes long, then it
+  is sent in a single DNS_RESPONSE cell with payload [01 01 2C] R1.  But
+  if the DNS record R2 is 1024 bytes long, it's sent in 3 DNS_RESPONSE
+  cells, with contents: [00 04 00] R2[0:495], [00] R2[495:992], and
+  [01] R2[992:1024] respectively.
 
-  DNS_BEGIN must use a non-zero, distinct StreamID, corresponding DNS_RESPONSE
-  will use the same StreamID. Similarly to RELAY_RESOLVE(D), no actual stream
-  is created.
+  [NOTE: I'm using the length field and the is-this-the-last-cell
+  field to allow multi-packet responses in the future.]
 
-  AXFR and IXRF are not supported in this cell by design (see specialized tool
-  below).
+  AXFR and IXRF are not supported in this cell by design (see
+  specialized tool below in section 5).
+
+1.1.3. Matching queries to responses.
+
+  DNS_BEGIN must use a non-zero, distinct StreamID.  The client MUST NOT
+  re-use the same stream ID until it has received a complete response
+  from the server or a RELAY_END cell.
+
+  The client may cancel a DNS_BEGIN request by sending a RELAY_END cell.
+  The server may refused to answer, or abort answering, a DNS_BEGIN cell
+  by sending a RELAY_END cell.
 
 2. Interfaces to applications
 
