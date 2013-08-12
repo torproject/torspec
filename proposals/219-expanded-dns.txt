@@ -3,6 +3,7 @@ Title: Support for full DNS and DNSSEC resolution in Tor
 Authors: Ondrej Mikle
 Created: 4 February 2012
 Modified: 2 August 2013
+Target: 0.2.5.x
 Status: Draft
 
 0. Overview
@@ -59,7 +60,7 @@ Status: Draft
   The FLAGS field is reserved, and should be set to 0 by all clients.
 
   Because of the maximum length of the RELAY cell, the DNS packet may
-  not be longer than 496 bytes.  [XXXX Is this enough?]
+  not be longer than 496 bytes. [XXXX Is this enough? -NM]
 
   Some fields in the query must be omitted or set to zero: see section 3
   below.
@@ -88,8 +89,6 @@ Status: Draft
   if the DNS record R2 is 1024 bytes long, it's sent in 3 DNS_RESPONSE
   cells, with contents: [00 04 00] R2[0:495], [00] R2[495:992], and
   [01] R2[992:1024] respectively.
-
-  The server should {XXXXX}.
 
   [NOTE: I'm using the length field and the is-this-the-last-cell
   field to allow multi-packet responses in the future. -NM]
