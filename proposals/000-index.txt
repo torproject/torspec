@@ -139,6 +139,9 @@ Proposals by number:
 216  Improved circuit-creation key exchange [CLOSED]
 217  Tor Extended ORPort Authentication [OPEN]
 218  Controller events to better understand connection/circuit usage [OPEN]
+219  Support for full DNS and DNSSEC resolution in Tor [DRAFT]
+220  Migrate server identity keys to Ed25519 [DRAFT]
+221  Stop using CREATE_FAST [OPEN]
 
 
 Proposals by status:
@@ -153,6 +156,8 @@ Proposals by status:
    182  Credit Bucket
    195  TLS certificate normalization for Tor 0.2.4.x [for 0.2.4.x]
    203  Avoiding censorship by impersonating an HTTPS server
+   219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
+   220  Migrate server identity keys to Ed25519 [for 0.2.5.x]
  NEEDS-REVISION:
    131  Help users to verify they are using Tor
    190  Bridge Client Authorization Based on a Shared Secret
@@ -186,6 +191,7 @@ Proposals by status:
    215  Let the minimum consensus method change with time
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
    218  Controller events to better understand connection/circuit usage [for 0.2.5.x]
+   221  Stop using CREATE_FAST [for 0.2.5.x]
  ACCEPTED:
    140  Provide diffs between consensuses
    147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.4.x]

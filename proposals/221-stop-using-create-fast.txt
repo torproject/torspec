@@ -1,0 +1,90 @@
+Filename: 221-stop-using-create-fast.txt
+Title: Stop using CREATE_FAST
+Authors: Nick Mathewson
+Created: 12 August 2013
+Target: 0.2.5.x
+Status: Open
+
+0. Summary
+
+   I propose that in 0.2.5.x, Tor clients stop sending CREATE_FAST
+   cells, and use CREATE or CREATE2 cells instead as appropriate.
+
+1. Introduction
+
+   The CREATE_FAST cell was created to avoid the performance hit of
+   using the TAP handshake on a TLS session that already provided what
+   TAP provided: authentication with RSA1024 and forward secrecy with
+   DH1024.  But thanks to the introduction of the ntor onionskin
+   handshake in Tor 0.2.4.x, for nodes with older versions of OpenSSL,
+   the TLS handshake strength lags behind with the strength of the onion
+   handshake, and the arguments against CREATE no longer apply.
+
+   Similarly, it's good to have an argument for circuit security that
+   survives possible breakdowns in TLS. But when CREATE_FAST is in use,
+   this is impossible: we can only argue forward-secrecy at the first
+   hop of each circuit by assuming that TLS has succeeded.
+
+   So let's simply stop sending CREATE_FAST cells.
+
+2. Proposed design
+
+   Currently, only clients will send CREATE_FAST, and only when they
+   have FastFirstHopPK set to its default value, 1.
+
+   I propose that we change "FastFirstHopPK" from a boolean to also
+   allow a new default "auto" value that tells Tor to take a value from
+   the consensus.  I propose a new consensus parameter, "usecreatefast",
+   default value taken to be 1.
+
+   Once enough versions of Tor support this proposal, the authorities
+   should set the value for "usecreatefast" to be 0.
+
+   In the series after that (0.2.6.x?), the default value for
+   "FastFirstHopPK" should be 0.
+
+   (Note that CREATE_FAST must still be used in the case where a client
+   has connected to a guard node or bridge without knowing any onion
+   keys for it, and wants to fetch directory information from it.)
+
+3. Alternative designs
+
+   We might make some choices to preserve CREATE_FAST under some
+   circumstances.  For example, we could say that CREATE_FAST is okay if
+   we have a TLS connection with a cipher, public key, and ephemeral key
+   algorithm of a given strength.
+
+   We might try to trust the TLS handshake for authentication but not
+   forward secrecy, and come up with a first-hop handshake that did a
+   simple curve25519 diffie-hellman.
+
+   We might use CREATE_FAST only whenever ntor is not available.
+
+   I'm rejecting all of the above for complexity reasons.
+
+   We might just change the default for FastFirstHopPK to 1 in
+   0.2.5.x-alpha.  It would make early users of that alpha easy for
+   their guards to distinguish.
+
+4. Performance considerations
+
+   This will increase the CPU requirements on guard nodes; their
+   cpuworkers would be more heavily loaded as 0.2.5.x is more
+   adopted.
+
+   I believe that, if guards upgrade to 0.2.4.x as 0.2.5.x is under
+   development, the commensurate benefits of ntor will outweigh the
+   problems here.  This holds even more if we wind up with a better ntor
+   implementation or replacement.
+
+5. Considerations on client detection
+
+   Right now, in a few places, Tor nodes assume that any connection on
+   which they have received a CREATE_FAST cell is probably from a
+   non-relay node, since relays never do that.  Implementing this
+   proposal would make that signal unreliable.
+
+   We should do this proposal anyway.  CREATE_FAST has never been a
+   reliable signal, since "FastFirstHopPK 0" is easy enough to type, and
+   the source code is easy enough to edit.  Proposal 163 and its
+   successors have better ideas here anyway.
