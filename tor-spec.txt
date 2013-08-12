@@ -507,7 +507,8 @@ see tor-design.pdf.
      1 -- The "certs up front" handshake.
      2 -- Uses the renegotiation-based handshake. Introduces
           varible-length cells.
-
+     3 -- Uses the in-protocol handshake.
+     4 -- Increases circuit ID width to 4 bytes.
 
 
 4.2. CERTS cells
