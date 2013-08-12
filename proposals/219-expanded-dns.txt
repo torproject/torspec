@@ -89,7 +89,7 @@ Status: Draft
   cells, with contents: [00 04 00] R2[0:495], [00] R2[495:992], and
   [01] R2[992:1024] respectively.
 
-  The server should 
+  The server should {XXXXX}.
 
   [NOTE: I'm using the length field and the is-this-the-last-cell
   field to allow multi-packet responses in the future. -NM]
@@ -135,6 +135,13 @@ Status: Draft
   4193, or 4291 adresses (PTR). REFUSED will be returned as DNS error
   code from OR.  [XXXX Must they also refuse to report addresses that
   resolve to these? -NM]
+
+  [XXX I don't think so. People often use public DNS
+  records that map to private adresses. We can't effectively separate
+  "truly public" records from the ones client's dnsmasq or similar DNS
+  resolver returns. - OM]
+
+  [XXX Then do you mean "must be returned as the DNS error from the OP"?]
 
   Request for special names (.onion, .exit, .noconnect) must never be
   sent, and will return REFUSED.
