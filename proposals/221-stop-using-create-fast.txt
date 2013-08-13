@@ -62,7 +62,7 @@ Status: Open
 
    I'm rejecting all of the above for complexity reasons.
 
-   We might just change the default for FastFirstHopPK to 1 in
+   We might just change the default for FastFirstHopPK to 0 in
    0.2.5.x-alpha.  It would make early users of that alpha easy for
    their guards to distinguish.
 
