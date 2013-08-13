@@ -293,6 +293,12 @@ Managed proxy interface
   in the bridge line.  The Options part is a list of space-separated
   K:V flags that Tor should know about.  Recognized options are:
 
+      - ARGS:K=V,K=V,K=V
+
+        If this option is set, the K=V arguments are added to Tor's
+        extrainfo document. Equal signs and commas must be escaped
+        with a backslash.
+
   SMETHOD and CMETHOD lines may be interspersed, to allow the proxies to
   report methods as they become available, even when some methods may
   require probing your network, connecting to some kind of peers, etc
@@ -318,3 +324,18 @@ Managed proxy interface
   So, for example, if tor supports this configuration protocol it
   should set the environment variable:
     TOR_PT_MANAGED_TRANSPORT_VER=1
+
+Advertising bridge methods
+
+  Bridges use transport lines in their extra-info documents to
+  advertise their pluggable transports:
+
+     transport SP <transportname> SP <address:port> [SP arglist] NL
+
+  The address:port are as returned from an SMETHOD line (unless they
+  are replaced by the FORWARD: directive).
+
+  The arglist is a K=V,... list as returned in the ARGS: part of the
+  SMETHOD line's Options component (commas and equal signs are escaped
+  with a backslash).
+
