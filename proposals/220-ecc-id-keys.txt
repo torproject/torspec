@@ -188,7 +188,7 @@ Status: Draft
         currently check.
       * If the identity-ed25519 line is present, it must be well-formed,
         and the certificate must be well-formed and correctly signed,
-        and there must be a valid.
+        and there must be a valid router-signature-ed25519 signature.
       * If we require an ed25519 key for this node (see 3.1 below), the
         ed25519 key must be present.
 
@@ -467,14 +467,17 @@ Status: Draft
 
    When we need to indicate an Ed25519 identity key in an hostname
    format (as in a .exit address), we use the lowercased version of the
-   name, and perform a case-insensitive match.  (This loses us one bit
-   per byte of name,
+   name, and perform a case-insensitive match.  (This loses us a little
+   less than one bit per byte of name, leaving plenty of bits to make
+   sure we choose the right node.)
 
-   Nodes must not list Ed25519 identities in their family lines; clients
-   and authorities must not honor them there.
+   Nodes must not list Ed25519 identities in their family lines; clients and
+   authorities must not honor them there.  (Doing so would make different
+   clients change paths differently in a possibly manipulatable way.)
 
    Clients shouldn't accept .exit addresses with Ed25519 names on SOCKS
-   or DNS ports by default, even when AllowDotExit is set.
+   or DNS ports by default, even when AllowDotExit is set.  We can add
+   another option for the later if there's a good reason to have this.
 
    We need an identity-to-node map for ECC identity and for RSA
    identity.
@@ -515,4 +518,3 @@ Status: Draft
    * Ed25519 support for hidden services
    * Bridge identity support.
    * Ed25519-aware family support
-   * 
