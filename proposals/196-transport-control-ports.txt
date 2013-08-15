@@ -55,6 +55,8 @@ Target: 0.2.4.x
 
 3.1. The new extended ORPort protocol
 
+3.1.1. Protocol
+
   The extended server port protocol is as follows:
 
      COMMAND [2 bytes, big-endian]
@@ -67,8 +69,11 @@ Target: 0.2.4.x
        bytes sent by the transport will be those tunneled over it.
        (body ignored)
 
-     [0x0001] USERADDR: an address:port string that represents the user's
-       address.
+     [0x0001] USERADDR: an address:port string that represents the
+       client's address.
+
+     [0x0002] TRANSPORT: a string of the name of the pluggable
+       transport currently in effect on the connection.
 
      Replies sent from tor to the proxy are:
 
@@ -82,7 +87,32 @@ Target: 0.2.4.x
        the TransportControlPort. See the 'Association and identifier
        creation' section below.
 
-  Parties should ignore command codes that they do not understand.
+  Parties MUST ignore command codes that they do not understand.
+
+  If the server receives a recognized command that does not parse, it
+  MUST close the connection to the client.
+
+3.1.2. Command descriptions
+
+3.1.2.1. USERADDR
+
+  An ASCII string holding the TCP/IP address of the client of the
+  pluggable transport proxy. A Tor bridge SHOULD use that address to
+  collect statistics about its clients.
+
+  The string MUST not be NUL-terminated.
+
+3.1.2.2. TRANSPORT
+
+  An ASCII string holding the name of the pluggable transport used by
+  the client of the pluggable transport proxy. A Tor bridge that
+  supports multiple transports SHOULD use that information to collect
+  statistics about the popularity of individual pluggable transports.
+
+  The string MUST not be NUL-terminated.
+
+  Pluggable transport names are C-identifiers and Tor MUST check them
+  for correctness.
 
 3.2. The new TransportControlPort protocol
 
