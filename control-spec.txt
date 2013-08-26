@@ -2248,10 +2248,11 @@
 
   The syntax is:
 
-    "650" SP "TRANSPORT_LAUNCHED" SP Type SP Name SP Address SP Port
+    "650" SP "TRANSPORT_LAUNCHED" SP Type SP Name SP TransportAddress SP Port
     Type = "server" | "client"
     Name = The name of the pluggable transport
-    Address = The IP address on which it is listening for connections
+    TransportAddress = An IPv4 or IPv6 address on which the pluggable
+                       transport is listening for connections
     Port = The TCP port on which it is listening for connections.
 
     A pluggable transport called 'Name' of type 'Type' was launched
