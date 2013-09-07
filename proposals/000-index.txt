@@ -142,6 +142,7 @@ Proposals by number:
 219  Support for full DNS and DNSSEC resolution in Tor [DRAFT]
 220  Migrate server identity keys to Ed25519 [DRAFT]
 221  Stop using CREATE_FAST [OPEN]
+222  Stop sending client timestamps [OPEN]
 
 
 Proposals by status:
@@ -192,6 +193,7 @@ Proposals by status:
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
    218  Controller events to better understand connection/circuit usage [for 0.2.5.x]
    221  Stop using CREATE_FAST [for 0.2.5.x]
+   222  Stop sending client timestamps [for 0.2.5.x]
  ACCEPTED:
    140  Provide diffs between consensuses
    147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.4.x]
