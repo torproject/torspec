@@ -301,7 +301,8 @@
 
        [Exactly once]
 
-       A timestamp when this descriptor has been created.
+       A timestamp when this descriptor has been created.  It should be
+       rounded down to the nearest hour.
 
      "protocol-versions" SP version-string NL
 
@@ -667,6 +668,12 @@
    format, whereas hidden services have understood and accepted v0,
    v1, and v2 since 0.1.1.x. As of Tor 0.2.0.7-alpha and 0.1.2.18,
    clients switched to using the v2 intro format.
+
+   The Timestampe (TS) field is no longer used in Tor 0.2.3.9-alpha and
+   later.  Clients MAY refrain from sending it; see the
+   "Support022HiddenServices" parameter in dir-spec.txt. Clients SHOULD
+   NOT send a precise timestamp, and should instead round to the nearest
+   10 minutes.
 
 1.9. Introduction: From the Introduction Point to Bob's OP
 
