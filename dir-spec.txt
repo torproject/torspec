@@ -1290,7 +1290,7 @@
                                  must have a bandwidth this high.
 
          "guard-bw-exc-exits" -- If exits can't be guards, then all guards
-                                 guards must have a bandwidth this high.
+                                 must have a bandwidth this high.
 
          "ignoring-advertised-bws" -- 1 if we have enough measured bandwidths
                                  that we'll ignore the advertised bandwidth
