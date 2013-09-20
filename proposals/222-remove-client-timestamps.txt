@@ -2,9 +2,8 @@ Filename: 222-remove-client-timestamps.txt
 Title: Stop sending client timestamps
 Authors: Nick Mathewson
 Created: 22 August 2013
-Target: 0.2.5.x
 Status: Closed
-Implemented-In: 0.2.4.??
+Implemented-In: 0.2.4.18
 
 0. Summary
 
