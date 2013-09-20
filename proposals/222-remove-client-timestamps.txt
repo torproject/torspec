@@ -3,7 +3,8 @@ Title: Stop sending client timestamps
 Authors: Nick Mathewson
 Created: 22 August 2013
 Target: 0.2.5.x
-Status: Open
+Status: Closed
+Implemented-In: 0.2.4.??
 
 0. Summary
 
@@ -46,12 +47,14 @@ Status: Open
 
    The AUTHENTICATE cell is not ordinarily sent by clients. It
    contains an 8-byte timestamp and a 16-byte random value.
-   Instead, let's replace both with a 24-byte (truncated) HMAC of
-   the current time, using a random key.
+   Instead, let's just send 24 bytes or random value.
 
-   This will achieve the goal of including a timestamp in the
-   cell (preventing replays even in the presence of bad entropy),
-   while at the same time not including the time here.
+   (An earlier version of this proposal suggested that we replace
+   them both with a 24-byte (truncated) HMAC of the current time,
+   using a random key, in an attempt to retain the allegedly
+   desirable property of avoiding nonce duplication in the event of
+   a bad RNG. But really, a Tor process with a bad RNG is not going
+   to get security in any case, so let's KISS.)
 
 2.3. TLS
 
@@ -89,7 +92,7 @@ Status: Open
 
   Hidden service descriptors include a publication time.  I
   propose that we round this time down to the nearest N minutes,
-  perhaps for N=30.
+  where N=60.
 
 4.2. INTRODUCE2 cell timestamp
 
@@ -102,8 +105,12 @@ Status: Open
   0.2.2.x (and really, no hidden services should be running on
   0.2.2.x!), we can simply send 0 instead.  (See ticket #7803).
 
-  This might be a good place to use a consensus parameter, so
-  that a large number of clients switch at the same time.
+  We can control this behavior with a consensus parameter
+  (Support022HiddenServices) and a tristate (0/1/auto) torrc option of
+  the same name.
+
+  When the timestamp is not completely disabled, it should be
+  rounded to the closest 10 minutes.
 
   I claim this would be suitable for backport to 0.2.4.
 

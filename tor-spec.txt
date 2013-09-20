@@ -627,8 +627,10 @@ see tor-design.pdf.
            - the NUL terminated ASCII string:
              "Tor V3 handshake TLS cross-certification"
           [32 octets]
-       TIME: The time of day in seconds since the POSIX epoch. [8 octets]
-       RAND: A 16 byte value, randomly chosen by the initiator [16 octets]
+       RAND: A 24 byte value, randomly chosen by the initiator.  (In an
+         imitation of SSL3's gmt_unix_time field, older versions of Tor
+         sent an 8-byte timestamp as the first 8 bytes of this field;
+         new implementations should not do that.) [24 octets]
        SIG: A signature of a SHA256 hash of all the previous fields
          using the initiator's "Authenticate" key as presented.  (As
          always in Tor, we use OAEP-MGF1 padding; see tor-spec.txt
