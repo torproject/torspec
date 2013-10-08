@@ -1150,6 +1150,17 @@
 
   [AUTHCHALLENGE was added in Tor FIXME.]
 
+3.25. DUMPGUARDS
+
+  The syntax is:
+    "DUMPGUARDS" CRLF
+
+  Tells the server to drop all guard nodes.
+
+  Tor replies with "250 OK" on success.
+
+  [DUMPGUARDS was added in Tor FIXME.]
+
 4. Replies
 
   Reply codes follow the same 3-character format as used by SMTP, with the
