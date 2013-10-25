@@ -1150,16 +1150,17 @@
 
   [AUTHCHALLENGE was added in Tor FIXME.]
 
-3.25. DUMPGUARDS
+3.25. DROPGUARDS
 
   The syntax is:
-    "DUMPGUARDS" CRLF
+    "DROPGUARDS" CRLF
 
-  Tells the server to drop all guard nodes.
+  Tells the server to drop all guard nodes. Do not invoke this command
+  lightly; it can increase vulnerability to tracking attacks over time.
 
   Tor replies with "250 OK" on success.
 
-  [DUMPGUARDS was added in Tor FIXME.]
+  [DROPGUARDS was added in Tor 0.2.5.1-alpha.]
 
 4. Replies
 
