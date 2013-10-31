@@ -2,8 +2,8 @@ Filename: 218-usage-controller-events.txt
 Title: Controller events to better understand connection/circuit usage
 Author: Rob Jansen, Karsten Loesing
 Created: 2013-02-06
-Status: Open
-Target: 0.2.5.x
+Status: Closed
+Implemented-In: 0.2.5.2-alpha
 
 1. Overview
 

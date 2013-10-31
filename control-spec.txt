@@ -183,6 +183,8 @@
   ; uses digits, but this may change
   StreamID = 1*16 IDChar
   CircuitID = 1*16 IDChar
+  ConnID = 1*16 IDChar
+  QueueID = 1*16 IDChar
   IDChar = ALPHA / DIGIT
 
   Address = ip4-address / ip6-address / hostname   (XXXX Define these)
@@ -1496,7 +1498,7 @@
   The syntax is:
 
     "650" SP "ORCONN" SP (LongName / Target) SP ORStatus [ SP "REASON="
-             Reason ] [ SP "NCIRCS=" NumCircuits ] CRLF
+             Reason ] [ SP "NCIRCS=" NumCircuits ] [ SP "ID=" ConnID ] CRLF
 
     ORStatus = "NEW" / "LAUNCHED" / "CONNECTED" / "FAILED" / "CLOSED"
 
@@ -1553,6 +1555,7 @@
         descriptors, buffers, etc) to connect to the OR.
      MISC -- The OR connection closed for some other reason.
 
+  [First added ID parameter in 0.2.5.2-alpha]
 
 4.1.4. Bandwidth used in the last second
 
@@ -2269,6 +2272,153 @@
 
     A pluggable transport called 'Name' of type 'Type' was launched
     successfully and is now listening for connections on 'Address':'Port'.
+
+4.1.21. Bandwidth used on an OR or DIR or EXIT connection
+
+  The syntax is:
+     "650" SP "CONN_BW" SP "ID=" ConnID SP "TYPE=" ConnType
+              SP "READ=" BytesRead SP "WRITTEN=" BytesWritten CRLF
+     ConnType = "OR" / "DIR" / "EXIT"
+     BytesRead = 1*DIGIT
+     BytesWritten = 1*DIGIT
+
+  Controllers MUST tolerate unrecognized connection types.
+
+  BytesWritten and BytesRead are the number of bytes written and read
+  by Tor since the last CONN_BW event on this connection.
+
+  These events are generated about once per second per connection; no
+  events are generated for connections that have not read or written.
+  These events are only generated if TestingTorNetwork is set.
+
+  [First added in 0.2.5.2-alpha]
+
+4.1.22. Bandwidth used by all streams attached to a circuit
+
+  The syntax is:
+     "650" SP "CIRC_BW" SP "ID=" CircuitID SP "READ=" BytesRead SP
+              "WRITTEN=" BytesWritten CRLF
+     BytesRead = 1*DIGIT
+     BytesWritten = 1*DIGIT
+
+  BytesRead and BytesWritten are the number of bytes read and written by
+  all applications with streams attached to this circuit since the last
+  CIRC_BW event.
+
+  These events are generated about once per second per circuit; no events
+  are generated for circuits that had no attached stream writing or
+  reading.
+
+  [First added in 0.2.5.2-alpha]
+
+4.1.23. Per-circuit cell stats
+
+  The syntax is:
+     "650" SP "CELL_STATS"
+              [ SP "ID=" CircuitID ]
+              [ SP "InboundQueue=" QueueID SP "InboundConn=" ConnID ]
+              [ SP "InboundAdded=" CellsByType ]
+              [ SP "InboundRemoved=" CellsByType SP
+                   "InboundTime=" MsecByType ]
+              [ SP "OutboundQueue=" QueueID SP "OutboundConn=" ConnID ]
+              [ SP "OutboundAdded=" CellsByType ]
+              [ SP "OutboundRemoved=" CellsByType SP
+                   "OutboundTime=" MsecByType ] CRLF
+     CellsByType, MsecByType = CellType ":" 1*DIGIT
+                               0*( "," CellType ":" 1*DIGIT )
+     CellType = 1*( "a" - "z" / "0" - "9" / "_" )
+
+  Examples are:
+     650 CELL_STATS ID=14 OutboundQueue=19403 OutboundConn=15
+         OutboundAdded=create_fast:1,relay_early:2
+         OutboundRemoved=create_fast:1,relay_early:2
+         OutboundTime=create_fast:0,relay_early:0
+     650 CELL_STATS InboundQueue=19403 InboundConn=32
+         InboundAdded=relay:1,created_fast:1
+         InboundRemoved=relay:1,created_fast:1
+         InboundTime=relay:0,created_fast:0
+         OutboundQueue=6710 OutboundConn=18
+         OutboundAdded=create:1,relay_early:1
+         OutboundRemoved=create:1,relay_early:1
+         OutboundTime=create:0,relay_early:0
+
+  ID is the locally unique circuit identifier that is only included if the
+  circuit originates at this node.
+
+  Inbound and outbound refer to the direction of cell flow through the
+  circuit which is either to origin (inbound) or from origin (outbound).
+
+  InboundQueue and OutboundQueue are identifiers of the inbound and
+  outbound circuit queues of this circuit.  These identifiers are only
+  unique per OR connection.  OutboundQueue is chosen by this node and
+  matches InboundQueue of the next node in the circuit.
+
+  InboundConn and OutboundConn are locally unique IDs of inbound and
+  outbound OR connection.  OutboundConn does not necessarily match
+  InboundConn of the next node in the circuit.
+
+  InboundQueue and InboundConn are not present if the circuit originates
+  at this node.  OutboundQueue and OutboundConn are not present if the
+  circuit (currently) ends at this node.
+
+  InboundAdded and OutboundAdded are total number of cells by cell type
+  added to inbound and outbound queues.  Only present if at least one cell
+  was added to a queue.
+
+  InboundRemoved and OutboundRemoved are total number of cells by
+  cell type processed from inbound and outbound queues.  InboundTime and
+  OutboundTime are total waiting times in milliseconds of all processed
+  cells by cell type.  Only present if at least one cell was removed from
+  a queue.
+
+  These events are generated about once per second per circuit; no
+  events are generated for circuits that have not added or processed any
+  cell.  These events are only generated if TestingTorNetwork is set.
+
+  [First added in 0.2.5.2-alpha]
+
+4.1.24. Token buckets refilled
+
+  The syntax is:
+     "650" SP "TB_EMPTY" SP BucketName [ SP "ID=" ConnID ] SP
+              "READ=" ReadBucketEmpty SP "WRITTEN=" WriteBucketEmpty SP
+              "LAST=" LastRefill CRLF
+
+     BucketName = "GLOBAL" / "RELAY" / "ORCONN"
+     ReadBucketEmpty = 1*DIGIT
+     WriteBucketEmpty = 1*DIGIT
+     LastRefill = 1*DIGIT
+
+  Examples are:
+     650 TB_EMPTY ORCONN ID=16 READ=0 WRITTEN=0 LAST=100
+     650 TB_EMPTY GLOBAL READ=93 WRITTEN=93 LAST=100
+     650 TB_EMPTY RELAY READ=93 WRITTEN=93 LAST=100
+
+  This event is generated when refilling a previously empty token
+  bucket.  BucketNames "GLOBAL" and "RELAY" keywords are used for the
+  global or relay token buckets, BucketName "ORCONN" is used for the
+  token buckets of an OR connection.  Controllers MUST tolerate
+  unrecognized bucket names.
+
+  ConnID is only included if the BucketName is "ORCONN".
+
+  If both global and relay buckets and/or the buckets of one or more OR
+  connections run out of tokens at the same time, multiple separate
+  events are generated.
+
+  ReadBucketEmpty (WriteBucketEmpty) is the time in millis that the read
+  (write) bucket was empty since the last refill.  LastRefill is the
+  time in millis since the last refill.
+
+  If a bucket went negative and if refilling tokens didn't make it go
+  positive again, there will be multiple consecutive TB_EMPTY events for
+  each refill interval during which the bucket contained zero tokens or
+  less.  In such a case, ReadBucketEmpty or WriteBucketEmpty are capped
+  at LastRefill in order not to report empty times more than once.
+
+  These events are only generated if TestingTorNetwork is set.
+
+  [First added in 0.2.5.2-alpha]
 
 5. Implementation notes
 
