@@ -1424,6 +1424,10 @@
         they do not.
         Min: 0, Max: 1. Default: 1.
 
+        "usecreatefast" -- Used to control whether clients use the
+        CREATE_FAST handshake on the first hop of their circuits.
+        Min: 0, Max: 1. Default: 1.
+
    The authority section of a vote contains the following items, followed
    in turn by the authority's current key certificate:
 

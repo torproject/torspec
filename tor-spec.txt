@@ -946,6 +946,10 @@ see tor-design.pdf.
    RELAY_BEGIN exiting the circuit at the first hop: letting Tor be used as a
    single hop proxy makes exit nodes a more attractive target for compromise.
 
+   The CREATE_FAST handshake is currently deprecated whenever it is not
+   necessary; the migration is controlled by the "usecreatefast"
+   networkstatus parameter as described in dir-spec.txt.
+
 5.2. Setting circuit keys
 
 5.2.1. KDF-TOR

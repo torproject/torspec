@@ -3,7 +3,7 @@ Title: Stop using CREATE_FAST
 Authors: Nick Mathewson
 Created: 12 August 2013
 Target: 0.2.5.x
-Status: Open
+Status: Closed
 
 0. Summary
 
