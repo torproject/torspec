@@ -1000,8 +1000,9 @@ see tor-design.pdf.
 
    When used in the ntor handshake, the first HASH_LEN bytes form the
    forward digest Df; the next HASH_LEN form the backward digest Db; the
-   next KEY_LEN form Kf, and the final KEY_LEN form Kb.  Excess bytes
-   from K are discarded.
+   next KEY_LEN form Kf, the next KEY_LEN form Kb, and the final
+   DIGEST_LEN bytes are taken as a nonce to use in the place of KH in the
+   hidden service protocol.  Excess bytes from K are discarded.
 
 5.3. Creating circuits
 
