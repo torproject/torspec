@@ -2278,7 +2278,15 @@
   The syntax is:
      "650" SP "CONN_BW" SP "ID=" ConnID SP "TYPE=" ConnType
               SP "READ=" BytesRead SP "WRITTEN=" BytesWritten CRLF
-     ConnType = "OR" / "DIR" / "EXIT"
+
+     ConnType = "OR" /  ; Carrying traffic within the tor network. This can
+                          either be our own (client) traffic or traffic we're
+                          relaying within the network.
+                "DIR" / ; Fetching tor descriptor data, or transmitting
+                          descriptors we're mirroring.
+                "EXIT"  ; Carrying traffic between the tor network and an
+                          external destination.
+
      BytesRead = 1*DIGIT
      BytesWritten = 1*DIGIT
 
