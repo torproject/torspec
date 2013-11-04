@@ -237,7 +237,7 @@ Managed proxy interface
       TOR_PT_AUTH_COOKIE_FILE is optional and might not be present in
       the environment of the proxy.
 
-      "TOR_PT_SERVER_TRANSPORT_OPTIONS" -- A comma seperated list
+      "TOR_PT_SERVER_TRANSPORT_OPTIONS" -- A semicolon separated list
        of <key>:<value> pairs, where <key> is a transport name and
        <value> is a k=v string value with options that are to be
        passed to the transport. Colons, semicolons, equal signs and
