@@ -133,7 +133,7 @@ Proposals by number:
 210  Faster Headless Consensus Bootstrapping [OPEN]
 211  Internal Mapaddress for Tor Configuration Testing [OPEN]
 212  Increase Acceptable Consensus Age [OPEN]
-213  Remove stream-level sendmes from the design [OPEN]
+213  Remove stream-level sendmes from the design [DEAD]
 214  Allow 4-byte circuit IDs in a new link protocol [CLOSED]
 215  Let the minimum consensus method change with time [OPEN]
 216  Improved circuit-creation key exchange [CLOSED]
@@ -188,7 +188,6 @@ Proposals by status:
    210  Faster Headless Consensus Bootstrapping [for 0.2.4.x+]
    211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
-   213  Remove stream-level sendmes from the design
    215  Let the minimum consensus method change with time
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
  ACCEPTED:
@@ -283,5 +282,6 @@ Proposals by status:
    120  Shutdown descriptors when Tor servers stop
    128  Families of private bridges
    142  Combine Introduction and Rendezvous Points
+   213  Remove stream-level sendmes from the design
  REJECTED:
    134  More robust consensus voting with diverse authority sets

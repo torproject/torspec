@@ -2,7 +2,7 @@ Filename: 213-remove-stream-sendmes.txt
 Title: Remove stream-level sendmes from the design
 Author: Roger Dingledine
 Created: 4-Nov-2012
-Status: Open
+Status: Dead
 
 1. Motivation
 
