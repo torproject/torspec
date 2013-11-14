@@ -2,7 +2,7 @@ Filename: 217-ext-orport-auth.txt
 Title: Tor Extended ORPort Authentication
 Author: George Kadianakis
 Created: 28-11-2012
-Status: Open
+Status: Finished
 Target: 0.2.5.x
 
 1. Overview
