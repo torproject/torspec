@@ -2,7 +2,17 @@ Filename: 146-long-term-stability.txt
 Title: Add new flag to reflect long-term stability
 Author: Nick Mathewson
 Created: 19-Jun-2008
-Status: Needs-Research
+Status: Superseded
+Superseded-by: 206
+
+Status:
+
+  The applications of this design are achieved by proposal 206 instead.
+  Instead of having the authorities track long-term stability for nodes
+  that might be useful as directories in a fallback consensus, we
+  eliminated the idea of a fallback consensus, and just have a DirSource
+  configuration option.  (Nov 2013)
+
 
 Overview
 

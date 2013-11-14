@@ -66,7 +66,7 @@ Proposals by number:
 143  Improvements of Distributed Storage for Tor Hidden Service Descriptors [OPEN]
 144  Increase the diversity of circuits by detecting nodes belonging the same provider [DRAFT]
 145  Separate "suitable as a guard" from "suitable as a new guard" [NEEDS-RESEARCH]
-146  Add new flag to reflect long-term stability [NEEDS-RESEARCH]
+146  Add new flag to reflect long-term stability [SUPERSEDED]
 147  Eliminate the need for v2 directories in generating v3 directories [ACCEPTED]
 148  Stream end reasons from the client side should be uniform [CLOSED]
 149  Using data from NETINFO cells [SUPERSEDED]
@@ -164,7 +164,6 @@ Proposals by status:
    190  Bridge Client Authorization Based on a Shared Secret
  NEEDS-RESEARCH:
    145  Separate "suitable as a guard" from "suitable as a new guard"
-   146  Add new flag to reflect long-term stability
  OPEN:
    143  Improvements of Distributed Storage for Tor Hidden Service Descriptors
    156  Tracking blocked ports on the client side
@@ -269,6 +268,7 @@ Proposals by status:
    113  Simplifying directory authority administration
    118  Advertising multiple ORPorts at once
    124  Blocking resistant TLS certificate usage
+   146  Add new flag to reflect long-term stability
    149  Using data from NETINFO cells
    153  Automatic software update protocol
    154  Automatic Software Update Protocol
