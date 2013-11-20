@@ -1,0 +1,115 @@
+Filename: 223-ace-handshake.txt
+Title: Ace: Improved circuit-creation key exchange
+Author:  Esfandiar Mohammadi
+Created: 22-July-2013
+Status: Open
+
+History:
+
+   22-July-2013 -- Submitted
+   20-Nov-2013  -- Reformatted slightly, wrapped lines, added
+                   references, adjusted the KDF [nickm]
+
+Summary:
+
+This is an attempt to translate the proposed circuit handshake from
+"Ace: An Efficient Key-Exchange Protocol for Onion Routing" by
+Backes, Kate, and Mohammadi into a Tor proposal format.
+
+The specification assumes an implementation of scalar multiplication
+and addition of two curve elements, as in Robert Ransom's celator
+library.
+
+Notation:
+
+  Let a|b be the concatenation of a with b.
+
+  Let H(x,t) be a tweakable hash function of output width H_LENGTH
+  bytes.
+
+  Let t_mac, t_key, and t_verify be a set of arbitrarily-chosen
+  tweaks for the hash function.
+
+  Let EXP(a,b) be a^b in some appropriate group G where the
+  appropriate DH parameters hold.  Let's say elements of this group,
+  when represented as byte strings, are all G_LENGTH bytes long.
+  Let's say we are using a generator g for this group.
+
+  Let MUTLIEXPONEN (a,b,c,d) be (a^b)*(c^d) in some appropriate
+  group G where the appropriate DH parameters hold.  Let's say
+  elements of this group, when represented as byte strings, are all
+  G_LENGTH bytes long.  Let's say we are using a generator g for
+  this group.
+
+  Let PROTOID be a string designating this variant of the protocol.
+
+  Let KEYID be a collision-resistant (but not necessarily preimage-resistant)
+     hash function on members of G, of output length H_LENGTH bytes.
+
+Instantiation:
+
+  Let's call this PROTOID "ace-curve25519-ed-uncompressed-sha256-1"
+
+  Set H(x,t) == HMAC_SHA256 with message x and key t. So H_LENGTH == 32.
+  Set t_mac   == PROTOID | ":mac"
+      t_key  == PROTOID | ":key"
+      t_verify  == PROTOID | ":verify"
+  Set EXP(a,b) == scalar_mult_curve25519(a,b),
+      MUTLIEXPONEN(a,b) == dblscalarmult_curve25519(a,b,c,d), and g == 9 .
+
+  Set KEYID(B) == B.  (We don't need to use a hash function here, since our
+     keys are already very short.  It is trivially collision-resistant, since
+     KEYID(A)==KEYID(B) iff A==B.)
+
+Protocol:
+
+  Take a router with identity key digest ID.
+
+  As setup, the router generates a secret key b, and a public onion key
+  B = EXP(g,b).  The router publishes B in its server descriptor.
+
+  To send a create cell, the client generates two keypairs of x_1,
+  X_1=EXP(g,x_1) and x_2, X_2=EXP(g,x_2) and sends a CREATE cell
+  with contents:
+
+    NODEID:     ID             -- H_LENGTH bytes
+    KEYID:      KEYID(B)       -- H_LENGTH bytes
+    CLIENT_PK:  X_1, X_2           -- 2 x G_LENGTH bytes
+
+  The server checks X_1, X_2, generates a keypair of y, Y=EXP(g,y)
+  and computes
+
+    point = MUTLIEXPONEN(X_1,y,X_2,b)
+    secret_input = point | ID | B | X_1 | X_2 | Y | PROTOID
+    KEY_SEED = H(secret_input | "Key Seed", t_key)
+    KEY_VERIFY = H(secret_input | "HMac Seed", t_verify)
+    auth_input = ID | Y | X_1 | X_2 | PROTOID | "Server"
+
+  The server sends a CREATED cell containing:
+
+    SERVER_PK:  Y                     -- G_LENGTH bytes
+    AUTH:       H(auth_input, KEY_VERIFY)  -- H_LENGTH bytes
+
+  The client then checks Y, and computes
+
+    point = MUTLIEXPONEN(Y,x_1,B,x_2)
+    secret_input =  | ID | B | X_1 | X_2 | Y | PROTOID
+    KEY_SEED = H(secret_input | "Key Seed", t_key)
+    KEY_VERIFY = H(secret_input | "HMac Seed", t_verify)
+    auth_input = ID | B | Y | X_1 | X_2 | PROTOID | "Server"
+
+    The client verifies that AUTH == H(auth_input, KEY_VERIFY).
+
+  Both parties now have a shared value for KEY_SEED.  They expand
+  this into the keys needed for the Tor relay protocol.
+
+Key expansion:
+
+  When using this handshake, clients and servers should expand keys
+  using HKDF as with the ntor handshake today.
+
+See also:
+
+  http://www.infsec.cs.uni-saarland.de/~mohammadi/ace/ace.html
+  for implementations, academic paper, and benchmarking code.
+

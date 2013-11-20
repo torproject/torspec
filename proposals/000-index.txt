@@ -143,6 +143,7 @@ Proposals by number:
 220  Migrate server identity keys to Ed25519 [DRAFT]
 221  Stop using CREATE_FAST [CLOSED]
 222  Stop sending client timestamps [CLOSED]
+223  Ace: Improved circuit-creation key exchange [OPEN]
 
 
 Proposals by status:
@@ -188,6 +189,7 @@ Proposals by status:
    211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    215  Let the minimum consensus method change with time
+   223  Ace: Improved circuit-creation key exchange
  ACCEPTED:
    140  Provide diffs between consensuses
    147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.4.x]
