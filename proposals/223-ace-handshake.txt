@@ -9,6 +9,7 @@ History:
    22-July-2013 -- Submitted
    20-Nov-2013  -- Reformatted slightly, wrapped lines, added
                    references, adjusted the KDF [nickm]
+   20-Nov-2013  -- Clarified that there's only one group here [nickm]
 
 Summary:
 
@@ -35,11 +36,7 @@ Notation:
   when represented as byte strings, are all G_LENGTH bytes long.
   Let's say we are using a generator g for this group.
 
-  Let MUTLIEXPONEN (a,b,c,d) be (a^b)*(c^d) in some appropriate
-  group G where the appropriate DH parameters hold.  Let's say
-  elements of this group, when represented as byte strings, are all
-  G_LENGTH bytes long.  Let's say we are using a generator g for
-  this group.
+  Let MUTLIEXPONEN (a,b,c,d) be (a^b)*(c^d) in the same group G as above.
 
   Let PROTOID be a string designating this variant of the protocol.
 
