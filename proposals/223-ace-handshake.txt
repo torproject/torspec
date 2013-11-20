@@ -90,7 +90,7 @@ Protocol:
   The client then checks Y, and computes
 
     point = MUTLIEXPONEN(Y,x_1,B,x_2)
-    secret_input =  | ID | B | X_1 | X_2 | Y | PROTOID
+    secret_input = point | ID | B | X_1 | X_2 | Y | PROTOID
     KEY_SEED = H(secret_input | "Key Seed", t_key)
     KEY_VERIFY = H(secret_input | "HMac Seed", t_verify)
     auth_input = ID | B | Y | X_1 | X_2 | PROTOID | "Server"
