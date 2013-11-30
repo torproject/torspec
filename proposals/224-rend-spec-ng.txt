@@ -1,0 +1,1709 @@
+Filename: 224-rend-spec-ng.txt
+Title: Next-Generation Hidden Services in Tor
+Author: Nick Mathewson
+Created: 2013-11-29
+Status: Draft
+
+
+-1. Draft notes
+
+   This document describes a proposed design and specification for
+   hidden services in Tor version 0.2.5.x or later. It's a replacement
+   for the current rend-spec.txt, rewritten for clarity and for improved
+   design.
+
+   Look for the string "TODO" below: it describes gaps or uncertainties
+   in the design.
+
+   Change history:
+       2013-11-29: Proposal first numbered. Some TODO and XXX items remain.
+
+0. Hidden services: overview and preliminaries.
+
+   Hidden services aim to provide responder anonymity for bidirectional
+   stream-based communication on the Tor network. Unlike regular Tor
+   connections, where the connection initiator receives anonymity but
+   the responder does not, hidden services attempt to provide
+   bidirectional anonymity.
+
+   Other features include:
+
+     * [TODO: WRITE ME once there have been some more drafts and we know
+       what the summary should say.]
+
+   Participants:
+
+      Operator -- A person running a hidden service
+
+      Host, "Server" -- The Tor software run by the operator to provide
+         a hidden service.
+
+      User -- A person contacting a hidden service.
+
+      Client -- The Tor software running on the User's computer
+
+      Hidden Service Directory (HSDir) -- A Tor node that hosts signed
+        statements from hidden service hosts so that users can make
+        contact with them.
+
+      Introduction Point -- A Tor node that accepts connection requests
+        for hidden services and anonymously relays those requests to the
+        hidden service.
+
+      Rendezvous Point -- A Tor node to which clients and servers
+        connect and which relays traffic between them.
+
+
+
+0.1. Improvements over previous versions.
+
+   [TODO write me once there have been more drafts and we know what the
+   summary should say.]
+
+0.2. Notation and vocabulary
+
+   Unless specified otherwise, all multi-octet integers are big-endian.
+
+   We write sequences of bytes in two ways:
+
+     1. A sequence of two-digit hexadecimal values in square brackets,
+        as in [AB AD 1D EA].
+
+     2. A string of characters enclosed in quotes, as in "Hello". These
+        characters in these string are encoded in their ascii
+        representations; strings are NOT nul-terminated unless
+        explicitly described as NUL terminated.
+
+   We use the words "byte" and "octet" interchangeably.
+
+   We use the vertical bar | to denote concatenation.
+
+   We use INT_N(val) to denote the network (big-endian) encoding of the
+   unsigned integer "val" in N bytes. For example, INT_4(1337) is [00 00
+   05 39].
+
+0.3. Cryptographic building blocks
+
+   This specification uses the following cryptographic building blocks:
+
+      * A stream cipher STREAM(iv, k) where iv is a nonce of length
+        S_IV_LEN bytes and k is a key of length S_KEY_LEN bytes.
+
+      * A public key signature system SIGN_KEYGEN()->seckey, pubkey;
+        SIGN_SIGN(seckey,msg)->sig; and SIGN_CHECK(pubkey, sig, msg) ->
+        { "OK", "BAD" }; where secret keys are of length SIGN_SECKEY_LEN
+        bytes, public keys are of length SIGN_PUBKEY_LEN bytes, and
+        signatures are of length SIGN_SIG_LEN bytes.
+
+        This signature system must also support key blinding operations
+        as discussed in appendix [KEYBLIND] and in section [SUBCRED]:
+        SIGN_BLIND_SECKEY(seckey, blind)->seckey2 and
+        SIGN_BLIND_PUBKEY(pubkey, blind)->pubkey2 .
+
+      * A public key agreement system "PK", providing
+        PK_KEYGEN()->seckey, pubkey; PK_VALID(pubkey) -> {"OK", "BAD"};
+        and PK_HANDHAKE(seckey, pubkey)->output; where secret keys are
+        of length PK_SECKEY_LEN bytes, public keys are of length
+        PK_PUBKEY_LEN bytes, and the handshake produces outputs of
+        length PK_OUTPUT_LEN bytes.
+
+      * A cryptographic hash function H(d), which should be preimage and
+        collision resistant. It produces hashes of length HASH_LEN
+        bytes.
+
+      * A cryptographic message authentication code MAC(key,msg) that
+        produces outputs of length MAC_LEN bytes.
+
+      * A key derivation function KDF(key data, salt, personalization,
+        n) that outputs n bytes.
+
+   As a first pass, I suggest:
+
+      * Instantiate STREAM with AES128-CTR. [TODO: or ChaCha20?]
+
+      * Instantiate SIGN with Ed25519 and the blinding protocol in
+        [KEYBLIND].
+
+      * Instantiate PK with Curve25519.
+
+      * Instantiate H with SHA256. [TODO: really?]
+
+      * Instantiate MAC with HMAC using H.
+
+      * Instantiate KDF with HKDF using H.
+
+   For legacy purposes, we specify compatibility with older versions of
+   the Tor introduction point and rendezvous point protocols. These used
+   RSA1024, DH1024, AES128, and SHA1, as discussed in
+   rend-spec.txt. Except as noted, all RSA keys MUST have exponent
+   values of 65537.
+
+   As in [proposal 220], all signatures are generated not over strings
+   themselves, but over those strings prefixed with a distinguishing
+   value.
+
+
+0.4. Protocol building blocks [BUILDING-BLOCKS]
+
+   In sections below, we need to transmit the locations and identities
+   of Tor nodes. We do so in the link identification format used by
+   EXTEND2 cells in the Tor protocol.
+
+         NSPEC      (Number of link specifiers)   [1 byte]
+         NSPEC times:
+           LSTYPE (Link specifier type)           [1 byte]
+           LSLEN  (Link specifier length)         [1 byte]
+           LSPEC  (Link specifier)                [LSLEN bytes]
+
+   Link specifier types are as described in tor-spec.txt. Every set of
+   link specifiers MUST include at minimum specifiers of type [00]
+   (TLS-over-TCP, IPv4) and [02] (legacy node identity).
+
+   We also incorporate Tor's circuit extension handshakes, as used in
+   the CREATE2 and CREATED2 cells described in tor-spec.txt. In these
+   handshakes, a client who knows a public key for a server sends a
+   message and receives a message from that server. Once the exchange is
+   done, the two parties have a shared set of forward-secure key
+   material, and the client knows that nobody else shares that key
+   material unless they control the secret key corresponding to the
+   server's public key.
+
+0.5. Assigned relay cell types
+
+   These relay cell types are reserved for use in the hidden service
+   protocol.
+
+      32 -- RELAY_COMMAND_ESTABLISH_INTRO
+
+            Sent from hidden service host to introduction point;
+            establishes introduction point. Discussed in
+            [REG_INTRO_POINT].
+
+      33 -- RELAY_COMMAND_ESTABLISH_RENDEZVOUS
+
+            Sent from client to rendezvous point; creates rendezvous
+            point. Discussed in [EST_REND_POINT].
+
+      34 -- RELAY_COMMAND_INTRODUCE1
+
+            Sent from client to introduction point; requests
+            introduction. Discussed in [SEND_INTRO1]
+
+      35 -- RELAY_COMMAND_INTRODUCE2
+
+            Sent from client to introduction point; requests
+            introduction. Same format as INTRODUCE1. Discussed in
+            [FMT_INTRO1] and [PROCESS_INTRO2]
+
+      36 -- RELAY_COMMAND_RENDEZVOUS1
+
+            Sent from introduction point to rendezvous point;
+            attempts to join introduction point's circuit to
+            client's circuit. Discussed in [JOIN_REND]
+
+      37 -- RELAY_COMMAND_RENDEZVOUS2
+
+            Sent from introduction point to rendezvous point;
+            reports join of introduction point's circuit to
+            client's circuit. Discussed in [JOIN_REND]
+
+      38 -- RELAY_COMMAND_INTRO_ESTABLISHED
+
+            Sent from introduction point to hidden service host;
+            reports status of attempt to establish introduction
+            point. Discussed in [INTRO_ESTABLISHED]
+
+      39 -- RELAY_COMMAND_RENDEZVOUS_ESTABLISHED
+
+            Sent from rendezvous point to client; acknowledges
+            receipt of ESTABLISH_RENDEZVOUS cell. Discussed in
+            [EST_REND_POINT]
+
+      40 -- RELAY_COMMAND_INTRODUCE_ACK
+
+            Sent form introduction point to client; acknowledges
+            receipt of INTRODUCE1 cell and reports success/failure.
+            Discussed in [INTRO_ACK]
+
+0.5. Acknowledgments
+
+   [TODO reformat these once the lists are more complete.]
+
+   This design includes ideas from many people, including
+     Christopher Baines,
+     Daniel J. Bernstein,
+     Matthew Finkel,
+     Ian Goldberg,
+     George Kadianakis,
+     Aniket Kate,
+     Tanja Lange,
+     Robert Ransom,
+
+   It's based on Tor's original hidden service design by Roger
+   Dingledine, Nick Mathewson, and Paul Syverson, and on improvements to
+   that design over the years by people including
+     Tobias Kamm,
+     Thomas Lauterbach,
+     Karsten Loesing,
+     Alessandro Preite Martinez,
+     Robert Ransom,
+     Ferdinand Rieger,
+     Christoph Weingarten,
+     Christian Wilms,
+
+   We wouldn't be able to do any of this work without good attack
+   designs from researchers including
+     Alex Biryukov,
+     Lasse Øverlier,
+     Ivan Pustogarov,
+     Paul Syverson
+     Ralf-Philipp Weinmann,
+   See [ATTACK-REFS] for their papers.
+
+   Several of these ideas have come from conversations with
+      Christian Grothoff,
+      Brian Warner,
+      Zooko Wilcox-O'Hearn,
+
+   And if this document makes any sense at all, it's thanks to
+   editing help from
+      Matthew Finkel
+      George Kadianakis,
+      Peter Palfrader,
+
+
+   [XXX  Acknowledge the huge bunch of people working on 8106.]
+   [XXX  Acknowledge the huge bunch of people working on 8244.]
+
+
+   Please forgive me if I've missed you; please forgive me if I've
+   misunderstood your best ideas here too.
+
+
+1. Protocol overview
+
+   In this section, we outline the hidden service protocol. This section
+   omits some details in the name of simplicity; those are given more
+   fully below, when we specify the protocol in more detail.
+
+1.1. View from 10,000 feet
+
+   A hidden service host prepares to offer a hidden service by choosing
+   several Tor nodes to serve as its introduction points. It builds
+   circuits to those nodes, and tells them to forward introduction
+   requests to it using those circuits.
+
+   Once introduction points have been picked, the host builds a set of
+   documents called "hidden service descriptors" (or just "descriptors"
+   for short) and uploads them to a set of HSDir nodes. These documents
+   list the hidden service's current introduction points and describe
+   how to make contact with the hidden service.
+
+   When a client wants to connect to a hidden service, it first chooses
+   a Tor node at random to be its "rendezvous point" and builds a
+   circuit to that rendezvous point. If the client does not have an
+   up-to-date descriptor for the service, it contacts an appropriate
+   HSDir and requests such a descriptor.
+
+   The client then builds an anonymous circuit to one of the hidden
+   service's introduction points listed in its descriptor, and gives the
+   introduction point an introduction request to pass to the hidden
+   service. This introduction request includes the target rendezvous
+   point and the first part of a cryptographic handshake.
+
+   Upon receiving the introduction request, the hidden service host
+   makes an anonymous circuit to the rendezvous point and completes the
+   cryptographic handshake. The rendezvous point connects the two
+   circuits, and the cryptographic handshake gives the two parties a
+   shared key and proves to the client that it is indeed talking to the
+   hidden service.
+
+   Once the two circuits are joined, the client can send Tor RELAY cells
+   to the server. RELAY_BEGIN cells open streams to an external process
+   or processes configured by the server; RELAY_DATA cells are used to
+   communicate data on those streams, and so forth.
+
+1.2. In more detail: naming hidden services [NAMING]
+
+   A hidden service's name is its long term master identity key.  This
+   is encoded as a hostname by encoding the entire key in Base 32, and
+   adding the string ".onion" at the end.
+
+   (This is a change from older versions of the hidden service protocol,
+   where we used an 80-bit truncated SHA1 hash of a 1024 bit RSA key.)
+
+   The names in this format are distinct from earlier names because of
+   their length. An older name might look like:
+
+        unlikelynamefora.onion
+        yyhws9optuwiwsns.onion
+
+   And a new name following this specification might look like:
+
+        a1uik0w1gmfq3i5ievxdm9ceu27e88g6o7pe0rffdw9jmntwkdsd.onion
+
+   Note that since master keys are 32 bytes long, and 52 bytes of base
+   32 encoding can hold 260 bits of information, we have four unused
+   bits in each of these names.
+
+   [TODO: Alternatively, we could require that the first bit of the
+   master key always be zero, and use a 51-byte encoding. Or we could
+   require that the first two bits be zero, and use a 51-byte encoding
+   and reserve the first bit. Or we could require that the first nine
+   bits, or ten bits be zero, etc.]
+
+1.3. In more detail: Access control [IMD:AC]
+
+   Access control for a hidden service is imposed at multiple points
+   through the process above.
+
+   In order to download a descriptor, clients must know which blinded
+   signing key was used to sign it. (See the next section for more info
+   on key blinding.)  This blinded signing key is derived from the
+   service's public key and, optionally, an additional secret that is
+   not part of the hidden service's onion address. The public key and
+   this secret together constitute the service's "credential".
+
+   When the secret is in use, the hidden service gains protections
+   equivalent to the "stealth mode" in previous designs.
+
+   To learn the introduction points, the clients must decrypt the body
+   of the hidden service descriptor. The encryption key for these is
+   derived from the service's credential.
+
+   In order to make an introduction point send a request to the server,
+   the client must know the introduction point and know the service's
+   per-introduction-point authentication key from the hidden service
+   descriptor.
+
+   The final level of access control happens at the server itself, which
+   may decide to respond or not respond to the client's request
+   depending on the contents of the request. The protocol is extensible
+   at this point: at a minimum, the server requires that the client
+   demonstrate knowledge od the contents of the encrypted portion of the
+   hidden service descriptor. The service may additionally require a
+   user- or group-specific access token before it responds to requests.
+
+1.4. In more detail: Distributing hidden service descriptors. [IMD:DIST]
+
+   Periodically, hidden service descriptors become stored at different
+   locations to prevent a single directory or small set of directories
+   from becoming a good DoS target for removing a hidden service.
+
+   For each period, the Tor directory authorities agree upon a
+   collaboratively generated random value. (See section 2.3 for a
+   description of how to incorporate this value into the voting
+   practice; generating the value is described in other proposals,
+   including [TODO: add a reference])  That value, combined with hidden service
+   directories' public identity keys, determines each HSDirs' position
+   in the hash ring for descriptors made in that period.
+
+   Each hidden service's descriptors are placed into the ring in
+   positions based on the key that was used to sign them. Note that
+   hidden service descriptors are not signed with the services' public
+   keys directly. Instead, we use a key-blinding system [KEYBLIND] to
+   create a new key-of-the-day for each hidden service. Any client that
+   knows the hidden service's credential can derive these blinded
+   signing keys for a given period. It should be impossible to derive
+   the blinded signing key lacking that credential.
+
+   The body of each descriptor is also encrypted with a key derived from
+   the credential.
+
+   To avoid a "thundering herd" problem where every service generates
+   and uploads a new descriptor at the start of each period, each
+   descriptor comes online at a time during the period that depends on
+   its blinded signing key. The keys for the last period remain valid
+   until the new keys come online.
+
+1.5. In more detail: Scaling to multiple hosts
+
+   [THIS SECTION IS UNFINISHED]
+
+   In order to allow multiple hosts to provide a single hidden service,
+   I'm considering two options.
+
+      * We can have each server build an introduction circuit to each
+        introduction point, and have the introduction points responsible
+        for round-robining between these circuits. One service host is
+        responsible for picking the introduction points and publishing
+        the descriptors.
+
+      * We can have servers choose their introduction points
+        independently, and build circuits to them. One service host is
+        responsible for combining these introduction points into a
+        single descriptor.
+
+   If we want to avoid having a single "master" host without which the
+   whole service goes down (the "one service host" in the description
+   above), we need a way to fail over from one host to another. We also
+   need a way to coordinate between the hosts. This is as yet
+   undesigned. Maybe it should use a hidden service?
+
+   See [SCALING-REFS] for discussion on this topic.
+
+   [TODO: Finalize this design.]
+
+1.6. In more detail: Backward compatibility with older hidden service
+      protocols
+
+   This design is incompatible with the clients, server, and hsdir node
+   protocols from older versions of the hidden service protocol as
+   described in rend-spec.txt. On the other hand, it is designed to
+   enable the use of older Tor nodes as rendezvous points and
+   introduction points.
+
+1.7. In more detail: Offline operation
+
+   In this design, a hidden service's secret identity key may be stored
+   offline. It's used only to generate blinded identity keys, which are
+   used to sign descriptor signing keys. In order to operate a hidden
+   service, the operator can generate a number of descriptor signing
+   keys and their certifications (see [DESC-OUTER] and [ENCRYPTED-DATA]
+   below), and their corresponding descriptor encryption keys, and
+   export those to the hidden service hosts.
+
+1.8. In more detail: Encryption Keys And Replay Resistance
+
+   To avoid replays of an introduction request by an introduction point,
+   a hidden service host must never accept the same request
+   twice. Earlier versions of the hidden service design used a
+   authenticated timestamp here, but including a view of the current
+   time can create a problematic fingerprint. (See proposal 222 for more
+   discussion.)
+
+1.9. In more detail: A menagerie of keys
+
+   [In the text below, an "encryption keypair" is roughly "a keypair you
+   can do Diffie-Hellman with" and a "signing keypair" is roughly "a
+   keypair you can do ECDSA with."]
+
+   Public/private keypairs defined in this document:
+
+      Master (hidden service) identity key -- A master signing keypair
+        used as the identity for a hidden service. This key is not used
+        on its own to sign anything; it is only used to generate blinded
+        signing keys as described in [KEYBLIND] and [SUBCRED].
+
+      Blinded signing key -- A keypair derived from the identity key,
+        used to sign descriptor signing keys. Changes periodically for
+        each service. Clients who know a 'credential' consisting of the
+        service's public identity key and an optional secret can derive
+        the public blinded identity key for a service. This key is used
+        as an index in the DHT-like structure of the directory system.
+
+      Descriptor signing key -- A key used to sign hidden service
+        descriptors. This is signed by blinded signing keys. Unlike
+        blinded signing keys and master identity keys, the secret part
+        of this key must be stored online by hidden service hosts.
+
+      Introduction point authentication key -- A short-term signing
+        keypair used to identify a hidden service to a given
+        introduction point. A fresh keypair is made for each
+        introduction point; these are used to sign the request that a
+        hidden service host makes when establishing an introduction
+        point, so that clients who know the public component of this key
+        can get their introduction requests sent to the right
+        service. No keypair is ever used with more than one introduction
+        point. (previously called a "service key" in rend-spec.txt)
+
+      Introduction point encryption key -- A short-term encryption
+        keypair used when establishing connections via an introduction
+        point. Plays a role analogous to Tor nodes' onion keys. A fresh
+        keypair is made for each introduction point.
+
+   Symmetric keys defined in this document:
+
+      Descriptor encryption keys -- A symmetric encryption key used to
+        encrypt the body of hidden service descriptors. Derived from the
+        current period and the hidden service credential.
+
+   Public/private keypairs defined elsewhere:
+
+      Onion key -- Short-term encryption keypair
+
+      (Node) identity key
+
+   Symmetric key-like things defined elsewhere:
+
+      KH from circuit handshake -- An unpredictable value derived as
+      part of the Tor circuit extension handshake, used to tie a request
+      to a particular circuit.
+
+
+2. Generating and publishing hidden service descriptors [HSDIR]
+
+   Hidden service descriptors follow the same metaformat as other Tor
+   directory objects. They are published anonymously to Tor servers with
+   the HSDir3 flag.
+
+   (Authorities should assign this flag as they currently assign the
+   HSDir flag, except that they should restrict it to Tor versions
+   implementing the HSDir parts of this specification.)
+
+2.1. Deriving blinded keys and subcredentials [SUBCRED]
+
+   In each time period (see [TIME-PERIOD] for a definition of time
+   periods), a hidden service host uses a different blinded private key
+   to sign its directory information, and clients use a different
+   blinded public key as the index for fetching that information.
+
+   For a candidate for a key derivation method, see Appendix [KEYBLIND].
+
+   Additionally, clients and hosts derive a subcredential for each
+   period. Knowledge of the subcredential is needed to decrypt hidden
+   service descriptors for each period and to authenticate with the
+   hidden service host in the introduction process. Unlike the
+   credential, it changes each period. Knowing the subcredential, even
+   in combination with the blinded private key, does not enable the
+   hidden service host to derive the main credential--therefore, it is
+   safe to put the subcredential on the hidden service host while
+   leaving the hidden service's private key offline.
+
+   The subcredential for a period is derived as:
+       H("subcredential" |
+         credential |
+         blinded-public-key).
+
+2.2. Locating, uploading, and downloading hidden service descriptors
+       [HASHRING]
+
+   To avoid attacks where a hidden service's descriptor is easily
+   targeted for censorship, we store them at different directories over
+   time, and use shared random values to prevent those directories from
+   being predictable far in advance.
+
+   Which Tor servers hosts a hidden service depends on:
+
+         * the current time period,
+         * the daily subcredential,
+         * the hidden service directories' public keys,
+         * a shared random value that changes in each time period,
+         * a set of network-wide networkstatus consensus parameters.
+
+   Below we explain in more detail.
+
+2.2.1. Dividing time into periods [TIME-PERIODS]
+
+   To prevent a single set of hidden service directory from becoming a
+   target by adversaries looking to permanently censor a hidden service,
+   hidden service descriptors are uploaded to different locations that
+   change over time.
+
+   The length of a "time period" is controlled by the consensus
+   parameter 'hsdir-interval', and is a number of minutes between 30 and
+   14400 (10 days). The default time period length is 1500 (one day plus
+   one hour).
+
+   Time periods start with the Unix epoch (Jan 1, 1970), and are
+   computed by taking the number of whole minutes since the epoch and
+   dividing by the time period. So if the current time is 2013-11-12
+   13:44:32 UTC, making the seconds since the epoch 1384281872, the
+   number of minutes since the epoch is 23071364.  If the current time
+   period length is 1500 (the default), then the current time period
+   number is 15380. It began 15380*1500*60 seconds after the epoch at
+   2013-11-11 20:00:00 UTC, and will end at (15380+1)*1500*60 seconds
+   after the epoch at 2013-11-12 21:00:00 UTC.
+
+2.2.2. Overlapping time periods to avoid thundering herds [TIME-OVERLAP]
+
+   If every hidden service host were to generate a new set of keys and
+   upload a new descriptor at exactly the start of each time period, the
+   directories would be overwhelmed by every host uploading at the same
+   time. Instead, each public key becomes valid at its new location at a
+   deterministic time somewhat _before_ the period begins, depending on
+   the public key and the period.
+
+   The time at which a key might first become valid is determined by the
+   consensus parameter "hsdir-overlap-begins", which is an integer in
+   range [1,100] with default value 80. This parameter denotes a
+   percentage of the interval for which no overlap occurs.  So for the
+   default interval (1500 minutes) and default overlap-begins value
+   (80%), new keys do not become valid for the first 1200 minutes of the
+   interval.
+
+   The new shared random value must be published *before* the start of
+   the next overlap interval by at least enough time to ensure that
+   clients all get it. [TODO: how much earlier?]
+
+   The time at which a key from the next interval becomes valid is
+   determined by taking the first two bytes of
+
+     OFFSET = H(Key | INT_8(Next_Period_Num))
+
+   as a big-endian integer, dividing by 65536, and treating that as a
+   fraction of the overlap interval.
+
+   For example, if the period is 1500 minutes long, and overlap interval
+   is 300 minutes long, and OFFSET begins with [90 50], then the next
+   key becomes valid at 1200 + 300 * (0x9050 / 65536) minutes, or
+   approximately 22 hours and 49 minutes after the beginning of the
+   period.
+
+   Hidden service directories should accept descriptors at least [TODO:
+   how much?] minutes before they would become valid, and retain them
+   for at least [TODO: how much?] minutes after the end of the period.
+
+   When a client is looking for a service, it must calculate its key
+   both for the current and for the subsequent period, to decide whether
+   the next period's key is valid yet.
+
+2.2.3. Where to publish a service descriptor
+
+   The following consensus parameters control where a hidden service
+   descriptor is stored;
+
+        hsdir_n_replicas = an integer in range [1,16]
+                             with default value 2.
+
+        hsdir_spread_fetch = an integer in range [1,128]
+                             with default value 3.
+
+        hsdir_spread_store = an integer in range [1,128]
+                             with default value 3.
+
+        hsdir_spread_accept = an integer in range [1,128]
+                             with default value 8.
+
+   To determine where a given hidden service descriptor will be stored
+   in a given period, after the blinded public key for that period is
+   derived, the uploading or downloading party calculate
+
+        for replicanum in 1...hsdir_n_replicas:
+            hs_index(replicanum) = H("store-at-idx" |
+                                 blinded_public_key | replicanum |
+                                 periodnum)
+
+   where blinded_public_key is specified in section KEYBLIND, and
+   periodnum is defined in section TIME-PERIODS.
+
+   where n_replicas is determined by the consensus parameter
+   "hsdir_n_replicas".
+
+   Then, for each node listed in the current consensus with the HSDir3
+   flag, we compute a directory index for that node as:
+
+           hsdir_index(node) = H(node_identity_digest |
+                                 shared_random |
+                                 INT_8(period_num) )
+
+   where shared_random is the shared value generated by the authorities
+   in section PUB-SHAREDRANDOM.
+
+   Finally, for replicanum in 1...hsdir_n_replicas, the hidden service
+   host uploads descriptors to the first hsdir_spread_store nodes whose
+   indices immediately follow hs_index(replicanum).
+
+   When choosing an HSDir to download from, clients choose randomly from
+   among the first hsdir_spread_fetch nodes after the indices.  (Note
+   that, in order to make the system better tolerate disappearing
+   HSDirs, hsdir_spread_fetch may be less than hsdir_spread_store.)
+
+   An HSDir should rejects a descriptor if that HSDir is not one of the
+   first hsdir_spread_accept HSDirs for that node.
+
+   [TODO: Incorporate the findings from proposal 143 here. But watch
+   out: proposal 143 did not analyze how much the set of nodes changes
+   over time, or how much client and host knowledge might diverge.]
+
+2.2.4. URLs for anonymous uploading and downloading
+
+   Hidden service descriptors conforming to this specification are
+   uploaded with an HTTP POST request to the URL
+   /tor/rendezvous3/publish relative to the hidden service directory's
+   root, and downloaded with an HTTP GET request for the URL
+   /tor/rendezvous3/<z> where z is a base-64 encoding of the hidden
+   service's blinded public key.
+
+   [TODO: raw base64 is not super-nice for URLs, since it can have
+   slashes. We already use it for microdescriptor URLs, though. Do we
+   care here?]
+
+   These requests must be made anonymously, on circuits not used for
+   anything else.
+
+2.3. Publishing shared random values [PUB-SHAREDRANDOM]
+
+   Our design for limiting the predictability of HSDir upload locations
+   relies on a shared random value that isn't predictable in advance or
+   too influenceable by an attacker. The authorities must run a protocol
+   to generate such a value at least once per hsdir period. Here we
+   describe how they publish these values; the procedure they use to
+   generate them can change independently of the rest of this
+   specification. For one possible (somewhat broken) protocol, see
+   Appendix [SHAREDRANDOM].
+
+   We add a new line in votes and consensus documents:
+
+       "hsdir-shared-random" PERIOD-START VALUE
+       PERIOD-START = YYYY-MM-DD HH:MM:SS
+       VALUE = A base-64 encoded 256-bit value.
+
+   To decide which hsdir-shared-random line to include in a consensus
+   for a given PERIOD-START, we choose whichever line appears verbatim
+   in the most votes, so long as it is listed by at least three
+   authorities. Ties are broken in favor of the lower value. More than
+   one PERIOD-START is allowed per vote, and per consensus. The same
+   PERIOD-START must not appear twice in a vote or in a consensus.
+
+   [TODO: Need to define a more robust algorithm. Need to cover cases
+   where multiple cluster of authorities publish a different value,
+   etc.]
+
+   The hs-dir-shared-random lines appear, sorted by PERIOD-START, in the
+   consensus immediately after the "params" line.
+
+   The authorities should publish the shared random value for the
+   current period, and, at a time at least three voting periods before
+   the overlap interval begins, the shared random value for the next
+   period.
+
+[TODO: find out what weasel doesn't like here.]
+
+2.4. Hidden service descriptors: outer wrapper [DESC-OUTER]
+
+   The format for a hidden service descriptor is as follows, using the
+   meta-format from dir-spec.txt.
+
+     "hs-descriptor" SP "3" SP public-key SP certification NL
+
+       [At start, exactly once.]
+
+       public-key is the blinded public key for the service, encoded in
+       base 64. Certification is a certification of a short-term ed25519
+       descriptor signing key using the public key, in the format of
+       proposal 220.
+
+     "time-period" SP YYYY-MM-DD HH:MM:SS NUM NL
+
+       [Exactly once.]
+
+       The time period for which this descriptor is relevant, including
+       its starting time and its period number.
+
+     "revision-counter" SP Integer NL
+
+       [Exactly once.]
+
+       The revision number of the descriptor. If an HSDir receives a
+       second descriptor for a key that it already has a descriptor for,
+       it should retain and serve the descriptor with the higher
+       revision-counter.
+
+       (Checking for monotonically increasing revision-counter values
+       prevents an attacker from replacing a newer descriptor signed by
+       a given key with a copy of an older version.)
+
+     "encrypted" NL encrypted-string
+
+       [Exactly once.]
+
+       An encrypted blob, whose format is discussed in [ENCRYPTED-DATA]
+       below. The blob is base-64 encoded and enclosed in -----BEGIN
+       MESSAGE---- and ----END MESSAGE---- wrappers.
+
+     "signature" SP signature NL
+
+       [exactly once, at end.]
+
+       A signature of all previous fields, using the signing key in the
+       hs-descriptor line. We use a separate key for signing, so that
+       the hidden service host does not need to have its private blinded
+       key online.
+
+
+2.5. Hidden service descriptors: encryption format [ENCRYPTED-DATA]
+
+   The encrypted part of the hidden service descriptor is encrypted and
+   authenticated with symmetric keys generated as follows:
+
+       salt = 16 random bytes
+
+       secret_input = nonce | blinded_public_key | subcredential |
+             INT_4(revision_counter)
+       keys = KDF(secret_input, salt, "hsdir-encrypted-data",
+                  S_KEY_LEN + S_IV_LEN + MAC_KEY_LEN)
+
+       SECRET_KEY = first S_KEY_LEN bytes of keys
+       SECRET_IV  = next S_IV_LEN bytes of keys
+       MAC_KEY    = last MAC_KEY_LEN bytes of keys
+
+   The encrypted data has the format:
+
+       SALT       (random bytes from above)       [16 bytes]
+       ENCRYPTED  The plaintext encrypted with S  [variable]
+       MAC        MAC of both above fields        [32 bytes]
+
+   The encryption format is ENCRYPTED =
+               STREAM(SECRET_IV,SECRET_KEY) xor Plaintext
+
+   Before encryption, the plaintext must be padded to a multiple of ???
+   bytes with NUL bytes. The plaintext must not be longer than ???
+   bytes.  [TODO: how much? Should this be a parameter?  What values in
+   practice is needed to hide how many intro points we have, and how
+   many might be legacy ones?]
+
+   The plaintext format is:
+
+     "create2-formats" SP formats NL
+
+      [Exactly once]
+
+      A space-separated list of integers denoting CREATE2 cell format
+      numbers that the server recognizes. Must include at least TAP and
+      ntor as described in tor-spec.txt. See tor-spec section 5.1 for a
+      list of recognized handshake types.
+
+     "authentication-required" SP types NL
+
+      [At most once]
+
+      A space-separated list of authentication types. A client that does
+      not support at least one of these authentication types will not be
+      able to contact the host. Recognized types are: 'password' and
+      'ed25519'. See [INTRO-AUTH] below.
+
+     At least once:
+
+        "introduction-point" SP link-specifiers NL
+
+          [Exactly once per introduction point at start of introduction
+            point section]
+
+          The link-specifiers is a base64 encoding of a link specifier
+          block in the format described in BUILDING-BLOCKS.
+
+        "auth-key" SP "ed25519" SP key SP certification NL
+
+          [Exactly once per introduction point]
+
+          Base-64 encoded introduction point authentication key that was
+          used to establish introduction point circuit, cross-certifying
+          the blinded public key key using the certification format of
+          proposal 220.
+
+        "enc-key" SP "ntor" SP key NL
+
+          [At most once per introduction point]
+
+          Base64-encoded curve25519 key used to encrypt request to
+          hidden service.
+
+          [TODO: I'd like to have a cross-certification here too.]
+
+        "enc-key" SP "legacy" NL key NL
+
+          [At most once per introduction point]
+
+          Base64-encoded RSA key, wrapped in "----BEGIN RSA PUBLIC
+          KEY-----" armor, for use with a legacy introduction point as
+          described in [LEGACY_EST_INTRO] and [LEGACY-INTRODUCE1] below.
+
+          Exactly one of the "enc-key ntor" and "enc-key legacy"
+          elements must be present for each introduction point.
+
+        [TODO: I'd like to have a cross-certification here too.]
+
+   Other encryption and authentication key formats are allowed; clients
+   should ignore ones they do not recognize.
+
+
+3. The introduction protocol
+
+   The introduction protocol proceeds in three steps.
+
+   First, a hidden service host builds an anonymous circuit to a Tor
+   node and registers that circuit as an introduction point.
+
+        [Between these steps, the hidden service publishes its
+        introduction points and associated keys, and the client fetches
+        them as described in section [HSDIR] above.]
+
+   Second, a client builds an anonymous circuit to the introduction
+   point, and sends an introduction request.
+
+   Third, the introduction point relays the introduction request along
+   the introduction circuit to the hidden service host, and acknowledges
+   the introduction request to the client.
+
+3.1. Registering an introduction point [REG_INTRO_POINT]
+
+3.1.1. Extensible ESTABLISH_INTRO protocol. [EST_INTRO]
+
+   When a hidden service is establishing a new introduction point, it
+   sends a ESTABLISH_INTRO cell with the following contents:
+
+     AUTH_KEY_TYPE    [1 byte]
+     AUTH_KEY_LEN     [1 byte]
+     AUTH_KEY         [AUTH_KEY_LEN bytes]
+     Any number of times:
+        EXT_FIELD_TYPE [1 byte]
+        EXT_FIELD_LEN  [1 byte]
+        EXT_FIELD      [EXTRA_FIELD_LEN bytes]
+     ZERO             [1 byte]
+     HANDSHAKE_AUTH   [MAC_LEN bytes]
+     SIGLEN           [1 byte]
+     SIG              [SIGLEN bytes]
+
+   The AUTH_KEY_TYPE field indicates the type of the introduction point
+   authentication key and the type of the MAC to use in for
+   HANDSHAKE_AUTH. Recognized types are:
+
+       [00, 01] -- Reserved for legacy introduction cells; see
+                   [LEGACY_EST_INTRO below]
+       [02] -- Ed25519; HMAC-SHA256.
+       [FF] -- Reserved for maintenance messages on existing
+               circuits; see MAINT_INTRO below.
+
+               [TODO: Should this just be a new relay cell type?
+                Matthew and George think so.]
+
+   The AUTH_KEY_LEN field determines the length of the AUTH_KEY
+   field. The AUTH_KEY field contains the public introduction point
+   authentication key.
+
+   The EXT_FIELD_TYPE, EXT_FIELD_LEN, EXT_FIELD entries are reserved for
+   future extensions to the introduction protocol. Extensions with
+   unrecognized EXT_FIELD_TYPE values must be ignored.
+
+   The ZERO field contains the byte zero; it marks the end of the
+   extension fields.
+
+   The HANDSHAKE_AUTH field contains the MAC of all earlier fields in
+   the cell using as its key the shared per-circuit material ("KH")
+   generated during the circuit extension protocol; see tor-spec.txt
+   section 5.2, "Setting circuit keys". It prevents replays of
+   ESTABLISH_INTRO cells.
+
+   SIGLEN is the length of the signature.
+
+   SIG is a signature, using AUTH_KEY, of all contents of the cell, up
+   to but not including SIG. These contents are prefixed with the string
+   "Tor establish-intro cell v1".
+
+   Upon receiving an ESTABLISH_INTRO cell, a Tor node first decodes the
+   key and the signature, and checks the signature. The node must reject
+   the ESTABLISH_INTRO cell and destroy the circuit in these cases:
+
+        * If the key type is unrecognized
+        * If the key is ill-formatted
+        * If the signature is incorrect
+        * If the HANDSHAKE_AUTH value is incorrect
+
+        * If the circuit is already a rendezvous circuit.
+        * If the circuit is already an introduction circuit.
+          [TODO: some scalability designs fail there.]
+        * If the key is already in use by another circuit.
+
+   Otherwise, the node must associate the key with the circuit, for use
+   later in INTRODUCE1 cells.
+
+   [TODO: The above will work fine with what we do today, but it will do
+   quite badly if we ever freak out and want to go back to RSA2048 or
+   bigger.  Do we care?]
+
+3.1.2. Registering an introduction point on a legacy Tor node [LEGACY_EST_INTRO]
+
+   Tor nodes should also support an older version of the ESTABLISH_INTRO
+   cell, first documented in rend-spec.txt. New hidden service hosts
+   must use this format when establishing introduction points at older
+   Tor nodes that do not support the format above in [EST_INTRO].
+
+   In this older protocol, an ESTABLISH_INTRO cell contains:
+
+        KEY_LENGTH     [2 bytes]
+        KEY            [KEY_LENGTH bytes]
+        HANDSHAKE_AUTH [20 bytes]
+        SIG            [variable, up to end of relay payload]
+
+   The KEY_LENGTH variable determines the length of the KEY field.
+
+   The KEY field is a ASN1-encoded RSA public key.
+
+   The HANDSHAKE_AUTH field contains the SHA1 digest of (KH |
+   "INTRODUCE").
+
+   The SIG field contains an RSA signature, using PKCS1 padding, of all
+   earlier fields.
+
+   Note that since the relay payload itself may be no more than 498
+   bytes long, the KEY_LENGTH field can never have a first byte other
+   than [00] or [01]. These values are used to distinguish legacy
+   ESTABLISH_INTRO cells from newer ones.
+
+   Older versions of Tor always use a 1024-bit RSA key for these
+   introduction authentication keys.
+
+   Newer hidden services MAY use RSA keys up 1904 bits. Any more than
+   that will not fit in a RELAY cell payload.
+
+3.1.3. Managing introduction circuits [MAINT_INTRO]
+
+   If the first byte of an ESTABLISH_INTRO cell is [FF], the cell's body
+   contains an administrative command for the circuit. The format of
+   such a command is:
+
+     Any number of times:
+       SUBCOMMAND_TYPE [2 bytes]
+       SUBCOMMAND_LEN  [2 bytes]
+       SUBCOMMAND      [COMMAND_LEN bytes]
+
+   Recognized SUBCOMMAND_TYPE values are:
+
+       [00 01] -- update encryption keys
+
+   [TODO: Matthew says, "This can be used to fork an intro point to
+    balance traffic over multiple hidden service servers while
+    maintaining the criteria for a valid ESTABLISH_INTRO
+    cell. -MF". Investigate.]
+
+   Unrecognized SUBCOMMAND_TYPE values should be ignored.
+
+3.1.3.1. Updating encryption keys (subcommand 0001) [UPDATE-KEYS-SUBCMD]
+
+   Hidden service hosts send this subcommand to set their initial
+   encryption keys or update the configured public encryption keys
+   associated with this circuit. This message must be sent after
+   establishing an introduction point, before the circuit can be
+   advertised.  These keys are given in the form:
+
+      NUMKEYS         [1 byte]
+      NUMKEYS times:
+        KEYTYPE         [1 byte]
+        KEYLEN          [1 byte]
+        KEY             [KEYLEN bytes]
+      COUNTER         [4 bytes]
+      SIGLEN          [1 byte]
+      SIGNATURE       [SIGLEN bytes.]
+
+   The KEYTYPE value [01] is for Curve25519 keys.
+
+   The COUNTER field is a monotonically increasing value across a given
+   introduction point authentication key.
+
+   The SIGNATURE must be generated with the introduction point
+   authentication key, and must cover the entire subcommand body,
+   prefixed with the string "Tor hidden service introduction encryption
+   keys v1".
+
+   [TODO: Nothing is done here to prove ownership of the encryption
+   keys. Does that matter?]
+
+   [TODO: The point here is to allow encryption keys to change while
+   maintaining an introduction point and not forcing a client to
+   download a new descriptor. I'm not sure if that's worth it. It makes
+   clients who have seen a key before distinguishable from ones who have
+   not.]
+
+   [Matthew says: "Repeat-client over long periods of time will always
+   be distinguishable. It may be better to simply expire intro points
+   than try to preserve forward-secrecy, though". Must find out what he
+   meant.]
+
+   Setting the encryption keys for a given circuit replaces the previous
+   keys for that circuit. Clients who attempt to connect using the old
+   key receive an INTRO_ACK cell with error code [00 02] as described in
+   section [INTRO_ACK] below.
+
+3.1.4. Acknowledging establishment of introduction point [INTRO_ESTABLISHED]
+
+   After setting up an introduction circuit, the introduction point
+   reports its status back to the hidden service host with an empty
+   INTRO_ESTABLISHED cell.
+
+    [TODO: make this cell type extensible. It should be able to include
+    data if that turns out to be needed.]
+
+3.2. Sending an INTRODUCE1 cell to the introduction point. [SEND_INTRO1]
+
+   In order to participate in the introduction protocol, a client must
+   know the following:
+
+     * An introduction point for a service.
+     * The introduction authentication key for that introduction point.
+     * The introduction encryption key for that introduction point.
+
+   The client sends an INTRODUCE1 cell to the introduction point,
+   containing an identifier for the service, an identifier for the
+   encryption key that the client intends to use, and an opaque blob to
+   be relayed to the hidden service host.
+
+   In reply, the introduction point sends an INTRODUCE_ACK cell back to
+   the client, either informing it that its request has been delivered,
+   or that its request will not succeed.
+
+3.2.1. INTRODUCE1 cell format [FMT_INTRO1]
+
+   An INTRODUCE1 cell has the following contents:
+
+     AUTH_KEYID      [32 bytes]
+     ENC_KEYID       [8 bytes]
+     Any number of times:
+       EXT_FIELD_TYPE [1 byte]
+       EXT_FIELD_LEN  [1 byte]
+       EXT_FIELD      [EXTRA_FIELD_LEN bytes]
+     ZERO             [1 byte]
+     ENCRYPTED        [Up to end of relay payload]
+
+   [TODO: Should we have a field to determine the type of ENCRYPTED, or
+   should we instead assume that there is exactly one encryption key per
+   encryption method? The latter is probably safer.]
+
+   Upon receiving an INTRODUCE1 cell, the introduction point checks
+   whether AUTH_KEYID and ENC_KEYID match a configured introduction
+   point authentication key and introduction point encryption key.  If
+   they do, the cell is relayed; if not, it is not.
+
+   The AUTH_KEYID for an Ed25519 public key is the public key itself.
+   The ENC_KEYID for a Curve25519 public key is the first 8 bytes of the
+   public key. (This key ID is safe to truncate, since all the keys are
+   generated by the hidden service host, and the ID is only valid
+   relative to a single AUTH_KEYID.)  The ENCRYPTED field is as
+   described in 3.3 below.
+
+   To relay an INTRODUCE1 cell, the introduction point sends an
+   INTRODUCE2 cell with exactly the same contents.
+
+3.2.2. INTRODUCE_ACK cell format. [INTRO_ACK]
+
+   An INTRODUCE_ACK cell has the following fields:
+     STATUS    [2 bytes]
+     Any number of times:
+       EXT_FIELD_TYPE [1 byte]
+       EXT_FIELD_LEN  [1 byte]
+       EXT_FIELD      [EXTRA_FIELD_LEN bytes]
+
+   Recognized status values are:
+     [00 00] -- Success: cell relayed to hidden service host.
+     [00 01] -- Failure: service ID not recognzied
+     [00 02] -- Failure: key ID not recognized
+     [00 03] -- Bad message format
+
+   Recognized extension field types:
+     [00 01] -- signed set of encryption keys
+
+   The extension field type 0001 is a signed set of encryption keys; its
+   body matches the body of the key update command in
+   [UPDATE-KEYS-CMD]. Whenever sending status [00 02], the introduction
+   point MUST send this extension field.
+
+3.2.3. Legacy formats [LEGACY-INTRODUCE1]
+
+   When the ESTABLISH_INTRO cell format of [LEGACY_EST_INTRO] is used,
+   INTRODUCE1 cells are of the form:
+
+     AUTH_KEYID_HASH  [20 bytes]
+     ENC_KEYID        [8 bytes]
+     Any number of times:
+       EXT_FIELD_TYPE [1 byte]
+       EXT_FIELD_LEN  [1 byte]
+       EXT_FIELD      [EXTRA_FIELD_LEN bytes]
+     ZERO             [1 byte]
+     ENCRYPTED        [Up to end of relay payload]
+
+   Here, AUTH_KEYID_HASH is the hash of the introduction point
+   authentication key used to establish the introduction.
+
+   Because of limitations in older versions of Tor, the relay payload
+   size for these INTRODUCE1 cells must always be at least 246 bytes, or
+   they will be rejected as invalid.
+
+3.3. Processing an INTRODUCE2 cell at the hidden service. [PROCESS_INTRO2]
+
+   Upon receiving an INTRODUCE2 cell, the hidden service host checks
+   whether the AUTH_KEYID/AUTH_KEYID_HASH field and the ENC_KEYID fields
+   are as expected, and match the configured authentication and
+   encryption key(s) on that circuit.
+
+   The service host then checks whether it has received a cell with
+   these contents before. If it has, it silently drops it as a
+   replay. (It must maintain a replay cache for as long as it accepts
+   cells with the same encryption key.)
+
+   If the cell is not a replay, it decrypts the ENCRYPTED field,
+   establishes a shared key with the client, and authenticates the whole
+   contents of the cell as having been unmodified since they left the
+   client. There may be multiple ways of decrypting the ENCRYTPED field,
+   depending on the chosen type of the encryption key. Requirements for
+   an introduction handshake protocol are described in
+   [INTRO-HANDSHAKE-REQS]. We specify one below in section
+   [NTOR-WITH-EXTRA-DATA].
+
+   The decrypted plaintext must have the form:
+
+      REND_TOKEN                                 [20 bytes]
+      Any number of times:
+          EXT_FIELD_TYPE                         [1 byte]
+          EXT_FIELD_LEN                          [1 byte]
+          EXT_FIELD                              [EXTRA_FIELD_LEN bytes]
+      ZERO                                       [1 byte]
+      ONION_KEY_TYPE                             [2 bytes]
+      ONION_KEY                                  [depends on ONION_KEY_TYPE]
+      NSPEC      (Number of link specifiers)     [1 byte]
+      NSPEC times:
+          LSTYPE (Link specifier type)           [1 byte]
+          LSLEN  (Link specifier length)         [1 byte]
+          LSPEC  (Link specifier)                [LSLEN bytes]
+      PAD        (optional padding)              [up to end of plaintext]
+
+
+   Upon processing this plaintext, the hidden service makes sure that
+   any required authentication is present in the extension fields, and
+   then extends a rendezvous circuit to the node described in the LSPEC
+   fields, using the ONION_KEY to complete the extension. As mentioned
+   in [BUILDING-BLOCKS], the "TLS-over-TCP, IPv4" and "Legacy node
+   identity" specifiers must be present.
+
+   The hidden service SHOULD NOT reject any LSTYPE fields which it
+   doesn't recognize; instead, it should use them verbatim in its EXTEND
+   request to the rendezvous point.
+
+   The ONION_KEY_TYPE field is one of:
+
+      [01] TAP-RSA-1024:  ONION_KEY is 128 bytes long.
+      [02] NTOR:          ONION_KEY is 32 bytes long.
+
+   The ONION_KEY field describes the onion key that must be used when
+   extending to the rendezvous point. It must be of a type listed as
+   supported in the hidden service descriptor.
+
+   Upon receiving a well-formed INTRODUCE2 cell, the hidden service host
+   will have:
+
+     * The information needed to connect to the client's chosen
+       rendezvous point.
+     * The second half of a handshake to authenticate and establish a
+       shared key with the hidden service client.
+     * A set of shared keys to use for end-to-end encryption.
+
+3.3.1. Introduction handshake encryption requirements [INTRO-HANDSHAKE-REQS]
+
+   When decoding the encrypted information in an INTRODUCE2 cell, a
+   hidden service host must be able to:
+
+     * Decrypt additional information included in the INTRODUCE2 cell,
+       to include the rendezvous token and the information needed to
+       extend to the rendezvous point.
+
+     * Establish a set of shared keys for use with the client.
+
+     * Authenticate that the cell has not been modified since the client
+       generated it.
+
+   Note that the old TAP-derived protocol of the previous hidden service
+   design achieved the first two requirements, but not the third.
+
+3.3.2. Example encryption handshake: ntor with extra data [NTOR-WITH-EXTRA-DATA]
+
+   This is a variant of the ntor handshake (see tor-spec.txt, section
+   5.1.4; see proposal 216; and see "Anonymity and one-way
+   authentication in key-exchange protocols" by Goldberg, Stebila, and
+   Ustaoglu).
+
+   It behaves the same as the ntor handshake, except that, in addition
+   to negotiating forward secure keys, it also provides a means for
+   encrypting non-forward-secure data to the server (in this case, to
+   the hidden service host) as part of the handshake.
+
+   Notation here is as in section 5.1.4 of tor-spec.txt, which defines
+   the ntor handshake.
+
+   The PROTOID for this variant is
+   "hidden-service-ntor-curve25519-sha256-1".  Define the tweak value
+   t_hsenc, and the tag value m_hsexpand as:
+
+      t_hsenc    = PROTOID | ":hs_key_extract"
+      m_hsexpand = PROTOID | ":hs_key_expand"
+
+   To make an INTRODUCE cell, the client must know a public encryption
+   key B for the hidden service on this introduction circuit. The client
+   generates a single-use keypair:
+             x,X = KEYGEN()
+   and computes:
+             secret_hs_input = EXP(B,x) | AUTH_KEYID | X | B | PROTOID
+             info = m_hsexpand | subcredential
+             hs_keys = HKDF(secret_hs_input, t_hsenc, info,
+                            S_KEY_LEN+MAC_LEN)
+             ENC_KEY = hs_keys[0:S_KEY_LEN]
+             MAC_KEY = hs_keys[S_KEY_LEN:S_KEY_LEN+MAC_KEY_LEN]
+
+   and sends, as the ENCRYPTED part of the INTRODUCE1 cell:
+
+          CLIENT_PK                [G_LENGTH bytes]
+          ENCRYPTED_DATA           [Padded to length of plaintext]
+          MAC                      [MAC_LEN bytes]
+
+
+   Substituting those fields into the INTRODUCE1 cell body format
+   described in [FMT_INTRO1] above, we have
+
+            AUTH_KEYID                  [32 bytes]
+            ENC_KEYID                   [8 bytes]
+            Any number of times:
+               EXT_FIELD_TYPE           [1 byte]
+               EXT_FIELD_LEN            [1 byte]
+               EXT_FIELD                [EXTRA_FIELD_LEN bytes]
+               ZERO                     [1 byte]
+            ENCRYPTED:
+               CLIENT_PK                [G_LENGTH bytes]
+               ENCRYPTED_DATA           [Padded to length of plaintext]
+               MAC                      [MAC_LEN bytes]
+
+
+   (This format is as documented in [FMT_INTRO1] above, except that here
+   we describe how to build the ENCRYPTED portion. If the introduction
+   point is running an older Tor that does not support this protocol,
+   the first field is replaced by a 20-byte AUTH_KEYID_HASH field as
+   described in [LEGACY-INTRODUCE1].)
+
+   Here, the encryption key plays the role of B in the regular ntor
+   handshake, and the AUTH_KEYID field plays the role of the node ID.
+   The CLIENT_PK field is the public key X. The ENCRYPTED_DATA field is
+   the message plaintext, encrypted with the symmetric key ENC_KEY. The
+   MAC field is a MAC of all of the cell from the AUTH_KEYID through the
+   end of ENCRYPTED_DATA, using the MAC_KEY value as its key.
+
+   To process this format, the hidden service checks PK_VALID(CLIENT_PK)
+   as necessary, and then computes ENC_KEY and MAC_KEY as the client did
+   above, except using EXP(CLIENT_PK,b) in the calculation of
+   secret_hs_input. The service host then checks whether the MAC is
+   correct. If it is invalid, it drops the cell. Otherwise, it computes
+   the plaintext by decrypting ENCRYPTED_DATA.
+
+   The hidden service host now completes the service side of the
+   extended ntor handshake, as described in tor-spec.txt section 5.1.4,
+   with the modified PROTOID as given above. To be explicit, the hidden
+   service host generates a keypair of y,Y = KEYGEN(), and uses its
+   introduction point encryption key 'b' to computes:
+
+      xb = EXP(X,b)
+
+      secret_hs_input = xb | AUTH_KEYID | X | B | PROTOID
+      info = m_hsexpand | subcredential
+      hs_keys = HKDF(secret_hs_input, t_hsenc, info,
+                     S_KEY_LEN+MAC_LEN)
+      HS_DEC_KEY = hs_keys[0:S_KEY_LEN]
+      HS_MAC_KEY = hs_keys[S_KEY_LEN:S_KEY_LEN+MAC_KEY_LEN]
+
+      (The above are used to check the MAC and then decrypt the
+      encrypted data.)
+
+      ntor_secret_input = EXP(X,y) | xb | ID | B | X | Y | PROTOID
+      NTOR_KEY_SEED = H(secret_input, t_key)
+      verify = H(secret_input, t_verify)
+      auth_input = verify | ID | B | Y | X | PROTOID | "Server"
+
+      (The above are used to finish the ntor handshake.)
+
+   The server's handshake reply is:
+       SERVER_PK   Y                       [G_LENGTH bytes]
+       AUTH        H(auth_input, t_mac)    [H_LENGTH bytes]
+
+   These faileds can be send to the client in a RENDEZVOUS1 cell.
+   (See [JOIN_REND] below.)
+
+   The hidden service host now also knows the keys generated by the
+   handshake, which it will use to encrypt and authenticate data
+   end-to-end between the client and the server. These keys are as
+   computed in tor-spec.txt section 5.1.4.
+
+3.4. Authentication during the introduction phase. [INTRO-AUTH]
+
+   Hidden services may restrict access only to authorized users.  One
+   mechanism to do so is the credential mechanism, where only users who
+   know the credential for a hidden service may connect at all. For more
+   fine-grained conntrol, a hidden service can be configured with
+   password-based or public-key-based authentication.
+
+3.4.1. Password-based authentication.
+
+   To authenticate with a password, the user must include an extension
+   field in the encrypted part of the INTRODUCE cell with an
+   EXT_FIELD_TYPE type of [01] and the contents:
+
+     Username [00] Password.
+
+   The username may not include any [00] bytes. The password may.
+
+   On the server side, the password MUST be stored hashed and salted,
+   ideally with scrypt or something better.
+
+3.4.2. Ed25519-based authentication.
+
+   To authenticate with an Ed25519 private key, the user must include an
+   extension field in the encrypted part of the INTRODUCE cell with an
+   EXT_FIELD_TYPE type of [02] and the contents:
+
+        Nonce     [16 bytes]
+        Pubkey    [32 bytes]
+        Signature [64 bytes]
+
+   Nonce is a random value. Pubkey is the public key that will be used
+   to authenticate. [TODO: should this be an identifier for the public
+   key instead?]  Signature is the signature, using Ed25519, of:
+
+        "Hidserv-userauth-ed25519"
+        Nonce       (same as above)
+        Pubkey      (same as above)
+        AUTH_KEYID  (As in the INTRODUCE1 cell)
+        ENC_KEYID   (As in the INTRODUCE1 cell)
+
+   The hidden service host checks this by seeing whether it recognizes
+   and would accept a signature from the provided public key. If it
+   would, then it checks whether the signature is correct. If it is,
+   then the correct user has authenticated.
+
+   Replay prevention on the whole cell is sufficient to prevent replays
+   on the authentication.
+
+   Users SHOULD NOT use the same public key with multiple hidden
+   services.
+
+4. The rendezvous protocol
+
+   Before connecting to a hidden service, the client first builds a
+   circuit to an arbitrarily chosen Tor node (known as the rendezvous
+   point), and sends an ESTABLISH_RENDEZVOUS cell. The hidden service
+   later connects to the same node and sends a RENDEZVOUS cell. Once
+   this has occurred, the relay forwards the contents of the RENDEZVOUS
+   cell to the client, and joins the two circuits together.
+
+4.1. Establishing a rendezvous point [EST_REND_POINT]
+
+   The client sends the rendezvous point a
+   RELAY_COMMAND_ESTABLISH_RENDEZVOUS cell containing a 20-byte value.
+            RENDEZVOUS_COOKIE         [20 bytes]
+
+   Rendezvous points MUST ignore any extra bytes in an
+   ESTABLISH_RENDEZVOUS message. (Older versions of Tor did not.)
+
+   The rendezvous cookie is an arbitrary 20-byte value, chosen randomly
+   by the client. The client SHOULD choose a new rendezvous cookie for
+   each new connection attempt. If the rendezvous cookie is already in
+   use on an existing circuit, the rendezvous point should reject it and
+   destroy the circuit.
+
+   Upon receiving a ESTABLISH_RENDEZVOUS cell, the rendezvous point
+   associates the cookie with the circuit on which it was sent. It
+   replies to the client with an empty RENDEZVOUS_ESTABLISHED cell to
+   indicate success.  [TODO: make this extensible]
+
+   The client MUST NOT use the circuit which sent the cell for any
+   purpose other than rendezvous with the given location-hidden service.
+
+   The client should establish a rendezvous point BEFORE trying to
+   connect to a hidden service.
+
+4.2. Joining to a rendezvous point [JOIN_REND]
+
+   To complete a rendezvous, the hidden service host builds a circuit to
+   the rendezvous point and sends a RENDEZVOUS1 cell containing:
+
+       RENDEZVOUS_COOKIE          [20 bytes]
+       HANDSHAKE_INFO             [variable; depends on handshake type
+                                   used.]
+
+   If the cookie matches the rendezvous cookie set on any
+   not-yet-connected circuit on the rendezvous point, the rendezvous
+   point connects the two circuits, and sends a RENDEZVOUS2 cell to the
+   client containing the contents of the RENDEZVOUS1 cell.
+
+   Upon receiving the RENDEZVOUS2 cell, the client verifies that the
+   HANDSHAKE_INFO correctly completes a handshake, and uses the
+   handshake output to derive shared keys for use on the circuit.
+
+   [TODO: Should we encrypt HANDSHAKE_INFO as we did INTRODUCE2
+   contents? It's not necessary, but it could be wise. Similarly, we
+   should make it extensible.]
+
+4.3. Using legacy hosts as rendezvous points
+
+   The behavior of ESTABLISH_RENDEZVOUS is unchanged from older versions
+   of this protocol, except that relays should now ignore unexpected
+   bytes at the end.
+
+   Old versions of Tor required that RENDEZVOUS cell payloads be exactly
+   168 bytes long. All shorter rendezvous payloads should be padded to
+   this length with [00] bytes.
+
+5. Encrypting data between client and host
+
+   A successfully completed handshake, as embedded in the
+   INTRODUCE/RENDEZVOUS cells, gives the client and hidden service host
+   a shared set of keys Kf, Kb, Df, Db, which they use for sending
+   end-to-end traffic encryption and authentication as in the regular
+   Tor relay encryption protocol, applying encryption with these keys
+   before other encryption, and decrypting with these keys before other
+   encryption. The client encrypts with Kf and decrypts with Kb; the
+   service host does the opposite.
+
+6. Open Questions:
+
+   Scaling hidden services is hard. There are on-going discussions that
+   you might be able to help with. See [SCALING-REFS].
+
+   How can we improve the HSDir unpredictability design proposed in
+   [SHAREDRANDOM]? See [SHAREDRANDOM-REFS] for discussion.
+
+   How can hidden service addresses become memorable while retaining
+   their self-authenticating and decentralized nature? See
+   [HUMANE-HSADDRESSES-REFS] for some proposals; many more are possible.
+
+   Hidden Services are pretty slow. Both because of the lengthy setup
+   procedure and because the final circuit has 6 hops. How can we make
+   the Hidden Service protocol faster? See [PERFORMANCE-REFS] for some
+   suggestions.
+
+References:
+
+[KEYBLIND-REFS]:
+        https://trac.torproject.org/projects/tor/ticket/8106
+        https://lists.torproject.org/pipermail/tor-dev/2012-September/004026.html
+
+[SHAREDRANDOM-REFS]:
+        https://trac.torproject.org/projects/tor/ticket/8244
+        https://lists.torproject.org/pipermail/tor-dev/2013-November/005847.html
+        https://lists.torproject.org/pipermail/tor-talk/2013-November/031230.html
+
+[SCALING-REFS]:
+        https://lists.torproject.org/pipermail/tor-dev/2013-October/005556.html
+
+[HUMANE-HSADDRESSES-REFS]:
+        https://gitweb.torproject.org/torspec.git/blob/HEAD:/proposals/ideas/xxx-onion-nyms.txt
+        http://archives.seul.org/or/dev/Dec-2011/msg00034.html
+
+[PERFORMANCE-REFS]:
+        "Improving Efficiency and Simplicity of Tor circuit
+        establishment and hidden services" by Overlier, L., and
+        P. Syverson
+
+        [TODO: Need more here! Do we have any? :( ]
+
+[ATTACK-REFS]:
+        "Trawling for Tor Hidden Services: Detection, Measurement,
+        Deanonymization" by Alex Biryukov, Ivan Pustogarov,
+        Ralf-Philipp Weinmann
+
+        "Locating Hidden Servers" by Lasse Øverlier and Paul
+        Syverson
+
+[ED25519-REFS]:
+        "High-speed high-security signatures" by Daniel
+        J. Bernstein, Niels Duif, Tanja Lange, Peter Schwabe, and
+        Bo-Yin Yang. http://cr.yp.to/papers.html#ed25519
+
+
+Appendix A. Signature scheme with key blinding [KEYBLIND]
+
+  As described in [IMD:DIST] and [SUBCRED] above, we require a "key
+  blinding" system that works (roughly) as follows:
+
+        There is a master keypair (sk, pk).
+
+        Given the keypair and a nonce n, there is a derivation function
+        that gives a new blinded keypair (sk_n, pk_n).  This keypair can
+        be used for signing.
+
+        Given only the public key and the nonce, there is a function
+        that gives pk_n.
+
+        Without knowing pk, it is not possible to derive pk_n; without
+        knowing sk, it is not possible to derive sk_n.
+
+        It's possible to check that a signature make with sk_n while
+        knowing only pk_n.
+
+        Someone who sees a large number of blinded public keys and
+        signatures made using those public keys can't tell which
+        signatures and which blinded keys were derived from the same
+        master keypair.
+
+        You can't forge signatures.
+
+        [TODO: Insert a more rigorous definition and better references.]
+
+
+  We propose the following scheme for key blinding, based on Ed25519.
+
+  (This is an ECC group, so remember that scalar multiplication is the
+  trapdoor function, and it's defined in terms of iterated point
+  addition. See the Ed25519 paper [Reference ED25519-REFS] for a fairly
+  clear writeup.)
+
+  Let the basepoint be written as B. Assume B has prime order l, so
+  lB=0. Let a master keypair be written as (a,A), where a is the private
+  key and A is the public key (A=aB).
+
+  To derive the key for a nonce N and an optional secret s, compute the
+  blinding factor h as H(A | s, B, N), and let:
+
+      private key for the period:   a' = h a
+      public key for the period:    A' = h' A = (ha)B
+
+  Generating a signature of M: given a deterministic random-looking r
+  (see EdDSA paper), take R=rB, S=r+hash(R,A',M)ah mod l. Send signature
+  (R,S) and public key A'.
+
+  Verifying the signature: Check whether SB = R+hash(R,A',M)A'.
+
+  (If the signature is valid,
+       SB = (r + hash(R,A',M)ah)B
+          = rB + (hash(R,A',M)ah)B
+          = R + hash(R,A',M)A' )
+
+  See [KEYBLIND-REFS] for an extensive discussion on this scheme and
+  possible alternatives. I've transcribed this from a description by
+  Tanja Lange at the end of the thread. [TODO: We'll want a proof for
+  this.]
+
+  (To use this with Tor, set N = INT_8(period-number) | INT_8(Start of
+  period in seconds since epoch).)
+
+Appendix B. Selecting nodes [PICKNODES]
+
+  Picking introduction points
+  Picking rendezvous points
+  Building paths
+  Reusing circuits
+
+  (TODO: This needs a writeup)
+
+Appendix C. Recommendations for searching for vanity .onions [VANITY]
+
+  EDITORIAL NOTE: The author thinks that it's silly to brute-force the
+  keyspace for a key that, when base-32 encoded, spells out the name of
+  your website. It also feels a bit dangerous to me. If you train your
+  users to connect to
+
+      llamanymityx4fi3l6x2gyzmtmgxjyqyorj9qsb5r543izcwymle.onion
+
+  I worry that you're making it easier for somebody to trick them into
+  connecting to
+
+      llamanymityb4sqi0ta0tsw6uovyhwlezkcrmczeuzdvfauuemle.onion
+
+  Nevertheless, people are probably going to try to do this, so here's a
+  decent algorithm to use.
+
+  To search for a public key with some criterion X:
+
+        Generate a random (sk,pk) pair.
+
+        While pk does not satisfy X:
+
+            Add the number 1 to sk
+            Add the scalar B to pk
+
+        Return sk, pk.
+
+  This algorithm is safe [source: djb, personal communication] [TODO:
+  Make sure I understood correctly!] so long as only the final (sk,pk)
+  pair is used, and all previous values are discarded.
+
+  To parallelize this algorithm, start with an independent (sk,pk) pair
+  generated for each independent thread, and let each search proceed
+  independently.
+
+Appendix D. Numeric values reserved in this document
+
+  [TODO: collect all the lists of commands and values mentioned above]

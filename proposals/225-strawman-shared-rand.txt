@@ -1,0 +1,113 @@
+Filename: 225-strawman-shared-rand.txt
+Title: Strawman proposal: commit-and-reveal shared rng
+Author: Nick Mathewson
+Created: 2013-11-29
+Status: Draft
+
+1. Introduction
+
+  This is a strawman proposal: I don't think we should actually build
+  it.  It's just a simple writeup of the more trivial commit-then-reveal
+  protocol for generating a shared random value.  It's insecure to the
+  extent that an adversary who controls b of the authorities gets to
+  choose among 2^b outcomes for the result of the protocol.
+
+  See proposal 224, section HASHRING for some motivation of why we want
+  one of these in Tor.
+
+  Let's do better!
+
+  [TODO: Are we really stuck with Tor's nasty metaformat here?]
+
+2. The protocol
+
+  Here's a protocol for producing a shared random value. It should run
+  less frequently than the directory consensus algorithm. It runs in
+  these phases.
+
+    1. COMMITMENT
+    2. REVEAL
+    3. COMPUTE SHARED RANDOM
+
+  It should be implemented by software other than Tor, which should be
+  okay for authorities.
+
+  Note: This is not a great protocol. It has a number of failure
+  modes. Better protocols seem hard to implement, though, and it ought
+  to be possible to drop in a replacement here, if we do it right.
+
+  At the start of phase 1, each participating authority publishes a
+  statement of the form:
+
+      shared-random 1
+      shared-random-type commit
+      signing-key-certification (certification here; see proposal 220)
+      commitment-key-certification (certification here; see proposal 220)
+      published YYYY-MM-DD HH:MM:SS
+      period-start YYYY-MM-DD HH:MM:SS
+      attempt INT
+      commitment sha512 C
+      signature (made with commitment key; see proposal 220)
+
+  The signing key is the one used for consensus votes, signed by the
+  directory authority identity key. The commitment key is used for this
+  protocol only. The signature is made with the commitment key. The
+  period-start value is the start of the period for which the shared
+  random value should be in use. The attempt value starts at 1, and
+  increments by 1 for each time that the protocol fails.
+
+  The other fields should be self-explanatory.
+
+  The commitment value C is a base64-encoded SHA-512 hash of a 256-bit
+  random value R.
+
+  During the rest of phase 1, every authority collects the commitments
+  from other authorities, and publishes them to other authorities, as
+  they do today with directory votes.
+
+  At the start of phase 2, each participating authority publishes:
+
+      shared-random 1
+      shared-random-type reveal
+      signing-key-certification (certification here; see proposal 220)
+      commitment-key-certification (certification here; see proposal 220)
+      received-commitment ID sig
+      received-commitment ID sig
+      published YYYY-MM-DD HH:MM:SS
+      period-start YYYY-MM-DD HH:MM:SS
+      attempt INT
+      commitment sha512 C
+      reveal R
+      signature (made with commitment key; see proposal 220)
+
+  The R value is the one used to generate C. The received-commitment
+  lines are the signatures on the documents from other authorities in
+  phase 1. All other fields are as in the commitments.
+
+  During the rest of phase 2, every authority collects the
+  reveals from other authorities, as above with commitments.
+
+  At the start of phase 3, each participating authority either has a
+  reveal from every authority that it received a commitment from, or it
+  does not. Each participating authority then says
+
+      shared-random 1
+      shared-random-type finish
+      signing-key-certification (certification here; see proposal 220)
+      commitment-key-certification (certification here; see proposal 220)
+      received-commitment ID sig R
+      received-commitment ID sig R ...
+      published YYYY-MM-DD HH:MM:SS
+      period-start YYYY-MM-DD HH:MM:SS
+      attempt INT
+      consensus C
+      signature (made with commitment key; see proposal 220)
+
+  Where C = SHA256(ID | R | ID | R | ID | R | ...) where the ID
+  values appear in ascending order and the R values appear after
+  their corresponding ID values.
+
+  See [SHAREDRANDOM-REFS] for more discussion here.
+
+  (TODO: should this be its own spec?  If so, does it have to use our
+  regular metaformat or can it use something less sucky?)

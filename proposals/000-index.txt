@@ -144,6 +144,8 @@ Proposals by number:
 221  Stop using CREATE_FAST [CLOSED]
 222  Stop sending client timestamps [CLOSED]
 223  Ace: Improved circuit-creation key exchange [OPEN]
+224  Next-Generation Hidden Services in Tor [DRAFT]
+225  Strawman proposal: commit-and-reveal shared rng [DRAFT]
 
 
 Proposals by status:
@@ -160,6 +162,8 @@ Proposals by status:
    203  Avoiding censorship by impersonating an HTTPS server
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
    220  Migrate server identity keys to Ed25519 [for 0.2.5.x]
+   224  Next-Generation Hidden Services in Tor
+   225  Strawman proposal: commit-and-reveal shared rng
  NEEDS-REVISION:
    131  Help users to verify they are using Tor
    190  Bridge Client Authorization Based on a Shared Secret
