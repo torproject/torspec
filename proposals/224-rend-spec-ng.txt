@@ -1235,7 +1235,7 @@ Status: Draft
 
    The decrypted plaintext must have the form:
 
-      REND_TOKEN                                 [20 bytes]
+      RENDEZVOUS_COOKIE                          [20 bytes]
       Any number of times:
           EXT_FIELD_TYPE                         [1 byte]
           EXT_FIELD_LEN                          [1 byte]
@@ -1506,6 +1506,9 @@ Status: Draft
        RENDEZVOUS_COOKIE          [20 bytes]
        HANDSHAKE_INFO             [variable; depends on handshake type
                                    used.]
+
+   where RENDEZVOUS_COOKIE is the cookie suggested by the client
+   during the introduction (see [PROCESS_INTRO2]).
 
    If the cookie matches the rendezvous cookie set on any
    not-yet-connected circuit on the rendezvous point, the rendezvous
