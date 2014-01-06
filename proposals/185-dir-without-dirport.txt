@@ -30,11 +30,11 @@ Configuration:
 
 Advertising cache status:
 
-  Nodes which are running as a directory cache but which do not have
-  a DirPort set, or which do not have a working DirPort, should set
-  the entry "dir-cache 1" in their router descriptors and give their
-  directory port as 0 in their router lines.  (Nodes that have a
-  working directory port advertise it as usual, and do not include a
+  Nodes that are running as a directory cache should set the entry
+  "dir-cache 1" in their router descriptors.  If they do not have a
+  DirPort set, or do not have a working DirPort, they should give
+  their directory port as 0 in their router lines.  (Nodes that have
+  a working directory port advertise it as usual, and also include a
   "dir-cache" line.  Nodes that do not serve directory information
   should set their directory port to 0, and not include any
   dir-cache line.  Implementations should accept and ignore
@@ -43,6 +43,6 @@ Advertising cache status:
 Consensus:
 
   Authorities should assign a "DirCache" flag to all nodes running
-  as a directory cache that do not set a DirPort.
+  as a directory cache.
 
   This does not require a new version of the consensus algorithm.
