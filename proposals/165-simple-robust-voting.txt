@@ -6,7 +6,7 @@ Status: Open
 
 Overview:
 
-  This proposal describes any easy-to-implement, easy-to-verify way to
+  This proposal describes an easy-to-implement, easy-to-verify way to
   change the set of authorities without creating a "flag day" situation.
 
 Motivation:
@@ -58,7 +58,7 @@ Proposed protocol design:
    Authorities exchange votes with every other authority in any of their
    voting sets.
 
-   When it is time to calculate a consensus, an authority votes with
+   When it is time to calculate a consensus, an authority picks votes from
    whichever voting set it lists that is listed by the most members of
    that set.  In other words, given two sets S1 and S2 that an authority
    lists, that authority will prefer to vote with S1 over S2 whenever
@@ -124,7 +124,7 @@ Data format changes:
 
 Migration issues:
 
-   We should keep track somewhere of which Tor client versions
+   We should keep track somewhere which Tor client versions
    recognized which authorities.
 
 Acknowledgments:
