@@ -24,7 +24,7 @@ Specifications: Client behavior
   to use to connect to a bridge.
 
   The new format is:
-     Bridge method address:port [[keyid=]id-fingerprint] [k=v] [k=v] [k=v]
+     Bridge method address:port [id-fingerprint] [k=v] [k=v] [k=v]
 
   To connect to such a bridge, the Tor program needs to know which
   SOCKS proxy will support the transport called "method".  It
@@ -55,7 +55,7 @@ Specifications: Client behavior
   id-fingerprint is not permitted in the new format.
 
   Example: if the bridge line is "bridge trebuchet www.example.com:3333
-     keyid=09F911029D74E35BD84156C5635688C009F909F9 rocks=20 height=5.6m"
+     09F911029D74E35BD84156C5635688C009F909F9 rocks=20 height=5.6m"
      AND if the Tor client knows that the 'trebuchet' method is supported,
      the client should connect to the proxy that provides the 'trebuchet'
      method, ask it to connect to www.example.com, and provide the string
