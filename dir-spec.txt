@@ -373,7 +373,8 @@
        [At start, exactly once.]
 
        Indicates the beginning of a router descriptor.  "nickname" must be a
-       valid router nickname as specified in 2.3.  "address" must be an IPv4
+       valid router nickname as specified in section 2.3.  "address" must be
+       an IPv4
        address in dotted-quad format.  The last three numbers indicate the
        TCP ports at which this OR exposes functionality. ORPort is a port at
        which this OR accepts TLS connections for the main OR protocol;
@@ -480,7 +481,8 @@
 
        [At most once.]
 
-       An exit-policy summary as specified in 3.3 and 3.5.2, summarizing
+       An exit-policy summary as specified in sections 3.3 and 3.5.2,
+       summarizing
        the router's rules for connecting to IPv6 addresses. A missing
        "ipv6-policy" line is equivalent to "ipv6-policy reject 1-65535".
 
@@ -635,7 +637,8 @@
     "write-history" YYYY-MM-DD HH:MM:SS (NSEC s) NUM,NUM,NUM,NUM,NUM... NL
         [At most once.]
 
-        As documented in 2.1 above.  See migration notes in section 2.2.1.
+        As documented in section 2.1 above.  See migration notes in
+        section 2.2.1.
 
     "geoip-db-digest" Digest NL
         [At most once.]
@@ -1129,13 +1132,13 @@
 
         [Exactly once, at start]
 
-        The "onion-key" element as specified in 2.1.
+        The "onion-key" element as specified in section 2.1.
 
     "ntor-onion-key" base-64-encoded-key
 
         [At most once]
 
-        The "ntor-onion-key" element as specified in 2.1.
+        The "ntor-onion-key" element as specified in section 2.1.
 
         (Only included when generating microdescriptors for
         consensus-method 16 or later.)
@@ -1144,20 +1147,20 @@
 
         [Any number]
 
-        The "or-address" element as specified in 2.1.
+        The "or-address" element as specified in section 2.1.
 
      "family" names NL
 
         [At most once]
 
-        The "family" element as specified in 2.1.
+        The "family" element as specified in section 2.1.
 
      "p" SP ("accept" / "reject") SP PortList NL
 
         [At most once]
 
-        The exit-policy summary as specified in 3.3 and 3.5.2.  A missing
-        "p" line is equivalent to "p reject 1-65535".
+        The exit-policy summary as specified in sections 3.3 and 3.5.2.  A
+        missing "p" line is equivalent to "p reject 1-65535".
 
         [With microdescriptors, clients don't learn exact exit policies:
         clients can only guess whether a relay accepts their request, try the
@@ -1168,7 +1171,7 @@
 
         [At most once]
 
-        The IPv6 exit policy summary as specified in 3.3 and 3.5.2. A
+        The IPv6 exit policy summary as specified in sections 3.3 and 3.5.2. A
         missing "p6" line is equivalent to "p6 reject 1-65535".
 
         (Only included when generating microdescriptors for
@@ -1245,7 +1248,7 @@
 
         The start of the Interval for this vote.  Before this time, the
         consensus document produced from this vote should not be used.
-        See 1.4 for voting timeline information.
+        See section 1.4 for voting timeline information.
 
     "flag-thresholds" SP Thresholds NL
 
@@ -1297,15 +1300,15 @@
 
         The time at which the next consensus should be produced; before this
         time, there is no point in downloading another consensus, since there
-        won't be a new one.  See 1.4 for voting timeline information.
+        won't be a new one.  See section 1.4 for voting timeline information.
 
     "valid-until" SP YYYY-MM-DD SP HH:MM:SS NL
 
         [Exactly once.]
 
         The end of the Interval for this vote.  After this time, the
-        consensus produced by this vote should not be used.  See 1.4 for
-        voting timeline information.
+        consensus produced by this vote should not be used.  See section 1.4
+        for voting timeline information.
 
     "voting-delay" SP VoteSeconds SP DistSeconds NL
 
@@ -1313,8 +1316,8 @@
 
         VoteSeconds is the number of seconds that we will allow to collect
         votes from all authorities; DistSeconds is the number of seconds
-        we'll allow to collect signatures from all authorities. See 1.4 for
-        voting timeline information.
+        we'll allow to collect signatures from all authorities. See
+        section 1.4 for voting timeline information.
 
     "client-versions" SP VersionList NL
 
@@ -1513,7 +1516,7 @@
         Present only if the OR has at least one IPv6 address.
 
         Address and portlist are as for "or-address" as specified in
-        2.1.
+        section 2.1.
 
         (Only included when the vote or consensus is generated with
         consensus-method 14 or later.)
@@ -1657,7 +1660,7 @@
          Wbe - Weight for Exit-flagged nodes for BEGIN_DIR requests
          Wbd - Weight for Guard+Exit-flagged nodes for BEGIN_DIR requests
 
-       These values are calculated as specified in Section 3.5.3.
+       These values are calculated as specified in section 3.5.3.
 
    The signature contains the following item, which appears Exactly Once
    for a vote, and At Least Once for a consensus.
@@ -1830,7 +1833,7 @@
    accept not for all addresses, ignoring all rejects for private
    netblocks.  "Most" addresses are permitted if no more than 2^25
    IPv4 addresses (two /8 networks) were blocked.  The list is encoded
-   as described in 3.5.2.
+   as described in section 3.5.2.
 
 3.5. Computing a consensus from a set of votes
 
@@ -1915,7 +1918,7 @@
           for the descriptor we are listing.  (They should all be the
           same.  If they are not, we pick the most commonly listed
           one, breaking ties in favor of the lexicographically larger
-          vote.)  The port list is encoded as specified in 3.5.2.
+          vote.)  The port list is encoded as specified in section 3.5.2.
 
         * If consensus-method 6 or later is in use and if 3 or more
           authorities provide a Measured= keyword in their votes for
@@ -2195,7 +2198,7 @@
 
    Examples for consensus flavors include:
       - Publishing hashes of microdescriptors instead of hashes of
-        full descriptors (see 3.6.2).
+        full descriptors (see section 3.6.2).
       - Including different digests of descriptors, instead of the
         perhaps-soon-to-be-totally-broken SHA1.
 
@@ -2251,7 +2254,7 @@
 
         [At start, exactly once.]
 
-        Similar to "r" lines in 3.3, but without the digest element.
+        Similar to "r" lines in section 3.3, but without the digest element.
 
     "p" ... NL
 
@@ -2512,7 +2515,7 @@
 [XXXX define recent]
 
    Authorities SHOULD NOT download descriptors for routers that they would
-   immediately reject for reasons listed in 3.1.
+   immediately reject for reasons listed in section 4.1.
 
 4.5. Downloading and storing microdescriptors (caches only)
 
@@ -2549,7 +2552,7 @@
    documents currently held.  If so, it downloads whatever extra-info
    documents are missing.  Caches download from authorities; non-caches try
    to download from caches.  We follow the same splitting and back-off rules
-   as in 4.4 (if a cache) or 5.3 (if a client).
+   as in section 4.4 (if a cache) or section 5.3 (if a client).
 
 4.7. General-use HTTP URLs
 
@@ -2727,12 +2730,12 @@
       - The client does not currently have it.
       - The client is not currently trying to download it.
       - The client would not discard it immediately upon receiving it.
-      - The client thinks it is running and valid (see 6.1 below).
+      - The client thinks it is running and valid (see section 6.1 below).
 
    If at least 16 known routers have downloadable descriptors, or if
    enough time (currently 10 minutes) has passed since the last time the
    client tried to download descriptors, it launches requests for all
-   downloadable descriptors, as described in 5.3 below.
+   downloadable descriptors, as described in section 5.3 below.
 
    When a descriptor download fails, the client notes it, and does not
    consider the descriptor downloadable again until a certain amount of time
@@ -2794,7 +2797,8 @@
 
    Everyone besides directory authorities uses the approaches in this section
    to decide which relays to use and what their keys are likely to be.
-   (Directory authorities just believe their own opinions, as in 3.1 above.)
+   (Directory authorities just believe their own opinions, as in section 3.4
+   above.)
 
 6.1. Choosing routers for circuits.
 
