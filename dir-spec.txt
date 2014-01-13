@@ -1096,6 +1096,41 @@
    Authorities MUST generate a new signing key and corresponding
    certificate before the key expires.
 
+4.1. Accepting uploads (authorities only)
+
+   When a router posts a signed descriptor to a directory authority, the
+   authority first checks whether it is well-formed and correctly
+   self-signed.  If it is, the authority next verifies that the nickname
+   in question is not already assigned to a router with a different
+   public key.
+   Finally, the authority MAY check that the router is not blacklisted
+   because of its key, IP, or another reason.
+
+   If the descriptor passes these tests, and the authority does not already
+   have a descriptor for a router with this public key, it accepts the
+   descriptor and remembers it.
+
+   If the authority _does_ have a descriptor with the same public key, the
+   newly uploaded descriptor is remembered if its publication time is more
+   recent than the most recent old descriptor for that router, and either:
+      - There are non-cosmetic differences between the old descriptor and the
+        new one.
+      - Enough time has passed between the descriptors' publication times.
+        (Currently, 12 hours.)
+
+   Differences between router descriptors are "non-cosmetic" if they would be
+   sufficient to force an upload as described in section 2.1 above.
+
+   Note that the "cosmetic difference" test only applies to uploaded
+   descriptors, not to descriptors that the authority downloads from other
+   authorities.
+
+   When a router posts a signed extra-info document to a directory authority,
+   the authority again checks it for well-formedness and correct signature,
+   and checks that its matches the extra-info-digest in some router
+   descriptor that it believes is currently useful.  If so, it accepts it and
+   stores it and serves it as requested.  If not, it drops it.
+
 3.2. Microdescriptors
 
    Microdescriptors are a stripped-down version of router descriptors
@@ -2343,41 +2378,6 @@
 
    All directory authorities and directory caches ("directory servers")
    implement this section, except as noted.
-
-4.1. Accepting uploads (authorities only)
-
-   When a router posts a signed descriptor to a directory authority, the
-   authority first checks whether it is well-formed and correctly
-   self-signed.  If it is, the authority next verifies that the nickname
-   in question is not already assigned to a router with a different
-   public key.
-   Finally, the authority MAY check that the router is not blacklisted
-   because of its key, IP, or another reason.
-
-   If the descriptor passes these tests, and the authority does not already
-   have a descriptor for a router with this public key, it accepts the
-   descriptor and remembers it.
-
-   If the authority _does_ have a descriptor with the same public key, the
-   newly uploaded descriptor is remembered if its publication time is more
-   recent than the most recent old descriptor for that router, and either:
-      - There are non-cosmetic differences between the old descriptor and the
-        new one.
-      - Enough time has passed between the descriptors' publication times.
-        (Currently, 12 hours.)
-
-   Differences between router descriptors are "non-cosmetic" if they would be
-   sufficient to force an upload as described in section 2.1 above.
-
-   Note that the "cosmetic difference" test only applies to uploaded
-   descriptors, not to descriptors that the authority downloads from other
-   authorities.
-
-   When a router posts a signed extra-info document to a directory authority,
-   the authority again checks it for well-formedness and correct signature,
-   and checks that its matches the extra-info-digest in some router
-   descriptor that it believes is currently useful.  If so, it accepts it and
-   stores it and serves it as requested.  If not, it drops it.
 
 4.2. Voting (authorities only)
 
