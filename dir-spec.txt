@@ -1019,7 +1019,7 @@
    sign new key certificates using new signing keys; it is very sensitive.
    The signing key is used to sign key certificates and status documents.
 
-3.1. Key certificates
+3.1. Creating key certificates
 
    Key certificates consist of the following items:
 
