@@ -328,6 +328,8 @@
 
 2. Router operation and formats
 
+2.1. Uploading router descriptors and extra-info documents
+
    ORs SHOULD generate a new router descriptor and a new extra-info
    document whenever any of the following events have occurred:
 
@@ -358,7 +360,7 @@
    documents may not exceed 50,000 bytes in length. If they do, the
    authorities SHOULD reject them.
 
-2.1. Router descriptor format
+2.1.1. Router descriptor format
 
    Router descriptors consist of the following items.  For backward
    compatibility, there should be an extra NL at the end of each router
@@ -366,15 +368,15 @@
 
    In lines that take multiple arguments, extra arguments SHOULD be
    accepted and ignored.  Many of the nonterminals below are defined in
-   section 2.3.
+   section 2.1.3.
 
      "router" nickname address ORPort SOCKSPort DirPort NL
 
        [At start, exactly once.]
 
        Indicates the beginning of a router descriptor.  "nickname" must be a
-       valid router nickname as specified in section 2.3.  "address" must be
-       an IPv4
+       valid router nickname as specified in section 2.1.3.  "address" must
+       be an IPv4
        address in dotted-quad format.  The last three numbers indicate the
        TCP ports at which this OR exposes functionality. ORPort is a port at
        which this OR accepts TLS connections for the main OR protocol;
@@ -530,7 +532,7 @@
         [We didn't start parsing these lines until Tor 0.1.0.6-rc; they should
          be marked with "opt" until earlier versions of Tor are obsolete.]
 
-        [See also migration notes in section 2.2.1.]
+        [See also migration notes in section 2.1.2.1.]
 
     "eventdns" bool NL
 
@@ -613,7 +615,7 @@
        Tor MAY accept a limited number of addresses or ports. As of Tor 0.2.3.x
        only the first address and the first port are used.
 
-2.2. Extra-info documents
+2.1.2. Extra-info document format
 
    Extra-info documents consist of the following items:
 
@@ -637,8 +639,8 @@
     "write-history" YYYY-MM-DD HH:MM:SS (NSEC s) NUM,NUM,NUM,NUM,NUM... NL
         [At most once.]
 
-        As documented in section 2.1 above.  See migration notes in
-        section 2.2.1.
+        As documented in section 2.1.1 above.  See migration notes in
+        section 2.1.2.1.
 
     "geoip-db-digest" Digest NL
         [At most once.]
@@ -968,7 +970,7 @@
         initial item "extra-info" and the final item "router-signature",
         signed with the router's identity key.
 
-2.2.1. Moving history fields to extra-info documents.
+2.1.2.1. Moving history fields to extra-info documents
 
    Tools that want to use the read-history and write-history values SHOULD
    download extra-info documents as well as router descriptors.  Such
@@ -981,7 +983,7 @@
    produced by older versions of Tor until all Tor versions earlier
    than 0.2.0.x are obsolete.
 
-2.3. Nonterminals in router descriptors
+2.1.3. Nonterminals in router descriptors
 
    nickname ::= between 1 and 19 alphanumeric characters ([A-Za-z0-9]),
       case-insensitive.
@@ -1132,13 +1134,13 @@
 
         [Exactly once, at start]
 
-        The "onion-key" element as specified in section 2.1.
+        The "onion-key" element as specified in section 2.1.1.
 
     "ntor-onion-key" base-64-encoded-key
 
         [At most once]
 
-        The "ntor-onion-key" element as specified in section 2.1.
+        The "ntor-onion-key" element as specified in section 2.1.1.
 
         (Only included when generating microdescriptors for
         consensus-method 16 or later.)
@@ -1147,13 +1149,13 @@
 
         [Any number]
 
-        The "or-address" element as specified in section 2.1.
+        The "or-address" element as specified in section 2.1.1.
 
      "family" names NL
 
         [At most once]
 
-        The "family" element as specified in section 2.1.
+        The "family" element as specified in section 2.1.1.
 
      "p" SP ("accept" / "reject") SP PortList NL
 
@@ -1516,7 +1518,7 @@
         Present only if the OR has at least one IPv6 address.
 
         Address and portlist are as for "or-address" as specified in
-        section 2.1.
+        section 2.1.1.
 
         (Only included when the vote or consensus is generated with
         consensus-method 14 or later.)
@@ -2373,7 +2375,7 @@
         (Currently, 12 hours.)
 
    Differences between router descriptors are "non-cosmetic" if they would be
-   sufficient to force an upload as described in section 2 above.
+   sufficient to force an upload as described in section 2.1 above.
 
    Note that the "cosmetic difference" test only applies to uploaded
    descriptors, not to descriptors that the authority downloads from other
