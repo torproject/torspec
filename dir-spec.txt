@@ -1096,7 +1096,7 @@
    Authorities MUST generate a new signing key and corresponding
    certificate before the key expires.
 
-3.2. Accepting uploads (authorities only)
+3.2. Accepting router descriptor and extra-info document uploads
 
    When a router posts a signed descriptor to a directory authority, the
    authority first checks whether it is well-formed and correctly
