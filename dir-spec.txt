@@ -2291,7 +2291,7 @@
   Handle bridges and strange exit policies:
      Wgm=Wgg, Wem=Wee, Weg=Wed
 
-3.9. Consensus flavors
+3.9. Computing consensus flavors
 
    Consensus flavors are variants of the consensus that clients can choose
    to download and use instead of the unflavored consensus.  The purpose
