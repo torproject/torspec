@@ -1935,6 +1935,22 @@
    Authorities SHOULD NOT download descriptors for routers that they would
    immediately reject for reasons listed in section 3.2.
 
+4.5. Downloading and storing extra-info documents
+
+   All authorities, and any cache that chooses to cache extra-info documents,
+   and any client that uses extra-info documents, should implement this
+   section.
+
+   Note that generally, clients don't need extra-info documents.
+
+   Periodically, the Tor instance checks whether it is missing any extra-info
+   documents: in other words, if it has any router descriptors with an
+   extra-info-digest field that does not match any of the extra-info
+   documents currently held.  If so, it downloads whatever extra-info
+   documents are missing.  Caches download from authorities; non-caches try
+   to download from caches.  We follow the same splitting and back-off rules
+   as in section 4.3 (if a cache) or section 5.3 (if a client).
+
 3.7. Computing a consensus from a set of votes
 
    Given a set of votes, authorities compute the contents of the consensus
