@@ -2648,7 +2648,7 @@
       - The client does not currently have it.
       - The client is not currently trying to download it.
       - The client would not discard it immediately upon receiving it.
-      - The client thinks it is running and valid (see section 6.1 below).
+      - The client thinks it is running and valid (see section 5.4.1 below).
 
    If at least 16 known routers have downloadable descriptors, or if
    enough time (currently 10 minutes) has passed since the last time the
@@ -2718,14 +2718,16 @@
    documents are missing.  Clients try to download from caches.
    We follow the same splitting and back-off rules as in section 5.2.
 
-6. Using directory information
+5.4. Using directory information
+
+   [XXX This subsection really belongs in path-spec.txt, not here. -KL]
 
    Everyone besides directory authorities uses the approaches in this section
    to decide which relays to use and what their keys are likely to be.
    (Directory authorities just believe their own opinions, as in section 3.4.2
    above.)
 
-6.1. Choosing routers for circuits.
+5.4.1. Choosing routers for circuits.
 
    Circuits SHOULD NOT be built until the client has enough directory
    information: a live consensus network status [XXXX fallback?]  and
@@ -2754,7 +2756,7 @@
 
    See the "path-spec.txt" document for more details.
 
-6.2. Managing naming
+5.4.2. Managing naming
 
    In order to provide human-memorable names for individual router
    identities, some directory servers bind names to IDs.  Clients handle
@@ -2782,12 +2784,12 @@
    SHOULD NOT ever use a router in response to a user request for a router
    called "Unnamed".
 
-6.3. Software versions
+5.4.3. Software versions
 
    An implementation of Tor SHOULD warn when it has fetched a consensus
    network-status, and it is running a software version not listed.
 
-6.4. Warning about a router's status.
+5.4.4. Warning about a router's status.
 
    If a router tries to publish its descriptor to a Naming authority
    that has its nickname mapped to another key, the router SHOULD
@@ -2802,7 +2804,7 @@
 
    ...
 
-6.5. Router protocol versions
+5.4.5. Router protocol versions
 
    A client should believe that a router supports a given feature if that
    feature is supported by the router or protocol versions in more than half
