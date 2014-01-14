@@ -1210,6 +1210,44 @@
    they need to confirm the actual identity key when doing a TLS handshake,
    and all they need to put the identity key digest in their CREATE cells.)
 
+3.4. Exchanging votes
+
+   Authorities divide time into Intervals.  Authority administrators SHOULD
+   try to all pick the same interval length, and SHOULD pick intervals that
+   are commonly used divisions of time (e.g., 5 minutes, 15 minutes, 30
+   minutes, 60 minutes, 90 minutes).  Voting intervals SHOULD be chosen to
+   divide evenly into a 24-hour day.
+
+   Authorities SHOULD act according to interval and delays in the
+   latest consensus.  Lacking a latest consensus, they SHOULD default to a
+   30-minute Interval, a 5 minute VotingDelay, and a 5 minute DistDelay.
+
+   Authorities MUST take pains to ensure that their clocks remain accurate
+   within a few seconds.  (Running NTP is usually sufficient.)
+
+   The first voting period of each day begins at 00:00 (midnight) UTC.  If
+   the last period of the day would be truncated by one-half or more, it is
+   merged with the second-to-last period.
+
+   An authority SHOULD publish its vote immediately at the start of each voting
+   period (minus VoteSeconds+DistSeconds).  It does this by making it
+   available at
+     http://<hostname>/tor/status-vote/next/authority.z
+   and sending it in an HTTP POST request to each other authority at the URL
+     http://<hostname>/tor/post/vote
+
+   If, at the start of the voting period, minus DistSeconds, an authority
+   does not have a current statement from another authority, the first
+   authority downloads the other's statement.
+
+   Once an authority has a vote from another authority, it makes it available
+   at
+      http://<hostname>/tor/status-vote/next/<fp>.z
+   where <fp> is the fingerprint of the other authority's identity key.
+   And at
+      http://<hostname>/tor/status-vote/next/d/<d>.z
+   where <d> is the digest of the vote document.
+
 3.4. Vote and consensus status documents
 
    Votes and consensuses are more strictly formatted than other documents
@@ -2378,42 +2416,6 @@
    implement this section, except as noted.
 
 4.1. Voting (authorities only)
-
-   Authorities divide time into Intervals.  Authority administrators SHOULD
-   try to all pick the same interval length, and SHOULD pick intervals that
-   are commonly used divisions of time (e.g., 5 minutes, 15 minutes, 30
-   minutes, 60 minutes, 90 minutes).  Voting intervals SHOULD be chosen to
-   divide evenly into a 24-hour day.
-
-   Authorities SHOULD act according to interval and delays in the
-   latest consensus.  Lacking a latest consensus, they SHOULD default to a
-   30-minute Interval, a 5 minute VotingDelay, and a 5 minute DistDelay.
-
-   Authorities MUST take pains to ensure that their clocks remain accurate
-   within a few seconds.  (Running NTP is usually sufficient.)
-
-   The first voting period of each day begins at 00:00 (midnight) UTC.  If
-   the last period of the day would be truncated by one-half or more, it is
-   merged with the second-to-last period.
-
-   An authority SHOULD publish its vote immediately at the start of each voting
-   period (minus VoteSeconds+DistSeconds).  It does this by making it
-   available at
-     http://<hostname>/tor/status-vote/next/authority.z
-   and sending it in an HTTP POST request to each other authority at the URL
-     http://<hostname>/tor/post/vote
-
-   If, at the start of the voting period, minus DistSeconds, an authority
-   does not have a current statement from another authority, the first
-   authority downloads the other's statement.
-
-   Once an authority has a vote from another authority, it makes it available
-   at
-      http://<hostname>/tor/status-vote/next/<fp>.z
-   where <fp> is the fingerprint of the other authority's identity key.
-   And at
-      http://<hostname>/tor/status-vote/next/d/<d>.z
-   where <d> is the digest of the vote document.
 
    The consensus status, along with as many signatures as the server
    currently knows, should be available at
