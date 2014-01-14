@@ -2595,8 +2595,15 @@
    A network-status document is "live" if the time in its valid-until field
    has not passed.
 
-   If a client is missing a live network-status document, it tries to fetch
-   it from a directory cache (or from an authority if it knows no caches).
+   When a client has no consensus network-status document, it downloads it
+   from a randomly chosen authority.  In all other cases, the client
+   downloads from caches randomly chosen from among those believed to be V2
+   directory servers.  (This information comes from the network-status
+   documents; see 6 below.)
+
+   After receiving any response client MUST discard any network-status
+   documents that it did not request.
+
    On failure, the client waits briefly, then tries that network-status
    document again from another cache.  The client does not build circuits
    until it has a live network-status consensus document, and it has
@@ -2646,7 +2653,19 @@
    If at least 16 known routers have downloadable descriptors, or if
    enough time (currently 10 minutes) has passed since the last time the
    client tried to download descriptors, it launches requests for all
-   downloadable descriptors, as described in section 5.3 below.
+   downloadable descriptors.
+
+   When downloading multiple router descriptors, the client chooses multiple
+   mirrors so that:
+     - At least 3 different mirrors are used, except when this would result
+       in more than one request for under 4 descriptors.
+     - No more than 128 descriptors are requested from a single mirror.
+     - Otherwise, as few mirrors as possible are used.
+   After choosing mirrors, the client divides the descriptors among them
+   randomly.
+
+   After receiving any response client MUST discard any descriptors that it
+   did not request.
 
    When a descriptor download fails, the client notes it, and does not
    consider the descriptor downloadable again until a certain amount of time
@@ -2670,32 +2689,6 @@
    they currently fetch descriptors.  After bootstrapping, clients only
    need to fetch the microdescriptors that have changed.
 
-   Clients maintain a cache of microdescriptors along with metadata like
-   when it was last referenced by a consensus, and which identity key
-   it corresponds to.  They keep a microdescriptor until it hasn't been
-   mentioned in any consensus for a week. Future clients might cache them
-   for longer or shorter times.
-
-5.3. Managing downloads
-
-   When a client has no consensus network-status document, it downloads it
-   from a randomly chosen authority.  In all other cases, the client
-   downloads from caches randomly chosen from among those believed to be V2
-   directory servers.  (This information comes from the network-status
-   documents; see 6 below.)
-
-   When downloading multiple router descriptors, the client chooses multiple
-   mirrors so that:
-     - At least 3 different mirrors are used, except when this would result
-       in more than one request for under 4 descriptors.
-     - No more than 128 descriptors are requested from a single mirror.
-     - Otherwise, as few mirrors as possible are used.
-   After choosing mirrors, the client divides the descriptors among them
-   randomly.
-
-   After receiving any response client MUST discard any network-status
-   documents and descriptors that it did not request.
-
    When a client gets a new microdescriptor consensus, it looks to see if
    there are any microdescriptors it needs to learn.  If it needs to learn
    more than half of the microdescriptors, it requests 'all', else it
@@ -2703,6 +2696,13 @@
    the upload bandwidth for listing the microdescriptors they want is more
    or less than the download bandwidth for the microdescriptors they do
    not want.
+   [XXX The 'all' URL is not implemented yet. -KL]
+
+   Clients maintain a cache of microdescriptors along with metadata like
+   when it was last referenced by a consensus, and which identity key
+   it corresponds to.  They keep a microdescriptor until it hasn't been
+   mentioned in any consensus for a week. Future clients might cache them
+   for longer or shorter times.
 
 5.4. Downloading extra-info documents
 
