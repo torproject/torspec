@@ -2393,7 +2393,7 @@
    Additionally, a microdescriptor consensus MAY use the sha256 digest
    algorithm for its signatures.
 
-3.10. Detached signatures
+3.10. Exchanging detached signatures
 
    Assuming full connectivity, every authority should compute and sign the
    same consensus including any flavors in each period.  Therefore, it
