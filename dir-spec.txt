@@ -2501,9 +2501,9 @@
 
    All directory caches implement this section, except as noted.
 
-4.1. Downloading consensus status documents (caches only)
+4.1. Downloading consensus status documents
 
-   All directory servers (authorities and caches) try to keep a recent
+   All directory caches try to keep a recent
    network-status consensus document to serve to clients.  A cache ALWAYS
    downloads a network-status consensus if any of the following are true:
      - The cache has no consensus document.
