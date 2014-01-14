@@ -2501,9 +2501,7 @@
 
    All directory caches implement this section, except as noted.
 
-4.1. Voting (authorities only)
-
-4.2. Downloading consensus status documents (caches only)
+4.1. Downloading consensus status documents (caches only)
 
    All directory servers (authorities and caches) try to keep a recent
    network-status consensus document to serve to clients.  A cache ALWAYS
@@ -2527,7 +2525,7 @@
    length.  Caches serve all consensus flavors from the same locations as
    the directory authorities.
 
-4.3. Downloading router descriptors
+4.2. Downloading router descriptors
 
    Periodically (currently, every 10 seconds), directory caches check
    whether there are any specific descriptors that they do not have and that
@@ -2550,7 +2548,7 @@
 
    [XXXX define recent]
 
-4.4. Downloading and storing microdescriptors (caches only)
+4.3. Downloading and storing microdescriptors (caches only)
 
    Directory mirrors should fetch, cache, and serve each microdescriptor
    from the authorities.
@@ -2571,7 +2569,7 @@
    (NOTE: Due to squid proxy url limitations at most 92 microdescrriptor hashes
    can be retrieved in a single request.)
 
-4.5. Downloading and storing extra-info documents
+4.4. Downloading and storing extra-info documents
 
    Any cache that chooses to cache extra-info documents
    and any client that uses extra-info documents should implement this
@@ -2585,9 +2583,9 @@
    documents currently held.  If so, it downloads whatever extra-info
    documents are missing.  Caches download from authorities; non-caches try
    to download from caches.  We follow the same splitting and back-off rules
-   as in section 4.3 (if a cache) or section 5.3 (if a client).
+   as in section 4.2 (if a cache) or section 5.3 (if a client).
 
-4.6. General-use HTTP URLs
+4.5. General-use HTTP URLs
 
    "Fingerprints" in these URLs are base16-encoded SHA1 hashes.
 
