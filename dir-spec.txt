@@ -2704,7 +2704,7 @@
    mentioned in any consensus for a week. Future clients might cache them
    for longer or shorter times.
 
-5.4. Downloading extra-info documents
+5.3. Downloading extra-info documents
 
    Any client that uses extra-info documents should implement this
    section.
@@ -2716,7 +2716,7 @@
    extra-info-digest field that does not match any of the extra-info
    documents currently held.  If so, it downloads whatever extra-info
    documents are missing.  Clients try to download from caches.
-   We follow the same splitting and back-off rules as in section 5.3.
+   We follow the same splitting and back-off rules as in section 5.2.
 
 6. Using directory information
 
