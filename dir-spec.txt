@@ -18,7 +18,6 @@
        103  Splitting identity key from regularly used signing key
        104  Long and Short Router Descriptors
 
-   XXX when to download certificates.
    XXX timeline
    XXX fill in XXXXs
 
@@ -483,7 +482,7 @@
 
        [At most once.]
 
-       An exit-policy summary as specified in sections 3.4.1 and 3.5.2,
+       An exit-policy summary as specified in sections 3.4.1 and 3.6.2,
        summarizing
        the router's rules for connecting to IPv6 addresses. A missing
        "ipv6-policy" line is equivalent to "ipv6-policy reject 1-65535".
@@ -1186,7 +1185,7 @@
 
         [At most once]
 
-        The exit-policy summary as specified in sections 3.4.1 and 3.5.2.  A
+        The exit-policy summary as specified in sections 3.4.1 and 3.6.2.  A
         missing "p" line is equivalent to "p reject 1-65535".
 
         [With microdescriptors, clients don't learn exact exit policies:
@@ -1198,7 +1197,7 @@
 
         [At most once]
 
-        The IPv6 exit policy summary as specified in sections 3.4.1 and 3.5.2. A
+        The IPv6 exit policy summary as specified in sections 3.4.1 and 3.6.2. A
         missing "p6" line is equivalent to "p6 reject 1-65535".
 
         (Only included when generating microdescriptors for
@@ -1288,7 +1287,7 @@
         [At most once for votes; does not occur in consensuses.]
 
         A space-separated list of supported methods for generating
-        consensuses from votes.  See section 3.5.1 for details.  If this
+        consensuses from votes.  See section 3.6.1 for details.  If this
         line is present, method "1" MUST be included.  Absence of the
         line means that only method "1" is supported.
 
@@ -1296,7 +1295,7 @@
 
         [At most once for consensuses; does not occur in votes.]
 
-        See section 3.5.1 for details.
+        See section 3.6.1 for details.
 
         (Only included when the vote is generated with consensus-method 2 or
         later.)
@@ -1725,7 +1724,7 @@
          Wbe - Weight for Exit-flagged nodes for BEGIN_DIR requests
          Wbd - Weight for Guard+Exit-flagged nodes for BEGIN_DIR requests
 
-       These values are calculated as specified in section 3.5.3.
+       These values are calculated as specified in section 3.6.3.
 
    The signature contains the following item, which appears Exactly Once
    for a vote, and At Least Once for a consensus.
@@ -1898,9 +1897,13 @@
    accept not for all addresses, ignoring all rejects for private
    netblocks.  "Most" addresses are permitted if no more than 2^25
    IPv4 addresses (two /8 networks) were blocked.  The list is encoded
-   as described in section 3.5.2.
+   as described in section 3.6.2.
 
-3.5. Computing a consensus from a set of votes
+3.5. Downloading missing certificates
+
+   XXX when to download certificates.
+
+3.6. Computing a consensus from a set of votes
 
    Given a set of votes, authorities compute the contents of the consensus
    document as follows:
@@ -1983,7 +1986,7 @@
           for the descriptor we are listing.  (They should all be the
           same.  If they are not, we pick the most commonly listed
           one, breaking ties in favor of the lexicographically larger
-          vote.)  The port list is encoded as specified in section 3.5.2.
+          vote.)  The port list is encoded as specified in section 3.6.2.
 
         * If consensus-method 6 or later is in use and if 3 or more
           authorities provide a Measured= keyword in their votes for
@@ -2027,7 +2030,7 @@
    All ties in computing medians are broken in favor of the smaller or
    earlier item.
 
-3.5.1. Forward compatibility
+3.6.1. Forward compatibility
 
    Future versions of Tor will need to include new information in the
    consensus documents, but it is important that all authorities (or at least
@@ -2065,7 +2068,7 @@
    making changes in the contents of consensus; not for making
    backward-incompatible changes in their format.)
 
-3.5.2. Encoding port lists
+3.6.2. Encoding port lists
 
   Whether the summary shows the list of accepted ports or the list of
   rejected ports depends on which list is shorter (has a shorter string
@@ -2085,7 +2088,7 @@
   use an accept-style summary and list as much of the port list as is
   possible within these 1000 bytes.  [XXXX be more specific.]
 
-3.5.3. Computing Bandwidth Weights
+3.6.3. Computing Bandwidth Weights
 
   Let weight_scale = 10000
 
@@ -2247,7 +2250,7 @@
   Handle bridges and strange exit policies:
      Wgm=Wgg, Wem=Wee, Weg=Wed
 
-3.6. Consensus flavors
+3.7. Consensus flavors
 
    Consensus flavors are variants of the consensus that clients can choose
    to download and use instead of the unflavored consensus.  The purpose
@@ -2263,7 +2266,7 @@
 
    Examples for consensus flavors include:
       - Publishing hashes of microdescriptors instead of hashes of
-        full descriptors (see section 3.6.2).
+        full descriptors (see section 3.7.2).
       - Including different digests of descriptors, instead of the
         perhaps-soon-to-be-totally-broken SHA1.
 
@@ -2284,7 +2287,7 @@
 
       "network-status-version" SP version SP flavor NL
 
-3.6.1. ns consensus
+3.7.1. ns consensus
 
    The ns consensus flavor is equivalent to the unflavored consensus
    except for its first line which states its consensus flavor name:
@@ -2293,7 +2296,7 @@
 
         [At start, exactly once.]
 
-3.6.2. Microdescriptor consensus
+3.7.2. Microdescriptor consensus
 
    The microdescriptor consensus is a consensus flavor that contains
    microdescriptor hashes instead of descriptor hashes and that omits
@@ -2349,7 +2352,7 @@
    Additionally, a microdescriptor consensus MAY use the sha256 digest
    algorithm for its signatures.
 
-3.7. Detached signatures
+3.8. Detached signatures
 
    Assuming full connectivity, every authority should compute and sign the
    same consensus including any flavors in each period.  Therefore, it
