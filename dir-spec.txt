@@ -2569,7 +2569,7 @@
    (NOTE: Due to squid proxy url limitations at most 92 microdescrriptor hashes
    can be retrieved in a single request.)
 
-4.4. Downloading and storing extra-info documents
+4.4. Downloading extra-info documents
 
    Any cache that chooses to cache extra-info documents
    and any client that uses extra-info documents should implement this
