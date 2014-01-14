@@ -2497,10 +2497,9 @@
       /tor/status-vote/(current|next)/consensus-F.z. and
       /tor/status-vote/(current|next)/consensus-F/<FP1>+....z.
 
-4. Directory server operation
+4. Directory cache operation
 
-   All directory authorities and directory caches ("directory servers")
-   implement this section, except as noted.
+   All directory caches implement this section, except as noted.
 
 4.1. Voting (authorities only)
 
