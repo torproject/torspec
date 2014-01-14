@@ -2571,19 +2571,15 @@
 
 4.4. Downloading extra-info documents
 
-   Any cache that chooses to cache extra-info documents
-   and any client that uses extra-info documents should implement this
+   Any cache that chooses to cache extra-info documents should implement this
    section.
-
-   Note that generally, clients don't need extra-info documents.
 
    Periodically, the Tor instance checks whether it is missing any extra-info
    documents: in other words, if it has any router descriptors with an
    extra-info-digest field that does not match any of the extra-info
    documents currently held.  If so, it downloads whatever extra-info
-   documents are missing.  Caches download from authorities; non-caches try
-   to download from caches.  We follow the same splitting and back-off rules
-   as in section 4.2 (if a cache) or section 5.3 (if a client).
+   documents are missing.  Caches download from authorities.  We follow the
+   same splitting and back-off rules as in section 4.2.
 
 4.5. General-use HTTP URLs
 
@@ -2823,6 +2819,20 @@
    the upload bandwidth for listing the microdescriptors they want is more
    or less than the download bandwidth for the microdescriptors they do
    not want.
+
+5.4. Downloading extra-info documents
+
+   Any client that uses extra-info documents should implement this
+   section.
+
+   Note that generally, clients don't need extra-info documents.
+
+   Periodically, the Tor instance checks whether it is missing any extra-info
+   documents: in other words, if it has any router descriptors with an
+   extra-info-digest field that does not match any of the extra-info
+   documents currently held.  If so, it downloads whatever extra-info
+   documents are missing.  Clients try to download from caches.
+   We follow the same splitting and back-off rules as in section 5.3.
 
 6. Using directory information
 
