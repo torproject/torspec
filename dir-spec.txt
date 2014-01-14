@@ -2626,7 +2626,7 @@
    the same update strategy as for the normal consensus.  They should not
    download more than one consensus flavor.
 
-5.2. Downloading and storing router descriptors or microdescriptors
+5.2. Downloading router descriptors or microdescriptors
 
    Clients try to have the best descriptor for each router.  A descriptor is
    "best" if:
