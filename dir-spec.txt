@@ -2819,12 +2819,12 @@
    This is currently equivalent to believing the median declared version for
    a router in all live networkstatuses.
 
-7. Standards compliance
+6. Standards compliance
 
    All clients and servers MUST support HTTP 1.0.  Clients and servers MAY
    support later versions of HTTP as well.
 
-7.1. HTTP headers
+6.1. HTTP headers
 
   Servers MAY set the Content-Length: header.  Servers SHOULD set
   Content-Encoding to "deflate" or "identity".
@@ -2840,7 +2840,7 @@
   single network statuses, the list of all router descriptors, a v1
   directory, or a v1 running routers document.  XXX mention times.
 
-7.2. HTTP status codes
+6.2. HTTP status codes
 
   Tor delivers the following status codes.  Some were chosen without much
   thought; other code SHOULD NOT rely on specific status codes yet.
@@ -2866,7 +2866,7 @@
       -- user requested some items that we ordinarily generate or store,
          but we do not have any available.
 
-9. Backward compatibility and migration plans
+7. Backward compatibility and migration plans
 
   Until Tor versions before 0.1.1.x are completely obsolete, directory
   authorities should generate, and mirrors should download and cache, v1
