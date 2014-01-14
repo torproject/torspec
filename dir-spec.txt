@@ -2581,7 +2581,7 @@
    documents are missing.  Caches download from authorities.  We follow the
    same splitting and back-off rules as in section 4.2.
 
-5. Client operation: downloading information
+5. Client operation
 
    Every Tor that is not a directory server (that is, those that do
    not have a DirPort set) implements this section.
