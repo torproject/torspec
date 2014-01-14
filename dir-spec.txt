@@ -2548,7 +2548,7 @@
 
    [XXXX define recent]
 
-4.3. Downloading and storing microdescriptors (caches only)
+4.3. Downloading microdescriptors
 
    Directory mirrors should fetch, cache, and serve each microdescriptor
    from the authorities.
