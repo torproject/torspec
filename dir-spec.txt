@@ -2893,7 +2893,7 @@ A. Consensus-negotiation timeline.
 
    Valid-after/valid-until switchover
 
-4.5. General-use HTTP URLs
+B. General-use HTTP URLs
 
    "Fingerprints" in these URLs are base16-encoded SHA1 hashes.
 
