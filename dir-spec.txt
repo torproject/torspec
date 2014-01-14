@@ -1903,6 +1903,40 @@
 
    XXX when to download certificates.
 
+4.3. Downloading and storing router descriptors (authorities and caches)
+
+   Periodically (currently, every 10 seconds), directory servers check
+   whether there are any specific descriptors that they do not have and that
+   they are not currently trying to download.  Caches identify these
+   descriptors by hash in the recent network-status consensus documents;
+   authorities identify them by hash in vote (if publication date is more
+   recent than the descriptor we currently have).
+
+ [XXXX need a way to fetch descriptors ahead of the vote?  v2 status docs can
+ do that for now.]
+
+   If so, the directory server launches requests to the authorities for these
+   descriptors, such that each authority is only asked for descriptors listed
+   in its most recent vote (if the requester is an authority) or in the
+   consensus (if the requester is a cache).  If we're an authority, and more
+   than one authority lists the descriptor, we choose which to ask at random.
+
+   If one of these downloads fails, we do not try to download that descriptor
+   from the authority that failed to serve it again unless we receive a newer
+   network-status (consensus or vote) from that authority that lists the same
+   descriptor.
+
+   Directory servers must potentially cache multiple descriptors for each
+   router. Servers must not discard any descriptor listed by any recent
+   consensus.  If there is enough space to store additional descriptors,
+   servers SHOULD try to hold those which clients are likely to download the
+   most.  (Currently, this is judged based on the interval for which each
+   descriptor seemed newest.)
+[XXXX define recent]
+
+   Authorities SHOULD NOT download descriptors for routers that they would
+   immediately reject for reasons listed in section 3.2.
+
 3.6. Computing a consensus from a set of votes
 
    Given a set of votes, authorities compute the contents of the consensus
