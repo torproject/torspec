@@ -33,16 +33,40 @@ Design:
   and sign an opinion document as if they were generating a vote,
   except that they generate opinions earlier than they generate votes.
 
+  [This proposal doesn't say what lines must be contained in opinion
+   documents.  It seems that an authority that parses an opinion
+   document is only interested in a) relay fingerprint, b) descriptor
+   publication time, and c) descriptor digest; unless there's more
+   information that helps authorities decide whether "they might
+   accept" a descriptor.  If not, opinion documents only need to
+   contain a small subset of headers and all the "r" lines that would
+   be contained in a later vote. -KL]
+  [This seems okay.  It would however mean that we can't use the same
+   parsing logic as we use for regular votes. -NM]
+
+  [Authorities should use the same "valid-after", "fresh-until",
+   and "valid-until" lines in opinion documents as they are going to
+   use in their next vote. -KL]
+  [Maybe these lines should just get ignored on opinions.  Or
+   omitted. -NM]
+
   Authorities don't need to generate more than one opinion document
   per voting interval, but may.  They should send it to the other
-  authorities they know about, at the regular vote upload URL, before
-  the authorities begin voting, so that enough time remains for the
-  authorities to fetch new descriptors.
+  authorities they know about, at
+     http://<hostname>/tor/post/opinion ,
+  before the authorities begin voting, so that enough time remains for
+  the authorities to fetch new descriptors.
 
   Additionally, authories make their opinions available at
      http://<hostname>/tor/status-vote/next/opinion.z
   and download opinions from authorities they haven't heard from in a
   while.
+
+  Authorities SHOULD send their opinion document to all other
+  authorities OpinionSeconds seconds before voting and request
+  missing opinion documents OpinionSeconds/2 seconds before voting.
+  OpinionSeconds SHOULD be defined as part of "voting-delay" lines
+  and otherwise default to the same number of seconds as VoteSeconds.
 
   Authorities MAY generate opinions on demand.
 
@@ -53,6 +77,9 @@ Design:
        recently than any descriptor they have for that router.
   Authorities then begin downloading such descriptors from authorities
   that claim to have them.
+
+  Authorities also download corresponding extra-info descriptors for
+  any router descriptor they learned from parsing an opinion document.
 
   Authorities MAY cache opinion documents, but don't need to.
 
