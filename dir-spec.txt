@@ -1899,11 +1899,11 @@
    IPv4 addresses (two /8 networks) were blocked.  The list is encoded
    as described in section 3.8.2.
 
-3.5. Downloading missing certificates
+3.5. Downloading missing certificates from other directory authorities
 
    XXX when to download certificates.
 
-3.6. Downloading router descriptors
+3.6. Downloading router descriptors from other directory authorities
 
    Periodically (currently, every 10 seconds), directory authorities check
    whether there are any specific descriptors that they do not have and that
@@ -1935,7 +1935,7 @@
    Authorities SHOULD NOT download descriptors for routers that they would
    immediately reject for reasons listed in section 3.2.
 
-3.7. Downloading extra-info documents
+3.7. Downloading extra-info documents from other directory authorities
 
    Periodically, an authority checks whether it is missing any extra-info
    documents: in other words, if it has any router descriptors with an
@@ -2501,7 +2501,7 @@
 
    All directory caches implement this section, except as noted.
 
-4.1. Downloading consensus status documents
+4.1. Downloading consensus status documents from directory authorities
 
    All directory caches try to keep a recent
    network-status consensus document to serve to clients.  A cache ALWAYS
@@ -2525,7 +2525,7 @@
    length.  Caches serve all consensus flavors from the same locations as
    the directory authorities.
 
-4.2. Downloading router descriptors
+4.2. Downloading router descriptors from directory authorities
 
    Periodically (currently, every 10 seconds), directory caches check
    whether there are any specific descriptors that they do not have and that
@@ -2548,7 +2548,7 @@
 
    [XXXX define recent]
 
-4.3. Downloading microdescriptors
+4.3. Downloading microdescriptors from directory authorities
 
    Directory mirrors should fetch, cache, and serve each microdescriptor
    from the authorities.
@@ -2569,7 +2569,7 @@
    (NOTE: Due to squid proxy url limitations at most 92 microdescrriptor hashes
    can be retrieved in a single request.)
 
-4.4. Downloading extra-info documents
+4.4. Downloading extra-info documents from directory authorities
 
    Any cache that chooses to cache extra-info documents should implement this
    section.
