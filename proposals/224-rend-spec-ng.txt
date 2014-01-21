@@ -1663,7 +1663,7 @@ Appendix A. Signature scheme with key blinding [KEYBLIND]
   blinding factor h as H(A | s, B, N), and let:
 
       private key for the period:   a' = h a
-      public key for the period:    A' = h' A = (ha)B
+      public key for the period:    A' = h A = (ha)B
 
   Generating a signature of M: given a deterministic random-looking r
   (see EdDSA paper), take R=rB, S=r+hash(R,A',M)ah mod l. Send signature
