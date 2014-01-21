@@ -453,15 +453,28 @@ Status: Draft
    enable the use of older Tor nodes as rendezvous points and
    introduction points.
 
-1.7. In more detail: Offline operation
+1.7. In more detail: Keeping crypto keys offline
 
-   In this design, a hidden service's secret identity key may be stored
-   offline. It's used only to generate blinded identity keys, which are
-   used to sign descriptor signing keys. In order to operate a hidden
-   service, the operator can generate a number of descriptor signing
-   keys and their certifications (see [DESC-OUTER] and [ENCRYPTED-DATA]
+   In this design, a hidden service's secret identity key may be
+   stored offline.  It's used only to generate blinded signing keys,
+   which are used to sign descriptor signing keys.
+
+   In order to operate a hidden service, the operator can generate in
+   advance a number of blinded signing keys and descriptor signing
+   keys (and their credentials; see [DESC-OUTER] and [ENCRYPTED-DATA]
    below), and their corresponding descriptor encryption keys, and
    export those to the hidden service hosts.
+
+   As a result, in the scenario where the Hidden Service gets
+   compromised, the adversary can only impersonate it for a limited
+   period of time (depending on how many signing keys were generated
+   in advance).
+   [TODO: Define revocation mechanism?]
+
+   It's important to not send the private part of the blinded signing
+   key to the Hidden Service since an attacker can derive from it the
+   secret master identity key. The secret blinded signing key should
+   only be used to create credentials for the descriptor signing keys.
 
 1.8. In more detail: Encryption Keys And Replay Resistance
 
@@ -481,21 +494,26 @@ Status: Draft
    Public/private keypairs defined in this document:
 
       Master (hidden service) identity key -- A master signing keypair
-        used as the identity for a hidden service. This key is not used
-        on its own to sign anything; it is only used to generate blinded
-        signing keys as described in [KEYBLIND] and [SUBCRED].
+        used as the identity for a hidden service.  This key is long
+        term and not used on its own to sign anything; it is only used
+        to generate blinded signing keys as described in [KEYBLIND]
+        and [SUBCRED]. The public key is encoded in the ".onion"
+        address according to [NAMING].
 
       Blinded signing key -- A keypair derived from the identity key,
         used to sign descriptor signing keys. Changes periodically for
         each service. Clients who know a 'credential' consisting of the
         service's public identity key and an optional secret can derive
-        the public blinded identity key for a service. This key is used
-        as an index in the DHT-like structure of the directory system.
+        the public blinded identity key for a service.  This key is used
+        as an index in the DHT-like structure of the directory system
+        (see [SUBCRED]).
 
       Descriptor signing key -- A key used to sign hidden service
-        descriptors. This is signed by blinded signing keys. Unlike
+        descriptors.  This is signed by blinded signing keys. Unlike
         blinded signing keys and master identity keys, the secret part
-        of this key must be stored online by hidden service hosts.
+        of this key must be stored online by hidden service hosts. The
+        public part of this key is included in the unencrypted section
+        of HS descriptors (see [DESC-OUTER]).
 
       Introduction point authentication key -- A short-term signing
         keypair used to identify a hidden service to a given
