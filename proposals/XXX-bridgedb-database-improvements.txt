@@ -1,0 +1,260 @@
+# -*- coding: utf-8 ; mode: org -*-
+
+Filename: XXX-bridgedb-database-improvements.txt
+Title: "Scalability and Stability Improvements to BridgeDB: Switching to a
+        Distributed Database System and RDBMS"
+Author: Isis Agora Lovecruft
+Created: 12 Oct 2013
+Related Proposals: XXX-social-bridge-distribution.txt
+Status: Open
+
+*  I.     Overview
+
+   BridgeDB is Tor's Bridge Distribution system, which currently has two major
+   Bridge Distribution mechanisms: the HTTPS Distributor and an Email
+   Distributor. [0]
+
+   BridgeDB is written largely in Twisted Python, and uses Python2's builtin
+   sqlite3 as its database backend.  Unfortunately, this backend system is
+   already showing strain through increased times for queries, and sqlite's
+   memory usage is not up-to-par with modern, more efficient, NoSQL databases.
+
+   In order to better facilitate the implementation of newer, more complex
+   Bridge Distribution mechanisms, several improvements should be made to the
+   underlying database system of BridgeDB.  Additionally, I propose that a
+   clear distinction in terms, as well as a modularisation of the codebase, be
+   drawn between the mechanisms for Bridge Distribution versus the backend
+   Bridge Database (BridgeDB) storage system.
+
+   This proposal covers the design and implementation of a scalable NoSQL ―
+   Document-Based and Key-Value Relational ― database backend for storing data
+   on Tor Bridge relays, in an efficient manner that is ammenable to
+   interfacing with the Twisted Python asynchronous networking code of current
+   and future Bridge Distribution mechanisms.
+
+*  II.   Terminology
+
+   BridgeDistributor := A program which decides when and how to hand out
+                        information on a Tor Bridge relay, and to whom.
+
+   BridgeDB := The backend system of databases and object-relational mapping
+               servers, which interfaces with the BridgeDistributor in order
+               to hand out bridges to clients, and to obtain and process new,
+               incoming ``@type bridge-server-descriptors``,
+               ``@type bridge-networkstatus`` documents, and
+               ``@type bridge-extrainfo`` descriptors. [3]
+
+   BridgeFinder := A client-side program for an Onion Proxy (OP) which handles
+                   interfacing with a BridgeDistributor in order to obtain new
+                   Bridge relays for a client.  A BridgeFinder also interfaces
+                   with a local Tor Controller (such as TorButton or ARM) to
+                   handle automatic, transparent Bridge configuration (no more
+                   copy+pasting into a torrc) without being given any
+                   additional privileges over the Tor process, [1] and relies
+                   on the Tor Controller to interface with the user for
+                   control input and displaying up-to-date information
+                   regarding available Bridges, Pluggable Transport methods,
+                   and potentially Invite Tickets and Credits (a cryptographic
+                   currency without fiat value which is generated
+                   automatically by clients whose Bridges remain largely
+                   uncensored, and is used to purchase new Bridges), should a
+                   Social Bridge Distributor be implemented. [2]
+
+*  III.   Databases
+** III.A. Scalability Requirements
+
+   Databases SHOULD be implemented in a manner which is ammenable to using a
+   distributed storage system; this is necessary because many potential
+   datatypes required by future BridgeDistributors MUST be stored permanently.
+   For example, in the designs for the Social Bridge Distributor, the list of
+   hash digests of spent Credits, and the list of hash digests of redeemed
+   Invite Tickets MUST be stored forever to prevent either from being replayed
+   ― or double-spent ― by a malicious user who wishes to block bridges faster.
+   Designing the BridgeDB backend system such that additional nodes may be
+   added in the future will allow the system to freely scale in relation to
+   the storage requirements of future BridgeDistributors.
+
+   Additionally, requiring that the implementation allow for distributed
+   database backends promotes modularisation the components of BridgeDB, such
+   that BridgeDistributors can be separated from the backend storage system,
+   BridgeDB, as all queries will be issued through a simplified, common API,
+   regardless of the number of nodes system, or the design of future
+   BridgeDistributors.
+
+***   1.  Distributed Database System
+
+   A distributed database system SHOULD be used for BridgeDB, in order to
+   scale resources as the number of Tor bridge users grows. This database
+   system, hereafter referred to as DDBS.
+
+   The DDBS MUST be capable of working within Twisted's asynchronous
+   framework. If possible, a Object-Relational Mapper (ORM) SHOULD be used to
+   abstract the database backend's structure and query syntax from the Twisted
+   Python classes which interact with it, so that the type of database may be
+   swapped out for another with less code refactoring.
+
+   The DDBM SHALL be used for persistent storage of complex data structures
+   such as the bridges, which MAY include additional information from both the
+   `@type bridge-server-descriptor`s and the `@type bridge-extra-info`
+   descriptors. [3]
+
+**** 1.a. Choice of DDBS
+
+   CouchDB is chosen for its simple HTTP API, ease of use, speed, and official
+   support for Twisted Python applications. [4] Additionally, its
+   document-based data model is very similar to the current archetecture of
+   tor's Directory Server/Mirror system, in that an HTTP API is used to
+   retrieve data stored within virtual directories.  Internally, it uses JSON
+   to store data and JavaScript as its query language, both of which are
+   likely friendlier to various other components of the Tor Metrics
+   infrastructure which sanitise and analyse portions of the Bridge
+   descriptors.  At the very least, friendlier than hardcoding raw SQL queries
+   as Python strings.
+
+**** 1.b. Data Structures which should be stored in a DDBS:
+
+   - RedactedDB - The Database of Blocked Bridges
+
+     The RedactedDB will hold entries of bridges which have been discovered to
+     be unreachable from BridgeDB network vantage point, or have been reported
+     unreachable by clients.
+
+   - BridgeDB - The Database of Bridges
+
+     BridgeDB holds information on available Bridges, obtained via bridge
+     descriptors and networkstatus documents from the BridgeAuthority. Because
+     a Bridge may have multiple `ORPort`s and multiple
+     `ServerTransportListenAddress`es, attaching additional data to each of
+     these addresses which MAY include the following information on a blocking
+     event:
+         - Geolocational country code of the reported blocking event
+         - Timestamp for when the blocking event was first reported
+         - The method used for discovery of the block
+         - an the believed mechanism which is causing the block
+     would quickly become unwieldy, the RedactedDB and BridgeDB SHOULD be kept
+     separate.
+
+   - User Credentials
+
+     For the Social BridgeDistributor, these are rather complex,
+     increasingly-growing, concatenations (or tuples) of several datatypes,
+     including Non-Interactive Proofs-of-Knowledge (NIPK) of Commitments to
+     k-TAA Blind Signatures, and NIPK of Commitments to a User's current
+     number of Credits and timestamps of requests for Invite Tickets.
+
+***   2.  Key-Value Relational Database Mapping Server
+
+    For simpler data structures which must be persistently stored, such as the
+    list of hashes of previously seen Invite Tickets, or the list of
+    previously spent Tokens, a Relational Database Mapping Server (RDBMS)
+    SHALL be used for optimisation of queries.
+
+    Redis and Memcached are two examples of RDBMS which are well tested and
+    are known to work well with Twisted. The major difference between the two
+    is that Memcaches are stored only within volatile memory, while Redis
+    additionally supports commands for transferring objects into persistent,
+    on-disk storage. 
+
+    There are several support modules for interfacing with both Memcached and
+    Redis from Twisted Python, see Twisted's MemCacheProtocol class [5] [6] or
+    txyam [7] for Memcached, and txredis [8] or txredisapi [9] for
+    Redis. Additionally, numerous big name projects both use Redis as part of
+    their backend systems, and also provide helpful documentation on their own
+    experience of the process of switching over to the new systems. [17] For
+    non-Twisted Python Redis APIs, there is redis-py, which provides a
+    connection pool that could likely be interfaced with from Twisted Python
+    without too much difficultly. [10] [11]
+
+**** 2.a. Data Structures which should be stored in a RDBMS
+
+    Simple, mostly-flat datatypes, and data which must be frequently indexed
+    should be stored in a RDBMS, such as large lists of hashes, or arbitrary
+    strings with assigned point-values (i.e. the "Uniform Mapping" for the
+    current HTTPS BridgeDistributor).
+
+    For the Social BridgeDistributor, hash digests of the following datatypes
+    SHOULD be stored in the RDBMS, in order to prevent double-spending and
+    replay attacks:
+
+      - Invite Tickets
+
+        These are anonymous, unlinkable, unforgeable, and verifiable tokens
+        which are occasionally handed out to well-behaved Users by the Social
+        BridgeDistributor to permit new Users to be invited into the system.
+        When they are redeemed, the Social BridgeDistributor MUST store a hash
+        digest of their contents to prevent replayed Invite Tickets.
+
+      - Spent Credits
+
+        These are Credits which have already been redeemed for new Bridges.
+        The Social BridgeDistributor MUST also store a hash digest of Spent
+        Credits to prevent double-spending.
+
+***   3.  Bloom Filters and Other Database Optimisations
+
+    In order to further decrease the need for lookups in the backend
+    databases, Bloom Filters can used to eliminate extraneous
+    queries. However, this optimization would only be beneficial for string
+    lookups, i.e. querying for a User's Credential, and SHOULD NOT be used for
+    queries within any of the hash lists, i.e. the list of hashes of
+    previously seen Invite Tickets. [14]
+
+****  3.a. Bloom Filters within Redis
+
+    It might be possible to use Redis' GETBIT and SETBIT commands to store a
+    Bloom Filter within a Redis cache system; [15] doing so would offload the
+    severe memory requirements of loading the Bloom Filter into memory in
+    Python when inserting new entries, reducing the time complexity from some
+    polynomial time complexity that is proportional to the integral of the
+    number of bridge users over the rate of change of bridge users over time,
+    to a time complexity of order O(1).
+
+****  3.b. Expiration of Stale Data
+
+    Some types of data SHOULD be safe to expire, such as User Credentials
+    which have not been updated within a certain timeframe. This idea should
+    be further explored to assess the safety and potential drawbacks to
+    removing old data.
+
+    If there is data which SHOULD expire, the PEXPIREAT command provided by
+    Redis for the key datatype would allow the RDBMS itself to handle cleanup
+    of stale data automatically. [16]
+
+****  4.   Other potential uses of the improved Bridge database system
+
+    Redis provides mechanisms for evaluations to be made on data by calling
+    the sha1 for a serverside Lua script. [15] While not required in the
+    slightest, it is a rather neat feature, as it would allow Tor's Metrics
+    infrastructure to offload some of the computational overhead of gathering
+    data on Bridge usage to BridgeDB (as well as diminish the security
+    implications of storing Bridge descriptors).
+
+    Also, if Twisted's IProducer and IConsumer interfaces do not provide
+    needed interface functionality, or it is desired that other components of
+    the Tor software ecosystem be capable of scheduling jobs for BridgeDB,
+    there are well-tested mechanisms for using Redis as a message
+    queue/scheduling system. [16]
+
+*  References
+
+[0]: https://bridges.torproject.org
+     mailto:bridges@bridges.torproject.org
+[1]: See proposals 199-bridgefinder-integration.txt at
+     https://gitweb.torproject.org/torspec.git/blob/HEAD:/proposals/199-bridgefinder-integration.txt
+[2]: See XXX-social-bridge-distribution.txt at
+     https://gitweb.torproject.org/user/isis/bridgedb.git/blob/refs/heads/feature/7520-social-dist-design:/doc/proposals/XXX-bridgedb-social-distribution.txt
+[3]: https://metrics.torproject.org/formats.html#descriptortypes
+[4]: https://github.com/couchbase/couchbase-python-client#twisted-api
+[5]: https://twistedmatrix.com/documents/current/api/twisted.protocols.memcache.MemCacheProtocol.html
+[6]: http://stackoverflow.com/a/5162203
+[7]: http://findingscience.com/twisted/python/memcache/2012/06/09/txyam:-yet-another-memcached-twisted-client.html
+[8]: https://pypi.python.org/pypi/txredis
+[9]: https://github.com/fiorix/txredisapi
+[10]: https://github.com/andymccurdy/redis-py/
+[11]: http://degizmo.com/2010/03/22/getting-started-redis-and-python/
+[12]: http://www.dr-josiah.com/2012/03/why-we-didnt-use-bloom-filter.html
+[13]: http://redis.io/topics/data-types §"Strings"
+[14]: http://redis.io/commands/pexpireat
+[15]: http://redis.io/commands/evalsha
+[16]: http://www.restmq.com/
+[17]: https://www.mediawiki.org/wiki/Redis
