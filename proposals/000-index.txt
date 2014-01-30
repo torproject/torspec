@@ -146,6 +146,7 @@ Proposals by number:
 223  Ace: Improved circuit-creation key exchange [OPEN]
 224  Next-Generation Hidden Services in Tor [DRAFT]
 225  Strawman proposal: commit-and-reveal shared rng [DRAFT]
+226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS" [OPEN]
 
 
 Proposals by status:
@@ -194,6 +195,7 @@ Proposals by status:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    215  Let the minimum consensus method change with time
    223  Ace: Improved circuit-creation key exchange
+   226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS"
  ACCEPTED:
    140  Provide diffs between consensuses
    147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.4.x]

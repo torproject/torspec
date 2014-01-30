@@ -1,6 +1,4 @@
-# -*- coding: utf-8 ; mode: org -*-
-
-Filename: XXX-bridgedb-database-improvements.txt
+Filename: 226-bridgedb-database-improvements.txt
 Title: "Scalability and Stability Improvements to BridgeDB: Switching to a
         Distributed Database System and RDBMS"
 Author: Isis Agora Lovecruft
