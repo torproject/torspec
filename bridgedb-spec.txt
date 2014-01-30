@@ -1,0 +1,391 @@
+
+                          BridgeDB specification
+
+                             Karsten Loesing
+                              Nick Mathewson
+
+0. Preliminaries
+
+   This document specifies how BridgeDB processes bridge descriptor files
+   to learn about new bridges, maintains persistent assignments of bridges
+   to distributors, and decides which bridges to give out upon user
+   requests.
+
+   Some of the decisions here may be suboptimal: this document is meant to
+   specify current behavior as of August 2013, not to specify ideal
+   behavior.
+
+1. Importing bridge network statuses and bridge descriptors
+
+   BridgeDB learns about bridges by parsing bridge network statuses,
+   bridge descriptors, and extra info documents as specified in Tor's
+   directory protocol. BridgeDB parses one bridge network status file
+   first and at least one bridge descriptor file and potentially one extra
+   info file afterwards.
+
+   BridgeDB scans its files on sighup.
+
+   BridgeDB does not validate signatures on descriptors or networkstatus
+   files: the operator needs to make sure that these documents have come
+   from a Tor instance that did the validation for us.
+
+1.1. Parsing bridge network statuses
+
+   Bridge network status documents contain the information of which bridges
+   are known to the bridge authority and which flags the bridge authority
+   assigns to them.
+   We expect bridge network statuses to contain at least the following two
+   lines for every bridge in the given order (format fully specified in Tor's
+   directory protocol):
+
+      "r" SP nickname SP identity SP digest SP publication SP IP SP ORPort
+          SP DirPort NL
+      "a" SP address ":" port NL (no more than 8 instances)
+      "s" SP Flags NL
+
+   BridgeDB parses the identity and the publication timestamp from the "r"
+   line, the OR address(es) and ORPort(s) from the "a" line(s), and the
+   assigned flags from the "s" line, specifically checking the assignment
+   of the "Running" and "Stable" flags.
+   BridgeDB memorizes all bridges that have the Running flag as the set of
+   running bridges that can be given out to bridge users.
+   BridgeDB memorizes assigned flags if it wants to ensure that sets of
+   bridges given out should contain at least a given number of bridges
+   with these flags.
+
+1.2. Parsing bridge descriptors
+
+   BridgeDB learns about a bridge's most recent IP address and OR port
+   from parsing bridge descriptors.
+   In theory, both IP address and OR port of a bridge are also contained
+   in the "r" line of the bridge network status, so there is no mandatory
+   reason for parsing bridge descriptors.  But the functionality described
+   in this section is still implemented in case we need data from the
+   bridge descriptor in the future.
+
+   Bridge descriptor files may contain one or more bridge descriptors.
+   We expect a bridge descriptor to contain at least the following lines in
+   the stated order:
+
+      "@purpose" SP purpose NL
+      "router" SP nickname SP IP SP ORPort SP SOCKSPort SP DirPort NL
+      "published" SP timestamp
+      ["opt" SP] "fingerprint" SP fingerprint NL
+      "router-signature" NL Signature NL
+
+   BridgeDB parses the purpose, IP, ORPort, nickname, and fingerprint
+   from these lines.
+   BridgeDB skips bridge descriptors if the fingerprint is not contained
+   in the bridge network status parsed earlier or if the bridge does not
+   have the Running flag.
+   BridgeDB discards bridge descriptors which have a different purpose
+   than "bridge".  BridgeDB can be configured to only accept descriptors
+   with another purpose or not discard descriptors based on purpose at
+   all.
+   BridgeDB memorizes the IP addresses and OR ports of the remaining
+   bridges.
+   If there is more than one bridge descriptor with the same fingerprint,
+   BridgeDB memorizes the IP address and OR port of the most recently
+   parsed bridge descriptor.
+   If BridgeDB does not find a bridge descriptor for a bridge contained in
+   the bridge network status parsed before, it does not add that bridge
+   to the set of bridges to be given out to bridge users.
+
+1.3. Parsing extra-info documents
+
+   BridgeDB learns if a bridge supports a pluggable transport by parsing
+   extra-info documents.
+   Extra-info documents contain the name of the bridge (but only if it is
+   named), the bridge's fingerprint, the type of pluggable transport(s) it
+   supports, and the IP address and port number on which each transport
+   listens, respectively.
+
+   Extra-info documents may contain zero or more entries per bridge. We expect
+   an extra-info entry to contain the following lines in the stated order:
+
+      "extra-info" SP name SP fingerprint NL
+      "transport" SP transport SP IP ":" PORT ARGS NL
+
+   BridgeDB parses the fingerprint, transport type, IP address, port and any
+   arguments that are specified on these lines. BridgeDB skips the name. If
+   the fingerprint is invalid, BridgeDB skips the entry.  BridgeDB memorizes
+   the transport type, IP address, port number, and any arguments that are be
+   provided and then it assigns them to the corresponding bridge based on the
+   fingerprint. Arguments are comma-separated and are of the form k=v,k=v.
+   Bridges that do not have an associated extra-info entry are not invalid.
+
+2. Assigning bridges to distributors
+
+   A "distributor" is a mechanism by which bridges are given (or not
+   given) to clients.  The current distributors are "email", "https",
+   and "unallocated".
+
+   BridgeDB assigns bridges to distributors based on an HMAC hash of the
+   bridge's ID and a secret and makes these assignments persistent.
+   Persistence is achieved by using a database to map node ID to
+   distributor.
+   Each bridge is assigned to exactly one distributor (including
+   the "unallocated" distributor).
+   BridgeDB may be configured to support only a non-empty subset of the
+   distributors specified in this document.
+   BridgeDB may be configured to use different probabilities for assigning
+   new bridges to distributors.
+   BridgeDB does not change existing assignments of bridges to
+   distributors, even if probabilities for assigning bridges to
+   distributors change or distributors are disabled entirely.
+
+3. Giving out bridges upon requests
+
+   Upon receiving a client request, a BridgeDB distributor provides a
+   subset of the bridges assigned to it.
+   BridgeDB only gives out bridges that are contained in the most recently
+   parsed bridge network status and that have the Running flag set (see
+   Section 1).
+   BridgeDB may be configured to give out a different number of bridges
+   (typically 4) depending on the distributor.
+   BridgeDB may define an arbitrary number of rules. These rules may
+   specify the criteria by which a bridge is selected. Specifically,
+   the available rules restrict the IP address version, OR port number,
+   transport type, bridge relay flag, or country in which the bridge
+   should not be blocked.
+
+4. Selecting bridges to be given out based on IP addresses
+
+   BridgeDB may be configured to support one or more distributors which
+   gives out bridges based on the requestor's IP address.  Currently, this
+   is how the HTTPS distributor works.
+   The goal is to avoid handing out all the bridges to users in a similar
+   IP space and time.
+# Someone else should look at proposals/ideas/old/xxx-bridge-disbursement
+# to see if this section is missing relevant pieces from it.  -KL
+
+   BridgeDB fixes the set of bridges to be returned for a defined time
+   period.
+   BridgeDB considers all IP addresses coming from the same /24 network
+   as the same IP address and returns the same set of bridges. From here on,
+   this non-unique address will be referred to as the IP address's 'area'.
+   BridgeDB divides the IP address space equally into a small number of
+# Note, changed term from "areas" to "disjoint clusters" -MF
+   disjoint clusters (typically 4) and returns different results for requests
+   coming from addresses that are placed into different clusters.
+# I found that BridgeDB is not strict in returning only bridges for a
+# given area.  If a ring is empty, it considers the next one.  Is this
+# expected behavior?  -KL
+#
+# This does not appear to be the case, anymore. If a ring is empty, then
+# BridgeDB simply returns an empty set of bridges. -MF
+#
+# I also found that BridgeDB does not make the assignment to areas
+# persistent in the database.  So, if we change the number of rings, it
+# will assign bridges to other rings.  I assume this is okay?  -KL
+   BridgeDB maintains a list of proxy IP addresses and returns the same
+   set of bridges to requests coming from these IP addresses.
+   The bridges returned to proxy IP addresses do not come from the same
+   set as those for the general IP address space.
+
+   BridgeDB can be configured to include bridge fingerprints in replies
+   along with bridge IP addresses and OR ports.
+   BridgeDB can be configured to display a CAPTCHA which the user must solve
+   prior to returning the requested bridges.
+
+   The current algorithm is as follows.  An IP-based distributor splits
+   the bridges uniformly into a set of "rings" based on an HMAC of their
+   ID.  Some of these rings are "area" rings for parts of IP space; some
+   are "category" rings for categories of IPs (like proxies).  When a
+   client makes a request from an IP, the distributor first sees whether
+   the IP is in one of the categories it knows.  If so, the distributor
+   returns an IP from the category rings.  If not, the distributor
+   maps the IP into an "area" (that is, a /24), and then uses an HMAC to
+   map the area to one of the area rings.
+
+   When the IP-based distributor determines from which area ring it is handing
+   out bridges, it identifies which rules it will use to choose appropriate
+   bridges. Using this information, it searches its cache of rings for one
+   that already adheres to the criteria specified in this request. If one
+   exists, then BridgeDB maps the current "epoch" (N-hour period) and the
+   IP's area (/24) to a point on the ring based on HMAC, and hands out
+   bridges at that point. If a ring does not already exist which satisfies this
+   request, then a new ring is created and filled with bridges that fulfill
+   the requirements. This ring is then used to select bridges as described.
+
+   "Mapping X to Y based on an HMAC" above means one of the following:
+      - We keep all of the elements of Y in some order, with a mapping
+        from all 160-bit strings to positions in Y.
+      - We take an HMAC of X using some fixed string as a key to get a
+        160-bit value.  We then map that value to the next position of Y.
+
+   When giving out bridges based on a position in a ring, BridgeDB first
+   looks at flag requirements and port requirements.  For example,
+   BridgeDB may be configured to "Give out at least L bridges with port
+   443, and at least M bridges with Stable, and at most N bridges
+   total."  To do this, BridgeDB combines to the results:
+      - The first L bridges in the ring after the position that have the
+        port 443, and
+      - The first M bridges in the ring after the position that have the
+        flag stable and that it has not already decided to give out, and
+      - The first N-L-M bridges in the ring after the position that it
+        has not already decided to give out.
+
+    After BridgeDB selects appropriate bridges to return to the requestor, it
+    then prioritises the ordering of them in a list so that as many criteria
+    are fulfilled as possible within the first few bridges. This list is then
+    truncated to N bridges, if possible. N is currently defined as a
+    piecewise function of the number of bridges in the ring such that:
+              
+             /
+            |  1,   if len(ring) < 20
+            |
+        N = |  2,   if 20 <= len(ring) <= 100 
+            |
+            |  3,   if 100 <= len(ring)
+             \
+
+    The bridges in this sublist, containing no more than N bridges, are the
+    bridges returned to the requestor.
+
+5. Selecting bridges to be given out based on email addresses
+
+   BridgeDB can be configured to support one or more distributors that are
+   giving out bridges based on the requestor's email address.  Currently,
+   this is how the email distributor works.
+   The goal is to bootstrap based on one or more popular email service's
+   sybil prevention algorithms.
+# Someone else should look at proposals/ideas/old/xxx-bridge-disbursement
+# to see if this section is missing relevant pieces from it.  -KL
+
+   BridgeDB rejects email addresses containing other characters than the
+   ones that RFC2822 allows.
+   BridgeDB may be configured to reject email addresses containing other
+   characters it might not process correctly.
+# I don't think we do this, is it worthwhile? -MF
+   BridgeDB rejects email addresses coming from other domains than a
+   configured set of permitted domains.
+   BridgeDB normalizes email addresses by removing "." characters and by
+   removing parts after the first "+" character.
+   BridgeDB can be configured to discard requests that do not have the
+   value "pass" in their X-DKIM-Authentication-Result header or does not
+   have this header.  The X-DKIM-Authentication-Result header is set by
+   the incoming mail stack that needs to check DKIM authentication.
+
+   BridgeDB does not return a new set of bridges to the same email address
+   until a given time period (typically a few hours) has passed.
+# Why don't we fix the bridges we give out for a global 3-hour time period
+# like we do for IP addresses?  This way we could avoid storing email
+# addresses.  -KL
+# The 3-hour value is probably much too short anyway.  If we take longer
+# time values, then people get new bridges when bridges show up, as
+# opposed to then we decide to reset the bridges we give them.  (Yes, this
+# problem exists for the IP distributor). -NM
+# I'm afraid I don't fully understand what you mean here.  Can you
+# elaborate?  -KL
+#
+# Assuming an average churn rate, if we use short time periods, then a
+# requestor will receive new bridges based on rate-limiting and will (likely)
+# eventually work their way around the ring; eventually exhausting all bridges
+# available to them from this distributor. If we use a longer time period,
+# then each time the period expires there will be more bridges in the ring
+# thus reducing the likelihood of all bridges being blocked and increasing
+# the time and effort required to enumerate all bridges. (This is my
+# understanding, not from Nick) -MF
+# Also, we presently need the cache to prevent replays and because if a user
+# sent multiple requests with different criteria in each then we would leak
+# additional bridges otherwise. -MF
+   BridgeDB can be configured to include bridge fingerprints in replies
+   along with bridge IP addresses and OR ports.
+   BridgeDB can be configured to sign all replies using a PGP signing key.
+   BridgeDB periodically discards old email-address-to-bridge mappings.
+   BridgeDB rejects too frequent email requests coming from the same
+   normalized address.
+
+   To map previously unseen email addresses to a set of bridges, BridgeDB
+   proceeds as follows:
+     - It normalizes the email address as above, by stripping out dots,
+       removing all of the localpart after the +, and putting it all
+       in lowercase.  (Example: "John.Doe+bridges@example.COM" becomes
+       "johndoe@example.com".)
+     - It maps an HMAC of the normalized address to a position on its ring
+       of bridges.
+     - It hands out bridges starting at that position, based on the
+       port/flag requirements, as specified at the end of section 4.
+
+    See section 4 for the details of how bridges are selected from the ring
+    and returned to the requestor.
+
+6. Selecting unallocated bridges to be stored in file buckets
+
+# Kaner should have a look at this section. -NM
+
+   BridgeDB can be configured to reserve a subset of bridges and not give
+   them out via one of the distributors.
+   BridgeDB assigns reserved bridges to one or more file buckets of fixed
+   sizes and write these file buckets to disk for manual distribution.
+   BridgeDB ensures that a file bucket always contains the requested
+   number of running bridges.
+   If the requested number of bridges in a file bucket is reduced or the
+   file bucket is not required anymore, the unassigned bridges are
+   returned to the reserved set of bridges.
+   If a bridge stops running, BridgeDB replaces it with another bridge
+   from the reserved set of bridges.
+# I'm not sure if there's a design bug in file buckets.  What happens if
+# we add a bridge X to file bucket A, and X goes offline?  We would add
+# another bridge Y to file bucket A.  OK, but what if A comes back?  We
+# cannot put it back in file bucket A, because it's full.  Are we going to
+# add it to a different file bucket?  Doesn't that mean that most bridges
+# will be contained in most file buckets over time?  -KL
+#
+# This should be handled the same as if the file bucket is reduced in size.
+# If X returns, then it should be added to the appropriate distributor. -MF
+
+7. Displaying Bridge Information
+
+  After bridges are selected using one of the methods described in
+  Sections 4 - 6, they are output in one of two formats. Bridges are
+  formatted as:
+
+      <address:port> NL
+
+  Pluggable transports are formatted as:
+
+      <transportname> SP <address:port> [SP arglist] NL
+
+  where arglist is an optional space-separated list of key-value pairs in
+  the form of k=v.
+
+  Previously, each line was prepended with the "bridge" keyword, such as
+
+      "bridge" SP <address:port> NL
+
+      "bridge" SP <transportname> SP <address:port> [SP arglist] NL
+
+# We don't do this anymore because Vidalia and TorLauncher don't expect it.
+# See the commit message for b70347a9c5fd769c6d5d0c0eb5171ace2999a736.
+
+8. Writing bridge assignments for statistics
+
+   BridgeDB can be configured to write bridge assignments to disk for
+   statistical analysis.
+   The start of a bridge assignment is marked by the following line:
+
+      "bridge-pool-assignment" SP YYYY-MM-DD HH:MM:SS NL
+
+   YYYY-MM-DD HH:MM:SS is the time, in UTC, when BridgeDB has completed
+   loading new bridges and assigning them to distributors.
+
+   For every running bridge there is a line with the following format:
+
+      fingerprint SP distributor (SP key "=" value)* NL
+
+   The distributor is one out of "email", "https", or "unallocated".
+
+   Both "email" and "https" distributors support adding keys for "port",
+   "flag" and "transport". Respectively, the port number, flag name, and
+   transport types are the values. These are used to indicate that
+   a bridge matches certain port, flag, transport criteria of requests.
+
+   The "https" distributor also allows the key "ring" with a number as
+   value to indicate to which IP address area the bridge is returned.
+
+   The "unallocated" distributor allows the key "bucket" with the file
+   bucket name as value to indicate which file bucket a bridge is assigned
+   to.
+
