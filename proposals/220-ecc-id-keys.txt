@@ -59,7 +59,7 @@ Status: Draft
 1.1. 'Personalized' signatures
 
    Each of the keys introduced here is used to sign more than one kind
-   of document. While these documents should be unambiguous, I'd going
+   of document. While these documents should be unambiguous, I'm going
    to forward-proof the signatures by specifying each signature to be
    generated, not on the document itself, but on the document prefixed
    with some distinguishing string.
@@ -106,7 +106,7 @@ Status: Draft
          SIGNATURE       [64 Bytes]
 
    FIXED_PREFIX is "REVOKEID" or "REVOKESK". VERSION is [01]. KEYTYPE is
-   [01] for revoking a signing key or [02] or revoking an identity key.
+   [01] for revoking a signing key or [02] for revoking an identity key.
    REVOKED_KEY is the key being revoked; IDENTITY_KEY is the node's
    Ed25519 identity key. PUBLISHED is the time that the document was
    generated, in seconds since the epoch. EXTRA_STUFF is left for a
@@ -132,7 +132,7 @@ Status: Draft
    But we also support offline identity keys:
 
         * When a Tor node starts with an Ed25519 public identity key
-          but no private identity key, it checks wither it has
+          but no private identity key, it checks whether it has
           a currently valid certified signing keypair.  If it does,
           it starts.  Otherwise, it refuses to start.
         * If a Tor node's signing key is going to expire soon, it starts
@@ -152,9 +152,9 @@ Status: Draft
    signing key and checking the signature before fully parsing the rest
    of the document. -NM]
 
-   When an identity-ed25519 element is present, there must also be an
+   When an identity-ed25519 element is present, there must also be a
    "router-signature-ed25519" element.  It MUST be the next-to-last
-   element in the descriptor, appearing immediately before RSA
+   element in the descriptor, appearing immediately before the RSA
    signature.  It MUST contain an ed25519 signature of the entire
    document, from the first character up to but not including the
    "router-signature-ed25519" element, prefixed with the string "Tor
@@ -162,9 +162,9 @@ Status: Draft
 
       "router-signature-ed25519" SP signature NL
 
-   Were 'signature' is encoded in base64 with terminating =s removed.
+   Where 'signature' is encoded in base64 with terminating =s removed.
 
-   The identity key in the identity-ed25519 key MUST be the one used to
+   The identity-key in the identity-ed25519 key MUST be the one used to
    sign the certification, and the signing key in the certification MUST
    be the one used to sign the document.
 
@@ -204,9 +204,9 @@ Status: Draft
    appear in router descriptors.
 
    Additionally, we add the base64-encoded, =-stripped SHA256 digest of
-   a node's extra-info document field to the extra-info-digest line.
-   (All versions of Tor that recognize this line allow an extra field
-   there.)
+   a node's extra-info document field to the extra-info-digest line in
+   the router descriptor. (All versions of Tor that recognize this line
+   allow an extra field there.)
 
 2.3.3. A note on signature verification
 
@@ -259,7 +259,7 @@ Status: Draft
 
        "id" SP ed25519-identity NL
 
-   where ed25519-identity is base-64 encoded, with trailing = characters
+   where ed25519-identity is base64-encoded, with trailing = characters
    omitted.  In vote documents, it may be replaced by the format:
 
        "id" SP "none" NL
@@ -348,7 +348,7 @@ Status: Draft
         7: RSA cross-certification for Ed25519 identity key
 
    The content of certificate type 4 is:
-        Ed25519 identity key                     [32 byets]
+        Ed25519 identity key                     [32 bytes]
         Signing key certificate as in 2.1 above  [variable length]
 
    The content of certificate type 5 is:
@@ -463,9 +463,9 @@ Status: Draft
    Anywhere in the interface that takes an $identity should be able to
    take an ECC identity too.  ECC identities are case-sensitive base64
    encodings of Ed25519 identity keys. You can use $ to indicate them as
-   well; we distinguish RSA identity digests length.
+   well; we distinguish RSA identity digests by length.
 
-   When we need to indicate an Ed25519 identity key in an hostname
+   When we need to indicate an Ed25519 identity key in a hostname
    format (as in a .exit address), we use the lowercased version of the
    name, and perform a case-insensitive match.  (This loses us a little
    less than one bit per byte of name, leaving plenty of bits to make
@@ -477,7 +477,7 @@ Status: Draft
 
    Clients shouldn't accept .exit addresses with Ed25519 names on SOCKS
    or DNS ports by default, even when AllowDotExit is set.  We can add
-   another option for the later if there's a good reason to have this.
+   another option for them later if there's a good reason to have this.
 
    We need an identity-to-node map for ECC identity and for RSA
    identity.
@@ -488,7 +488,7 @@ Status: Draft
 
 7. Hidden service changes out of scope
 
-   Hidden services need to be able identity nodes by ECC keys, just as
+   Hidden services need to be able to identity nodes by ECC keys, just as
    they will need to include ntor keys as well as TAP keys.  Not just
    yet though.  This needs to be part of a bigger hidden service
    revamping strategy.
@@ -518,3 +518,4 @@ Status: Draft
    * Ed25519 support for hidden services
    * Bridge identity support.
    * Ed25519-aware family support
+
