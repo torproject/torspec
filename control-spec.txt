@@ -1235,7 +1235,7 @@
 
   These replies can be sent after a corresponding SETEVENTS command has been
   received.  They will not be interleaved with other Reply elements, but they
-  can appear between a command and its corresponding reply.  For example,
+  can not appear between a command and its corresponding reply.  For example,
   this sequence is possible:
 
      C: SETEVENTS CIRC
@@ -2422,6 +2422,28 @@
   These events are only generated if TestingTorNetwork is set.
 
   [First added in 0.2.5.2-alpha]
+
+4.1.25. HiddenService descriptors
+
+  The syntax is:
+
+    "650" SP "HS_DESC" SP Action SP HSAddress SP AuthType SP HsDir [SP DescriptorID]
+
+    Action =  "REQUESTED" / "RECEIVED" / "IGNORE" / "FAILED"
+    HSAddress = 16*Base32Character
+    AuthType = "NO_AUTH" / "BASIC_AUTH" / "STEALTH_AUTH" / "UNKNOWN"
+    HsDir = LongName / Fingerprint
+    DescriptorID = 32*Base32Character
+
+    These events will be triggerred when required HiddenService descriptor is
+    not found in the cache and a fetch from network is performed.
+
+    If we already had the v0 descriptor, the newly fected v2 descriptor will be
+    ignored and a "HS_DESC" event with "IGNORE" action will be generated.
+
+    For HsDir, LongName is always prefered. If HsDir cannot be found in node
+    list at the time event is sent, Fingerprint will be used instead.
+
 
 5. Implementation notes
 
