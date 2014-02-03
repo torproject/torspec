@@ -1072,12 +1072,16 @@
   The syntax is:
     "TAKEOWNERSHIP" CRLF
 
-  This command instructs Tor to shut down (as if it had received
-  SIGINT or a "SIGNAL INT" controller command) when this control
+  This command instructs Tor to shut down when this control
   connection is closed.  This command affects each control connection
   that sends it independently; if multiple control connections send
   the TAKEOWNERSHIP command to a Tor instance, Tor will shut down when
   any of those connections closes.
+
+  (As of Tor 0.2.5.2-alpha, Tor does not wait a while for circuits to
+  close when shutting down because of an exiting controller.  If you
+  want to ensure a clean shutdown--and you should!--then send "SIGNAL
+  SHUTDOWN" and wait for the Tor process to close.)
 
   This command is intended to be used with the
   __OwningControllerProcess configuration option.  A controller that
