@@ -8,10 +8,6 @@
    0.1.0.x series, and dir-spec-v2.txt for information on the protocol
    used by the 0.1.1.x and 0.1.2.x series.
 
-   Caches and authorities must still support older versions of the
-   directory protocols, until the versions of Tor that require them are
-   finally out of commission.
-
    This document merges and supersedes the following proposals:
 
        101  Voting on the Tor Directory System
@@ -181,10 +177,6 @@
    clients by giving them descriptors nobody else uses.
 
    All directory information is uploaded and downloaded with HTTP.
-
-   [Authorities also generate and caches also cache documents produced and
-   used by earlier versions of this protocol; see dir-spec-v1.txt and
-   dir-spec-v2.txt for notes on those versions.]
 
 1.1. What's different from version 2?
 
@@ -741,7 +733,9 @@
         unique IP addresses that have connected from that country to
         request a v2/v3 network status, rounded up to the nearest multiple
         of 8. Only those IP addresses are counted that the directory can
-        answer with a 200 OK status code.
+        answer with a 200 OK status code.  (Note here and below: current Tor
+        versions, as of 0.2.5.2-alpha, no longer cache or serve v2
+        networkstatus documents.)
 
     "dirreq-v2-reqs" CC=N,CC=N,... NL
         [At most once.]
@@ -2597,7 +2591,7 @@
 
    When a client has no consensus network-status document, it downloads it
    from a randomly chosen authority.  In all other cases, the client
-   downloads from caches randomly chosen from among those believed to be V2
+   downloads from caches randomly chosen from among those believed to be V3
    directory servers.  (This information comes from the network-status
    documents; see 6 below.)
 
@@ -2750,9 +2744,6 @@
 
      - Clients SHOULD NOT choose non-'Guard' nodes when picking entry guard
        nodes.
-
-     - Clients SHOULD NOT download directory information from non-'V2Dir'
-       caches.
 
    See the "path-spec.txt" document for more details.
 
