@@ -2858,22 +2858,6 @@
       -- user requested some items that we ordinarily generate or store,
          but we do not have any available.
 
-7. Backward compatibility and migration plans
-
-  Until Tor versions before 0.1.1.x are completely obsolete, directory
-  authorities should generate, and mirrors should download and cache, v1
-  directories and running-routers lists, and allow old clients to download
-  them.  These documents and the rules for retrieving, serving, and caching
-  them are described in dir-spec-v1.txt.
-
-  Until Tor versions before 0.2.0.x are completely obsolete, directory
-  authorities should generate, mirrors should download and cache, v2
-  network-status documents, and allow old clients to download them.
-  Additionally, all directory servers and caches should download, store, and
-  serve any router descriptor that is required because of v2 network-status
-  documents. These documents and the rules for retrieving, serving, and
-  caching them are described in dir-spec-v1.txt.
-
 A. Consensus-negotiation timeline.
 
    Period begins: this is the Published time.
