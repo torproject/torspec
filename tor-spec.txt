@@ -494,7 +494,9 @@ see tor-design.pdf.
    integers.  Both parties MUST select as the link protocol version the
    highest number contained both in the VERSIONS cell they sent and in the
    versions cell they received.  If they have no such version in common,
-   they cannot communicate and MUST close the connection.
+   they cannot communicate and MUST close the connection.  Either party MUST
+   close the connection of the versions cell is not well-formed (for example,
+   if it contains an odd number of bytes).
 
    Since the version 1 link protocol does not use the "renegotiation"
    handshake, implementations MUST NOT list version 1 in their VERSIONS
