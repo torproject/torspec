@@ -1157,7 +1157,7 @@
 
   Tor replies with "250 OK" on success.
 
-  [DROPGUARDS was added in Tor 0.2.5.1-alpha.]
+  [DROPGUARDS was added in Tor 0.2.5.2-alpha.]
 
 4. Replies
 
