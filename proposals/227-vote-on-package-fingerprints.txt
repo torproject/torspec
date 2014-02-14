@@ -1,0 +1,143 @@
+Filename: 227-vote-on-package-fingerprints.txt
+Title: Include package fingerprints in consensus documents
+Author: Nick Mathewson, Mike Perry
+Created: 2014-02-14
+Status: Open
+
+0. Abstract
+
+   We propose extending the Tor consensus document to include
+   digests of the latest versions of one or more package files, to
+   allow software using Tor to determine its up-to-dateness, and
+   help users verify that they are getting the correct software.
+
+1. Introduction
+
+   To improve the integrity and security of updates, it would be
+   useful to provide a way to authenticate the latest versions of
+   core Tor software through the consensus. By listing a location
+   with this information for each version of each package, we can
+   augment the update process of Tor software to authenticate the
+   packages it downloads through the Tor consensus.
+
+2. Proposal
+
+   We introduce a new line for inclusion in votes and consensuses.
+   Its format is:
+
+     "package" SP PACKAGENAME SP VERSION SP URL SP DIGESTS NL
+
+      PACKAGENAME = NONSPACE
+      VERSION = NONSPACE
+      URL = NONSPACE
+      DIGESTS = DIGEST | DIGESTS SP DIGEST
+      DIGEST = DIGESTTYPE "=" BASE64
+
+      NONSPACE = one or more non-space printing characters
+
+      BASE64 = one or more base-64 characters, with trailing =s
+               removed.
+
+      SP = " "
+      NL = a newline
+
+   Votes and consensuses may include any number of "package" lines,
+   but no vote or consensus may include more than one "package" line
+   with the same PACKAGENAME and VERSION values.  All "package"
+   lines must be sorted by PACKAGENAME, and then by VERSION, in
+   lexical (strcmp) order.
+
+   If the consensus-method is at least (TBD), then when computing
+   the consensus, package lines for a given PACKAGENAME/VERSION pair
+   should be included if at least three authorities list such a
+   package in their votes.  (Call these lines the "input" lines for
+   PACKAGENAME.)  That consensus should contain every "package" line
+   that is listed verbatim by more than half of the authorities
+   listing a line for the PACKAGENAME/VERSION pair, and no
+   others.
+
+   These lines appear immediately following the client-versions and
+   server-versions lines.
+
+3. Recommended usage
+
+   Programs that want to use this facility should pick their
+   PACKAGENAME values, and arrange to have their versions listed in
+   the consensus by at least three friendly authority operators.
+
+   Programs may want to have multiple PACKAGENAME values in order to
+   keep separate lists. These lists could correspond to how the
+   software is used (as tor has client-versions and
+   server-versions); or to a release series (as in tbb-alpha,
+   tbb-beta, and tbb-stable); or to how bad it is to use versions
+   not listed (as in foo-noknownexploits, foo-recommended).
+
+   Programs MUST NOT use "package" lines from consensuses that have
+   not been verified and accepted as valid according to the rules in
+   dir-spec.txt, and SHOULD NOT fetch their own consensuses if there
+   is a tor process also running that can fetch the consensus
+   itself.
+
+   For safety, programs MAY want to disable functionality until
+   confirming that their versions are acceptable.
+
+   To avoid synchronization problems, programs that use the DIGEST
+   field to store a digest of the contents of the URL SHOULD NOT use
+   any URLs whose contents are expected to change while any valid
+   consensus lists them.
+
+3.1. Intended usage by the Tor Browser Bundle
+
+   Tor Browser Bundle packages will be listed with package names
+   'tbb-stable, 'tbb-beta', and 'tbb-alpha'. We will list a line for
+   the latest version of each release series.
+
+   When the updater downloads a new update, it always downloads the
+   latest version of the Tor Browser Bundle. Because of this, and
+   because we will only use these lines to authenticate updates, we
+   should not need to list more than one version per series in the
+   consensus.
+
+   After completing a package download and verifying the download
+   signatures (which are handled independently from the Tor
+   Consensus), it will consult the appropriate current consensus
+   document through the control port.
+
+   If the current consensus timestamp is not yet more recent than
+   the proposed update timestamp, the updater will delay installing
+   the package until a consensus timestamp that is more recent than
+   the update timestamp has been obtained by the Tor client.
+
+   If the consensus document has a package line for the current
+   release series with a matching version, it will then download the
+   file at the specified URL, and then compute its hash to make sure
+   it matches the value in the consensus.
+
+   If the hash matches, the Tor Browser will download the file and
+   parse its contents, which will be a JSON file which lists
+   information needed to verify the hashes of the downloaded update
+   file.
+
+   If the hash does not match, the Tor Browser Bundle should display
+   an error to the user and not install the package.
+
+   If there are no package lines in the consensus for the expected
+   version, the updater will delay installing the update (but the
+   bundle should still inform the user they are out of date and may
+   update manually).
+
+   If there are no package lines in the consensus for the current
+   release series at all, the updater should install the package
+   using only normal signature verification.
+
+4. Limitations and open questions
+
+   This proposal won't tell users how to upgrade, or even exactly
+   what version to upgrade to.
+
+   If software is so broken that it won't start at all, or shouldn't
+   be started at all, this proposal can't help with that.
+
+   This proposal is not a substitute for a proper software update
+   tool.
+
