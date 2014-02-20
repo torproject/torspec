@@ -16,7 +16,16 @@ Status: Draft
    in the design.
 
    Change history:
+
        2013-11-29: Proposal first numbered. Some TODO and XXX items remain.
+
+       2014-01-04: Clarify some unclear sections.
+
+       2014-01-21: Fix a typo.
+
+       2014-02-20: Move more things to the revised certificate format in the
+           new updated proposal 220.
+
 
 0. Hidden services: overview and preliminaries.
 
@@ -787,14 +796,14 @@ Status: Draft
    The format for a hidden service descriptor is as follows, using the
    meta-format from dir-spec.txt.
 
-     "hs-descriptor" SP "3" SP public-key SP certification NL
+     "hs-descriptor" SP "3" certificate NL
 
        [At start, exactly once.]
 
-       public-key is the blinded public key for the service, encoded in
-       base 64. Certification is a certification of a short-term ed25519
-       descriptor signing key using the public key, in the format of
-       proposal 220.
+       The 'certificate' field contains a certificate in the format from
+       proposal 220, with the short-term ed25519 descriptor-signing key
+       signed by the blinded public key.  It must contain a
+       ed25519-signing-key extension containing the blinded public key.
 
      "time-period" SP YYYY-MM-DD HH:MM:SS NUM NL
 
@@ -895,14 +904,15 @@ Status: Draft
           The link-specifiers is a base64 encoding of a link specifier
           block in the format described in BUILDING-BLOCKS.
 
-        "auth-key" SP "ed25519" SP key SP certification NL
+        "auth-key" SP "ed25519" certificate NL
 
           [Exactly once per introduction point]
 
           Base-64 encoded introduction point authentication key that was
           used to establish introduction point circuit, cross-certifying
-          the blinded public key key using the certification format of
-          proposal 220.
+          the blinded public key.  This uses the certificate format of
+          proposal 220 with type [09].  The signing-key extension is
+          mandatory here to tell you what the public key is.
 
         "enc-key" SP "ntor" SP key NL
 
@@ -1732,3 +1742,14 @@ Appendix C. Recommendations for searching for vanity .onions [VANITY]
 Appendix D. Numeric values reserved in this document
 
   [TODO: collect all the lists of commands and values mentioned above]
+
+Appendix E. Reserved numbers
+
+  We reserve these certificate type values for Ed25519 certificates:
+
+      [08] hidden service short-term ed25519 key, signed with blinded
+           public key. (Section 2.4)
+      [09] intro point authentication key, cross-certifying blinded
+           public key. (Section 2.5)
+
+  [XXXX list more]
