@@ -216,8 +216,8 @@ see tor-design.pdf.
       * The certificate's public key modulus is longer than 1024 bits.
    The initiator then sends a VERSIONS cell to the responder, which then
    replies with a VERSIONS cell; they have then negotiated a Tor
-   protocol version.  Assuming that the version they negotiate is 3 (the
-   only one specified for use with this handshake right now), the
+   protocol version.  Assuming that the version they negotiate is 3 or higher
+   (the only ones specified for use with this handshake right now), the
    responder sends a CERTS cell, an AUTH_CHALLENGE cell, and a NETINFO
    cell to the initiator, which may send either CERTS, AUTHENTICATE,
    NETINFO if it wants to authenticate, or just NETINFO if it does not.
