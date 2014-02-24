@@ -67,7 +67,7 @@ Proposals by number:
 144  Increase the diversity of circuits by detecting nodes belonging the same provider [DRAFT]
 145  Separate "suitable as a guard" from "suitable as a new guard" [NEEDS-RESEARCH]
 146  Add new flag to reflect long-term stability [SUPERSEDED]
-147  Eliminate the need for v2 directories in generating v3 directories [ACCEPTED]
+147  Eliminate the need for v2 directories in generating v3 directories [REJECTED]
 148  Stream end reasons from the client side should be uniform [CLOSED]
 149  Using data from NETINFO cells [SUPERSEDED]
 150  Exclude Exit Nodes from a circuit [CLOSED]
@@ -163,7 +163,7 @@ Proposals by status:
    195  TLS certificate normalization for Tor 0.2.4.x [for 0.2.4.x]
    203  Avoiding censorship by impersonating an HTTPS server
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
-   220  Migrate server identity keys to Ed25519 [for 0.2.5.x]
+   220  Migrate server identity keys to Ed25519 [for 0.2.x.x]
    224  Next-Generation Hidden Services in Tor
    225  Strawman proposal: commit-and-reveal shared rng
  NEEDS-REVISION:
@@ -200,7 +200,6 @@ Proposals by status:
    227  Include package fingerprints in consensus documents
  ACCEPTED:
    140  Provide diffs between consensuses
-   147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.4.x]
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
  META:
@@ -295,3 +294,4 @@ Proposals by status:
    213  Remove stream-level sendmes from the design
  REJECTED:
    134  More robust consensus voting with diverse authority sets
+   147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.4.x]
