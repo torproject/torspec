@@ -11,8 +11,8 @@ Status: Draft
 
 0. Introduction
 
-   In current Tor designs, identity keys are limited to 1024-bit RSA
-   keys.
+   In current Tor designs, router identity keys are limited to
+   1024-bit RSA keys.
 
    Clearly, that should change, because RSA doesn't represent a good
    performance-security tradeoff nowadays, and because 1024-bit RSA is
@@ -220,7 +220,7 @@ Status: Draft
    Current versions of Tor will handle these new formats by ignoring the
    new fields, and not checking any ed25519 information.
 
-   New version of Tor will have a flag that tells them whether to check
+   New versions of Tor will have a flag that tells them whether to check
    ed25519 information.  When it is set, they must check:
 
       * All RSA information and signatures that Tor implementations
@@ -238,7 +238,7 @@ Status: Draft
 
 2.5.2. Extra-info documents
 
-   Extrainfo documents now include "identity-ed25519" and
+   Extra-info documents now include "identity-ed25519" and
    "router-signature-ed25519" fields in the same positions in which they
    appear in router descriptors.
 
@@ -556,7 +556,7 @@ Status: Draft
 
 7. Hidden service changes out of scope
 
-   Hidden services need to be able to identity nodes by ECC keys, just as
+   Hidden services need to be able to identify nodes by ECC keys, just as
    they will need to include ntor keys as well as TAP keys.  Not just
    yet though.  This needs to be part of a bigger hidden service
    revamping strategy.
