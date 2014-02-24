@@ -2,7 +2,7 @@ Filename: 147-prevoting-opinions.txt
 Title: Eliminate the need for v2 directories in generating v3 directories
 Author: Nick Mathewson
 Created: 2-Jul-2008
-Status: Accepted
+Status: Rejected
 Target: 0.2.4.x
 
 Overview
@@ -82,4 +82,39 @@ Design:
   any router descriptor they learned from parsing an opinion document.
 
   Authorities MAY cache opinion documents, but don't need to.
+
+Reasons for rejection:
+
+  1. Authorities learn about new relays from each others' vote documents.
+
+  See git commits 2e692bd8 and eaf5487d, which went into 0.2.2.12-alpha:
+  o Major bugfixes:
+    - Many relays have been falling out of the consensus lately because
+      not enough authorities know about their descriptor for them to get
+      a majority of votes. When we deprecated the v2 directory protocol,
+      we got rid of the only way that v3 authorities can hear from each
+      other about other descriptors. Now authorities examine every v3
+      vote for new descriptors, and fetch them from that authority. Bugfix
+      on 0.2.1.23.
+
+  2. Authorities don't serve version 2 statuses anymore.
+
+  Since January 2013, there was only a single version 3 directory
+  authority left that served version 2 statuses: dizum.  moria1 and tor26
+  have been rejecting version 2 requests for a long time, and it was
+  mostly an oversight that dizum still served them.  As of January 2014,
+  dizum does not serve version 2 statuses anymore.  The other six
+  authorities have never generated version 2 statuses for others to be
+  used as pre-voting opinions.
+
+  3. Vote documents indicate that pre-voting opinions wouldn't help much.
+
+  From January 1 to 7, 2014, only 0.4 relays on average were not included
+  in a consensus because they were listed in less than 5 votes.  These 0.4
+  relays could probably have been included with pre-voting opinions.
+
+  (Here's how to find out: extract the votes-2014-01.tar.bz2 tarball, run
+  `grep -R "^r " 0[1-7] | cut -c 4-22,112- | cut -d" " -f1,3 | sort | uniq
+  -c | sort | grep " [1-4] " | wc -l`, result is 63, divide by 7*24
+  published consensuses, obtain 0.375 as end result.)
 

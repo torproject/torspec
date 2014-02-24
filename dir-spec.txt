@@ -1247,6 +1247,13 @@
       http://<hostname>/tor/status-vote/next/d/<d>.z
    where <d> is the digest of the vote document.
 
+   Also, once an authority receives a vote from another authority, it
+   examines it for new descriptors and fetches them from that authority.
+   This may the only way for an authority to hear about relays that didn't
+   publish their descriptor to all authorities, and while it's too late
+   for the authority to include relays in its current vote, it can include
+   them in its next vote.  See section 3.6 below for details.
+
 3.4.1. Vote and consensus status document formats
 
    Votes and consensuses are more strictly formatted than other documents
