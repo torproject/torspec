@@ -148,6 +148,7 @@ Proposals by number:
 225  Strawman proposal: commit-and-reveal shared rng [DRAFT]
 226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS" [OPEN]
 227  Include package fingerprints in consensus documents [OPEN]
+228  Cross-certifying identity keys with onion keys [OPEN]
 
 
 Proposals by status:
@@ -198,6 +199,7 @@ Proposals by status:
    223  Ace: Improved circuit-creation key exchange
    226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS"
    227  Include package fingerprints in consensus documents
+   228  Cross-certifying identity keys with onion keys
  ACCEPTED:
    140  Provide diffs between consensuses
    172  GETINFO controller option for circuit information
