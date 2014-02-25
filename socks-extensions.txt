@@ -26,17 +26,20 @@ Tor's extensions to the SOCKS protocol
   - The BIND command is not supported.
 
   SOCKS4,4A:
-  - SOCKS4 usernames are ignored.
+  - SOCKS4 usernames are used to implement stream isolation.
 
   SOCKS5:
   - The (SOCKS5) "UDP ASSOCIATE" command is not supported.
   - IPv6 is not supported in CONNECT commands.
   - The "NO AUTHENTICATION REQUIRED" (SOCKS5) authentication method [00] is
     supported; and as of Tor 0.2.3.2-alpha, the "USERNAME/PASSWORD" (SOCKS5)
-    authentication method [02] is supported too. Any credentials passed to
-    the latter are ignored. As an extension to support some broken clients,
+    authentication method [02] is supported too, and used as a method to
+    implement stream isolation. As an extension to support some broken clients,
     we allow clients to pass "USERNAME/PASSWORD" authentication to us even if
     no authentication was selected.
+
+  (For more information on stream isolation, see IsolateSOCKSAuth on the Tor
+  manpage.)
 
 2. Name lookup
 
