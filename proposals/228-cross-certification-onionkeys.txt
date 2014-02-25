@@ -1,0 +1,142 @@
+Filename: 228-cross-certification-onionkeys.txt
+Title: Cross-certifying identity keys with onion keys
+Author: Nick Mathewson
+Created: 25 February 2014
+Status: Open
+
+
+0. Abstract
+
+   In current Tor router descriptor designs, routers prove ownership
+   of an identity key (by signing the router descriptors), but not
+   of their onion keys.  This document describes a method for them
+   to do so.
+
+1. Introduction.
+
+   Signing router descriptors with identity keys prevents attackers
+   from impersonating a server and advertising their own onion keys
+   and IP addresses.  That's good.
+
+   But there's nothing in Tor right now that effectively stops you
+   (an attacker) from listing somebody else's public onion key in
+   your descriptor.  If you do, you can't actually recover any keys
+   negotiated using that key, and you can't MITM circuits made with
+   that key (since you don't have the private key).  You _could_ do
+   something weird in the TAP protocol where you .
+
+   Nonetheless, it's probably undesirable that this is possible at
+   all.  Just because it isn't obvious today how to exploit this
+   doesn't mean it will never be possible.
+
+2. Cross-certifying identities with onion keys
+
+2.1. What to certify
+
+   Once proposal 220 is implemented, we'll sign our Ed25519 identity
+   key as described in proposal 220.  Since the Ed25519 identity key
+   certifies the RSA key, there's no strict need to certify both
+   separately.
+
+   On the other hand, this proposal may be implemented before proposal
+   220.  If it is, we'll need a way for it to certify the RSA1024 key
+   too.
+
+2.2. TAP onion keys
+
+   We add to each router descriptor a new element,
+   "onion-key-crosscert", containing a RSA signature of:
+
+       A SHA1 hash of the identity key  [20 bytes]
+       The Ed25519 identity key, if any [32 bytes]
+
+   If there is no ed25519 identity key, or if in some future version
+   there is no RSA identity key, the corresponding field must be
+   zero-filled.
+
+   Parties verifying this signature MUST allow additional data beyond
+   the 52 bytes listed above.
+
+2.3. ntor onion keys
+
+   Here, we need to convert the ntor key to an ed25519 key for
+   signing.  See the appendix A for how to do that.  We'll also need
+   to transmit a sign bit.
+
+   We can add an element "ntor-onion-key-crosscert", containing an
+   Ed25519 certificate in the format from proposal 220 section 2.1,
+   with a sign indicator to indicate which ed25519 public key to use
+   to check the key:
+
+      "ntor-onion-key-crosscert" SP SIGNBIT SP CERT NL
+
+      SIGNBIT = "0" / "1"
+
+   Note that this cert format has 32 bytes of of redundant data, since it
+   includes the identity key an extra time.  That seems okay to me.
+
+   The TYPE field in this certificate should be set to
+      [0A] - ntor onion key cross-certifying ntor identity key
+
+3. Authority behavior
+
+   Authorities should reject any router descriptor with an invalid
+   onion-key-crosscert element or ntor-onion-key-crosscert element.
+
+   Both elements should be required on any cert containing an
+   ed25519 identity key.
+
+   See section 3.1 of proposal 220 for rules requiring routers to
+   eventually have ed25519 keys.
+
+4. Performance impact
+
+   Routers do not generate new descriptors frequently enough for
+   them to need to
+
+   Checking an extra ed25519 signature when parsing a descriptor is
+   very cheap, since we can use batch signature checking.
+
+   The point decompression algorithm will require us to calculate
+   1/(u+1), which costs as much as an exponentiation in
+   GF(2^255-19).
+
+   Checking an RSA1024 signature is also cheap, since we use small
+   public exponents.
+
+   Adding an extra RSA signature and an extra ed25519 signature to
+   each descriptor will make each descriptor, after compression,
+   about 128+100 bytes longer.  (Compressed base64-encoded random
+   bytes are about as long as the original random bytes.) Most
+   clients don't download raw descriptors, though, so it shouldn't
+   matter too much.
+
+
+A. Converting a curve25519 public key to an ed25519 public key
+
+   Given a curve25519 x-coordinate (u), we can get the y coordinate
+   of the ed25519 key using
+
+         y = (u-1)/(u+1)
+
+   and then we can apply the usual ed25519 point decomporession
+   algorithm to find the x coordinate of the ed25519 point to check
+   signatures with.
+
+   Note that we need the sign of the X coordinate to do this
+   operation; otherwise, we'll have two possible X coordinates that
+   might have correspond to the key.  Therefore, we need the 'sign'
+   of the X coordinate, as used by the ed25519 key expansion
+   algorithm.
+
+   To get the sign, the easiest way is to take the same private key,
+   feed it to the ed25519 public key generation algorithm, and see
+   what the sign is.
+
+
+B. Security notes
+
+   It would be very bad for security if we provided a diffie-hellman
+   oracle for our curve25519 ntor keys.  Fortunately, we don't, since
+   nobody else can influence the certificate contents.
+
