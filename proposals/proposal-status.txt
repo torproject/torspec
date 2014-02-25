@@ -4,34 +4,48 @@ December[0], based on the one I did in November[1] based on the
 one I did in June of 2012[2], based on the one I did in May[3] of 2011.
 
 Future versions of this document will be maintained in the torspec
-repository.
+repository as "proposals/proposal-status.txt".  I'll still send them
+to tor-dev periodically.
 
 If you're looking for something to review, think about, or comment
 on:
 
      Review 212 (using older consensuses) or 215 (obsoleting
-     consensus methods) if you understand the directory system even a
-     little bit; they are quite simple.
+     consensus methods) if you understand the directory system even
+     a little bit; they are quite simple.
 
      Review 219 if you're a DNS geek, or you'd like Tor to work
      better with more DNS types.
 
-     Review 220 (ed25519 identity keys) if you like designing
-     signature things, if you have good ideas about future-proofing
-     key type migration, or if you care about making Tor servers'
-     identity keys stronger.
+     Review 220 (ed25519 identity keys) and 228
+     (cross-certification) if you like designing signature things,
+     if you have good ideas about future-proofing key type
+     migration, or if you care about making Tor servers' identity
+     keys stronger.
 
-     Review 223 (ACE handshake) if you're a cryptographer, or a cryptography
-     implementer, and you'd like an even faster replacement for the
-     ntor handshake.
+     Review 223 (ACE handshake) if you're a cryptographer, or a
+     cryptography implementer, and you'd like an even faster
+     replacement for the ntor handshake.
 
      Review 224 if you want to look through a big, complex protocol
      with a lot of pieces. Also review it if you care about hidden
      services and making them better.
 
+     Review 226 if you're interested in bridgedb development.
+
      Review something else if you want to take a possibly good idea
      that needs more momentum and promote it, fix it up, or finally
      kill it off.
+
+I note in passing that many of the proposals below seem stalled,
+perhaps permanently: some because we don't know how to answer their
+open questions, others because we're not sure if they're a good
+idea, others because they don't seem implementable yet.  Is that the
+best way to characterize it?  Should we have a new "stalled"
+proposal status or something?  Should we have a
+"rejected-pending-revision" status that we use effectively for
+everything that doesn't seem likely to get revised or implemented
+any time soon?  Other suggestions would be welcome.
 
 Finally: if you've sent something to tor-dev or to me that should
 have a proposal number, but doesn't have one yet, please ping me
@@ -386,17 +400,17 @@ again to remind me!
 
 220  Migrate server identity keys to Ed25519
 
-     This one is an intial design to migrate server identity keys to
+     This one is a design to migrate server identity keys to
      Ed25519 for improved security margin.  It needs more analysis of
      long-term migration to other signing key types -- what do we do
-     if we want to add support for EdDSA over Curve2617 or something?
+     if we want to add support for EdDSA over Curve3617 or something?
      Can we make it easier than this?  And it also needs analysis to
      make sure it enables us to eventually drop RSA1024 keys
      entirely.
 
      I've started building this, though, so we'd better figure out
      out fairly soon.  Other proposals, like 224, depend on this one.
-     (12/2013)
+     (2/2014)
 
 223  Ace: Improved circuit-creation key exchange
 
@@ -436,12 +450,46 @@ again to remind me!
      something better. Some alternatives have already been discussed
      on tor-dev; more work is needed, though. (12/2013)
 
-226 (writeme)
+226  Scalability and Stability Improvements to BridgeDB:
+     Switching to a Distributed Database System and RDBMS
 
+     This one outlines design and behavior changes for a seriously
+     refactored bridgedb.  (2/2014)
 
-227 (writeme)
+227  Include package fingerprints in consensus documents
+
+     Here we outline a scheme for including the digests of the latest
+     versions of Tor software in consensuses, to help with update
+     security. (2/2014)
+
+228  Cross-certifying identity keys with onion keys
+
+     This proposal signs each server's identity key with its onion
+     keys, to prove onion key ownership in the router descriptor.
+     It's not clear that this actually improves security, but it
+     fixes an annoying gap in our key authentication. (2/2014)
+
+229  Further SOCKS5 extensions
+
+     Here's a nice idea for how we can support a new SOCKS5 protocol
+     extension to relay information between clients and Tor, and
+     between Tor and pluggable transports, more effectively.  It
+     also adds some additional SOCKS5 error codes. There are some
+     open questions to answer. (2/2014)
 
 Since last time:
 
-     147 was closed as unnecessary.  See discussion in the new "Reasons for
-     Rejection" section at the end of that proprosal.
+     147 was closed as unnecessary.  See discussion in the new "Reasons
+     for Rejection" section at the end of that proprosal.
+
+     165 got clarified a little.
+
+     185 has been tweaked based on commentary from Karsten: the flag it
+     proposes now works a little differently.
+
+     220 has been revised to have a more unified certificate format.
+
+     224 has been cleaned up, expanded, revised, and tightened.
+
+     Proposals 226, 227, 228, and 229 are new.
+
