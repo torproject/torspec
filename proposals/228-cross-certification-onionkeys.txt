@@ -22,8 +22,18 @@ Status: Open
    (an attacker) from listing somebody else's public onion key in
    your descriptor.  If you do, you can't actually recover any keys
    negotiated using that key, and you can't MITM circuits made with
-   that key (since you don't have the private key).  You _could_ do
-   something weird in the TAP protocol where you .
+   that key (since you don't have the private key).
+
+   (You _could_ do something weird in the TAP protocol where you
+   receive an onionskin that you can't process, relay it to the
+   party who can process it, and receive a valid reply that you
+   could send back to the user.  But this makes you a less effective
+   man-in-the-middle than you would be if you had just generated
+   your own onion key.  The ntor protocol shuts down this
+   possibility by including the router identity in the material to
+   be hashed, so that you can't complete an ntor handshake unless
+   the client agrees with you about what identity goes with your
+   ntor onion key.)
 
    Nonetheless, it's probably undesirable that this is possible at
    all.  Just because it isn't obvious today how to exploit this
