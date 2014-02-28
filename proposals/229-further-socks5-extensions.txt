@@ -44,6 +44,13 @@ Status: Draft
    After the authentication method has been negotiated following the
    standard SOCKS5 protocol, the actual authentication phase begins.
 
+   If any requirement labeled with a "MUST" below in this protocol
+   is violated, the party receiving the violation MUST close the
+   connection.
+
+   All multibyte numeric values in this protocol MUST be transmitted
+   in network (big-endian) byte order.
+
    The initiator will send an Extended Authentication request:
 
     +----+----------+-------+-------------+-------+-------------+---
@@ -60,24 +67,21 @@ Status: Draft
     NR PAIRS: 16 bits (unsigned integer)
 
        This field specifies the number of key/value pairs to follow.
-       The NR PAIRS field MUST be transmitted in network byte order.
 
     KLEN: 16 bits (unsigned integer)
 
        This field specifies the length of the key in bytes.  It MUST
-       be transmitted in network byte order, and MUST be greater
-       than 0.
+       be greater than 0.
 
     KEY: variable length
 
        This field contains the key associated with the subsequent
-       VALUE field as an ASCII string, without a NULL terminator.
+       VALUE field as an ASCII string, without a NUL terminator.
 
     VLEN: 16 bits (unsigned integer)
 
-       This field specifies the length of the value in bytes.  It
-       MUST be transmitted in network byte order.  It MAY be
-       X'0000', in which case the corresponding VALUE field is
+       This field specifies the length of the value in bytes. It MAY
+       be X'0000', in which case the corresponding VALUE field is
        omitted.
 
     VALUE: variable length, optional
@@ -110,31 +114,11 @@ Status: Draft
        If a server sends a response indicating failure (STATUS value
        other than X'00') it MUST close the connection.
 
-    NR PAIRS: 16 bits (unsigned integer)
+    NR PAIRS, KLEN, KEY, VLEN, VALUE:
 
-       This field specifies the number of key/value pairs to follow.
-       The NR PAIRS field MUST be transmitted in network byte order.
+       These fields have the same format as they do in Extended
+       Authentication requests.
 
-    KLEN: 16 bits (unsigned integer)
-
-       This field specifies the length of the key in bytes.  It MUST be
-       transmitted in network byte order, and MUST be greater than 0.
-
-    KEY: variable length
-
-       This field contains the key associated with the subsequent
-       VALUE field as an ASCII string, without a NULL terminator.
-
-    VLEN: 16 bits (unsigned integer)
-
-       This field specifies the length of the value in bytes.  It
-       MUST be transmitted in network byte order.  It MAY be
-       X'0000', in which case the corresponding VALUE field is
-       omitted.
-
-    VALUE: variable length, optional
-
-       The value corresponding to the KEY.
 
    The currently defined KEYs are:
 
