@@ -114,6 +114,9 @@ Status: Draft
        If a server sends a response indicating failure (STATUS value
        other than X'00') it MUST close the connection.
 
+       [XXXX What should a client if it gets a value here it does
+       not recognize?]
+
     NR PAIRS, KLEN, KEY, VLEN, VALUE:
 
        These fields have the same format as they do in Extended
@@ -125,7 +128,23 @@ Status: Draft
     * "USERNAME" The username for authentication.
     * "PASSWD" The password for authentication.
 
-    [XXX - Add some more here, Stream isolation?]
+    [XXXX What do these do?  What is their behavior?  Are they
+      client-only? Right now, Tor uses SOCKS5 usernames and
+      passwords in two ways:
+
+            1) as a way to control isolation, when receiving them
+               from a SOCKS client.
+            2) as a way to encode arbitrary data, when sending data
+               to a PT.
+
+      Neither of these seem necessary any more.  We can turn 1 into
+       a new KEY, and we can turn 2 into a new set of keys.  -NM]
+
+    [XXX - Add some more here, Stream isolation? -YA]
+
+    [XXXX What should a client if it gets a value here it does
+     not recognize? -NM]
+
 
 2.2. Tor Extended SOCKS5 Reply Codes
 
@@ -135,6 +154,9 @@ Status: Draft
    indicated that it understands the "Tor Extended SOCKS5
    Authentication" as part of the version identifier/method
    selection SOCKS5 message.
+
+    [Actually, should this perhaps be controlled by additional KEY?
+       (I'm not sure.) -NM]
 
    Where:
 
@@ -190,9 +212,10 @@ Status: Draft
 
    Identical security considerations to RFC 1929 Username/Password
    authentication applies when doing Username/Password
-   authentication using the keys reserved for such.  As the
-   USERNAME/PASSWD fields are carried in cleartext, this authentication
-   method MUST NOT be used in scenarios where sniffing is possible.
+   authentication using the keys reserved for such.  As SOCKS5 is
+   sent in cleartext, this extension (like the rest of the SOCKS5
+   protocol) MUST NOT be used in scenarios where sniffing is possible.
+
    The authors of this proposal note that binding any of the Tor
    (and associated) SOCKS5 servers to non-loopback interfaces is
    strongly discouraged currently, so in the current model this is
@@ -211,7 +234,7 @@ Status: Draft
    Appelbaum, J., Mathewson, N., "Pluggable Transport Specification",
    June 2012.
 
-[XXX -  Changelog (Remove when accepted)]
+[XXX -  Changelog (Remove when accepted) -YA]
 
    2014-02-28 (Thanks to nickm/arma)
     * Generalize to also support tor
