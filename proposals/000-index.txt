@@ -149,6 +149,7 @@ Proposals by number:
 226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS" [OPEN]
 227  Include package fingerprints in consensus documents [OPEN]
 228  Cross-certifying identity keys with onion keys [OPEN]
+229  Further SOCKS5 extensions [DRAFT]
 
 
 Proposals by status:
@@ -167,6 +168,7 @@ Proposals by status:
    220  Migrate server identity keys to Ed25519 [for 0.2.x.x]
    224  Next-Generation Hidden Services in Tor
    225  Strawman proposal: commit-and-reveal shared rng
+   229  Further SOCKS5 extensions
  NEEDS-REVISION:
    131  Help users to verify they are using Tor
    190  Bridge Client Authorization Based on a Shared Secret

@@ -1,0 +1,238 @@
+Filename: 229-further-socks5-extensions.txt
+Title: Further SOCKS5 extensions
+Author: Yawning Angel
+Created: 25-Feb-2014
+Status: Draft
+
+0. Abstract
+
+   We propose extending the SOCKS5 protocol to allow passing more
+   per-session metadata, and to allow returning more meaningful
+   reponse failure codes back to the client.
+
+1. Introduction
+
+   The SOCKS5 protocol is used by Tor both as the primary interface
+   for applications to transfer data, and as the interface by which
+   Tor communicates with pluggable transport implementations.
+
+   While the current specifications allow for passing a limited
+   amount of per-session metadata via hijacking the
+   Username/Password authentication method fields, this solution is
+   limited in that the amount of payload that can be conveyed is
+   restricted to 510 bytes, does not allow the SOCKS server to
+   return a response, and precludes using authentication on the
+   SOCKS port.
+
+   The first part of this proposal defines a new authentication
+   method to overcome both of these limitations.
+
+   The second part of this proposal defines a range of SOCKS5
+   response codes that can be used to signal Tor specific error
+   conditions when processing SOCKS requests.
+
+2. Proposal
+
+2.1. Tor Extended SOCKS5 Authentication
+
+   We introduce a new authentication method to the SOCKS5 protocol.
+
+   The METHOD number to be returned to indicate support for or
+   select this method is X'97', which belongs to the "RESERVED FOR
+   PRIVATE METHODS" range in RFC 1928.
+
+   After the authentication method has been negotiated following the
+   standard SOCKS5 protocol, the actual authentication phase begins.
+
+   The initiator will send an Extended Authentication request:
+
+    +----+----------+-------+-------------+-------+-------------+---
+    |VER | NR PAIRS | KLEN1 |    KEY1     | VLEN1 |   VALUE1    | ...
+    +----+----------+-------+-------------+-------+-------------+---
+    | 1  |    2     |   2   | KLEN1 bytes |   2   | VLEN1 bytes | ...
+    +----+----------+-------+-------------+-------+-------------+---
+
+    VER: 8 bits (unsigned integer)
+
+       This field specifies the version of the authentication
+       method.  It MUST be set to X'01'.
+
+    NR PAIRS: 16 bits (unsigned integer)
+
+       This field specifies the number of key/value pairs to follow.
+       The NR PAIRS field MUST be transmitted in network byte order.
+
+    KLEN: 16 bits (unsigned integer)
+
+       This field specifies the length of the key in bytes.  It MUST
+       be transmitted in network byte order, and MUST be greater
+       than 0.
+
+    KEY: variable length
+
+       This field contains the key associated with the subsequent
+       VALUE field as an ASCII string, without a NULL terminator.
+
+    VLEN: 16 bits (unsigned integer)
+
+       This field specifies the length of the value in bytes.  It
+       MUST be tramsmitted in network byte order.  It MAY be
+       X'0000', in which case the corresponding VALUE field is
+       omitted.
+
+    VALUE: variable length, optional
+
+       The value corresponding to the KEY.
+
+
+   The responder will verify the contents of the Extended
+   Authentication request and send the followint response:
+
+    +----+--------+----------+-------+-------------+-------+-------------+---
+    |VER | STATUS | NR PAIRS | KLEN1 |    KEY1     | VLEN1 |   VALUE1    | ...
+    +----+--------+----------+-------+-------------+-------+-------------+---
+    | 1  |   1    |    2     |   2   | KLEN1 bytes |   2   | VLEN1 bytes | ...
+    +----+--------+----------+-------+-------------+-------+-------------+---
+
+    VER: 8 bits (unsigned integer)
+
+       This field specifies the version of the authentication
+       method.  It MUST be set to X'01'.
+
+    STATUS: 8 bits (unsigned integer)
+
+       The status of the Extended Authentication request where:
+
+        * X'00' SUCCESS
+        * X'01' AUTHENTICATION FAILED
+        * X'02' INVALID ARGUMENTS
+
+       If a server sends a response indicating failure (STATUS value
+       other than X'00') it MUST close the connection.
+
+    NR PAIRS: 16 bits (unsigned integer)
+
+       This field specifies the number of key/value pairs to follow.
+       The NR PAIRS field MUST be transmitted in network byte order.
+
+    KLEN: 16 bits (unsigned integer)
+
+       This field specifies the length of the key in bytes.  It MUST be
+       transmitted in network byte order, and MUST be greater than 0.
+
+    KEY: variable length
+
+       This field contains the key associated with the subsequent
+       VALUE field as an ASCII string, without a NULL terminator.
+
+    VLEN: 16 bits (unsigned integer)
+
+       This field specifies the length of the value in bytes.  It
+       MUST be tramsmitted in network byte order.  It MAY be
+       X'0000', in which case the corresponding VALUE field is
+       omitted.
+
+    VALUE: variable length, optional
+
+       The value corresponding to the KEY.
+
+   The currently defined KEYs are:
+
+    * "UNAME" The username for authentication.
+    * "PASSWD" The password for authentication.
+
+    [XXX - Add some more here, Stream isolation?]
+
+2.2. Tor Extended SOCKS5 Reply Codes
+
+   We introduce the following additional SOCKS5 reply codes to be
+   sent in the REP field of a SOCKS5 message.  Implementations MUST
+   NOT send any of the extended codes unless the initiator has
+   indicated that it understands the "Tor Extended SOCKS5
+   Authentication" as part of the version identifier/method
+   selection SOCKS5 message.
+
+   Where:
+
+    * X'E0' Hidden Service Not Found
+
+      The requested Tor Hidden Service was not reachable.
+
+    * X'E1' Hidden Service Not Reachable
+
+      The requested Tor Hidden Service was not found.
+
+    * X'F0' Temporary Pluggable Transport failure, retry immediately
+
+      Pluggable transports SHOULD return this status code if the
+      connection attempt failed, but the pluggable transport
+      believes that subsequent connections with the same parameters
+      are likely to succeed.
+
+      Example:
+
+         The ScrambleSuit Session Ticket handshake failed, but
+         reconnecting is likely to succeed as it will use the
+         UniformDH handshake.
+
+    * X'F1' Pluggable transport protocol failure, invalid bridge
+
+      Pluggable transports MUST return this status code if the
+      connection attempt failed in a manner that indicates that the
+      remote peer is not likely to accept connections at a later
+      time.
+
+      Example:
+
+         The obfs3 handshake failed.
+
+    * X'F2' Pluggable transport internal error
+
+      Pluggable transports SHOULD return this status code if the
+      connection attempt failed due to an internal error in the
+      pluggable transport implementation.
+
+      Tor might wish to restart the pluggable transport executable,
+      or retry after a delay.
+
+3. Compatibility
+
+   SOCKS5 negotiates authentication methods so backward and forward
+   compatibility is obtained for free, assuming a non-broken SOCKS5
+   implementation on the responder side that ignores unrecognised
+   authentication methods in the negotiation phase.
+
+4. Security Considerations
+
+   Identical security considerations to RFC 1929 Username/Password
+   authentication applies when doing Username/Password
+   authentication using the keys reserved for such.  As the
+   UNAME/PASSWD fields are carried in cleartext, this authentication
+   method MUST NOT be used in scenarios where sniffing is possible.
+   The authors of this proposal note that binding any of the Tor
+   (and associated) SOCKS5 servers to non-loopback interfaces is
+   strongly discouraged currently, so in the current model this is
+   believed to be acceptable.
+
+5. References
+
+   Leech, M., Ganis, M., Lee, Y., Kuris, R., Koblas, D., Jones L., "SOCKS
+   Protocol Version 5", RFC 1928, March 1996.
+
+   Tor Project, "Tor's extensions to the SOCKS protocol"
+
+   Leech, M. "Username/Password Authentication for SOCKS V5", RFC 1929,
+   March 1996.
+
+   Appelbaum, J., Mathewson, N., "Pluggable Transport Specification",
+   June 2012.
+
+[XXX -  Changelog (Remove when accepted)]
+
+   2014-02-28 (Thanks to nickm/arma)
+    * Generalize to also support tor
+      * Add status codes for bug #6031
+    * Switch from always having a username/password field to making them just
+      predefined keys.
+    * Change the auth method number to 0x97
+
