@@ -8,7 +8,7 @@ Status: Draft
 
    We propose extending the SOCKS5 protocol to allow passing more
    per-session metadata, and to allow returning more meaningful
-   reponse failure codes back to the client.
+   response failure codes back to the client.
 
 1. Introduction
 
@@ -76,7 +76,7 @@ Status: Draft
     VLEN: 16 bits (unsigned integer)
 
        This field specifies the length of the value in bytes.  It
-       MUST be tramsmitted in network byte order.  It MAY be
+       MUST be transmitted in network byte order.  It MAY be
        X'0000', in which case the corresponding VALUE field is
        omitted.
 
@@ -86,7 +86,7 @@ Status: Draft
 
 
    The responder will verify the contents of the Extended
-   Authentication request and send the followint response:
+   Authentication request and send the following response:
 
     +----+--------+----------+-------+-------------+-------+-------------+---
     |VER | STATUS | NR PAIRS | KLEN1 |    KEY1     | VLEN1 |   VALUE1    | ...
@@ -128,7 +128,7 @@ Status: Draft
     VLEN: 16 bits (unsigned integer)
 
        This field specifies the length of the value in bytes.  It
-       MUST be tramsmitted in network byte order.  It MAY be
+       MUST be transmitted in network byte order.  It MAY be
        X'0000', in which case the corresponding VALUE field is
        omitted.
 
@@ -138,7 +138,7 @@ Status: Draft
 
    The currently defined KEYs are:
 
-    * "UNAME" The username for authentication.
+    * "USERNAME" The username for authentication.
     * "PASSWD" The password for authentication.
 
     [XXX - Add some more here, Stream isolation?]
@@ -207,7 +207,7 @@ Status: Draft
    Identical security considerations to RFC 1929 Username/Password
    authentication applies when doing Username/Password
    authentication using the keys reserved for such.  As the
-   UNAME/PASSWD fields are carried in cleartext, this authentication
+   USERNAME/PASSWD fields are carried in cleartext, this authentication
    method MUST NOT be used in scenarios where sniffing is possible.
    The authors of this proposal note that binding any of the Tor
    (and associated) SOCKS5 servers to non-loopback interfaces is
