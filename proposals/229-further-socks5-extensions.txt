@@ -243,3 +243,7 @@ Status: Draft
       predefined keys.
     * Change the auth method number to 0x97
 
+   2014-02-28 (nickm's fault)
+    * check it into git
+    * clean text a little, fix redundancy
+    * ask some questions
