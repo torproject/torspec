@@ -145,6 +145,8 @@ Status: Draft
     [XXXX What should a client if it gets a value here it does
      not recognize? -NM]
 
+    [XXXX Should we recommend any namespace conventions for these? -NM]
+
 
 2.2. Tor Extended SOCKS5 Reply Codes
 
