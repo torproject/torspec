@@ -127,8 +127,6 @@ Status: Draft
    When this extension is present, it MUST match the key used to
    sign the certificate.
 
-   This 
-
 2.3. Revoking keys.
 
    We also specify a revocation document for revoking a signing key or an

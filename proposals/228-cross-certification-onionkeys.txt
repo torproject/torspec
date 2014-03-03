@@ -101,8 +101,9 @@ Status: Open
 
 4. Performance impact
 
-   Routers do not generate new descriptors frequently enough for
-   them to need to
+   Routers do not generate new descriptors frequently enough for the
+   extra signing operations required here to have an appreciable affect
+   on their performance.
 
    Checking an extra ed25519 signature when parsing a descriptor is
    very cheap, since we can use batch signature checking.
