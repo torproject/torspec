@@ -355,6 +355,12 @@ see tor-design.pdf.
    less than HASH_LEN bits.  Responders SHOULD NOT select any SSLv3
    ciphersuite other than the DHE+3DES suites listed above.
 
+2.2. TLS security considerations
+
+   Implementations MUST NOT allow TLS session resumption -- it can
+   exacerbate some attacks (e.g. the "Triple Handshake" attack from
+   Feb 2013), and it plays havoc with forward secrecy guarantees.
+
 3. Cell Packet format
 
    The basic unit of communication for onion routers and onion
@@ -644,6 +650,10 @@ see tor-design.pdf.
    correct values as described above, and then verifies the signature.
    signature.  The server MUST ignore any extra bytes in the signed
    data after the SHA256 hash.
+
+   Initiators MUST NOT send an AUTHENTICATE cell before they have
+   verified the certificates presented in the responder's CERTS
+   cell, and authenticated the responder.
 
 4.5. NETINFO cells
 
