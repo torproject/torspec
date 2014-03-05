@@ -8,10 +8,6 @@
    0.1.0.x series, and dir-spec-v2.txt for information on the protocol
    used by the 0.1.1.x and 0.1.2.x series.
 
-   Caches and authorities must still support older versions of the
-   directory protocols, until the versions of Tor that require them are
-   finally out of commission.
-
    This document merges and supersedes the following proposals:
 
        101  Voting on the Tor Directory System
@@ -181,10 +177,6 @@
    clients by giving them descriptors nobody else uses.
 
    All directory information is uploaded and downloaded with HTTP.
-
-   [Authorities also generate and caches also cache documents produced and
-   used by earlier versions of this protocol; see dir-spec-v1.txt and
-   dir-spec-v2.txt for notes on those versions.]
 
 1.1. What's different from version 2?
 
@@ -741,7 +733,9 @@
         unique IP addresses that have connected from that country to
         request a v2/v3 network status, rounded up to the nearest multiple
         of 8. Only those IP addresses are counted that the directory can
-        answer with a 200 OK status code.
+        answer with a 200 OK status code.  (Note here and below: current Tor
+        versions, as of 0.2.5.2-alpha, no longer cache or serve v2
+        networkstatus documents.)
 
     "dirreq-v2-reqs" CC=N,CC=N,... NL
         [At most once.]
@@ -1620,7 +1614,8 @@
           "Unnamed" if another router has bound the name used by this
              router, and this authority binds names.
           "Valid" if the router has been 'validated'.
-          "V2Dir" if the router implements the v2 directory protocol.
+          "V2Dir" if the router implements the v2 directory protocol or
+             higher.
 
     "v" SP version NL
 
@@ -1859,10 +1854,10 @@
    "Authority" -- A router is called an 'Authority' if the authority
    generating the network-status document believes it is an authority.
 
-   "V2Dir" -- A router supports the v2 directory protocol if it has an open
-   directory port, and it is running a version of the directory protocol that
-   supports the functionality clients need.  (Currently, this is
-   0.1.1.9-alpha or later.)
+   "V2Dir" -- A router supports the v2 directory protocol or higher if it has
+   an open directory port, and it is running a version of the directory
+   protocol that supports the functionality clients need.  (Currently, this
+   is 0.1.1.9-alpha or later.)
 
    "HSDir" -- A router is a v2 hidden service directory if it stores and
    serves v2 hidden service descriptors, and the authority believes that it's
@@ -2604,7 +2599,7 @@
 
    When a client has no consensus network-status document, it downloads it
    from a randomly chosen authority.  In all other cases, the client
-   downloads from caches randomly chosen from among those believed to be V2
+   downloads from caches randomly chosen from among those believed to be V3
    directory servers.  (This information comes from the network-status
    documents; see 6 below.)
 
@@ -2758,9 +2753,6 @@
      - Clients SHOULD NOT choose non-'Guard' nodes when picking entry guard
        nodes.
 
-     - Clients SHOULD NOT download directory information from non-'V2Dir'
-       caches.
-
    See the "path-spec.txt" document for more details.
 
 5.4.2. Managing naming
@@ -2872,22 +2864,6 @@
   503 -- we are declining the request in order to save bandwidth
       -- user requested some items that we ordinarily generate or store,
          but we do not have any available.
-
-7. Backward compatibility and migration plans
-
-  Until Tor versions before 0.1.1.x are completely obsolete, directory
-  authorities should generate, and mirrors should download and cache, v1
-  directories and running-routers lists, and allow old clients to download
-  them.  These documents and the rules for retrieving, serving, and caching
-  them are described in dir-spec-v1.txt.
-
-  Until Tor versions before 0.2.0.x are completely obsolete, directory
-  authorities should generate, mirrors should download and cache, v2
-  network-status documents, and allow old clients to download them.
-  Additionally, all directory servers and caches should download, store, and
-  serve any router descriptor that is required because of v2 network-status
-  documents. These documents and the rules for retrieving, serving, and
-  caching them are described in dir-spec-v1.txt.
 
 A. Consensus-negotiation timeline.
 
