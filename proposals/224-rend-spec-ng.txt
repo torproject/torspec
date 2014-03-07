@@ -1186,6 +1186,11 @@ Status: Draft
    point authentication key and introduction point encryption key.  If
    they do, the cell is relayed; if not, it is not.
 
+   (After checking AUTH_KEYID and ENC_KEYID and finding no match, the
+   introduction point should check to see whether a legacy hidden service is
+   running whose PK_ID is the first 20 bytes of AUTH_KEYID.  If so, it
+   behaves as in rend-spec.txt.)
+
    The AUTH_KEYID for an Ed25519 public key is the public key itself.
    The ENC_KEYID for a Curve25519 public key is the first 8 bytes of the
    public key. (This key ID is safe to truncate, since all the keys are
@@ -1250,7 +1255,8 @@ Status: Draft
    The service host then checks whether it has received a cell with
    these contents before. If it has, it silently drops it as a
    replay. (It must maintain a replay cache for as long as it accepts
-   cells with the same encryption key.)
+   cells with the same encryption key. Note that the encryption format below
+   should be non-malleable.)
 
    If the cell is not a replay, it decrypts the ENCRYPTED field,
    establishes a shared key with the client, and authenticates the whole
