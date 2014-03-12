@@ -1381,7 +1381,7 @@ Status: Draft
                EXT_FIELD_TYPE           [1 byte]
                EXT_FIELD_LEN            [1 byte]
                EXT_FIELD                [EXTRA_FIELD_LEN bytes]
-               ZERO                     [1 byte]
+            ZERO                        [1 byte]
             ENCRYPTED:
                CLIENT_PK                [G_LENGTH bytes]
                ENCRYPTED_DATA           [Padded to length of plaintext]

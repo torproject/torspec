@@ -756,7 +756,7 @@
     "net/listeners/dns"
     "net/listeners/control"
       A quoted, space-separated list of the locations where Tor is listening
-      for connections of the specified type. These can contain both IPv4
+      for connections of the specified type. These can contain IPv4
       network address...
 
         "127.0.0.1:9050" "127.0.0.1:9051"
@@ -764,6 +764,10 @@
       ... or local unix sockets...
 
         "unix:/home/my_user/.tor/socket"
+
+      ... or IPv6 network addresses:
+
+        "[2001:0db8:7000:0000:0000:dead:beef:1234]:9050"
 
       [New in Tor 0.2.2.26-beta.]
 
