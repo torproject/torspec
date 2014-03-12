@@ -755,8 +755,17 @@
     "net/listeners/natd"
     "net/listeners/dns"
     "net/listeners/control"
-      A space-separated list of the addresses at which Tor is listening for
-      connections of each specified type.  [New in Tor 0.2.2.26-beta.]
+      A quoted, space-separated list of the locations where Tor is listening
+      for connections of the specified type. These can contain both IPv4
+      network address...
+
+        "127.0.0.1:9050" "127.0.0.1:9051"
+
+      ... or local unix sockets...
+
+        "unix:/home/my_user/.tor/socket"
+
+      [New in Tor 0.2.2.26-beta.]
 
     "dir-usage"
       A newline-separated list of how many bytes we've served to answer
