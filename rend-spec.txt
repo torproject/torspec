@@ -733,19 +733,17 @@
    received a reply, it uses g^y and H(g^xy) to complete the handshake as in
    the Tor circuit extend process: they establish a 60-octet string as
        K = SHA1(g^xy | [00]) | SHA1(g^xy | [01]) | SHA1(g^xy | [02])
-   and generate
-       KH = K[0..15]
-       Kf = K[16..31]
-       Kb = K[32..47]
+   and generate KH, Df, Db, Kf, and Kb as in the KDF-TOR key derivation
+   approach documented in tor-spec.txt.
 
    Subsequently, the rendezvous point passes relay cells, unchanged, from
-   each of the two circuits to the other.  When Alice's OP sends
-   RELAY cells along the circuit, it first encrypts them with the
+   each of the two circuits to the other.  When Alice's OP sends RELAY cells
+   along the circuit, it authenticates with Df, and encrypts them with the
    Kf, then with all of the keys for the ORs in Alice's side of the circuit;
    and when Alice's OP receives RELAY cells from the circuit, it decrypts
    them with the keys for the ORs in Alice's side of the circuit, then
-   decrypts them with Kb.  Bob's OP does the same, with Kf and Kb
-   interchanged.
+   decrypts them with Kb, and checks integrity with Db.  Bob's OP does the
+   same, with Kf and Kb interchanged.
 
 1.11. Creating streams
 
