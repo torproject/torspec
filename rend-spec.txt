@@ -736,6 +736,10 @@
    and generate KH, Df, Db, Kf, and Kb as in the KDF-TOR key derivation
    approach documented in tor-spec.txt.
 
+   As in the TAP handshake, if the KH value derived from KDF-Tor does not
+   match the value in the RENDEZVOUS2 cell, the client must close the
+   circuit.
+
    Subsequently, the rendezvous point passes relay cells, unchanged, from
    each of the two circuits to the other.  When Alice's OP sends RELAY cells
    along the circuit, it authenticates with Df, and encrypts them with the
