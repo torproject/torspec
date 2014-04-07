@@ -1,0 +1,83 @@
+Filename: xxx-rsa1024-relay-id-maigration.txt
+Title: How to change RSA1024 relay identity keys
+Authors: Nick Mathewson
+Created: 7 April 2014
+Target: 0.2.?
+Status: Draft
+
+1. Intro and motivation
+
+   Some times, a relay would like to migrate from one RSA1024
+   identity key to another without losing its previous status.
+
+   This is especially important because proposal 220 ("Migrate
+   server identity keys to Ed25519") is not yet implemented, and so
+   server identity keys are not kept offline.  So when an OpenSSL
+   bug like CVE-2014-0160 makes memory-reading attacks a threat to
+   identity keys, we need a way for routers to migrate ASAP.
+
+   This proposal does not cover migrating RSA1024 OR identity keys
+   for authorities.
+
+2. Design
+
+   I propose that when a relay changes its identity key, it should
+   include a "old-identity" field in its server descriptor for 60 days
+   after the migration.  This old-identity would include the
+   old RSA1024 identity, a signature of the new identity key
+   with the old one, and the date when the migration occurred.
+
+   This field would appear as an "old-id" field in microdescriptors,
+   containin a SHA1 fingerprint of the old identity key, if the
+   signature turned out to be value.
+
+   Authorities would store old-identity => new-identity mappings,
+   and:
+
+      * Treat history information (wfu, mtbf, [and what else?]) from
+        old identities as applying to new identities instead.
+
+      * No longer accept any routers descriptors signed by the old
+        identity.
+
+   Clients would migrate any guard entries for the old identity to
+   the new identity.
+
+   (This will break clients connections for clients who try to
+   connect to the old identity key before learning about the new
+   one, but the window there won't be large for any single router.)
+
+3. Descriptor format details
+
+   Router descriptors may contain these new elements:
+
+      "old-rsa1024-id-key" NL RSA_KEY NL
+
+        Contains an old RSA1024 identity key. If this appears,
+        old-rsa1024-id-migration must also appear. [At most once]
+
+      "old-rsa1024-id-migration" SP ISO-TIME NL SIGNATURE NL
+
+        Contains a signature of:
+         The bytes "RSA1024 ID MIGRATION"               [20 bytes]
+         The ISO-TIME field above as an 8 byte field    [8 bytes]
+         A SHA256 hash of the new identity              [32 bytes]
+
+        If this appears, "old-rsa1024-id-key" must also appear.
+        [At most once].
+
+4. Interface
+
+   To use this feature, a router should rename its secret_id_key
+   file to secret_id_key_OLD.  The first time that Tor starts and
+   finds a secret_id_key_OLD file, it generates a new ID key if one
+   is not present, and generates the text of the old-rsa-1024-id-key
+   and old-rsa1024-id-migration fields above.  It stores them in a
+   new "old_id_key_migration" file, and deletes the
+   secret_id_key_OLD file.  It includes them in its desecriptors.
+
+   Sixty days after the stored timestamp, the router deletes the
+   "old_id_key_migration" file and stops including its contents in
+   the descriptor.
+
+
