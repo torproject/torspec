@@ -1535,7 +1535,7 @@
 
       Reason = "MISC" / "DONE" / "CONNECTREFUSED" /
                "IDENTITY" / "CONNECTRESET" / "TIMEOUT" / "NOROUTE" /
-               "IOERROR" / "RESOURCELIMIT"
+               "IOERROR" / "RESOURCELIMIT" / "PT_MISSING"
 
   NumCircuits counts both established and pending circuits.
 
@@ -1565,6 +1565,7 @@
      IOERROR -- We got some other IO error on our connection to the OR.
      RESOURCELIMIT -- We don't have enough operating system resources (file
         descriptors, buffers, etc) to connect to the OR.
+     PT_MISSING -- No pluggable transport was available.
      MISC -- The OR connection closed for some other reason.
 
   [First added ID parameter in 0.2.5.2-alpha]
