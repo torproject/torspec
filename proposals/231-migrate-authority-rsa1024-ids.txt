@@ -1,0 +1,68 @@
+Filename: 231-migrate-authority-rsa1024-ids.txt
+Title: Migrating authority RSA1024 identity keys
+Authors: Nick Mathewson
+Created: 8 April 2014
+Target: 0.2.?
+Status: Draft
+
+1. Intro and motivation
+
+   We'd like for RSA1024 identity keys to die out entirely.  But we
+   may need to migrate authority identity keys before that happens.
+
+   This is especially important because proposal 220 ("Migrate
+   server identity keys to Ed25519") is not yet implemented, and so
+   server identity keys are not kept offline.  So when an OpenSSL
+   bug like CVE-2014-0160 makes memory-reading attacks a threat to
+   identity keys, we need a way for authorities to migrate ASAP.
+
+   Migrating authority ID keys is a trickier problem than migrating
+   router ID keys, since the authority RSA1024 keys are hardwired in the
+   source.  We use them to authenticate encrypted OR connections to
+   authorities that we use to publish and retrieve directory
+   information.
+
+   This proposal does not cover migrating RSA1024 OR identity keys for
+   other nodes; for that, see proposal 230.
+
+2. Design
+
+   When an authority is using a new RSA1024 key, it retains the old one
+   in a "legacy_link_id_key" file.  It uses this key to perform link
+   protocol handshakes at its old address:port, and it uses the new key
+   to perform link protocol handshakes at a new address:port.
+
+   This should be sufficient for all clients that expect the old
+   address:port:fingerprint to work, while allowing new clients to use
+   the correct address:port:fingerprint.
+
+   Authorities will sign their own router descriptors with their new
+   identity key, and won't advertise the old port or fingerprint at all
+   in their descriptors.  This shouldn't break anything, so far as I
+   know.
+
+3. Implementation
+
+   We'll have a new flag on an ORPort: "LegacyIDKey". It implies
+   NoAdvertise.  If it is present, we use our LegacyIDKey for that
+   ORPort and that ORPort, for all of:
+
+     * The TLS certificate chains used in the v1 and v2 link protocol
+       handshake.
+
+     * The certificate chains and declared identity in the v3 link
+       handshake.
+
+     * Accepting ntor cells.
+
+4. Open questions
+
+   On ticket #11448, Robert Ransom suggests that authorities may need to
+   publish extra server descriptors for themselves, signed with the old
+   identity key too.  We should investigate whether clients will
+   misbehave if they can't find such descriptors.
+
+   If that's the case, authorities should generate these descriptors,
+   but not include them in votes or the consensus; or if they are
+   included, don't assign them flags that will get them used.
+
