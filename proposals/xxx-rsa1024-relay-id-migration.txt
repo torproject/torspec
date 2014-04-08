@@ -28,7 +28,7 @@ Status: Draft
    with the old one, and the date when the migration occurred.
 
    This field would appear as an "old-id" field in microdescriptors,
-   containin a SHA1 fingerprint of the old identity key, if the
+   containing a SHA1 fingerprint of the old identity key, if the
    signature turned out to be value.
 
    Authorities would store old-identity => new-identity mappings,
