@@ -150,6 +150,7 @@ Proposals by number:
 227  Include package fingerprints in consensus documents [OPEN]
 228  Cross-certifying identity keys with onion keys [OPEN]
 229  Further SOCKS5 extensions [DRAFT]
+230  How to change RSA1024 relay identity keys [DRAFT]
 
 
 Proposals by status:
@@ -169,6 +170,7 @@ Proposals by status:
    224  Next-Generation Hidden Services in Tor
    225  Strawman proposal: commit-and-reveal shared rng
    229  Further SOCKS5 extensions
+   230  How to change RSA1024 relay identity keys [for 0.2.?]
  NEEDS-REVISION:
    131  Help users to verify they are using Tor
    190  Bridge Client Authorization Based on a Shared Secret

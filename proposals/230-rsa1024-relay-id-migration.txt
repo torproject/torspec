@@ -1,4 +1,4 @@
-Filename: 230-rsa1024-relay-id-maigration.txt
+Filename: 230-rsa1024-relay-id-migration.txt
 Title: How to change RSA1024 relay identity keys
 Authors: Nick Mathewson
 Created: 7 April 2014
