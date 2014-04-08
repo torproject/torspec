@@ -473,12 +473,13 @@
       a SAVECONF command, so the controller can write the file to
       disk itself. [First implemented in 0.2.2.7-alpha.]
 
-    ["exit-policy/prepend" -- The default exit policy lines that Tor will
-      *prepend* to the ExitPolicy config option.
-     -- Never implemented. Useful?]
-
     "exit-policy/default" -- The default exit policy lines that Tor will
       *append* to the ExitPolicy config option.
+
+    "exit-policy/ipv4"
+    "exit-policy/ipv6"
+    "exit-policy/full" -- This OR's exit policy, in IPv4-only, IPv6-only, or
+      all-entries flavors.
 
     "desc/id/<OR identity>" or "desc/name/<OR nickname>" -- the latest
       server descriptor for a given OR.  (Note that modern Tor clients
