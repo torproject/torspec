@@ -2,7 +2,8 @@ Filename: 232-pluggable-transports-through-proxy.txt
 Title: Pluggable Transport through SOCKS proxy
 Author: Arturo Filastò
 Created: 28 February 2012
-Status: Draft
+Status: Open
+Target: 0.2.6.x
 
 Overview
 
