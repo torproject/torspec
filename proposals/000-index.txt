@@ -152,6 +152,7 @@ Proposals by number:
 229  Further SOCKS5 extensions [DRAFT]
 230  How to change RSA1024 relay identity keys [DRAFT]
 231  Migrating authority RSA1024 identity keys [DRAFT]
+232  Pluggable Transport through SOCKS proxy [DRAFT]
 
 
 Proposals by status:
@@ -173,6 +174,7 @@ Proposals by status:
    229  Further SOCKS5 extensions
    230  How to change RSA1024 relay identity keys [for 0.2.?]
    231  Migrating authority RSA1024 identity keys [for 0.2.?]
+   232  Pluggable Transport through SOCKS proxy
  NEEDS-REVISION:
    131  Help users to verify they are using Tor
    190  Bridge Client Authorization Based on a Shared Secret
