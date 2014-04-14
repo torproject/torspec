@@ -69,7 +69,7 @@ Specifications: Tor Pluggable Transport communication
 
   If the pluggable transport proxy detects that the TOR_PT_PROXY
   environment variable is set, it attempts connecting to it. On
-  success it writes to stdout: "PROXY true".
+  success it writes to stdout: "PROXY DONE".
   On failure it writes: "PROXY-ERROR <errormessage>".
 
   If Tor does not read a PROXY line or it reads a PROXY-ERROR line
