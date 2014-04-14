@@ -6,27 +6,30 @@ Status: Open
 
 
 1. Introduction
-While chatting with the Tor archons at the winter meeting, two speed
-optimizations for tor2web mode [1] were put forward.  This proposal specifies
-concretizes these two optimizations.  As with the current tor2web mode, this
-quickened tor2web mode negates any client anonymity.
 
+   While chatting with the Tor archons at the winter meeting, two speed
+   optimizations for tor2web mode [1] were put forward.  This proposal
+   specifies concretizes these two optimizations.  As with the current
+   tor2web mode, this quickened tor2web mode negates any client
+   anonymity.
 
 2. Tor2web optimizations
-  2.1) self-rendezvous
-  In the current tor2web mode, the client establishes a 1-hop circuit (direct
-  connection) to a chosen rendezvous point.  We propose that, alternatively,
-  the client set *itself* as the rendezvous point. This coincides with ticket
-  #9685[2].
 
+2.1. Self-rendezvous
 
-  2.2) direct-introduction
+  In the current tor2web mode, the client establishes a 1-hop circuit
+  (direct connection) to a chosen rendezvous point.  We propose that,
+  alternatively, the client set *itself* as the rendezvous point. This
+  coincides with ticket #9685[2].
+
+2.2. direct-introduction
+
   Identical to the non-tor2web mode, in the current tor2web mode, the
-  client establishes a 3-hop circuit to the introduction point.
-  We propose that, alternatively, the client builds a 1-hop circuit to
-  the introduction point.
-
+  client establishes a 3-hop circuit to the introduction point.  We
+  propose that, alternatively, the client builds a 1-hop circuit to the
+  introduction point.
 
 4. References
-[1] Tor2web mode: https://trac.torproject.org/projects/tor/ticket/2553
-[2] Self-rendezvous: https://trac.torproject.org/projects/tor/ticket/9685
+
+  [1] Tor2web mode: https://trac.torproject.org/projects/tor/ticket/2553
+  [2] Self-rendezvous: https://trac.torproject.org/projects/tor/ticket/9685

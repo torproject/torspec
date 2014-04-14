@@ -153,6 +153,8 @@ Proposals by number:
 230  How to change RSA1024 relay identity keys [DRAFT]
 231  Migrating authority RSA1024 identity keys [DRAFT]
 232  Pluggable Transport through SOCKS proxy [OPEN]
+233  Making Tor2Web mode faster [OPEN]
+234  Adding remittance field to directory specification [OPEN]
 
 
 Proposals by status:
@@ -208,6 +210,8 @@ Proposals by status:
    227  Include package fingerprints in consensus documents
    228  Cross-certifying identity keys with onion keys
    232  Pluggable Transport through SOCKS proxy [for 0.2.6.x]
+   233  Making Tor2Web mode faster
+   234  Adding remittance field to directory specification
  ACCEPTED:
    140  Provide diffs between consensuses
    172  GETINFO controller option for circuit information
