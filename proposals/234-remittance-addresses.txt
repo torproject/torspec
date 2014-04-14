@@ -1,0 +1,36 @@
+Filename: 234-remittance-addresses.txt
+Title: Adding remittance field to directory specification
+Author: Virgil Griffith, Leif Ryge, Rob Jansen
+Created: 2014-03-27
+Status: Open
+
+
+1. Motivation
+We wish to add the ability for individual users to donate to the owners of
+relay operators using a cryptocurrency.  We propose adding an optional line to
+the torrc file which will be published in the directory consensus and listed
+on https://compass.torproject.org.
+
+
+2. Proposal
+Allow an optional "RemittanceAddresses" line to the torrc file containing
+comma-delimited cryptocurrency URIs.  The format is:
+
+RemittanceAddressses <currency1>:<address>1,<currency2>:<address2>
+
+For an example using an actual bitcoin and namecoin address, this is:
+
+RemittanceAddressses bitcoin:19mP9FKrXqL46Si58pHdhGKow88SUPy1V8,namecoin:NAMEuWT2icj3ef8HWJwetZyZbXaZUJ5hFT
+
+The contents of a relay's RemittanceAddresses line will be mirrored in
+the relay's router descriptor (which is then published in the directory
+consensus).  This line will be treated akin to the ContactInfo field.  A
+cryptocurrency address may not contain a colon, comma, whitespace, or other
+nonprintable ASCII.
+
+Like the ContactInfo line, there is no explicit length limit for
+RemittanceAddressses---the only limit is the length of the entire descriptor.
+If the relay lists multiple addresses of the same currency type (e.g., two
+bitcoin addresses), only the first (left-most) one of each currency is
+published in the directory consensus.
+
