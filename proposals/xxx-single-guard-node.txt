@@ -1,0 +1,274 @@
+Filename: xxx-single-guard-node.txt
+Title: The move to a single guard node
+Author: George Kadianakis
+Created: 2014-03-22
+Status: Draft and potentially a bad idea
+
+0. Introduction
+
+   It has been suggested that reducing the number of guard nodes of
+   each user and increasing the guard node rotation period will make
+   Tor more resistant against certain attacks [0].
+
+   For example, an attacker who sets up guard nodes and hopes for a
+   client to eventually choose them as their guard will have much less
+   probability of succeeding in the long term.
+
+   Currently, every client picks 3 guard nodes and keeps them for 2 to
+   3 months (since 0.2.4.12-alpha) before rotating them. In this
+   document, we propose the move to a single guard per client and an
+   increase of the rotation period to 9 to 10 months.
+
+1. Proposed changes
+
+1.1. Switch to one guard per client
+
+   When this proposal becomes effective, clients will switch to using
+   a single guard node.
+
+   That is, in its first startup, Tor picks one guard and stores its
+   identity persistently to disk. Tor uses that guard node as the
+   first hop of its circuits from thereafter.
+
+   If that Guard node ever becomes unusable, rather than replacing it,
+   Tor picks a new guard and adds it to the end of the list. When
+   choosing the first hop of a circuit, Tor tries all guard nodes from
+   the top of the list sequentially till it finds a usable guard node.
+
+   A Guard node is considered unusable according to section "5. Guard
+   nodes" in path-spec.txt. The rest of the rules from that section
+   apply here too. XXX which rules specifically?
+
+   XXX Do we need to specify how already existing clients migrate?
+
+1.1.1. Alternative behavior to section 1.1
+
+   Here is an alternative behavior than the one specified in the
+   previous section. It's unclear which one is better.
+
+   Instead of picking a new guard when the old guard becomes unusable,
+   we pick a number of guards in the beginning but only use the top
+   usable guard each time. When our guard becomes unusable, we move to
+   the guard below it in the list.
+
+   This behavior _might_ make some attacks harder; for example, an
+   attacker who shoots down your guard in the hope that you will pick
+   his guard next, is now forced to have evil guards in the network at
+   the time you first picked your guards.
+
+   However, this behavior might also influence performance, since a
+   guard that was fast enough 7 months ago, might not be this fast
+   today. Should we reevaluate our opinion based on the last
+   consensus, when we have to pick a new guard? Also, a guard that was
+   up 7 months ago might be down today, so we might end up sampling
+   from the current network anyway.
+
+1.2. Increase guard rotation period
+
+   When this proposal becomes effective, Tor clients will set the
+   lifetime of each guard to a random time between 9 to 10 months.
+
+   If Tor tries to use a guard whose age is over its lifetime value,
+   the guard gets discarded (also from persistent storage) and a new
+   one is picked in its place.
+
+   XXX We didn't do any analysis on extending the rotation period.
+       For example, we don't even know the average age of guards, and
+       whether all guards stay around for less than 9 months anyway.
+       Maybe we should do some analysis before proceeding?
+
+   XXX The guard lifetime should be controlled using the
+       (undocumented?) GuardLifetime consensus option, right?
+
+1.2.1. Alternative behavior to section 1.2
+
+   Here is an alternative behavior than the one specified in the
+   previous section. It's unclear which one is better.
+
+   Similar to section 1.2, but instead of rotating to completely new
+   guard nodes after 9 months, we pick a few extra guard nodes in the
+   beginning, and after 9 months we delete the already used guard
+   nodes and use the one after them.
+
+   This has approximately the same tradeoffs as section 1.1.1.
+
+   Also, should we check the age of all of our guards periodically, or
+   only check them when we try to use them?
+
+1.3. Age of guard as a factor on guard probabilities
+
+   By increasing the guard rotation period we also increase the lack
+   of clients for young guards since clients will rotate guards even
+   more infrequently now (see 'Phase three' of [1]).
+
+   We can try to mitigate this phenomenon by giving higher priority to
+   young guards to be picked as guards:
+
+   To do so, everytime an authority needs to vote for a guard, it
+   reads a set of consensus documents spanning the past NNN months, and
+   calculates the age of the guard; that is, in how many consensuses
+   its public key has been included in the past.
+
+   The authorities include the age of each guard by appending
+   '[SP "Age=" INT]' in the guard's "w" line.
+
+   When a client picks a guard, it applies the age of each guard as a
+   weight on its guard probability. XXX unspecified how
+
+   XXX How much should the age of a guard influence its probability?
+       Should we say that a guard that just appeared should have 10%
+       more chance of being selected as a guard node than the oldest
+       guard in town?
+
+   XXX Should the authorities include the age itself, or just the
+       weight that clients should apply to the probability?
+
+   XXX Is this risky? Maybe we shouldn't give too much priority to new
+       guards, otherwise an adversary can start up a few new relays
+       every month, enjoy maximum priority when they get the guard
+       flag, leave them running for a bit till the next batch gets the
+       guard flag and then trash them.
+
+1.4. Raise the bandwidth threshold for being a guard
+
+   From dir-spec.txt:
+      "Guard" -- A router is a possible 'Guard' if its Weighted Fractional
+       Uptime is at least the median for "familiar" active routers, and if
+       its bandwidth is at least median or at least 250KB/s.
+
+   When this proposal becomes effective, authorities should change the
+   bandwidth threshold for being a guard node to 2000KB/s instead of
+   250KB/s.
+
+   Implications of raising the bandwidth threshold are discussed in
+   section 2.3.
+
+   XXX Is this insane? It's an 8-fold increase.
+
+2. Discussion
+
+2.1. Guard node set fingerprinting
+
+   With the old behavior of three guard nodes per user, it was
+   extremely unlikely for two users to have the same guard node
+   set. Hence the set of guard nodes acted as a fingerprint to each
+   user.
+
+   When this proposal becomes effective, each user will have one guard
+   node. We believe that this slightly reduces the effectiveness of
+   this fingerprint since users who pick a popular guard node will now
+   blend in with thousands of other users. However, clients who pick a
+   slow guard will still have a small anonymity set [2].
+
+   All in all, this proposal slightly improves the situation of guard
+   node fingerprinting, but does not solve it. See the next section
+   for a suggested scheme that would further fix the guard node set
+   fingerprinting problem
+
+2.1.1. Potential fingerprinting solution: Guard buckets
+
+   One of the suggested alternatives that moves us closer to solving
+   the guard node fingerprinting problem, would be to split the list
+   of N guard nodes into buckets of K guards, and have each client
+   pick a bucket [3].
+
+   This reduces the fingerprint from N-choose-k to N/k guard set
+   choices; it also allows users to have multiple guard nodes which
+   provides reliability and performance.
+
+   Unfortunately, the implementation of this idea is not as easy and
+   its anonymity effects are not well understood so we had to reject
+   this alternative for now.
+
+2.2. What about 'multipath' schemes like Conflux?
+
+   By switching to one guard, we rule out the deployment of
+   'multipath' systems like Conflux [4] which build multiple circuits
+   through the Tor network and attempt to detect and use the most
+   efficient circuits.
+
+   On the other hand, the 'Guard buckets' idea outlined in section
+   2.1.1 works well with Conflux-type schemes so it's still worth
+   considering.
+
+2.3. Implications of raising the bandwidth threshold for guards
+
+   By raising the bandwidth threshold for being a guard we directly
+   affect the performance and anonymity of Tor clients. We performed a
+   brief analysis of the implications of switching to one guard and
+   the results imply that the changes are not tragic [2].
+
+   Specifically, it seems that the performance of about half of the
+   clients will degrade slightly, but the performance of the other
+   half will remain the same or even improve.
+
+   Also, it seems that the powerful guard nodes of the Tor network
+   have enough total bandwidth capacity to handle client traffic even
+   if some slow guard nodes get discarded.
+
+   On the anonymity side, by increasing the bandwidth threshold to
+   2MB/s we half our guard nodes; we discard 1000 out of 2000
+   guards. Even if this seems like a substantial diversity loss, it
+   seems that the 1000 discarded guard nodes had a very small chance
+   of being selected in the first place (7% chance of any of the being
+   selected).
+
+   However, it's worth noting that the performed analysis was quite
+   brief and the implications of this proposal are complex, so we
+   should be prepared for surprises.
+
+2.4. Should we stop building circuits after a number of guard failures?
+
+   Inspired by academic papers like the Sniper attack [5], a powerful
+   attacker can choose to shut down guard nodes till a client is
+   forced to pick an attacker controlled guard node. Similarly, a
+   local network attacker can kill all connections towards all guards
+   except the ones she controls.
+
+   This is a very powerful attack that is hard to defend against. A
+   naive way of defending against it would be for Tor to refuse to
+   build any more circuits after a number of guard node failures have
+   been experienced.
+
+   Unfortunately, we believe that this is not a sufficiently strong
+   countermeasure since puzzled users will not comprehend the
+   confusing warning message about guard node failures and they will
+   instead just uninstall and reinstall TBB to fix the issue.
+
+2.5. What this proposal does not propose
+
+   Finally, this proposal does not aim to solve all the problems with
+   guard nodes. This proposal only tries to solve some of the problems
+   whose solution is analyzed sufficiently and seems harmless enough
+   to us.
+
+   For example, this proposal does not try to solve:
+   - Guard enumeration attacks. We need guard layers or virtual
+     circuits for this [6].
+   - The guard node set fingerprinting problem [7]
+   - The fact that each isolation profile or virtual identity should
+     have its own guards.
+
+XXX It would also be nice to have some way to easily revert back to 3
+    guards if we later decide that a single guard was a very stupid
+    idea.
+
+References:
+
+[0]: https://blog.torproject.org/blog/improving-tors-anonymity-changing-guard-parameters
+     http://freehaven.net/anonbib/#wpes12-cogs
+
+[1]: https://blog.torproject.org/blog/lifecycle-of-a-new-relay
+
+[2]: https://lists.torproject.org/pipermail/tor-dev/2014-March/006458.html
+
+[3]: https://trac.torproject.org/projects/tor/ticket/9273#comment:4
+
+[4]: http://freehaven.net/anonbib/#pets13-splitting
+
+[5]: https://blog.torproject.org/blog/new-tor-denial-service-attacks-and-defenses
+
+[6]: https://trac.torproject.org/projects/tor/ticket/9001
+
+[7]: https://trac.torproject.org/projects/tor/ticket/10969
+
