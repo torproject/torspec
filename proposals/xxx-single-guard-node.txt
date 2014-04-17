@@ -2,7 +2,7 @@ Filename: xxx-single-guard-node.txt
 Title: The move to a single guard node
 Author: George Kadianakis
 Created: 2014-03-22
-Status: Draft and potentially a bad idea
+Status: Draft
 
 0. Introduction
 
@@ -37,7 +37,10 @@ Status: Draft and potentially a bad idea
 
    A Guard node is considered unusable according to section "5. Guard
    nodes" in path-spec.txt. The rest of the rules from that section
-   apply here too. XXX which rules specifically?
+   apply here too. XXX which rules specifically? -asn
+   XXX Probably the rules about how to add a new guard (only after 
+       contact), when to re-try a guard for reachability, and when to 
+       discard a guard?  -nickhopper
 
    XXX Do we need to specify how already existing clients migrate?
 
@@ -98,36 +101,46 @@ Status: Draft and potentially a bad idea
 1.3. Age of guard as a factor on guard probabilities
 
    By increasing the guard rotation period we also increase the lack
-   of clients for young guards since clients will rotate guards even
+   of utilization for young guards since clients will rotate guards even
    more infrequently now (see 'Phase three' of [1]).
 
-   We can try to mitigate this phenomenon by giving higher priority to
-   young guards to be picked as guards:
+   We can mitigate this phenomenon by treating these recent guards as
+   "fractional" guards:
 
    To do so, everytime an authority needs to vote for a guard, it
-   reads a set of consensus documents spanning the past NNN months, and
-   calculates the age of the guard; that is, in how many consensuses
-   its public key has been included in the past.
+   reads a set of consensus documents spanning the past NNN months,
+   where NNN is the number of months in the guard rotation period (10
+   months if this proposal is adopted in full) and calculates the
+   visibility of the guard; that is, in how many consensuses it has
+   had the guard flag. 
 
    The authorities include the age of each guard by appending
-   '[SP "Age=" INT]' in the guard's "w" line.
+   '[SP "GV=" INT]' in the guard's "w" line.
 
-   When a client picks a guard, it applies the age of each guard as a
-   weight on its guard probability. XXX unspecified how
+   A guard N that has been visible for V out of NNN*30*24 consensuses
+   has had the opportunity to be chosen as a guard by approximately 
+   F = V/NNN*30*24 of the clients in the network, and the remaining
+   1-F fraction of the clients have not noticed this change.  So when
+   being chosen for middle or exit positions on a circuit, clients
+   should treat N as if F fraction of its bandwidth is a guard
+   (respectively, dual) node and (1-F) is a middle (resp, exit) node.
+   Let Wpf denote the weight from the 'bandwidth-weights' line a
+   client would apply to N for position p if it had the guard
+   flag, Wpn the weight if it did not have the guard flag, and B the
+   measured bandwidth of N in the consensus.  Then instead of choosing
+   N for position p proportionally to Wpf*B or Wpn*B, clients should
+   choose N proportionally to F*Wpf*B + (1-F)*Wpn*B.
 
-   XXX How much should the age of a guard influence its probability?
-       Should we say that a guard that just appeared should have 10%
-       more chance of being selected as a guard node than the oldest
-       guard in town?
+   Similarly, when calculating the bandwidth-weights line as in
+   section 3.8.3 of dir-spec.txt, directory authorities should treat N
+   as if fraction F of its bandwidth has the guard flag and (1-F) does
+   not.  So when computing the totals G,M,E,D, each relay N with guard
+   visibility fraction F and bandwidth B should be added as follows:
 
-   XXX Should the authorities include the age itself, or just the
-       weight that clients should apply to the probability?
-
-   XXX Is this risky? Maybe we shouldn't give too much priority to new
-       guards, otherwise an adversary can start up a few new relays
-       every month, enjoy maximum priority when they get the guard
-       flag, leave them running for a bit till the next batch gets the
-       guard flag and then trash them.
+   G' = G + F*B, if N does not have the exit flag
+   M' = M + (1-F)*B, if N does not have the exit flag
+   D' = D + F*B, if N has the exit flag
+   E' = E + (1-F)*B, if N has the exit flag
 
 1.4. Raise the bandwidth threshold for being a guard
 
