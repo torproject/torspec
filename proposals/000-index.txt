@@ -155,6 +155,7 @@ Proposals by number:
 232  Pluggable Transport through SOCKS proxy [OPEN]
 233  Making Tor2Web mode faster [OPEN]
 234  Adding remittance field to directory specification [OPEN]
+235  Stop assigning (and eventually supporting) the Named flag [DRAFT]
 
 
 Proposals by status:
@@ -176,6 +177,7 @@ Proposals by status:
    229  Further SOCKS5 extensions
    230  How to change RSA1024 relay identity keys [for 0.2.?]
    231  Migrating authority RSA1024 identity keys [for 0.2.?]
+   235  Stop assigning (and eventually supporting) the Named flag [for 0.2.5]
  NEEDS-REVISION:
    131  Help users to verify they are using Tor
    190  Bridge Client Authorization Based on a Shared Secret

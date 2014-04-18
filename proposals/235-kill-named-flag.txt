@@ -1,0 +1,53 @@
+Filename: 235-kill-named-flag.txt
+Title: Stop assigning (and eventually supporting) the Named flag
+Authors: Sebastian Hahnn
+Created: 10 April 2014
+Target: 0.2.5
+Status: Draft
+
+1. Intro and motivation
+
+  Currently, Tor supports the concept of linking a Tor relay's nickname
+  to its identity key. This happens automatically as a new relay joins
+  the network with a unique nickname, and keeps it for a while. To
+  indicate that a nickname is linked to the presented identity, the
+  directory authorities vote on a Named flag for all relays where they
+  have such a link. Not all directory authorities are currently doing
+  this - in fact, there are only two, gabelmoo and tor26.
+
+  For a long time, we've been telling everyone to not rely on relay
+  nicknames, even if the Named flag is assigned. This has two reasons:
+  First off, it adds another trust requirement on the directory
+  authorities, and secondly naming may change over time as relays go
+  offline for substantial amounts of time.
+
+  Now that a significant portion of the network is required to rotate
+  their identity keys, few relays will keep their Named flag. We should
+  use this chance to stop assigning Named flags.
+
+2. Design
+
+  None so far, but we should review older-but-still-supported Tor
+  versions (down to 0.2.2.x) for potential issues. In theory, Tor
+  clients already support consensuses without Named flags, and testing
+  in private Tor networks has never revealed any issues in this regard,
+  but we're unsure if there might be some functionality that isn't
+  typically tested with private networks and could get broken now.
+
+3. Implementation
+
+  The gabelmoo and tor26 directory authorities can simply remove the
+  NamingAuthoritativeDirectory configuration option to stop giving out
+  Named flags. This will mean the consensus won't include Named and
+  Unnamed flags any longer. The code collecting naming statistics is
+  independent of Tor, so it can run a while longer to ensure Naming can
+  be switched on if unforeseen issues arise.
+
+  Once this has been shown to not cause any issues, support for the
+  Named flag can be removed from the Tor client implementation, and
+  support for the NamingAuthoritativeDirectory can be removed from the
+  Tor directory authority implementation.
+
+4. Open questions
+
+  None.
