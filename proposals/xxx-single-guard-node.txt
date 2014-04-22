@@ -1,6 +1,6 @@
 Filename: xxx-single-guard-node.txt
 Title: The move to a single guard node
-Author: George Kadianakis
+Author: George Kadianakis, Nicholas Hopper
 Created: 2014-03-22
 Status: Draft
 
@@ -38,8 +38,8 @@ Status: Draft
    A Guard node is considered unusable according to section "5. Guard
    nodes" in path-spec.txt. The rest of the rules from that section
    apply here too. XXX which rules specifically? -asn
-   XXX Probably the rules about how to add a new guard (only after 
-       contact), when to re-try a guard for reachability, and when to 
+   XXX Probably the rules about how to add a new guard (only after
+       contact), when to re-try a guard for reachability, and when to
        discard a guard?  -nickhopper
 
    XXX Do we need to specify how already existing clients migrate?
@@ -112,13 +112,13 @@ Status: Draft
    where NNN is the number of months in the guard rotation period (10
    months if this proposal is adopted in full) and calculates the
    visibility of the guard; that is, in how many consensuses it has
-   had the guard flag. 
+   had the guard flag.
 
    The authorities include the age of each guard by appending
    '[SP "GV=" INT]' in the guard's "w" line.
 
    A guard N that has been visible for V out of NNN*30*24 consensuses
-   has had the opportunity to be chosen as a guard by approximately 
+   has had the opportunity to be chosen as a guard by approximately
    F = V/NNN*30*24 of the clients in the network, and the remaining
    1-F fraction of the clients have not noticed this change.  So when
    being chosen for middle or exit positions on a circuit, clients
@@ -284,4 +284,3 @@ References:
 [6]: https://trac.torproject.org/projects/tor/ticket/9001
 
 [7]: https://trac.torproject.org/projects/tor/ticket/10969
-
