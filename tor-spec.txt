@@ -761,6 +761,10 @@ see tor-design.pdf.
    (An OP with no public key MAY choose any CircID it wishes, since an OP
    never needs to process a CREATE cell.)
 
+   The CircID value 0 is specifically reserved for cells that do not
+   belong to any circuit: CircID 0 must not be used for circuits.  No
+   other CircID value, including 0x8000 or 0x80000000, is reserved.
+
 5.1.2. EXTEND and EXTENDED cells
 
    To extend an existing circuit, the client sends a EXTEND or EXTENDED2
