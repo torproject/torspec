@@ -156,6 +156,7 @@ Proposals by number:
 233  Making Tor2Web mode faster [OPEN]
 234  Adding remittance field to directory specification [OPEN]
 235  Stop assigning (and eventually supporting) the Named flag [DRAFT]
+236  The move to a single guard node [OPEN]
 
 
 Proposals by status:
@@ -214,6 +215,7 @@ Proposals by status:
    232  Pluggable Transport through SOCKS proxy [for 0.2.6.x]
    233  Making Tor2Web mode faster
    234  Adding remittance field to directory specification
+   236  The move to a single guard node
  ACCEPTED:
    140  Provide diffs between consensuses
    172  GETINFO controller option for circuit information

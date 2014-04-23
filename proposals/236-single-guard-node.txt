@@ -1,8 +1,8 @@
-Filename: xxx-single-guard-node.txt
+Filename: 236-single-guard-node.txt
 Title: The move to a single guard node
 Author: George Kadianakis, Nicholas Hopper
 Created: 2014-03-22
-Status: Draft
+Status: Open
 
 0. Introduction
 
