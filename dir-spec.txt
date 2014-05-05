@@ -1154,7 +1154,7 @@
 
         The "onion-key" element as specified in section 2.1.1.
 
-    "ntor-onion-key" base-64-encoded-key
+    "ntor-onion-key" SP base-64-encoded-key NL
 
         [At most once]
 
