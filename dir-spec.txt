@@ -1197,6 +1197,16 @@
         (Only included when generating microdescriptors for
         consensus-method 15 or later.)
 
+     "id" SP base64-encoded-identity-digest NL
+
+        [At most once]
+
+        The node identity digest (as described in tor-spec.txt), base64
+        encoded, without trailing =s.  This line is included to prevent
+        collisions between microdescriptors.
+
+        (Only included when generating microdescriptors for
+        consensus-method 18 or later.)
 
    (Note that with microdescriptors, clients do not learn the identity of
    their routers: they only learn a hash of the identity key.  This is all
@@ -2071,6 +2081,9 @@
           line for any router that doesn't have at least 3 measured
           bandwidth values in votes. They also add an "Unmeasured=1"
           flag to such 'w' lines.
+
+        * If consensus method 18 or later is used, authorities include
+          "id" lines in microdescriptors.
 
      The signatures at the end of a consensus document are sorted in
      ascending order by identity digest.
