@@ -1197,7 +1197,7 @@
         (Only included when generating microdescriptors for
         consensus-method 15 or later.)
 
-     "id" SP base64-encoded-identity-digest NL
+     "id" SP "rsa1024" SP base64-encoded-identity-digest NL
 
         [At most once]
 
