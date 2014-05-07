@@ -1205,6 +1205,11 @@
         encoded, without trailing =s.  This line is included to prevent
         collisions between microdescriptors.
 
+        Implementations MUST ignore "id" lines with unrecognized
+        key-types in place of "rsa1024". Implementations SHOULD ignore
+        "id rsa1024" lines as well: they are added to microdescriptors
+        only to prevent collisions.
+
         (Only included when generating microdescriptors for
         consensus-method 18 or later.)
 
