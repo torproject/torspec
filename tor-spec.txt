@@ -501,7 +501,7 @@ see tor-design.pdf.
    highest number contained both in the VERSIONS cell they sent and in the
    versions cell they received.  If they have no such version in common,
    they cannot communicate and MUST close the connection.  Either party MUST
-   close the connection of the versions cell is not well-formed (for example,
+   close the connection if the versions cell is not well-formed (for example,
    if it contains an odd number of bytes).
 
    Since the version 1 link protocol does not use the "renegotiation"
@@ -648,8 +648,8 @@ see tor-design.pdf.
    To check the AUTHENTICATE cell, a responder checks that all fields
    from TYPE through TLSSECRETS contain their unique
    correct values as described above, and then verifies the signature.
-   signature.  The server MUST ignore any extra bytes in the signed
-   data after the SHA256 hash.
+   The server MUST ignore any extra bytes in the signed data after
+   the SHA256 hash.
 
    Initiators MUST NOT send an AUTHENTICATE cell before they have
    verified the certificates presented in the responder's CERTS
@@ -1087,7 +1087,7 @@ see tor-design.pdf.
    bytes sent between Alice and Bob (assuming Alice was not already
    connected to Bob.)
 
-   To prevent this, when an OR we gets an extend request, it SHOULD use an
+   To prevent this, when an OR gets an extend request, it SHOULD use an
    existing OR connection if the ID matches, and ANY of the following
    conditions hold:
        - The IP matches the requested IP.
