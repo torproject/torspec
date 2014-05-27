@@ -9,6 +9,9 @@ Status: Accepted
   22-May-2009: Restricted the ed format even more strictly for ease of
   implementation. -nickm
 
+  25-May-2014: Adapted to the new dir-spec version 3 and made the diff urls
+  backwards-compatible. -mvdan
+
 1. Overview.
 
   Tor clients and servers need a list of which relays are on the
@@ -18,6 +21,10 @@ Status: Accepted
   This proposal suggests that clients download diffs of consensuses
   once they have a consensus instead of hourly downloading a full
   consensus.
+
+  This does not only apply to ordinary directory consensuses, but to the
+  newer microdescriptor consensuses added in the third version of the
+  directory specification.
 
 2. Numbers
 
@@ -77,12 +84,13 @@ Status: Accepted
   Directory authorities and servers need to keep up to X [XXX: depends
   on how long clients try to download diffs per above] old consensus
   documents so they can build diffs.  They should offer a diff to the
-  most recent consensus at the URL
+  most recent consensus at the following request:
 
-  http://tor.noreply.org/tor/status-vote/current/consensus/diff/<HASH>/<FPRLIST>
+  HTTP/1.0 GET /tor/status-vote/current/consensus/<FPRLIST>.z
+  X-Or-Diff-From-Consensus: HASH1 HASH2...
 
-  where hash is the full digest of the consensus the client currently
-  has, and FPRLIST is a list of (abbreviated) fingerprints of
+  where the hashes are the full digests of the consensuses the client
+  currently has, and FPRLIST is a list of (abbreviated) fingerprints of
   authorities the client trusts.
 
   Servers will only return a consensus if more than half of the requested
@@ -93,8 +101,14 @@ Status: Accepted
   conditional consensus downloads that Tor supports starting with
   0.1.2.1-alpha.)
 
-  If a server cannot offer a diff from the consensus identified by the
-  hash but has a current consensus it MUST return the full consensus.
+  The advantage of using the same URL that is currently used for
+  consensuses is that the client doesn't need to know whether a server
+  supports consensus diffs.  If it doesn't, it will simply ignore the
+  extra header and return the full consensus.
+
+  If a server cannot offer a diff from one of the consensuses identified
+  by one of the hashes but has a current consensus it MUST return the
+  full consensus.
 
   [XXX: what should we do when the client already has the latest
   consensus?  I can think of the following options:
@@ -113,7 +127,12 @@ Status: Accepted
   to be a full consensus download and would therefore currently start
   with "network-status-version 3".
 
-  Following the network-status-diff header line is a diff, or patch, in
+  Following the network-status-diff line is another header line, starting with
+  the token "hash" followed by the full digest of the consensus that this diff
+  applies to and the full digest of the consensus that the resulting consensus
+  should have.
+
+  Following the network-status-diff header lines is a diff, or patch, in
   limited ed format.  We choose this format because it is easy to create
   and process with standard tools (patch, diff -e, ed).  This will help
   us in developing and testing this proposal and it should make future
@@ -132,7 +151,6 @@ Status: Accepted
                       following block.
    - "<n1>a"          Append the following block after line n1.
    - "a"              Append the following block after the current line.
-   - "s/.//"          Remove the first character in the current line.
 
   Note that line numbers always apply to the file after all previous
   commands have already been applied.
@@ -151,5 +169,4 @@ Status: Accepted
   appended to the diff after the line with the command.  A line with
   just a period (".") ends the block (and is not part of the lines
   to add).  Note that it is impossible to insert a line with just
-  a single dot.  Recommended procedure is to insert a line with
-  two dots, then remove the first character of that line using s/.//.
+  a single dot.
