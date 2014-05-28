@@ -309,9 +309,6 @@ Status: Draft
    a microdescriptor, a lack of "id" line means that the node has no ed25519
    identity.)
 
-   [XXXX Should the id entries in consensuses go into microdescriptors
-     instead? I think perhaps so. -NM]
-
    A vote or consensus document is ill-formed if it includes the same
    ed25519 identity key twice.
 
