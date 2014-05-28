@@ -78,8 +78,8 @@ Status: Draft
          EXPIRATION_DATE [3 Bytes]
          CERT_KEY_TYPE   [1 byte]
          CERTIFIED_KEY   [32 Bytes]
-         EXTENSIONS      [variable length, up to length of certificate
-                          minus 64 bytes.]
+         N_EXTENSIONS    [1 byte]
+         EXTENSIONS      [N_EXTENSIONS times]
          SIGNATURE       [64 Bytes]
 
    The "VERSION" field holds the value [01].  The "CERT_TYPE" field
@@ -94,14 +94,19 @@ Status: Draft
    The EXTENSIONS field contains zero or more extensions, each of
    the format:
 
-         ExtLength [1 or 2 bytes]
-         ExtType   [1 or 2 bytes]
+         ExtLength [2 bytes]
+         ExtType   [1 byte]
+         ExtFlags  [1 byte]
          ExtData   [Length bytes]
 
-   The ExtLength and ExtType fields can represent values between 0
-   and 2^15-1, representing values under 128 as "0xxxxxxx" and
-   values over 128 as "1xxxxxxx yyyyyyyy".  The meaning of the
-   ExtData field in an extension is type-dependent.
+   The meaning of the ExtData field in an extension is type-dependent.
+
+   The ExtFlags field holds flags; this flag is currently defined:
+
+      1 -- AFFECTS_VALIDATION. If this flag is present, then the
+           extension affects whether the certificate is valid; clients
+           must not accept the certificate as valid unless they
+           understand the extension.
 
    It is an error for an extension to be truncated; such a
    certificate is invalid.
@@ -142,8 +147,10 @@ Status: Draft
          SIGNATURE       [64 Bytes]
 
    FIXED_PREFIX is "REVOKEID" or "REVOKESK". VERSION is [01]. KEYTYPE is
-   [01] for revoking a signing key or [02] for revoking an identity key.
-   REVOKED_KEY is the key being revoked; IDENTITY_KEY is the node's
+   [01] for revoking a signing key, [02] for revoking an identity key,
+   or [03] for revoking an RSA identity key.
+   REVOKED_KEY is the key being revoked or a SHA256 hash of the key if
+   it is an RSA identity key; IDENTITY_KEY is the node's
    Ed25519 identity key. PUBLISHED is the time that the document was
    generated, in seconds since the epoch. REV_EXTENSIONS is left for a
    future version of this document.  The SIGNATURE is generated with
@@ -194,10 +201,11 @@ Status: Draft
    When an identity-ed25519 element is present, there must also be a
    "router-signature-ed25519" element.  It MUST be the next-to-last
    element in the descriptor, appearing immediately before the RSA
-   signature.  It MUST contain an ed25519 signature of the entire
-   document, from the first character up to but not including the
-   "router-signature-ed25519" element, prefixed with the string "Tor
-   router descriptor signature v1".  Its format is:
+   signature.  (In future versions of the descriptor format that do not
+   require an RSA identity key, it MUST be last.)  It MUST contain an
+   ed25519 signature of the entire document, from the first character up
+   to but not including the "router-signature-ed25519" element, prefixed
+   with the string "Tor router descriptor signature v1".  Its format is:
 
       "router-signature-ed25519" SP signature NL
 
@@ -284,10 +292,6 @@ Status: Draft
    little while, so that node operators can try 0.2.5 but downgrade to
    0.2.4 without being de-listed from the consensus.
 
-
-   [XXX I could specify a way to do a signed "I'm downgrading for a
-   while!" statement, and kludge some code back into 0.2.4.x to better
-   support that?]
 
 3.2. Formats
 
@@ -404,7 +408,7 @@ Status: Draft
    certificate, and an authentication certificate signed with the
    identity key.  The AUTHENTICATE cell contains a signature of
    various fields, including the contents of the AUTH_CHALLENGE
-   which the server sent cell, using the client's authentication
+   which the server sent, using the client's authentication
    key.  These cells allow the client to authenticate to the server.
 
 
