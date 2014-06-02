@@ -724,8 +724,7 @@ see tor-design.pdf.
 
    The format of a CREATED cell is:
        HDATA     (Server Handshake Data)     [TAP_S_HANDSHAKE_LEN bytes]
-   It's equivalent to a CREATED2 cell with length of and length of
-   TAP_S_HANDSHAKE_LEN.
+   (It's equivalent to a CREATED2 cell with length of TAP_S_HANDSHAKE_LEN.)
 
    As usual with DH, x and y MUST be generated randomly.
 
