@@ -1253,7 +1253,7 @@
 
   These replies can be sent after a corresponding SETEVENTS command has been
   received.  They will not be interleaved with other Reply elements, but they
-  can not appear between a command and its corresponding reply.  For example,
+  can appear between a command and its corresponding reply.  For example,
   this sequence is possible:
 
      C: SETEVENTS CIRC
