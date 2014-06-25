@@ -245,3 +245,31 @@ Side note: What to put on the webserver?
    "Something to add to your HTTPS website" rather than as a standalone
    installation.
 
+Related work:
+
+   meek [1] is a pluggable transport that uses HTTP for carrying bytes
+   and TLS for obfuscation. Traffic is relayed through a third-party
+   server (Google App Engine). It uses a trick to talk to the third
+   party so that it looks like it is talking to an unblocked server.
+
+   meek itself is not really about HTTP at all. It uses HTTP only
+   because it's convenient and the big Internet services we use as cover
+   also use HTTP. meek uses HTTP as a transport, and TLS for
+   obfuscation, but the key idea is really "domain fronting," where it
+   appears to the censor you are talking to one domain (www.google.com),
+   but behind the scenes you are talking to another
+   (meek-reflect.appspot.com). The meek-server program is an ordinary
+   HTTP (not necessarily even HTTPS!) server, whose communication is
+   easily fingerprintable; but that doesn't matter because the censor
+   never sees that part of the communication, only the communication
+   between the client and CDN.
+
+   One way to think about the difference: if a censor (somehow) learns
+   the IP address of a bridge as described in this proposal, it's easy
+   and low-cost for the censor to block that bridge by IP address. meek
+   aims to make it much more expensive: even if you know a domain is
+   being used (in part) for circumvention, in order to block it have to
+   block something important like the Google frontend or CloudFlare
+   (high collateral damage).
+
+1. https://trac.torproject.org/projects/tor/wiki/doc/meek
