@@ -1199,17 +1199,15 @@ see tor-design.pdf.
    RELAY_EARLY cell.  Otherwise, older Tors will relay it as a RELAY cell.
 
    If a node ever receives more than 8 RELAY_EARLY cells on a given
-   outbound circuit, it SHOULD close the circuit. (For historical reasons,
-   we don't limit the number of inbound RELAY_EARLY cells; they should
-   be harmless anyway because clients won't accept extend requests. See
-   bug 1038.)
+   outbound circuit, it SHOULD close the circuit. If it receives any
+   inbound RELAY_EARLY cells, it MUST close the circuit immediately.
 
    When speaking v2 of the link protocol or later, clients MUST only send
    EXTEND cells inside RELAY_EARLY cells.  Clients SHOULD send the first ~8
    RELAY cells that are not targeted at the first hop of any circuit as
    RELAY_EARLY cells too, in order to partially conceal the circuit length.
 
-   [Starting with Tor 0.2.3.11-alpha, future version of Tor, relays should
+   [Starting with Tor 0.2.3.11-alpha, relays should
    reject any EXTEND cell not received in a RELAY_EARLY cell.]
 
 6. Application connections and stream management
