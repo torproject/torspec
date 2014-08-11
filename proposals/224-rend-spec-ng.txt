@@ -968,11 +968,11 @@ Status: Draft
      AUTH_KEY_TYPE    [1 byte]
      AUTH_KEY_LEN     [1 byte]
      AUTH_KEY         [AUTH_KEY_LEN bytes]
-     Any number of times:
+     N_EXTENSIONS     [1 byte]
+     N_EXTENSIONS times:
         EXT_FIELD_TYPE [1 byte]
         EXT_FIELD_LEN  [1 byte]
         EXT_FIELD      [EXTRA_FIELD_LEN bytes]
-     ZERO             [1 byte]
      HANDSHAKE_AUTH   [MAC_LEN bytes]
      SIGLEN           [1 byte]
      SIG              [SIGLEN bytes]
@@ -997,9 +997,6 @@ Status: Draft
    The EXT_FIELD_TYPE, EXT_FIELD_LEN, EXT_FIELD entries are reserved for
    future extensions to the introduction protocol. Extensions with
    unrecognized EXT_FIELD_TYPE values must be ignored.
-
-   The ZERO field contains the byte zero; it marks the end of the
-   extension fields.
 
    The HANDSHAKE_AUTH field contains the MAC of all earlier fields in
    the cell using as its key the shared per-circuit material ("KH")
@@ -1170,11 +1167,11 @@ Status: Draft
 
      AUTH_KEYID      [32 bytes]
      ENC_KEYID       [8 bytes]
-     Any number of times:
+     N_EXTENSIONS    [1 Byte]
+     N_EXTENSIONS times:
        EXT_FIELD_TYPE [1 byte]
        EXT_FIELD_LEN  [1 byte]
        EXT_FIELD      [EXTRA_FIELD_LEN bytes]
-     ZERO             [1 byte]
      ENCRYPTED        [Up to end of relay payload]
 
    [TODO: Should we have a field to determine the type of ENCRYPTED, or
@@ -1204,8 +1201,9 @@ Status: Draft
 3.2.2. INTRODUCE_ACK cell format. [INTRO_ACK]
 
    An INTRODUCE_ACK cell has the following fields:
-     STATUS    [2 bytes]
-     Any number of times:
+     STATUS       [2 bytes]
+     N_EXTENSIONS [1 bytes]
+     N_EXTENSIONS times:
        EXT_FIELD_TYPE [1 byte]
        EXT_FIELD_LEN  [1 byte]
        EXT_FIELD      [EXTRA_FIELD_LEN bytes]
@@ -1231,11 +1229,11 @@ Status: Draft
 
      AUTH_KEYID_HASH  [20 bytes]
      ENC_KEYID        [8 bytes]
-     Any number of times:
+
        EXT_FIELD_TYPE [1 byte]
        EXT_FIELD_LEN  [1 byte]
        EXT_FIELD      [EXTRA_FIELD_LEN bytes]
-     ZERO             [1 byte]
+
      ENCRYPTED        [Up to end of relay payload]
 
    Here, AUTH_KEYID_HASH is the hash of the introduction point
@@ -1270,11 +1268,11 @@ Status: Draft
    The decrypted plaintext must have the form:
 
       RENDEZVOUS_COOKIE                          [20 bytes]
-      Any number of times:
+      N_EXTENSIONS                               [1 byte]
+      N_EXTENSIONS times:
           EXT_FIELD_TYPE                         [1 byte]
           EXT_FIELD_LEN                          [1 byte]
           EXT_FIELD                              [EXTRA_FIELD_LEN bytes]
-      ZERO                                       [1 byte]
       ONION_KEY_TYPE                             [2 bytes]
       ONION_KEY                                  [depends on ONION_KEY_TYPE]
       NSPEC      (Number of link specifiers)     [1 byte]
@@ -1377,11 +1375,11 @@ Status: Draft
 
             AUTH_KEYID                  [32 bytes]
             ENC_KEYID                   [8 bytes]
-            Any number of times:
+            N_EXTENSIONS                [1 bytes]
+            N_EXTENSIONS times:
                EXT_FIELD_TYPE           [1 byte]
                EXT_FIELD_LEN            [1 byte]
                EXT_FIELD                [EXTRA_FIELD_LEN bytes]
-            ZERO                        [1 byte]
             ENCRYPTED:
                CLIENT_PK                [G_LENGTH bytes]
                ENCRYPTED_DATA           [Padded to length of plaintext]

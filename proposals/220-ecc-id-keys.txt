@@ -75,7 +75,7 @@ Status: Draft
 
          VERSION         [1 Byte]
          CERT_TYPE       [1 Byte]
-         EXPIRATION_DATE [3 Bytes]
+         EXPIRATION_DATE [4 Bytes]
          CERT_KEY_TYPE   [1 byte]
          CERTIFIED_KEY   [32 Bytes]
          N_EXTENSIONS    [1 byte]
@@ -88,8 +88,8 @@ Status: Draft
    CERT_KEY_TYPE is [01], or a SHA256 hash of some other key type
    depending on the value of CERT_KEY_TYPE. The EXPIRATION_DATE is a
    date, given in HOURS since the epoch, after which this
-   certificate isn't valid. (A three-byte field here will work fine
-   until 5797 A.D.)
+   certificate isn't valid. (A four-byte field here will work fine
+   until 10136 A.D.)
 
    The EXTENSIONS field contains zero or more extensions, each of
    the format:
@@ -142,8 +142,9 @@ Status: Draft
          IDENTITY_KEY    [32 Bytes]
          REVOKED_KEY     [32 Bytes]
          PUBLISHED       [8 Bytes]
-         REV_EXTENSIONS  [variable length, up to length of revocation
-                          document minus 64 bytes]
+         N_EXTENSIONS    [1 Byte]
+           N_EXTENSIONS_TIMES:
+           EXTENSIONS      [N_EXTENSIONS times]
          SIGNATURE       [64 Bytes]
 
    FIXED_PREFIX is "REVOKEID" or "REVOKESK". VERSION is [01]. KEYTYPE is
