@@ -1,0 +1,131 @@
+Filename: 237-directory-servers-for-all.txt
+Title: All relays are directory servers
+Author: Matthew Finkel
+Created: 29-Jul-2014
+Status: Open
+Target: 0.2.6.x
+
+Overview:
+
+      This proposal aims at removing part of the distinction between the
+  relay and the directory server. Currently operators have the options
+  of being one of: a relay, a directory server, or both.  With the
+  acceptance of this proposal the options will be simplified to being
+  either only a directory server or a combined relay and directory
+  server. All relays will serve directory requests.
+
+Motivation:
+
+      Fetching directory documents and descriptors is sometimes a
+  non-trivial operation for clients. If they do not have a consensus then
+  they must contact a directory authority (until directory sources are
+  added or clients are able to use a fallback consensus). If they have a
+  consensus and have at least one entry guard then the client can query
+  that guard for documents. If the document isn't available then after a
+  period of time the client will attempt to retry downloading it. If the
+  entry guard isn't a directory server, as well, a directory server and/or
+  directory guard must be chosen (based on the server having an open
+  DirPort) and queried for the document. At a minimum, this has a
+  potential performance impact, at worst it's another attack vector that
+  allows for profiling clients and partitioning users. With the
+  orthogonally proposed move to clients using a single guard, the
+  potential performance bottleneck and ability to profile users could be
+  exacerbated. If the client selects an entry guard and it is not a
+  directory server then the client may select a distinct directory guard
+  which will leak client behavior to a second node. In the case where the
+  client does not use guards, it is important to have the largest possible
+  amount of diversity in the set of directory servers. In a network where
+  every relay is a directory server, the profiling and partitioning
+  attack vector is reduced to the guard (for clients who use them), which
+  is already in a privileged position for this. In addition, with the
+  increased set size relay descriptors and documents are more readily
+  available and it diversifies the providers.
+
+
+Design:
+
+      The changes needed to achieve this should be simple. Currently all
+  relays download and cache the majority of relay documents in any case,
+  so the slight increased memory usage from downloading all of them should
+  have minimal consequences. There will be necessary logical changes in
+  the client, router, and directory code.
+
+      Currently directory servers are defined as such if they advertise
+  having an open directory port. We can no longer assume this is true. To
+  this end, we will introduce a new server descriptor line.
+
+  	"tunnelled-dir-server" NL
+
+      The presence of this line indicates that the relay accepts
+  tunnelled directory requests. For a relay that implements this
+  proposal, this line MUST be added to its descriptor if it does not
+  advertise a directory port, and MAY be added if it also advertises an
+  open directory port. In addition to this, relays will now download and
+  cache all descriptors and documents listed in the consensus, regardless
+  of whether they are deemed useful or usable, exactly like the current
+  directory servers. All relays will also accept directory requests when
+  they are tunnelled over a connection established with a BEGIN_DIR cell,
+  the same way these connections are already accepted by bridges and
+  directory servers with an open DirPort.
+
+      Directory Authorities will now assign the V2Dir flag to a server if
+  it supports a version of the directory protocol which is useful to
+  clients and it has at least an open directory port or it has an open
+  and reachable OR port and advertises "tunnelled-dir-server" in its
+  server descriptor.
+
+      Clients choose a directory by using the current criteria with the
+  additional criterion that a server only needs the V2Dir status flag
+  instead of requiring an open DirPort. When the client chooses which
+  directory server it will query, it checks if the server has an open
+  directory port and uses begindir if it does not have one. Directory
+  servers should not be able to determine which version of Tor the client
+  is using (or a lower-bound on the version), if possible. Continuing to
+  prefer direct directory connections over begin may help mitigate a
+  potential partitioning attack.
+
+Security Considerations and Implications:
+
+      Currently all directory servers are explicitly configured. This is
+  necessary because they must have a configured and reachable external
+  port.  However, this is a restriction and results in a reduced number of
+  directory servers on the network. As a result, this could allow an
+  adversary to control a significant fraction of the servers. By
+  increasing the number of directory servers on the network the likelihood
+  of selecting one that is malicious is reduced. Also, with this proposal,
+  it will be more likely that a client's entry guard is also a directory
+  server (as alluded to in Proposal 207). However, the reduced anonymity
+  set caused when the guard does not have, or is unwilling to distribute,
+  a specific document still exists. With the increased diversity in the
+  available servers, the impact of this should be reduced.
+
+      Another question that may need further consideration is whether we
+  trust bad directories to be good guards and exits.
+
+Specification:
+
+  	The version 3 directory protocol specification does not
+  currently document the use of directory guards. This spec should be
+  updated to mention the preferred use of directory guards during
+  directory requests. In addition, the new criteria for assigning the
+  V2Dir flag should be documented.
+
+Impact on local resources:
+
+      Should relays attempt to download documents from another mirror
+  before asking an authority? All relays will now prefer contacting the
+  authorities first, but this will not scale well and will partition users
+  from relays.
+
+      If all relays become directory servers, they will choose to
+  download all documents, regardless of whether they are useful, in case
+  another client does want them. This will have very little impact on the
+  "typical" relay, however on memory constrained relays (BeagleBone,
+  Raspberry Pi, and similar), every megabyte allocated to directory
+  documents is not available for new circuits. Should we add a config
+  option that allows operators to disable being a directory server?  Is
+  it more worthwhile for them to serve these documents or to relay cells?
+
+Future Considerations:
+
+      Should the DirPort be deprecated at some point in the future?
