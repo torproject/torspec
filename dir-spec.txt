@@ -2122,6 +2122,7 @@
      "15" -- Adds support for "p6" lines.
      "16" -- Adds ntor keys to microdescriptors
      "17" -- Adds "Unmeasured=1" flags to "w" lines
+     "18" -- Adds 'id' to microdescriptors.
 
    Before generating a consensus, an authority must decide which consensus
    method to use.  To do this, it looks for the highest version number
