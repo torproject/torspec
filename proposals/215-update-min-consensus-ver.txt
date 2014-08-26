@@ -2,7 +2,8 @@ Filename: 215-update-min-consensus-ver.txt
 Title: Let the minimum consensus method change with time
 Author: Nick Mathewson
 Created: 15 Nov 2012
-Status: Open
+Status: Closed
+Implemented-In: 0.2.6.1-alpha
 
 
 0. Overview
