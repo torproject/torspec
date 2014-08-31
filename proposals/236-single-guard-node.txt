@@ -110,12 +110,14 @@ Status: Open
    To do so, everytime an authority needs to vote for a guard, it
    reads a set of consensus documents spanning the past NNN months,
    where NNN is the number of months in the guard rotation period (10
-   months if this proposal is adopted in full) and calculates the
-   visibility of the guard; that is, in how many consensuses it has
-   had the guard flag.
+   months if this proposal is adopted in full) and calculates in how
+   many consensuses it has had the guard flag for.
 
-   The authorities include the age of each guard by appending
-   '[SP "GV=" INT]' in the guard's "w" line.
+   Then, in their votes, the authorities include the Guard Fraction of
+   each guard by appending '[SP "GuardFraction=" INT]' in the guard's
+   "w" line. Its value is an integer between 0 and 100, with 0 meaning
+   that it's a brand new guard, and 100 that it has been present in
+   all the inspected consensuses.
 
    A guard N that has been visible for V out of NNN*30*24 consensuses
    has had the opportunity to be chosen as a guard by approximately
@@ -141,6 +143,20 @@ Status: Open
    M' = M + (1-F)*B, if N does not have the exit flag
    D' = D + F*B, if N has the exit flag
    E' = E + (1-F)*B, if N has the exit flag
+
+1.3.1. Guard Fraction voting
+
+  To pass that information to clients, we introduce consensus method
+  19, where if 3 or more authorities provided GuardFraction values in
+  their votes, the authorities produce a consensus containing a
+  GuardFraction keyword equal to the low-median of the GuardFraction
+  votes.
+
+  The GuardFraction keyword is appended in the 'w' line of each router
+  in the consensus, after the optional 'Unmeasured' keyword. Example:
+    w Bandwidth=20 Unmeasured=1 GuardFraction=66
+  or
+    w Bandwidth=53600 GuardFraction=99
 
 1.4. Raise the bandwidth threshold for being a guard
 
