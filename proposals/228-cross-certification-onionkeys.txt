@@ -85,6 +85,8 @@ Status: Open
    Note that this cert format has 32 bytes of of redundant data, since it
    includes the identity key an extra time.  That seems okay to me.
 
+   The signed key here is the master identity key.
+
    The TYPE field in this certificate should be set to
       [0A] - ntor onion key cross-certifying ntor identity key
 
@@ -150,4 +152,17 @@ B. Security notes
    It would be very bad for security if we provided a diffie-hellman
    oracle for our curve25519 ntor keys.  Fortunately, we don't, since
    nobody else can influence the certificate contents.
+
+C. Implementation notes
+
+   As implemented in Tor, I've decided to make this proposal cross-dependent
+   on proposal 220. A router descriptor must have ALL or NONE
+   of the following:
+            * An Ed25529 identity key
+            * A TAP cross-certification
+            * An ntor cross-certification
+
+   Further, if it has the above, it must also have:
+            * An ntor onion key.
+
 
