@@ -186,9 +186,10 @@ Status: Draft
 
    We specify the following element that may appear at most once in
    each router descriptor:
-      "identity-ed25519" SP certificate NL
+      "identity-ed25519" NL "-----BEGIN ED25519 CERT-----" NL certificate
+           "-----END ED25519 CERT-----" NL
 
-   The identity-key and certificate are base64-encoded with
+   The certificate is base64-encoded with
    terminating =s removed.  When this element is present, it MUST appear
    as the first or second element in the router descriptor.
    [XXX The rationale here is to allow extracting the identity key and
@@ -200,15 +201,15 @@ Status: Draft
    can extract the identity key.
 
    When an identity-ed25519 element is present, there must also be a
-   "router-signature-ed25519" element.  It MUST be the next-to-last
-   element in the descriptor, appearing immediately before the RSA
-   signature.  (In future versions of the descriptor format that do not
-   require an RSA identity key, it MUST be last.)  It MUST contain an
-   ed25519 signature of the entire document, from the first character up
-   to but not including the "router-signature-ed25519" element, prefixed
+   "router-sig-ed25519" element.  It MUST be the next-to-last element in
+   the descriptor, appearing immediately before the RSA signature.  (In
+   future versions of the descriptor format that do not require an RSA
+   identity key, it MUST be last.)  It MUST contain an ed25519 signature
+   of a SHA256 digest of the entire document, from the first character
+   up to but not including the "router-sig-ed25519" element, prefixed
    with the string "Tor router descriptor signature v1".  Its format is:
 
-      "router-signature-ed25519" SP signature NL
+      "router-sig-ed25519" SP signature NL
 
    Where 'signature' is encoded in base64 with terminating =s removed.
 
