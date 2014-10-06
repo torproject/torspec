@@ -1599,6 +1599,9 @@ References:
         https://trac.torproject.org/projects/tor/ticket/8106
         https://lists.torproject.org/pipermail/tor-dev/2012-September/004026.html
 
+[KEYBLIND-PROOF]:
+        https://lists.torproject.org/pipermail/tor-dev/2013-December/005943.html
+
 [SHAREDRANDOM-REFS]:
         https://trac.torproject.org/projects/tor/ticket/8244
         https://lists.torproject.org/pipermail/tor-dev/2013-November/005847.html
@@ -1691,9 +1694,8 @@ Appendix A. Signature scheme with key blinding [KEYBLIND]
           = R + hash(R,A',M)A' )
 
   See [KEYBLIND-REFS] for an extensive discussion on this scheme and
-  possible alternatives. I've transcribed this from a description by
-  Tanja Lange at the end of the thread. [TODO: We'll want a proof for
-  this.]
+  possible alternatives. Also, see [KEYBLIND-PROOF] for a security
+  proof of this scheme.
 
   (To use this with Tor, set N = INT_8(period-number) | INT_8(Start of
   period in seconds since epoch).)
