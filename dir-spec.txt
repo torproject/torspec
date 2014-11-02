@@ -575,6 +575,9 @@
        protocols are "Link 1 2 Circuit 1".  See section 4.1 of tor-spec.txt
        for more information about link protocol versions.
 
+       [NOTE: No version of Tor uses this protocol list.  It will be removed
+         in a future version of Tor.]
+
    "allow-single-hop-exits" NL
 
        [At most once.]
