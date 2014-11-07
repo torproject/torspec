@@ -186,9 +186,10 @@ Status: Draft
 
    We specify the following element that may appear at most once in
    each router descriptor:
-      "identity-ed25519" SP certificate NL
+      "identity-ed25519" NL "-----BEGIN ED25519 CERT-----" NL certificate
+           "-----END ED25519 CERT-----" NL
 
-   The identity-key and certificate are base64-encoded with
+   The certificate is base64-encoded with
    terminating =s removed.  When this element is present, it MUST appear
    as the first or second element in the router descriptor.
    [XXX The rationale here is to allow extracting the identity key and
@@ -200,15 +201,16 @@ Status: Draft
    can extract the identity key.
 
    When an identity-ed25519 element is present, there must also be a
-   "router-signature-ed25519" element.  It MUST be the next-to-last
-   element in the descriptor, appearing immediately before the RSA
-   signature.  (In future versions of the descriptor format that do not
-   require an RSA identity key, it MUST be last.)  It MUST contain an
-   ed25519 signature of the entire document, from the first character up
-   to but not including the "router-signature-ed25519" element, prefixed
+   "router-sig-ed25519" element.  It MUST be the next-to-last element in
+   the descriptor, appearing immediately before the RSA signature.  (In
+   future versions of the descriptor format that do not require an RSA
+   identity key, it MUST be last.)  It MUST contain an ed25519 signature
+   of a SHA256 digest of the entire document, from the first character
+   up to and including the first space after the "router-sig-ed25519"
+   string, prefixed
    with the string "Tor router descriptor signature v1".  Its format is:
 
-      "router-signature-ed25519" SP signature NL
+      "router-sig-ed25519" SP signature NL
 
    Where 'signature' is encoded in base64 with terminating =s removed.
 
@@ -313,6 +315,14 @@ Status: Draft
    A vote or consensus document is ill-formed if it includes the same
    ed25519 identity key twice.
 
+   A vote listing ed25519 identities must also include a new entry in its
+   "r" lines, containing a base64-encoded SHA256 digest of the entire
+   descriptor (including signature).  This kills off another place where
+   we rely on sha1.  The format for 'r' lines is now:
+
+    "r" SP nickname SP identity SP digest SP publication SP IP SP ORPort
+        SP DirPort [ SP digest-sha256 ] NL
+
 3.3. Generating votes
 
    An authority should pick which descriptor to choose for a node as
@@ -334,45 +344,52 @@ Status: Draft
    it, we'll pick the next available vote method in sequence to use for
    this.
 
-   When the new consensus method is in use, we must choose nodes first
-   by ECC key, then by RSA key.
+   When the new consensus method is in use, we must choose nodes first by ECC
+   key, then by RSA key.  [This procedure is analogous to the current one,
+   except that it is aware of multiple kinds of keys.]
 
-   First, for every {ECC identity key, RSA identity key} pair listed by
-   over half of the voting authorities, list it, unless some other RSA
-   identity key digest is listed more popularly for the ECC key.  Break
-   ties in favor of low RSA digests. Treat all routerstatus entries that
-   mention this <ECC,RSA> pair as being for the same router, and all
-   routerstatus entries that mention the same RSA key with an
-   unspecified ECC key as being for the same router.
+3.4.1. Notation for voting
 
-   Then, for every node that has previously not been listed, perform the
-   current routerstatus algorithm: listing a node if it has been listed
-   by at least N/2 voting authorities, and treating all routerstatuses
-   containing the same identity as the same router.
+  We have a set of votes.  Each contains either 'old tuples' or 'new tuples'.
 
-   In other words:
+  Old tuples are:
+    <id-RSA, descriptor-digest, published, nickname, IP, ports>
 
-     Let Entries = []
+  New tuples are:
+    <id-Ed, id-RSA, descriptor-digest, dd256, published, nickname, IP, ports>
 
-     for each ECC ID listed by any voter:
-        Find the RSA key associated with that ECC ID by the most voters,
-        breaking ties in favor of low RSA keys.
 
-        If that ECC ID and RSA key ID are listed by > N/2 voting authorities:
-            Add the consensus of the routerstatus entries for those
-            voters, along with the routerstatus entry for every voter
-            that included that RSA key with no ECC key, to Entries.
-            Include the ECC ID in the consensus.
+3.4.2. Validating votes
 
-      For each RSA key listed by any voter:
-        If that RSA key is already in Entries, skip it.
+  It is an error for a vote to have the same id-RSA or the same id-Ed listed
+  twice.  Throw it away if it does.
 
-        If the RSA key is listed by > N/2 voting authorities:
-            Add the consensus of the routerstatus entries for those
-            voters to Entries.  Do not include an ECC key in the
-            consensus.
+3.4.3. Decide which ids to include.
 
-   [XXX Think about this even more.]
+  For each <id-Ed, id-RSA> that is listed by more than half of the total
+    authorities (not just total votes), include it.  (No other <id-Ed, id-RSA'>
+    can have as many votes.)
+
+  Log any other id-RSA values corresponding to an id-Ed we included, and any
+    other id-Ed values corresponding to an id-RSA we included.
+
+  For each <id-RSA> that is not yet included, if it is listed by more than
+    half of the total authorities, and we do not already have it listed with
+    some <id-Ed>, include it without an id-Ed.
+
+3.4.4. Decide which descriptors to include.
+
+   A tuple belongs to an <id-RSA, id-Ed> identity if it is a new tuple that
+   matches both ID parts, or if it is an old tuple that matches the RSA part.
+   A tuple belongs to an <id-RSA> identity if its RSA identity matches.
+
+   A tuple matches another tuple if all the fields that are present in both
+   tuples are the same.
+
+   For every included identity, consider the tuples belonging to that
+   identity.  Group them into sets of matching tuples.  Include the tuple
+   that matches the largest set, breaking ties in favor of the most recently
+   published, and then in favor of the smaller server descriptor digest.
 
 4. The link protocol
 
