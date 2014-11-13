@@ -442,6 +442,10 @@
        accepted for at least 1 week after any new key is published in a
        subsequent descriptor. It MUST be 1024 bits.
 
+       The key encoding is the encoding of the key as a PKCS#1 RSAPublicKey
+       structure, encoded in base64, and wrapped in "-----BEGIN RSA PUBLIC
+       KEY-----" and "-----END RSA PUBLIC KEY-----".
+
     "ntor-onion-key" base-64-encoded-key
 
        [At most once]
@@ -457,6 +461,8 @@
        [Exactly once]
 
        The OR's long-term identity key.  It MUST be 1024 bits.
+
+       The encoding is as for "onion-key" above.
 
     "accept" exitpattern NL
     "reject" exitpattern NL
