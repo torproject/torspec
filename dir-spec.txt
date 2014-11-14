@@ -1455,9 +1455,9 @@
         "circwindow" -- the default package window that circuits should
         be established with. It started out at 1000 cells, but some
         research indicates that a lower value would mean fewer cells in
-        transit in the network at any given time. Obeyed by Tor 0.2.1.20
-        and later.
+        transit in the network at any given time.
         Min: 100, Max: 1000
+        First-appeared: Tor 0.2.1.20
 
         "CircuitPriorityHalflifeMsec" -- the halflife parameter used when
         weighting which circuit will send the next cell. Obeyed by Tor
@@ -1465,6 +1465,7 @@
         and 0.2.2.10-alpha recognized a "CircPriorityHalflifeMsec" parameter,
         but mishandled it badly.)
         Min: -1, Max: 2147483647 (INT32_MAX)
+        First-appeared: Tor 0.2.2.11-alpha
 
         "perconnbwrate" and "perconnbwburst" -- if set, each relay sets
         up a separate token bucket for every client OR connection,
@@ -1475,6 +1476,8 @@
         0.2.2.14-alpha looked for bwconnrate and bwconnburst, but then
         did the wrong thing with them; see bug 1830 for details.)
         Min: 1, Max: 2147483647 (INT32_MAX)
+        First-appeared: 0.2.2.7-alpha
+        Removed-in: 0.2.2.16-alpha
 
         "refuseunknownexits" -- if set to one, exit relays look at
         the previous hop of circuits that ask to open an exit stream,
@@ -1482,10 +1485,12 @@
         goal is to make it harder for people to use them as one-hop
         proxies. See trac entry 1751 for details.
         Min: 0, Max: 1
+        First-appeared: 0.2.2.17-alpha
 
         "bwweightscale" -- Value that bandwidth-weights are divided by. If not
         present then this defaults to 10000.
         Min: 1
+        First-appeared: 0.2.2.10-alpha
 
         "cbtdisabled", "cbtnummodes", "cbtrecentcount", "cbtmaxtimeouts",
         "cbtmincircs", "cbtquantile", "cbtclosequantile", "cbttestfreq",
@@ -1496,12 +1501,14 @@
         "UseOptimisticData" -- If set to zero, clients by default
         shouldn't try to send optimistic data to servers until they have
         received a RELAY_CONNECTED cell.
-        Min: 0, Max: 1
+        Min: 0, Max: 1, Default: 0
+        First-appeared: 0.2.3.3-alpha
 
         "maxunmeasuredbw" -- Used by authorities during voting with
         method 17 or later. The maximum value to give for any Bandwidth=
         entry for a router that isn't based on at least three
         measurements.
+        First-appeared: 0.2.4.11-alpha
 
         "Support022HiddenServices" -- Used to implement a mass switch-over
         from sending timestamps to hidden services by default to sending
@@ -1509,10 +1516,54 @@
         clients with the default configuration send timestamps; otherwise,
         they do not.
         Min: 0, Max: 1. Default: 1.
+        First-appeared: 0.2.4.18-rc
 
         "usecreatefast" -- Used to control whether clients use the
         CREATE_FAST handshake on the first hop of their circuits.
         Min: 0, Max: 1. Default: 1.
+        First-appeared: 0.2.4.23, 0.2.5.2-alpha
+
+        "pb_mincircs", "pb_noticepct", "pb_warnpct", "pb_extremepct",
+        "pb_dropguards", "pb_scalecircs", "pb_scalefactor",
+        "pb_multfactor", "pb_minuse", "pb_noticeusepct",
+        "pb_extremeusepct", "pb_scaleuse" -- DOCDOC
+
+        "UseNTorHandshake" -- If true, then versions of Tor that support
+          NTor will prefer to use it by default.
+        Min: 0,  Max: 1. Default: 1.
+        First-appeared: 0.2.4.8-alpha
+
+        "FastFlagMinThreshold", "FastFlagMaxThreshold" -- lowest and
+        highest allowable values for the cutoff for routers that should get
+        the Fast flag.  This is used during voting to prevent the threshold
+        for getting the Fast flag from being too low or too high.
+        FastFlagMinThreshold: Min: 4. Max: INT32_MAX: Default: 4.
+        FastFlagMaxThreshold: Min: -. Max: INT32_MAX: Default: INT32_MAX
+        First-appeared: 0.2.3.11-alpha
+
+        "NumDirectoryGuards", "NumEntryGuards" -- Number of guard nodes
+        clients should use by default.  If NumDirectoryGuards is 0,
+        we default to NumEntryGuards.
+        NumDirectoryGuards: Min: 0. Max: 10. Default: 0
+        NumEntryGuards:     Min: 1. Max: 10. Default: 3
+        First-appeared: 0.2.4.23, 0.2.5.6-alpha
+
+        "GuardLifetime" -- Duration for which clients should choose guard
+        nodes, in seconds.
+        Min: 30 days.  Max: 1826 days.  Default: 60 days.
+        First-appeared: 0.2.4.12-alpha
+
+        "min_paths_for_circs_pct" -- DOCDOC
+
+        "NumNTorsPerTAP" -- When balancing ntor and TAP cells at relays,
+        how many ntor handshakes should we perform for each TAP handshake?
+        Min: 1. Max: 100000. Default: 10.
+        First-appeared: 0.2.4.17-rc
+
+        "AllowNonearlyExtend" -- If true, permit EXTEND cells that are not
+        inside RELAY_EARLY cells.
+        Min: 0. Max: 1. Default: 0.
+        First-appeared: 0.2.3.11-alpha
 
    The authority section of a vote contains the following items, followed
    in turn by the authority's current key certificate:
