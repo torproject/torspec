@@ -1,0 +1,92 @@
+Filename: 238-hs-relay-stats
+
+Title: Better hidden service stats from Tor relays
+Author: George Kadianakis, David Goulet, Karsten Loesing
+Created: 2014-11-17
+Status: Incomplete
+
+0. Motivation
+
+   Hidden Services is one of the least understood parts of the Tor
+   network. We don't really know how many hidden services there are
+   and how much they are used.
+
+   This proposal suggests that Tor relays include some hidden service
+   related stats to their extra info descriptors. No stats are
+   collected from Tor hidden services or clients.
+
+   While uncertainty might be a good thing in a hidden network,
+   learning more information about the usage of hidden services can be
+   helpful.
+
+   For example, learning how many cells are sent for hidden service
+   purposes tells us whether hidden service traffic is 2% of the Tor
+   network traffic or 90% of the Tor network traffic. This info can
+   also help us during load balancing, for example if we change the
+   path building of hidden services to mitigate guard discovery
+   attacks [XXX].
+   # XXX Is "HS purposes" only RP traffic? Or also IP traffic?
+
+   Also, learning the number of hidden services, can help us
+   understand how widespread hidden services are. It will also help us
+   understand approximately how much load is put in the network by
+   hidden service logistics, like introduction point circuits etc.
+
+1. Design
+
+   Tor relays will add some fields related to hidden service
+   statistics in their extra-info descriptors.
+
+   Tor relays collect these statistics by keeping track of their
+   hidden service directory or rendezvous point activities, slightly
+   obfuscating the numbers and posting them to the directory
+   authorities. Extra-info descriptors are posted to directory
+   authorities every 24 hours.
+
+2. Implementation
+
+2.1. Hidden service traffic statistics
+
+  Tor HSDirs will add the following field to their extra-info
+  descriptor:
+
+  "hs-traffic" ... XXX
+
+2.2. HSDir hidden service counting
+
+   Tor HSDirs will add the following field to their extra-info
+   descriptor:
+
+   "dirreq-v3-hsdir" key=val,... NL
+      [At most once.]
+
+      Statistics about HS directory activities.
+      The current list of statistics is as follows:
+
+       "hs-num": The approximate number of HSes that the HSDir is
+                 hosting descriptors for at the time the extra-info
+                 descriptor was created.
+
+
+   To derive this, HSDirs are expected to walk over their descriptor
+   caches and count the number of HSes contained. The number is then
+   obfuscated slightly by a small noise factor that introduces 10%
+   inaccuracy.
+
+   More specifically:
+
+        hs-num = <number of HSes> * <random real \in [0.9, 1.1]>
+
+
+
+  time_t cutoff = now - REND_CACHE_MAX_AGE - REND_CACHE_MAX_SKEW;
+
+3. Discussion
+
+3.1. Count only RP cells? Or also IP cells?
+
+3.2. Why obfuscation on HSDirs stats? And how much?
+
+
+
+[XXX]: guard discovery: https://lists.torproject.org/pipermail/tor-dev/2014-September/007474.html
