@@ -45,48 +45,145 @@ Status: Incomplete
 
 2. Implementation
 
+2.0. Hidden service statistics interval
+
+   We want relays to report hidden-service statistics over a long-enough
+   time period to not put users at risk.  Similar to other statistics, we
+   suggest a 24-hour statistics interval.  All related statistics are
+   collected at the end of that interval and included in the next
+   extra-info descriptors published by the relay.
+
+   Tor relays will add the following line to their extra-info descriptor:
+
+    "hidserv-stats-end" YYYY-MM-DD HH:MM:SS (NSEC s) NL
+        [At most once.]
+
+        YYYY-MM-DD HH:MM:SS defines the end of the included measurement
+        interval of length NSEC seconds (86400 seconds by default).
+
+        A "hidserv-stats-end" line, as well as any other "hidserv-*" line,
+        is first added after the relay has been running for at least 24
+        hours.
+
 2.1. Hidden service traffic statistics
 
-  Tor HSDirs will add the following field to their extra-info
-  descriptor:
+   We want to learn how much of the total Tor network traffic is caused by
+   hidden service usage.  There are three phases in the rendezvous
+   protocol where traffic is generated: (1) when hidden services make
+   themselves available in the network, (2) when clients open connections
+   to hidden services, and (3) when clients exchange application data with
+   hidden services.  We expect (3) to consume most bytes here, so we're
+   focusing on this only.  More precisely, we measure hidden service
+   traffic by counting RELAY cells seen on a rendezvous point after
+   receiving a RENDEZVOUS1 cell.  These RELAY cells include commands to
+   open or close application streams, and they include application data.
 
-  "hs-traffic" ... XXX
+   Tor relays will add the following line to their extra-info descriptor:
+
+    "hidserv-rend-relayed-cells" SP num NL
+        [At most once.]
+
+        Approximate number of RELAY cells seen in either direction on a
+        circuit after receiving and successfully processing a RENDEZVOUS1
+        cell.  The actual number observed by the directory is multiplied
+        with a random number in [0.9, 1.1] before being reported.
+
+   The keyword indicates that this line is part of hidden-service
+   statistics ("hidserv") and contains aggregate data from the relay
+   acting as rendezvous point ("rend").
+
+   We plan to extrapolate reported values to network totals by dividing
+   values by the probability of clients picking relays as rendezvous
+   point.  This approach should become more precise on faster relays and
+   the more relays report these statistics.
+
+   We also plan to compare reported values with "cell-*" statistics to
+   learn what fraction of traffic can be attributed to hidden services.
+
+   Ideally, we'd be able to compare values to "write-history" and
+   "read-history" lines to compute similar fractions of traffic used for
+   hidden services.  The goal would be to avoid enabling "cell-*"
+   statistics by default.  In order for this to work we'll have to
+   multiply reported cell numbers with the default cell size of 512 bytes.
 
 2.2. HSDir hidden service counting
 
-   Tor HSDirs will add the following field to their extra-info
-   descriptor:
+   We also want to learn how many hidden services exist in the network.
+   The best place to learn this is at hidden service directories where
+   hidden services publish their descriptors.
 
-   "dirreq-v3-hsdir" key=val,... NL
-      [At most once.]
+   Tor relays will add the following line to their extra-info descriptor:
 
-      Statistics about HS directory activities.
-      The current list of statistics is as follows:
+    "hidserv-dir-published-ids" SP num NL
+        [At most once.]
 
-       "hs-num": The approximate number of HSes that the HSDir is
-                 hosting descriptors for at the time the extra-info
-                 descriptor was created.
+        Approximate number of unique hidden-service identities seen in
+        descriptors published to and accepted by this hidden-service
+        directory.  The actual number observed by the directory is
+        multiplied with a random number in [0.9, 1.1] before being
+        reported.
 
+   This statistic requires keeping a separate data structure with unique
+   identities seen during the current statistics interval.  We could, in
+   theory, have relays iterate over their descriptor caches when producing
+   the daily hidden-service statistics blurb.  But it's unclear how
+   caching would affect results from such an approach, because descriptors
+   published at the start of the current statistics interval could already
+   have been removed, and descriptors published in the last statistics
+   interval could still be present.  Keeping a separate data structure,
+   possibly even a probabilistic one, seems like the more accurate
+   approach.
 
-   To derive this, HSDirs are expected to walk over their descriptor
-   caches and count the number of HSes contained. The number is then
-   obfuscated slightly by a small noise factor that introduces 10%
-   inaccuracy.
+   We plan to extrapolate this value to network totals by calculating what
+   fraction of hidden-service identities this relay was supposed to see.
+   This extrapolation will be very rough, because each hidden-service
+   directory is only responsible for a tiny share of hidden-service
+   descriptors, and there is no way to increase that share significantly.
 
-   More specifically:
+   Here are some numbers: there are about 3000 directories, and each
+   descriptor is stored on three directories.  So, each directory is
+   responsible for roughly 1/1000 of descriptor identifiers.  There are
+   two replicas for each descriptor, and descriptor identifiers change
+   once per day.  Hence, each descriptor is stored to four places in
+   identifier space throughout a 24-hour period.  The probability of any
+   given directory to see a given hidden-service identity is
+   1-(1-1/1000)^4 = 0.00399 = 1/250.  This approximation constitutes an
+   upper threshold, because it assumes that services are running all day.
+   An extrapolation based on this formula will lead to undercounting the
+   total number of hidden services.
 
-        hs-num = <number of HSes> * <random real \in [0.9, 1.1]>
+   A possible inaccuracy in the estimation algorithm comes from the fact
+   that a relay may not be acting as hidden-service directory during the
+   full statistics interval.  We suggest adding the following line to
+   handle this case better.
 
+   Tor relays also add the following line to their extra-info descriptor,
+   preceding any "hidserv-dir-*" lines:
 
+    "hidserv-dir-start" YYYY-MM-DD HH:00:00 NL
+        [At most once.]
 
-  time_t cutoff = now - REND_CACHE_MAX_AGE - REND_CACHE_MAX_SKEW;
+        YYYY-MM-DD HH:00:00 defines the first hour when this
+        hidden-service directory accepted either a publish or fetch
+        request for a hidden-service descriptor.
+
+   Finally, the intentionally added randomness leads to either under- or
+   overcounting hidden services by up to 10%.
 
 3. Discussion
 
 3.1. Count only RP cells? Or also IP cells?
+   As discussed on IRC, counting only RP cells should be fine for now.
+   Everything else is protocol overhead, which includes HSDir traffic,
+   IPo traffic, RPo traffic before the first RELAY cell, etc.  We can
+   always be smarter later. -KL
 
 3.2. Why obfuscation on HSDirs stats? And how much?
-
+   As discussed on IRC, maybe we should obfuscate small numbers more than
+   large numbers by adding a random number in [-20, 20].  Or we could
+   require a reporting threshold, if we can figure out how that cannot be
+   gamed by the adversary by making the required number of requests
+   themselves.  Let's ask Aaron Johnson. -KL
 
 
 [XXX]: guard discovery: https://lists.torproject.org/pipermail/tor-dev/2014-September/007474.html
