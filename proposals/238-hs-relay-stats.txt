@@ -115,15 +115,17 @@ Status: Incomplete
    hopeless but unnecessary).  That is, we don't want the (distribution
    of) the cell count from any relay to change by much whether or not C
    cells are removed.  The standard differential privacy approach would be
-   to *add* noise from the Laplace distribution Lab(\epsilon/C), where
+   to *add* noise from the Laplace distribution Lap(\epsilon/C), where
    \epsilon controls how much the statistics *distribution* can
    multiplicatively differ.  This is not to say that we need to add noise
    exactly from that distribution (maybe we weaken the guarantee slightly
    to get better accuracy), but the same idea applies.  This would apply
    the same to both large and small relays.  We *want* to learn roughly
    how much hidden-service traffic each relay has - we just want to
-   obscure the exact number within some tolerance.  (Would we want to
-   include \epsilon/C in the "hidserv-rend-relayed-cells" line?)
+   obscure the exact number within some tolerance.  We'll probably want to
+   include the algorithm and parameters used for adding noise in the
+   "hidserv-rend-relayed-cells" line, as in, "lap=x" with x being
+   \epsilon/C.
 
 2.2. HSDir hidden service counting
 
@@ -182,7 +184,9 @@ Status: Incomplete
    time of that consensus.
 
    Finally, the intentionally added randomness leads to either under- or
-   overcounting hidden services by up to 10%.
+   overcounting hidden services by up to 10%.  A probably better
+   alternative for adding noise is to use the Laplace approach suggested
+   above.
 
 3. Security
 
