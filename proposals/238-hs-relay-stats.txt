@@ -1,7 +1,7 @@
 Filename: 238-hs-relay-stats
 
 Title: Better hidden service stats from Tor relays
-Author: George Kadianakis, David Goulet, Karsten Loesing
+Author: George Kadianakis, David Goulet, Karsten Loesing, Aaron Johnson
 Created: 2014-11-17
 Status: Incomplete
 
@@ -104,7 +104,26 @@ Status: Incomplete
    "read-history" lines to compute similar fractions of traffic used for
    hidden services.  The goal would be to avoid enabling "cell-*"
    statistics by default.  In order for this to work we'll have to
-   multiply reported cell numbers with the default cell size of 512 bytes.
+   multiply reported cell numbers with the default cell size of 512 bytes
+   (we cannot infer the actual number of bytes, because cells are
+   end-to-end encrypted between client and service).
+
+   A possible alternative to multiplying the number of cells with a random
+   factor is to introduce additive noise.  Let's suppose that we would
+   like to obscure any individual connection that contains C cells or
+   fewer (obscuring extremely and unusually large connections seems
+   hopeless but unnecessary).  That is, we don't want the (distribution
+   of) the cell count from any relay to change by much whether or not C
+   cells are removed.  The standard differential privacy approach would be
+   to *add* noise from the Laplace distribution Lab(\epsilon/C), where
+   \epsilon controls how much the statistics *distribution* can
+   multiplicatively differ.  This is not to say that we need to add noise
+   exactly from that distribution (maybe we weaken the guarantee slightly
+   to get better accuracy), but the same idea applies.  This would apply
+   the same to both large and small relays.  We *want* to learn roughly
+   how much hidden-service traffic each relay has - we just want to
+   obscure the exact number within some tolerance.  (Would we want to
+   include \epsilon/C in the "hidserv-rend-relayed-cells" line?)
 
 2.2. HSDir hidden service counting
 
@@ -143,8 +162,11 @@ Status: Incomplete
    Here are some numbers: there are about 3000 directories, and each
    descriptor is stored on three directories.  So, each directory is
    responsible for roughly 1/1000 of descriptor identifiers.  There are
-   two replicas for each descriptor, and descriptor identifiers change
-   once per day.  Hence, each descriptor is stored to four places in
+   two replicas for each descriptor (that is, each descriptor is stored
+   under two descriptor identifiers), and descriptor identifiers change
+   once per day (which means that, during a 24-hour period, there are two
+   opportunities for each directory to see a descriptor).  Hence, each
+   descriptor is stored to four places in
    identifier space throughout a 24-hour period.  The probability of any
    given directory to see a given hidden-service identity is
    1-(1-1/1000)^4 = 0.00399 = 1/250.  This approximation constitutes an
@@ -154,36 +176,54 @@ Status: Incomplete
 
    A possible inaccuracy in the estimation algorithm comes from the fact
    that a relay may not be acting as hidden-service directory during the
-   full statistics interval.  We suggest adding the following line to
-   handle this case better.
-
-   Tor relays also add the following line to their extra-info descriptor,
-   preceding any "hidserv-dir-*" lines:
-
-    "hidserv-dir-start" YYYY-MM-DD HH:00:00 NL
-        [At most once.]
-
-        YYYY-MM-DD HH:00:00 defines the first hour when this
-        hidden-service directory accepted either a publish or fetch
-        request for a hidden-service descriptor.
+   full statistics interval.  We'll have to look at consensuses to
+   determine when the relay first received the "HSDir" flag, and only
+   consider the part of the statistics interval following the valid-after
+   time of that consensus.
 
    Finally, the intentionally added randomness leads to either under- or
    overcounting hidden services by up to 10%.
 
-3. Discussion
+3. Security
 
-3.1. Count only RP cells? Or also IP cells?
+   The main security considerations that need discussion are what an
+   adversary could do with reported statistics that they couldn't do
+   without them.  In the following, we're going through things the
+   adversary could learn, how plausible that is, and how much we care.
+   (All these things refer to hidden-service traffic, not to
+   hidden-service counting.  We should think about the latter, too.)
+
+3.1. Identify rendezvous point of high-volume and long-lived connection
+
+   The adversary could identify the rendezvous point of a very large and
+   very long-lived HS connection by observing a relay with unexpectedly
+   large relay cell count.
+
+3.2. Identify hard-coded rendezvous points
+
+   The adversary could observe if there are RPs that consistently report
+   large cell counts. These might be HS clients with hardcoded RPs, and
+   that would allow the adversary to identify this behavior and
+   potentially link that with a known HS client of known behavior (e.g.
+   a botnet client). Then the adversary could figure out which RPs to
+   target.
+
+3.3. Identify number of users of a hidden service
+
+   The adversary may be able to identify the number of users
+   of an HS if he knows the amount of traffic on a connection to that HS
+   (which he potentially can determine himself) and knows when that
+   service goes up or down. He can look at the change in the total
+   reported RP traffic to determine about how many fewer HS users there
+   are when that HS is down.
+
+4. Discussion
+
+4.1. Count only RP cells? Or also IP cells?
    As discussed on IRC, counting only RP cells should be fine for now.
    Everything else is protocol overhead, which includes HSDir traffic,
    IPo traffic, RPo traffic before the first RELAY cell, etc.  We can
    always be smarter later. -KL
-
-3.2. Why obfuscation on HSDirs stats? And how much?
-   As discussed on IRC, maybe we should obfuscate small numbers more than
-   large numbers by adding a random number in [-20, 20].  Or we could
-   require a reporting threshold, if we can figure out how that cannot be
-   gamed by the adversary by making the required number of requests
-   themselves.  Let's ask Aaron Johnson. -KL
 
 
 [XXX]: guard discovery: https://lists.torproject.org/pipermail/tor-dev/2014-September/007474.html
