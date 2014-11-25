@@ -209,7 +209,7 @@ of their choices.
    position they are being selected for.
 
    These weights are published in the consensus, and are computed as described
-   in Section 3.4.3 of dir-spec.txt. They are:
+   in Section "Computing Bandwidth Weights" of dir-spec.txt. They are:
 
       Wgg - Weight for Guard-flagged nodes in the guard position
       Wgm - Weight for non-flagged nodes in the guard Position
@@ -234,6 +234,10 @@ of their choices.
       Wbm - Weight for Guard+Exit-flagged nodes for BEGIN_DIR requests
       Wbe - Weight for Guard+Exit-flagged nodes for BEGIN_DIR requests
       Wbd - Weight for Guard+Exit-flagged nodes for BEGIN_DIR requests
+
+   If any of those weights is malformed or not present in a consensus,
+   clients proceed with the regular path selection algorithm setting
+   the weights to the default value of 10000.
 
    Additionally, we may be building circuits with one or more requests in
    mind.  Each kind of request puts certain constraints on paths:
