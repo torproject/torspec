@@ -1,9 +1,8 @@
-Filename: 238-hs-relay-stats
-
+Filename: 238-hs-relay-stats.txt
 Title: Better hidden service stats from Tor relays
 Author: George Kadianakis, David Goulet, Karsten Loesing, Aaron Johnson
 Created: 2014-11-17
-Status: Incomplete
+Status: Draft
 
 0. Motivation
 
@@ -24,13 +23,13 @@ Status: Incomplete
    network traffic or 90% of the Tor network traffic. This info can
    also help us during load balancing, for example if we change the
    path building of hidden services to mitigate guard discovery
-   attacks [XXX].
-   # XXX Is "HS purposes" only RP traffic? Or also IP traffic?
+   attacks [0].
 
-   Also, learning the number of hidden services, can help us
-   understand how widespread hidden services are. It will also help us
-   understand approximately how much load is put in the network by
-   hidden service logistics, like introduction point circuits etc.
+   Also, learning the number of hidden services, can give us an
+   understanding of how widespread hidden services are. It will also
+   help us understand approximately how much load is put in the
+   network by hidden service logistics, like introduction point
+   circuits etc.
 
 1. Design
 
@@ -45,7 +44,7 @@ Status: Incomplete
 
 2. Implementation
 
-2.0. Hidden service statistics interval
+2.1. Hidden service statistics interval
 
    We want relays to report hidden-service statistics over a long-enough
    time period to not put users at risk.  Similar to other statistics, we
@@ -65,7 +64,7 @@ Status: Incomplete
         is first added after the relay has been running for at least 24
         hours.
 
-2.1. Hidden service traffic statistics
+2.2. Hidden service traffic statistics
 
    We want to learn how much of the total Tor network traffic is caused by
    hidden service usage.  There are three phases in the rendezvous
@@ -83,14 +82,84 @@ Status: Incomplete
     "hidserv-rend-relayed-cells" SP num NL
         [At most once.]
 
-        Approximate number of RELAY cells seen in either direction on a
-        circuit after receiving and successfully processing a RENDEZVOUS1
-        cell.  The actual number observed by the directory is multiplied
-        with a random number in [0.9, 1.1] before being reported.
+        Approximate number of RELAY cells seen in either direction on
+        a circuit after receiving and successfully processing a
+        RENDEZVOUS1 cell.  The actual number observed by the directory
+        is multiplied with a random number in [0.9, 1.1] and then gets
+        floored before being reported.
 
    The keyword indicates that this line is part of hidden-service
    statistics ("hidserv") and contains aggregate data from the relay
    acting as rendezvous point ("rend").
+
+2.3. HSDir hidden service counting
+
+   We also want to learn how many hidden services exist in the network.
+   The best place to learn this is at hidden service directories where
+   hidden services publish their descriptors.
+
+   Tor relays will add the following line to their extra-info descriptor:
+
+    "hidserv-dir-published-ids" SP num NL
+        [At most once.]
+
+        Approximate number of unique hidden-service identities seen in
+        descriptors published to and accepted by this hidden-service
+        directory.  The actual number observed by the directory is
+        multiplied with a random number in [0.9, 1.1] and then gets
+        floored before being reported.
+
+   This statistic requires keeping a separate data structure with unique
+   identities seen during the current statistics interval.  We could, in
+   theory, have relays iterate over their descriptor caches when producing
+   the daily hidden-service statistics blurb.  But it's unclear how
+   caching would affect results from such an approach, because descriptors
+   published at the start of the current statistics interval could already
+   have been removed, and descriptors published in the last statistics
+   interval could still be present.  Keeping a separate data structure,
+   possibly even a probabilistic one, seems like the more accurate
+   approach.
+
+3. Security
+
+   The main security considerations that need discussion are what an
+   adversary could do with reported statistics that they couldn't do
+   without them.  In the following, we're going through things the
+   adversary could learn, how plausible that is, and how much we care.
+   (All these things refer to hidden-service traffic, not to
+   hidden-service counting.  We should think about the latter, too.)
+
+3.1. Identify rendezvous point of high-volume and long-lived connection
+
+   The adversary could identify the rendezvous point of a very large and
+   very long-lived HS connection by observing a relay with unexpectedly
+   large relay cell count.
+
+3.2. Identify number of users of a hidden service
+
+   The adversary may be able to identify the number of users
+   of an HS if he knows the amount of traffic on a connection to that HS
+   (which he potentially can determine himself) and knows when that
+   service goes up or down. He can look at the change in the total
+   reported RP traffic to determine about how many fewer HS users there
+   are when that HS is down.
+
+4. Discussion
+
+4.1. Why count only RP cells? Why not also count IP cells?
+
+   As discussed on IRC, counting only RP cells should be fine for now.
+   Everything else is protocol overhead, which includes HSDir traffic,
+   introduction point traffic, or rendezvous point traffic before the
+   first RELAY cell, etc.
+
+   Furthermore, introduction points correspond to specific HSes, so
+   publishing IP cell stats could reveal the popularity of specific
+   HSes.
+
+4.2. How to use these stats?
+
+ 4.2.1. How to use RP Cell statistics
 
    We plan to extrapolate reported values to network totals by dividing
    values by the probability of clients picking relays as rendezvous
@@ -108,52 +177,7 @@ Status: Incomplete
    (we cannot infer the actual number of bytes, because cells are
    end-to-end encrypted between client and service).
 
-   A possible alternative to multiplying the number of cells with a random
-   factor is to introduce additive noise.  Let's suppose that we would
-   like to obscure any individual connection that contains C cells or
-   fewer (obscuring extremely and unusually large connections seems
-   hopeless but unnecessary).  That is, we don't want the (distribution
-   of) the cell count from any relay to change by much whether or not C
-   cells are removed.  The standard differential privacy approach would be
-   to *add* noise from the Laplace distribution Lap(\epsilon/C), where
-   \epsilon controls how much the statistics *distribution* can
-   multiplicatively differ.  This is not to say that we need to add noise
-   exactly from that distribution (maybe we weaken the guarantee slightly
-   to get better accuracy), but the same idea applies.  This would apply
-   the same to both large and small relays.  We *want* to learn roughly
-   how much hidden-service traffic each relay has - we just want to
-   obscure the exact number within some tolerance.  We'll probably want to
-   include the algorithm and parameters used for adding noise in the
-   "hidserv-rend-relayed-cells" line, as in, "lap=x" with x being
-   \epsilon/C.
-
-2.2. HSDir hidden service counting
-
-   We also want to learn how many hidden services exist in the network.
-   The best place to learn this is at hidden service directories where
-   hidden services publish their descriptors.
-
-   Tor relays will add the following line to their extra-info descriptor:
-
-    "hidserv-dir-published-ids" SP num NL
-        [At most once.]
-
-        Approximate number of unique hidden-service identities seen in
-        descriptors published to and accepted by this hidden-service
-        directory.  The actual number observed by the directory is
-        multiplied with a random number in [0.9, 1.1] before being
-        reported.
-
-   This statistic requires keeping a separate data structure with unique
-   identities seen during the current statistics interval.  We could, in
-   theory, have relays iterate over their descriptor caches when producing
-   the daily hidden-service statistics blurb.  But it's unclear how
-   caching would affect results from such an approach, because descriptors
-   published at the start of the current statistics interval could already
-   have been removed, and descriptors published in the last statistics
-   interval could still be present.  Keeping a separate data structure,
-   possibly even a probabilistic one, seems like the more accurate
-   approach.
+ 4.2.2. How to use HSDir HS statistics
 
    We plan to extrapolate this value to network totals by calculating what
    fraction of hidden-service identities this relay was supposed to see.
@@ -183,51 +207,25 @@ Status: Incomplete
    consider the part of the statistics interval following the valid-after
    time of that consensus.
 
-   Finally, the intentionally added randomness leads to either under- or
-   overcounting hidden services by up to 10%.  A probably better
-   alternative for adding noise is to use the Laplace approach suggested
-   above.
+4.3. Multiplicative or additive noise?
 
-3. Security
+   A possible alternative to multiplying the number of cells with a random
+   factor is to introduce additive noise.  Let's suppose that we would
+   like to obscure any individual connection that contains C cells or
+   fewer (obscuring extremely and unusually large connections seems
+   hopeless but unnecessary).  That is, we don't want the (distribution
+   of) the cell count from any relay to change by much whether or not C
+   cells are removed.  The standard differential privacy approach would be
+   to *add* noise from the Laplace distribution Lap(\epsilon/C), where
+   \epsilon controls how much the statistics *distribution* can
+   multiplicatively differ.  This is not to say that we need to add noise
+   exactly from that distribution (maybe we weaken the guarantee slightly
+   to get better accuracy), but the same idea applies.  This would apply
+   the same to both large and small relays.  We *want* to learn roughly
+   how much hidden-service traffic each relay has - we just want to
+   obscure the exact number within some tolerance.  We'll probably want to
+   include the algorithm and parameters used for adding noise in the
+   "hidserv-rend-relayed-cells" line, as in, "lap=x" with x being
+   \epsilon/C.
 
-   The main security considerations that need discussion are what an
-   adversary could do with reported statistics that they couldn't do
-   without them.  In the following, we're going through things the
-   adversary could learn, how plausible that is, and how much we care.
-   (All these things refer to hidden-service traffic, not to
-   hidden-service counting.  We should think about the latter, too.)
-
-3.1. Identify rendezvous point of high-volume and long-lived connection
-
-   The adversary could identify the rendezvous point of a very large and
-   very long-lived HS connection by observing a relay with unexpectedly
-   large relay cell count.
-
-3.2. Identify hard-coded rendezvous points
-
-   The adversary could observe if there are RPs that consistently report
-   large cell counts. These might be HS clients with hardcoded RPs, and
-   that would allow the adversary to identify this behavior and
-   potentially link that with a known HS client of known behavior (e.g.
-   a botnet client). Then the adversary could figure out which RPs to
-   target.
-
-3.3. Identify number of users of a hidden service
-
-   The adversary may be able to identify the number of users
-   of an HS if he knows the amount of traffic on a connection to that HS
-   (which he potentially can determine himself) and knows when that
-   service goes up or down. He can look at the change in the total
-   reported RP traffic to determine about how many fewer HS users there
-   are when that HS is down.
-
-4. Discussion
-
-4.1. Count only RP cells? Or also IP cells?
-   As discussed on IRC, counting only RP cells should be fine for now.
-   Everything else is protocol overhead, which includes HSDir traffic,
-   IPo traffic, RPo traffic before the first RELAY cell, etc.  We can
-   always be smarter later. -KL
-
-
-[XXX]: guard discovery: https://lists.torproject.org/pipermail/tor-dev/2014-September/007474.html
+[0]: guard discovery: https://lists.torproject.org/pipermail/tor-dev/2014-September/007474.html
