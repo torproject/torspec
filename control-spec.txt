@@ -364,7 +364,7 @@
 
      Signal = "RELOAD" / "SHUTDOWN" / "DUMP" / "DEBUG" / "HALT" /
               "HUP" / "INT" / "USR1" / "USR2" / "TERM" / "NEWNYM" /
-              "CLEARDNSCACHE"
+              "CLEARDNSCACHE" / "HEARTBEAT"
 
   The meaning of the signals are:
 
@@ -381,6 +381,7 @@
                    don't share any circuits with old ones.  Also clears
                    the client-side DNS cache.  (Tor MAY rate-limit its
                    response to this signal.)
+      HEARTBEAT -- Make Tor dump an unscheduled Heartbeat message to log.
 
   The server responds with "250 OK" if the signal is recognized (or simply
   closes the socket if it was asked to close immediately), or "552
