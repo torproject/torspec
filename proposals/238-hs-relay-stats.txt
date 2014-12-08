@@ -23,7 +23,7 @@ Status: Draft
    network traffic or 90% of the Tor network traffic. This info can
    also help us during load balancing, for example if we change the
    path building of hidden services to mitigate guard discovery
-   attacks [0].
+   attacks [GUARD-DISCOVERY].
 
    Also, learning the number of hidden services, can give us an
    understanding of how widespread hidden services are. It will also
@@ -31,9 +31,10 @@ Status: Draft
    network by hidden service logistics, like introduction point
    circuits etc.
 
+
 1. Design
 
-   Tor relays will add some fields related to hidden service
+   Tor relays shall add some fields related to hidden service
    statistics in their extra-info descriptors.
 
    Tor relays collect these statistics by keeping track of their
@@ -41,6 +42,7 @@ Status: Draft
    obfuscating the numbers and posting them to the directory
    authorities. Extra-info descriptors are posted to directory
    authorities every 24 hours.
+
 
 2. Implementation
 
@@ -66,59 +68,106 @@ Status: Draft
 
 2.2. Hidden service traffic statistics
 
-   We want to learn how much of the total Tor network traffic is caused by
-   hidden service usage.  There are three phases in the rendezvous
-   protocol where traffic is generated: (1) when hidden services make
-   themselves available in the network, (2) when clients open connections
-   to hidden services, and (3) when clients exchange application data with
-   hidden services.  We expect (3) to consume most bytes here, so we're
-   focusing on this only.  More precisely, we measure hidden service
-   traffic by counting RELAY cells seen on a rendezvous point after
-   receiving a RENDEZVOUS1 cell.  These RELAY cells include commands to
-   open or close application streams, and they include application data.
+   We want to learn how much of the total Tor network traffic is
+   caused by hidden service usage.  More precisely, we measure hidden
+   service traffic by counting RELAY cells seen on a rendezvous point
+   after receiving a RENDEZVOUS1 cell.  These RELAY cells include
+   commands to open or close application streams, and they include
+   application data.
 
    Tor relays will add the following line to their extra-info descriptor:
 
-    "hidserv-rend-relayed-cells" SP num NL
+    "hidserv-rend-relayed-cells" SP num SP key=val SP key=val ... NL
         [At most once.]
 
-        Approximate number of RELAY cells seen in either direction on
-        a circuit after receiving and successfully processing a
-        RENDEZVOUS1 cell.  The actual number observed by the directory
-        is multiplied with a random number in [0.9, 1.1] and then gets
-        floored before being reported.
+        Where 'num' is the number of RELAY cells seen in either
+        direction on a circuit after receiving and successfully
+        processing a RENDEZVOUS1 cell.
 
-   The keyword indicates that this line is part of hidden-service
-   statistics ("hidserv") and contains aggregate data from the relay
-   acting as rendezvous point ("rend").
+        The actual number is obfuscated as detailed in section
+        "2.4. Statistics obfuscation". The parameters of the
+        obfuscation are included in the key=val part of the line.
+
+   The obfuscatory parameters for this statistic are:
+     * delta_f = 2048
+     * epsilon = 0.3
+     * bin_size = 1024
+
+   So, an example line could be:
+     hidserv-rend-relayed-cells 19456 delta_f=2048 epsilon=0.30 binsize=1024
 
 2.3. HSDir hidden service counting
 
-   We also want to learn how many hidden services exist in the network.
-   The best place to learn this is at hidden service directories where
-   hidden services publish their descriptors.
+   We also want to learn how many hidden services exist in the
+   network.  The best place to learn this is at hidden service
+   directories where hidden services publish their descriptors.
 
    Tor relays will add the following line to their extra-info descriptor:
 
-    "hidserv-dir-published-ids" SP num NL
+    "hidserv-dir-onions-seen" SP num SP key=val SP key=val ... NL
         [At most once.]
 
         Approximate number of unique hidden-service identities seen in
         descriptors published to and accepted by this hidden-service
-        directory.  The actual number observed by the directory is
-        multiplied with a random number in [0.9, 1.1] and then gets
-        floored before being reported.
+        directory.
 
-   This statistic requires keeping a separate data structure with unique
-   identities seen during the current statistics interval.  We could, in
-   theory, have relays iterate over their descriptor caches when producing
-   the daily hidden-service statistics blurb.  But it's unclear how
-   caching would affect results from such an approach, because descriptors
-   published at the start of the current statistics interval could already
-   have been removed, and descriptors published in the last statistics
-   interval could still be present.  Keeping a separate data structure,
-   possibly even a probabilistic one, seems like the more accurate
-   approach.
+        The actual number number is obfuscated as detailed in section
+        "2.4. Statistics obfuscation". The parameters of the
+        obfuscation are included in the key=val part of the line.
+
+   The obfuscatory parameters for these statistics are:
+     * delta_f = 1
+     * epsilon = 0.3
+     * bin_size = 8
+
+   So, an example line could be:
+    hidserv-dir-onions-seen 112 delta_f=1 epsilon=0.30 binsize=8
+
+2.4. Statistics obfuscation
+
+  We believe that publishing the actual measurement values in such a
+  system might have unpredictable effects, so we obfuscate these
+  statistics before publishing:
+
+                   +--------------+    +--------------------+
+   actual value -> |additive noise| -> |round-up obfuscation| -> public statistic
+                   +--------------+    +--------------------+
+
+  We are using two obfuscation methods to better hide the actual
+  numbers even if they remain the same over multiple measurement
+  periods.
+
+  Specifically, given the actual measurement value, we first deploy
+  additive noise in a fashion similar to basic differential
+  privacy. Then, we round up this obfuscated result to the nearest
+  multiple of an integer (which is a security parameter), to derive a
+  final result which can be published safely.
+
+  More information about the obfuscation methods follows:
+
+2.4.1. Additive noise
+
+  We apply additive noise to the actual measurement by adding to it a
+  random value sampled from a Laplace distribution . Following the
+  differential privacy methodology [DIFF-PRIVACY], our obfuscatory
+  Laplace distribution has \mu = 0 and b = (delta_f / epsilon).
+
+  The precise values of delta_f and epsilon are different for each
+  statistic and are defined on the respective statistics sections.
+
+2.4.2. Round-up obfuscation
+
+  To further hide any patterns, before publishing statistics, we round
+  up the result to the nearest multiple of 'bin_size'. 'bin_size' is
+  an integer security parameter and can be found on the respective
+  statistics sections.
+
+  This is similar to how Tor keeps bridge user statistics. As an
+  example, if the measurement value is 9 and bin_size is 8, then the
+  final value will be rounded up to 16. This also works for negative
+  values, so for example, if the measurement value is -9 and bin_size
+  is 8, the value will be rounded up to -8.
+
 
 3. Security
 
@@ -144,14 +193,17 @@ Status: Draft
    reported RP traffic to determine about how many fewer HS users there
    are when that HS is down.
 
+
 4. Discussion
 
 4.1. Why count only RP cells? Why not also count IP cells?
 
-   As discussed on IRC, counting only RP cells should be fine for now.
-   Everything else is protocol overhead, which includes HSDir traffic,
-   introduction point traffic, or rendezvous point traffic before the
-   first RELAY cell, etc.
+   There are three phases in the rendezvous protocol where traffic is
+   generated: (1) when hidden services make themselves available in
+   the network, (2) when clients open connections to hidden services,
+   and (3) when clients exchange application data with hidden
+   services.  We expect (3), that is the RP cells, to consume most
+   bytes here, so we're focusing on this only.
 
    Furthermore, introduction points correspond to specific HSes, so
    publishing IP cell stats could reveal the popularity of specific
@@ -207,25 +259,9 @@ Status: Draft
    consider the part of the statistics interval following the valid-after
    time of that consensus.
 
-4.3. Multiplicative or additive noise?
 
-   A possible alternative to multiplying the number of cells with a random
-   factor is to introduce additive noise.  Let's suppose that we would
-   like to obscure any individual connection that contains C cells or
-   fewer (obscuring extremely and unusually large connections seems
-   hopeless but unnecessary).  That is, we don't want the (distribution
-   of) the cell count from any relay to change by much whether or not C
-   cells are removed.  The standard differential privacy approach would be
-   to *add* noise from the Laplace distribution Lap(\epsilon/C), where
-   \epsilon controls how much the statistics *distribution* can
-   multiplicatively differ.  This is not to say that we need to add noise
-   exactly from that distribution (maybe we weaken the guarantee slightly
-   to get better accuracy), but the same idea applies.  This would apply
-   the same to both large and small relays.  We *want* to learn roughly
-   how much hidden-service traffic each relay has - we just want to
-   obscure the exact number within some tolerance.  We'll probably want to
-   include the algorithm and parameters used for adding noise in the
-   "hidserv-rend-relayed-cells" line, as in, "lap=x" with x being
-   \epsilon/C.
+5. References
 
-[0]: guard discovery: https://lists.torproject.org/pipermail/tor-dev/2014-September/007474.html
+[GUARD-DISCOVERY]: https://lists.torproject.org/pipermail/tor-dev/2014-September/007474.html
+
+[DIFF-PRIVACY]: http://research.microsoft.com/en-us/projects/databaseprivacy/dwork.pdf
