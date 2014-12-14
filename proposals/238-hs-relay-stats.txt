@@ -84,14 +84,15 @@ Status: Draft
         direction on a circuit after receiving and successfully
         processing a RENDEZVOUS1 cell.
 
-        The actual number is obfuscated as detailed in section
-        "2.4. Statistics obfuscation". The parameters of the
-        obfuscation are included in the key=val part of the line.
+        The actual number is obfuscated as detailed in
+        [STAT-OBFUSCATION]. The parameters of the obfuscation are
+        included in the key=val part of the line.
 
    The obfuscatory parameters for this statistic are:
      * delta_f = 2048
      * epsilon = 0.3
      * bin_size = 1024
+   (Also see [CELL-LAPLACE-GRAPH] for a graph of the Laplace distribution.)
 
    So, an example line could be:
      hidserv-rend-relayed-cells 19456 delta_f=2048 epsilon=0.30 binsize=1024
@@ -111,55 +112,45 @@ Status: Draft
         descriptors published to and accepted by this hidden-service
         directory.
 
-        The actual number number is obfuscated as detailed in section
-        "2.4. Statistics obfuscation". The parameters of the
-        obfuscation are included in the key=val part of the line.
+        The actual number number is obfuscated as detailed in
+        [STAT-OBFUSCATION]. The parameters of the obfuscation are
+        included in the key=val part of the line.
 
-   The obfuscatory parameters for these statistics are:
-     * delta_f = 1
+   The obfuscatory parameters for this statistic are:
+     * delta_f = 8
      * epsilon = 0.3
      * bin_size = 8
+   (Also see [ONIONS-LAPLACE-GRAPH] for a graph of the Laplace distribution.)
 
    So, an example line could be:
     hidserv-dir-onions-seen 112 delta_f=1 epsilon=0.30 binsize=8
 
-2.4. Statistics obfuscation
+2.4. Statistics obfuscation [STAT-OBFUSCATION]
 
   We believe that publishing the actual measurement values in such a
   system might have unpredictable effects, so we obfuscate these
   statistics before publishing:
 
-                   +--------------+    +--------------------+
-   actual value -> |additive noise| -> |round-up obfuscation| -> public statistic
-                   +--------------+    +--------------------+
+                   +-----------+    +--------------+
+   actual value -> |  binning  | -> |additive noise| -> public statistic
+                   +-----------+    +--------------+
 
   We are using two obfuscation methods to better hide the actual
   numbers even if they remain the same over multiple measurement
   periods.
 
-  Specifically, given the actual measurement value, we first deploy
-  additive noise in a fashion similar to basic differential
-  privacy. Then, we round up this obfuscated result to the nearest
-  multiple of an integer (which is a security parameter), to derive a
-  final result which can be published safely.
+  Specifically, given the actual measurement value, we first apply
+  data binning to it (basically we round it up to the nearest multiple
+  of an integer, see [DATA-BINNING]). And then we apply additive noise
+  to the binned value in a fashion similar to differential privacy.
 
   More information about the obfuscation methods follows:
 
-2.4.1. Additive noise
+2.4.1. Data binning
 
-  We apply additive noise to the actual measurement by adding to it a
-  random value sampled from a Laplace distribution . Following the
-  differential privacy methodology [DIFF-PRIVACY], our obfuscatory
-  Laplace distribution has \mu = 0 and b = (delta_f / epsilon).
-
-  The precise values of delta_f and epsilon are different for each
-  statistic and are defined on the respective statistics sections.
-
-2.4.2. Round-up obfuscation
-
-  To further hide any patterns, before publishing statistics, we round
-  up the result to the nearest multiple of 'bin_size'. 'bin_size' is
-  an integer security parameter and can be found on the respective
+  The first thing we do to the original measurement value, is to round
+  it up to the nearest multiple of 'bin_size'.  'bin_size' is an
+  integer security parameter and can be found on the respective
   statistics sections.
 
   This is similar to how Tor keeps bridge user statistics. As an
@@ -167,6 +158,17 @@ Status: Draft
   final value will be rounded up to 16. This also works for negative
   values, so for example, if the measurement value is -9 and bin_size
   is 8, the value will be rounded up to -8.
+
+2.4.2. Additive noise
+
+  Then, before publishing the statistics, we apply additive noise to
+  the binned value by adding to it a random value sampled from a
+  Laplace distribution . Following the differential privacy
+  methodology [DIFF-PRIVACY], our obfuscatory Laplace distribution has
+  mu = 0 and b = (delta_f / epsilon).
+
+  The precise values of delta_f and epsilon are different for each
+  statistic and are defined on the respective statistics sections.
 
 
 3. Security
@@ -196,7 +198,7 @@ Status: Draft
 
 4. Discussion
 
-4.1. Why count only RP cells? Why not also count IP cells?
+4.1. Why count only RP cells? Why not count IP cells too?
 
    There are three phases in the rendezvous protocol where traffic is
    generated: (1) when hidden services make themselves available in
@@ -211,7 +213,7 @@ Status: Draft
 
 4.2. How to use these stats?
 
- 4.2.1. How to use RP Cell statistics
+ 4.2.1. How to use rendezvous cell statistics
 
    We plan to extrapolate reported values to network totals by dividing
    values by the probability of clients picking relays as rendezvous
@@ -259,9 +261,33 @@ Status: Draft
    consider the part of the statistics interval following the valid-after
    time of that consensus.
 
+4.3. Why does the obfuscation work?
 
-5. References
+   By applying data binning, we smudge the original value making it
+   harder for attackers to guess it. Specifically, an attacker who
+   knows the bin, can only guess the underlying value with probability
+   1/bin_size.
+
+   By applying additive noise, we make it harder for the adversary to
+   find out the current bin, which makes it even harder to get the
+   original value. If additive noise was not applied, an adversary
+   could try to detect changes in the original value by checking when
+   we switch bins.
+
+5. Acknowledgements
+
+   Thanks go to 'pfm' for the helpful Laplace graphs.
+
+6. References
 
 [GUARD-DISCOVERY]: https://lists.torproject.org/pipermail/tor-dev/2014-September/007474.html
 
 [DIFF-PRIVACY]: http://research.microsoft.com/en-us/projects/databaseprivacy/dwork.pdf
+
+[DATA-BINNING]: https://en.wikipedia.org/wiki/Data_binning
+
+[CELL-LAPLACE-GRAPH]: https://raw.githubusercontent.com/corcra/pioton/master/vis/laplacePDF_mu0_b6800.png
+                      https://raw.githubusercontent.com/corcra/pioton/master/vis/laplaceCDF_mu0_b6800.png
+
+[ONIONS-LAPLACE-GRAPH]: https://raw.githubusercontent.com/corcra/pioton/master/vis/laplacePDF_mu0_b3.png
+                        https://raw.githubusercontent.com/corcra/pioton/master/vis/laplaceCDF_mu0_b3.png
