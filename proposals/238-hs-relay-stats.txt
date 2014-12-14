@@ -286,8 +286,8 @@ Status: Draft
 
 [DATA-BINNING]: https://en.wikipedia.org/wiki/Data_binning
 
-[CELL-LAPLACE-GRAPH]: https://raw.githubusercontent.com/corcra/pioton/master/vis/laplacePDF_mu0_b6800.png
-                      https://raw.githubusercontent.com/corcra/pioton/master/vis/laplaceCDF_mu0_b6800.png
+[CELL-LAPLACE-GRAPH]: https://raw.githubusercontent.com/corcra/pioton/master/vis/laplacePDF_mu0.0_b6826.67.png
+                      https://raw.githubusercontent.com/corcra/pioton/master/vis/laplaceCDF_mu0.0_b6826.67.png
 
-[ONIONS-LAPLACE-GRAPH]: https://raw.githubusercontent.com/corcra/pioton/master/vis/laplacePDF_mu0_b3.png
-                        https://raw.githubusercontent.com/corcra/pioton/master/vis/laplaceCDF_mu0_b3.png
+[ONIONS-LAPLACE-GRAPH]: https://raw.githubusercontent.com/corcra/pioton/master/vis/laplacePDF_mu0.0_b26.67.png
+                        https://raw.githubusercontent.com/corcra/pioton/master/vis/laplaceCDF_mu0.0_b26.67.png
