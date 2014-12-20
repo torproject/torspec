@@ -1873,6 +1873,10 @@
      ENOUGH_DIR_INFO
        Tor now knows enough network-status documents and enough server
        descriptors that it's going to start trying to build circuits now.
+      [Newer versions of Tor (0.2.6.1-alpha and later):
+       If the consensus contains Exits (the typical case), Tor will build
+       both exit and internal circuits. If not, Tor will only build internal
+       circuits.]
 
        {Controllers may want to use this event to decide when to indicate
        progress to their users, but should not interrupt the user's browsing
@@ -2615,6 +2619,21 @@
 
   Current Tor versions enter these phases in order, monotonically.
   Future Tors MAY revisit earlier stages.
+ [XXXX: do we revisit earlier stages if the network fails?]
+
+ [Newer versions of Tor (0.2.6.1-alpha and later):
+  If the consensus contains Exits (the typical case), Tor will build both
+  exit and internal circuits. When bootstrap completes, Tor will be ready
+  to handle an application requesting an exit circuit to services like the
+  World Wide Web.
+
+  If the consensus does not contain Exits, Tor will only build internal
+  circuits. In this case, earlier statuses will have included "internal"
+  as indicated above. When bootstrap completes, Tor will be ready to handle
+  an application requesting an internal circuit to hidden services at
+  ".onion" addresses.
+
+  If a future consensus contains Exits, exit circuits may become available.]
 
   Phase 0:
   tag=starting summary="Starting"
@@ -2622,31 +2641,32 @@
   Tor starts out in this phase.
 
   Phase 5:
-  tag=conn_dir summary="Connecting to directory mirror"
+  tag=conn_dir summary="Connecting to directory server"
 
-  Tor sends this event as soon as Tor has chosen a directory mirror --
+  Tor sends this event as soon as Tor has chosen a directory server --
   e.g. one of the authorities if bootstrapping for the first time or
   after a long downtime, or one of the relays listed in its cached
   directory information otherwise.
 
   Tor will stay at this phase until it has successfully established
-  a TCP connection with some directory mirror. Problems in this phase
+  a TCP connection with some directory server. Problems in this phase
   generally happen because Tor doesn't have a network connection, or
   because the local firewall is dropping SYN packets.
 
   Phase 10:
-  tag=handshake_dir summary="Finishing handshake with directory mirror"
+  tag=handshake_dir summary="Finishing handshake with directory server"
 
-  This event occurs when Tor establishes a TCP connection with a relay used
-  as a directory mirror (or its https proxy if it's using one). Tor remains
-  in this phase until the TLS handshake with the relay is finished.
+  This event occurs when Tor establishes a TCP connection with a relay or
+  authority used as a directory server (or its https proxy if it's using
+  one). Tor remains in this phase until the TLS handshake with the relay
+  or authority is finished.
 
   Problems in this phase generally happen because Tor's firewall is
   doing more sophisticated MITM attacks on it, or doing packet-level
   keyword recognition of Tor's handshake.
 
   Phase 15:
-  tag=onehop_create summary="Establishing one-hop circuit for dir info"
+  tag=onehop_create summary="Establishing an encrypted directory connection"
 
   Once TLS is finished with a relay, Tor will send a CREATE_FAST cell
   to establish a one-hop circuit for retrieving directory information.
@@ -2669,7 +2689,7 @@
   phase is a good opportunity for using the "progress" keyword to indicate
   partial progress.
 
-  This phase could stall if the directory mirror we picked doesn't
+  This phase could stall if the directory server we picked doesn't
   have a copy of the networkstatus consensus so we have to ask another,
   or it does give us a copy but we don't find it valid.
 
@@ -2682,51 +2702,99 @@
   fetched on hold and fetch the keys so we can verify the signatures.
 
   Phase 45
-  tag=requesting_descriptors summary="Asking for relay descriptors"
+  tag=requesting_descriptors summary="Asking for relay descriptors
+                                      [ for internal paths]"
 
   Once we have a valid networkstatus consensus and we've checked all
   its signatures, we start asking for relay descriptors. We stay in this
   phase until we have received a 'connected' relay cell in response to
   a request for descriptors.
 
+ [Newer versions of Tor (0.2.6.1-alpha and later):
+  If the consensus contains Exits (the typical case), Tor will ask for
+  descriptors for both exit and internal paths. If not, Tor will only ask
+  for descriptors for internal paths. In this case, this status will
+  include "internal" as indicated above.]
+
   Phase 50:
-  tag=loading_descriptors summary="Loading relay descriptors"
+  tag=loading_descriptors summary="Loading relay descriptors[ for internal
+                                   paths]"
 
   We will ask for relay descriptors from several different locations,
   so this step will probably make up the bulk of the bootstrapping,
   especially for users with slow connections. We stay in this phase until
-  we have descriptors for at least 1/4 of the usable relays listed in
-  the networkstatus consensus. This phase is also a good opportunity to
-  use the "progress" keyword to indicate partial steps.
+  we have descriptors for a significant fraction of the usable relays
+  listed in the networkstatus consensus (this can be between 25% and 95%
+  depending on Tor's configuration and network consensus parameters).
+  This phase is also a good opportunity to use the "progress" keyword to
+  indicate partial steps.
+
+ [Newer versions of Tor (0.2.6.1-alpha and later):
+  If the consensus contains Exits (the typical case), Tor will download
+  descriptors for both exit and internal paths. If not, Tor will only
+  download descriptors for internal paths. In this case, this status will
+  include "internal" as indicated above.]
 
   Phase 80:
-  tag=conn_or summary="Connecting to entry guard"
+  tag=conn_or summary="Connecting to the Tor network[ internally]"
 
   Once we have a valid consensus and enough relay descriptors, we choose
-  some entry guards and start trying to build some circuits. This step
+  entry guard(s) and start trying to build some circuits. This step
   is similar to the "conn_dir" phase above; the only difference is
   the context.
 
   If a Tor starts with enough recent cached directory information,
   its first bootstrap status event will be for the conn_or phase.
 
+ [Newer versions of Tor (0.2.6.1-alpha and later):
+  If the consensus contains Exits (the typical case), Tor will build both
+  exit and internal circuits. If not, Tor will only build internal circuits.
+  In this case, this status will include "internal(ly)" as indicated above.]
+
   Phase 85:
-  tag=handshake_or summary="Finishing handshake with entry guard"
+  tag=handshake_or summary="Finishing handshake with first hop[ of internal
+                            circuit]"
 
   This phase is similar to the "handshake_dir" phase, but it gets reached
   if we finish a TCP connection to a Tor relay and we have already reached
   the "conn_or" phase. We'll stay in this phase until we complete a TLS
   handshake with a Tor relay.
 
-  Phase 90:
-  tag=circuit_create summary="Establishing circuits"
+ [Newer versions of Tor (0.2.6.1-alpha and later):
+  If the consensus contains Exits (the typical case), Tor may be finishing
+  a handshake with the first hop if either an exit or internal circuit. In
+  this case, it won't specify which type. If the consensus contains no Exits,
+  Tor will only build internal circuits. In this case, this status will
+  include "internal" as indicated above.]
 
-  Once we've finished our TLS handshake with an entry guard, we will
-  set about trying to make some 3-hop circuits in case we need them soon.
+  Phase 90:
+  tag=circuit_create summary="Establishing a[n internal] Tor circuit"
+
+  Once we've finished our TLS handshake with the first hop of a circuit,
+  we will set about trying to make some 3-hop circuits in case we need them
+  soon.
+
+ [Newer versions of Tor (0.2.6.1-alpha and later):
+  If the consensus contains Exits (the typical case), Tor will build both
+  exit and internal circuits. If not, Tor will only build internal circuits.
+  In this case, this status will include "internal" as indicated above.]
 
   Phase 100:
   tag=done summary="Done"
 
-  A full 3-hop exit circuit has been established. Tor is ready to handle
+  A full 3-hop circuit has been established. Tor is ready to handle
   application connections now.
 
+ [Newer versions of Tor (0.2.6.1-alpha and later):
+  If the consensus contains Exits (the typical case), Tor will build both
+  exit and internal circuits. At this stage, Tor will be ready to handle
+  an application requesting an exit circuit to services like the World
+  Wide Web.
+
+  If the consensus does not contain Exits, Tor will only build internal
+  circuits. In this case, earlier statuses will have included "internal"
+  as indicated above. At this stage, Tor will be ready to handle an
+  application requesting an internal circuit to hidden services at ".onion"
+  addresses.
+
+  If a future consensus contains Exits, exit circuits may become available.]

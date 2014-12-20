@@ -2689,7 +2689,23 @@
    On failure, the client waits briefly, then tries that network-status
    document again from another cache.  The client does not build circuits
    until it has a live network-status consensus document, and it has
-   descriptors for more than 1/4 of the routers that it believes are running.
+   descriptors for a significant proportion of the routers that it believes
+   are running (this is configurable using torrc options and consensus
+   parameters).
+
+  [Newer versions of Tor (0.2.6.1-alpha and later):
+   If the consensus contains Exits (the typical case), Tor will build both
+   exit and internal circuits. When bootstrap completes, Tor will be ready
+   to handle an application requesting an exit circuit to services like the
+   World Wide Web.
+
+   If the consensus does not contain Exits, Tor will only build internal
+   circuits. In this case, earlier statuses will have included "internal"
+   as indicated above. When bootstrap completes, Tor will be ready to handle
+   an application requesting an internal circuit to hidden services at
+   ".onion" addresses.
+
+   If a future consensus contains Exits, exit circuits may become available.]
 
    (Note: clients can and should pick caches based on the network-status
    information they have: once they have first fetched network-status info

@@ -28,6 +28,20 @@ of their choices.
    that no current circuit can handle, for testing the network or our
    reachability, and so on).
 
+  [Newer versions of Tor (0.2.6.1-alpha and later):
+   If the consensus contains Exits (the typical case), Tor will build both
+   exit and internal circuits. When bootstrap completes, Tor will be ready
+   to handle an application requesting an exit circuit to services like the
+   World Wide Web.
+
+   If the consensus does not contain Exits, Tor will only build internal
+   circuits. In this case, earlier statuses will have included "internal"
+   as indicated above. When bootstrap completes, Tor will be ready to handle
+   an application requesting an internal circuit to hidden services at
+   ".onion" addresses.
+
+   If a future consensus contains Exits, exit circuits may become available.]
+
    When a client application creates a new stream (by opening a SOCKS
    connection or launching a resolve request), we attach it to an appropriate
    open circuit if one exists, or wait if an appropriate circuit is
@@ -659,12 +673,12 @@ of their choices.
   Clients maintain two usage counts for each of their guards: a count
   of the number of usage attempts, and a count of the number of
   successful usages.
-  
+
   A usage attempt means any attempt to attach a stream to a circuit.
 
   Usage success status is temporarily recorded by state flags on circuits.
   Guard usage success counts are not incremented until circuit close. A
-  circuit is marked as successfully used if we receive a properly 
+  circuit is marked as successfully used if we receive a properly
   recognized RELAY cell on that circuit that was expected for the current
   circuit purpose.
 
@@ -733,7 +747,7 @@ of their choices.
        Min: 0
        Max: 100
        Effect: If the circuit success rate falls below this percentage,
-               we emit a more alarmist warning log message. If 
+               we emit a more alarmist warning log message. If
                pb_dropguard is set to 1, we also disable the use of the
                guard.
 
@@ -791,7 +805,7 @@ of their choices.
   version of the defense is unlikely to be deployed until the ntor
   circuit handshake is enabled, or the nature of CPU overload induced
   failure is better understood.
-  
+
 
 
 X. Old notes
@@ -844,4 +858,3 @@ X.3. Some stuff that worries me about entry guards. 2006 Jun, Nickm.
 
   [Do we do any of this now? If not, this should move into 099-misc or
   098-todo. -NM]
-
