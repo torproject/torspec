@@ -2693,7 +2693,7 @@
    are running (this is configurable using torrc options and consensus
    parameters).
 
-  [Newer versions of Tor (0.2.6.1-alpha and later):
+  [Newer versions of Tor (0.2.6.2-alpha and later):
    If the consensus contains Exits (the typical case), Tor will build both
    exit and internal circuits. When bootstrap completes, Tor will be ready
    to handle an application requesting an exit circuit to services like the

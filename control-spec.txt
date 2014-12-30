@@ -1873,7 +1873,7 @@
      ENOUGH_DIR_INFO
        Tor now knows enough network-status documents and enough server
        descriptors that it's going to start trying to build circuits now.
-      [Newer versions of Tor (0.2.6.1-alpha and later):
+      [Newer versions of Tor (0.2.6.2-alpha and later):
        If the consensus contains Exits (the typical case), Tor will build
        both exit and internal circuits. If not, Tor will only build internal
        circuits.]
@@ -2621,7 +2621,7 @@
   Future Tors MAY revisit earlier stages.
  [XXXX: do we revisit earlier stages if the network fails?]
 
- [Newer versions of Tor (0.2.6.1-alpha and later):
+ [Newer versions of Tor (0.2.6.2-alpha and later):
   If the consensus contains Exits (the typical case), Tor will build both
   exit and internal circuits. When bootstrap completes, Tor will be ready
   to handle an application requesting an exit circuit to services like the
@@ -2710,7 +2710,7 @@
   phase until we have received a 'connected' relay cell in response to
   a request for descriptors.
 
- [Newer versions of Tor (0.2.6.1-alpha and later):
+ [Newer versions of Tor (0.2.6.2-alpha and later):
   If the consensus contains Exits (the typical case), Tor will ask for
   descriptors for both exit and internal paths. If not, Tor will only ask
   for descriptors for internal paths. In this case, this status will
@@ -2729,7 +2729,7 @@
   This phase is also a good opportunity to use the "progress" keyword to
   indicate partial steps.
 
- [Newer versions of Tor (0.2.6.1-alpha and later):
+ [Newer versions of Tor (0.2.6.2-alpha and later):
   If the consensus contains Exits (the typical case), Tor will download
   descriptors for both exit and internal paths. If not, Tor will only
   download descriptors for internal paths. In this case, this status will
@@ -2746,7 +2746,7 @@
   If a Tor starts with enough recent cached directory information,
   its first bootstrap status event will be for the conn_or phase.
 
- [Newer versions of Tor (0.2.6.1-alpha and later):
+ [Newer versions of Tor (0.2.6.2-alpha and later):
   If the consensus contains Exits (the typical case), Tor will build both
   exit and internal circuits. If not, Tor will only build internal circuits.
   In this case, this status will include "internal(ly)" as indicated above.]
@@ -2760,7 +2760,7 @@
   the "conn_or" phase. We'll stay in this phase until we complete a TLS
   handshake with a Tor relay.
 
- [Newer versions of Tor (0.2.6.1-alpha and later):
+ [Newer versions of Tor (0.2.6.2-alpha and later):
   If the consensus contains Exits (the typical case), Tor may be finishing
   a handshake with the first hop if either an exit or internal circuit. In
   this case, it won't specify which type. If the consensus contains no Exits,
@@ -2774,7 +2774,7 @@
   we will set about trying to make some 3-hop circuits in case we need them
   soon.
 
- [Newer versions of Tor (0.2.6.1-alpha and later):
+ [Newer versions of Tor (0.2.6.2-alpha and later):
   If the consensus contains Exits (the typical case), Tor will build both
   exit and internal circuits. If not, Tor will only build internal circuits.
   In this case, this status will include "internal" as indicated above.]
@@ -2785,7 +2785,7 @@
   A full 3-hop circuit has been established. Tor is ready to handle
   application connections now.
 
- [Newer versions of Tor (0.2.6.1-alpha and later):
+ [Newer versions of Tor (0.2.6.2-alpha and later):
   If the consensus contains Exits (the typical case), Tor will build both
   exit and internal circuits. At this stage, Tor will be ready to handle
   an application requesting an exit circuit to services like the World
