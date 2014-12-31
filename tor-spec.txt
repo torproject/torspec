@@ -1006,7 +1006,7 @@ see tor-design.pdf.
 
        Where H(x,t) is HMAC_SHA256 with value x and key t
          and K_1     = H(m_expand | INT8(1) , KEY_SEED )
-         and K_(i+1) = H(K_i | m_expand | INT8(i) , KEY_SEED )
+         and K_(i+1) = H(K_i | m_expand | INT8(i+1) , KEY_SEED )
          and m_expand is an arbitrarily chosen value,
          and INT8(i) is a octet with the value "i".
 
