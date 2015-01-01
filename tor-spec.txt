@@ -754,8 +754,8 @@ see tor-design.pdf.
    keys are compared numerically by modulus.)
 
    In link protocol version 4 or higher, whichever node initiated the
-   connection sets its MSB to 0, and whichever node didn't initiate the
-   connection sets its MSB to 1.
+   connection sets its MSB to 1, and whichever node didn't initiate the
+   connection sets its MSB to 0.
 
    (An OP with no public key MAY choose any CircID it wishes, since an OP
    never needs to process a CREATE cell.)
