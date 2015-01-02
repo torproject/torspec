@@ -719,6 +719,9 @@
 
    (Bob's OP MUST NOT use this circuit for any other purpose.)
 
+   (By default, Bob builds a circuit of at least three hops, *not including*
+   Alice's chosen rendezvous point.)
+
    If the RP recognizes RC, it relays the rest of the cell down the
    corresponding circuit in a RELAY_COMMAND_RENDEZVOUS2 cell, containing:
 
