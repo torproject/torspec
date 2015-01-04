@@ -1559,3 +1559,31 @@ see tor-design.pdf.
    ten cell payloads remaining to be flushed at that edge.
 
 
+
+8. Handling resource exhaustion
+
+
+8.1. Memory exhaustion.
+
+   If RAM becomes low, an OR should begin destroying circuits until
+   more memory is free again.  We recommend the following algorithm:
+
+     - Set a threshold amount of RAM to recover at 10% of the total RAM.
+
+     - Sort the circuits by their 'staleness', defined as the age of the
+       oldest data queued on the circuit.  This data can be:
+
+          * Bytes that are waiting to flush to or from a stream on that
+            circuit.
+
+          * Bytes that are waiting to flush from a connection created with
+            BEGIN_DIR.
+
+          * Cells that are waiting to flush or be processed.
+
+     - While we have not yet recovered enough RAM:
+
+          * Free all memory held by the most stale circuit, and send DESTROY
+            cells in both directions on that circuit.  Count the amount of
+            memory we recovered towards the total.
+
