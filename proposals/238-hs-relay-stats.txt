@@ -1,0 +1,293 @@
+Filename: 238-hs-relay-stats.txt
+Title: Better hidden service stats from Tor relays
+Author: George Kadianakis, David Goulet, Karsten Loesing, Aaron Johnson
+Created: 2014-11-17
+Status: Draft
+
+0. Motivation
+
+   Hidden Services is one of the least understood parts of the Tor
+   network. We don't really know how many hidden services there are
+   and how much they are used.
+
+   This proposal suggests that Tor relays include some hidden service
+   related stats to their extra info descriptors. No stats are
+   collected from Tor hidden services or clients.
+
+   While uncertainty might be a good thing in a hidden network,
+   learning more information about the usage of hidden services can be
+   helpful.
+
+   For example, learning how many cells are sent for hidden service
+   purposes tells us whether hidden service traffic is 2% of the Tor
+   network traffic or 90% of the Tor network traffic. This info can
+   also help us during load balancing, for example if we change the
+   path building of hidden services to mitigate guard discovery
+   attacks [GUARD-DISCOVERY].
+
+   Also, learning the number of hidden services, can give us an
+   understanding of how widespread hidden services are. It will also
+   help us understand approximately how much load is put in the
+   network by hidden service logistics, like introduction point
+   circuits etc.
+
+
+1. Design
+
+   Tor relays shall add some fields related to hidden service
+   statistics in their extra-info descriptors.
+
+   Tor relays collect these statistics by keeping track of their
+   hidden service directory or rendezvous point activities, slightly
+   obfuscating the numbers and posting them to the directory
+   authorities. Extra-info descriptors are posted to directory
+   authorities every 24 hours.
+
+
+2. Implementation
+
+2.1. Hidden service statistics interval
+
+   We want relays to report hidden-service statistics over a long-enough
+   time period to not put users at risk.  Similar to other statistics, we
+   suggest a 24-hour statistics interval.  All related statistics are
+   collected at the end of that interval and included in the next
+   extra-info descriptors published by the relay.
+
+   Tor relays will add the following line to their extra-info descriptor:
+
+    "hidserv-stats-end" YYYY-MM-DD HH:MM:SS (NSEC s) NL
+        [At most once.]
+
+        YYYY-MM-DD HH:MM:SS defines the end of the included measurement
+        interval of length NSEC seconds (86400 seconds by default).
+
+        A "hidserv-stats-end" line, as well as any other "hidserv-*" line,
+        is first added after the relay has been running for at least 24
+        hours.
+
+2.2. Hidden service traffic statistics
+
+   We want to learn how much of the total Tor network traffic is
+   caused by hidden service usage.  More precisely, we measure hidden
+   service traffic by counting RELAY cells seen on a rendezvous point
+   after receiving a RENDEZVOUS1 cell.  These RELAY cells include
+   commands to open or close application streams, and they include
+   application data.
+
+   Tor relays will add the following line to their extra-info descriptor:
+
+    "hidserv-rend-relayed-cells" SP num SP key=val SP key=val ... NL
+        [At most once.]
+
+        Where 'num' is the number of RELAY cells seen in either
+        direction on a circuit after receiving and successfully
+        processing a RENDEZVOUS1 cell.
+
+        The actual number is obfuscated as detailed in
+        [STAT-OBFUSCATION]. The parameters of the obfuscation are
+        included in the key=val part of the line.
+
+   The obfuscatory parameters for this statistic are:
+     * delta_f = 2048
+     * epsilon = 0.3
+     * bin_size = 1024
+   (Also see [CELL-LAPLACE-GRAPH] for a graph of the Laplace distribution.)
+
+   So, an example line could be:
+     hidserv-rend-relayed-cells 19456 delta_f=2048 epsilon=0.30 binsize=1024
+
+2.3. HSDir hidden service counting
+
+   We also want to learn how many hidden services exist in the
+   network.  The best place to learn this is at hidden service
+   directories where hidden services publish their descriptors.
+
+   Tor relays will add the following line to their extra-info descriptor:
+
+    "hidserv-dir-onions-seen" SP num SP key=val SP key=val ... NL
+        [At most once.]
+
+        Approximate number of unique hidden-service identities seen in
+        descriptors published to and accepted by this hidden-service
+        directory.
+
+        The actual number number is obfuscated as detailed in
+        [STAT-OBFUSCATION]. The parameters of the obfuscation are
+        included in the key=val part of the line.
+
+   The obfuscatory parameters for this statistic are:
+     * delta_f = 8
+     * epsilon = 0.3
+     * bin_size = 8
+   (Also see [ONIONS-LAPLACE-GRAPH] for a graph of the Laplace distribution.)
+
+   So, an example line could be:
+    hidserv-dir-onions-seen 112 delta_f=1 epsilon=0.30 binsize=8
+
+2.4. Statistics obfuscation [STAT-OBFUSCATION]
+
+  We believe that publishing the actual measurement values in such a
+  system might have unpredictable effects, so we obfuscate these
+  statistics before publishing:
+
+                   +-----------+    +--------------+
+   actual value -> |  binning  | -> |additive noise| -> public statistic
+                   +-----------+    +--------------+
+
+  We are using two obfuscation methods to better hide the actual
+  numbers even if they remain the same over multiple measurement
+  periods.
+
+  Specifically, given the actual measurement value, we first apply
+  data binning to it (basically we round it up to the nearest multiple
+  of an integer, see [DATA-BINNING]). And then we apply additive noise
+  to the binned value in a fashion similar to differential privacy.
+
+  More information about the obfuscation methods follows:
+
+2.4.1. Data binning
+
+  The first thing we do to the original measurement value, is to round
+  it up to the nearest multiple of 'bin_size'.  'bin_size' is an
+  integer security parameter and can be found on the respective
+  statistics sections.
+
+  This is similar to how Tor keeps bridge user statistics. As an
+  example, if the measurement value is 9 and bin_size is 8, then the
+  final value will be rounded up to 16. This also works for negative
+  values, so for example, if the measurement value is -9 and bin_size
+  is 8, the value will be rounded up to -8.
+
+2.4.2. Additive noise
+
+  Then, before publishing the statistics, we apply additive noise to
+  the binned value by adding to it a random value sampled from a
+  Laplace distribution . Following the differential privacy
+  methodology [DIFF-PRIVACY], our obfuscatory Laplace distribution has
+  mu = 0 and b = (delta_f / epsilon).
+
+  The precise values of delta_f and epsilon are different for each
+  statistic and are defined on the respective statistics sections.
+
+
+3. Security
+
+   The main security considerations that need discussion are what an
+   adversary could do with reported statistics that they couldn't do
+   without them.  In the following, we're going through things the
+   adversary could learn, how plausible that is, and how much we care.
+   (All these things refer to hidden-service traffic, not to
+   hidden-service counting.  We should think about the latter, too.)
+
+3.1. Identify rendezvous point of high-volume and long-lived connection
+
+   The adversary could identify the rendezvous point of a very large and
+   very long-lived HS connection by observing a relay with unexpectedly
+   large relay cell count.
+
+3.2. Identify number of users of a hidden service
+
+   The adversary may be able to identify the number of users
+   of an HS if he knows the amount of traffic on a connection to that HS
+   (which he potentially can determine himself) and knows when that
+   service goes up or down. He can look at the change in the total
+   reported RP traffic to determine about how many fewer HS users there
+   are when that HS is down.
+
+
+4. Discussion
+
+4.1. Why count only RP cells? Why not count IP cells too?
+
+   There are three phases in the rendezvous protocol where traffic is
+   generated: (1) when hidden services make themselves available in
+   the network, (2) when clients open connections to hidden services,
+   and (3) when clients exchange application data with hidden
+   services.  We expect (3), that is the RP cells, to consume most
+   bytes here, so we're focusing on this only.
+
+   Furthermore, introduction points correspond to specific HSes, so
+   publishing IP cell stats could reveal the popularity of specific
+   HSes.
+
+4.2. How to use these stats?
+
+ 4.2.1. How to use rendezvous cell statistics
+
+   We plan to extrapolate reported values to network totals by dividing
+   values by the probability of clients picking relays as rendezvous
+   point.  This approach should become more precise on faster relays and
+   the more relays report these statistics.
+
+   We also plan to compare reported values with "cell-*" statistics to
+   learn what fraction of traffic can be attributed to hidden services.
+
+   Ideally, we'd be able to compare values to "write-history" and
+   "read-history" lines to compute similar fractions of traffic used for
+   hidden services.  The goal would be to avoid enabling "cell-*"
+   statistics by default.  In order for this to work we'll have to
+   multiply reported cell numbers with the default cell size of 512 bytes
+   (we cannot infer the actual number of bytes, because cells are
+   end-to-end encrypted between client and service).
+
+ 4.2.2. How to use HSDir HS statistics
+
+   We plan to extrapolate this value to network totals by calculating what
+   fraction of hidden-service identities this relay was supposed to see.
+   This extrapolation will be very rough, because each hidden-service
+   directory is only responsible for a tiny share of hidden-service
+   descriptors, and there is no way to increase that share significantly.
+
+   Here are some numbers: there are about 3000 directories, and each
+   descriptor is stored on three directories.  So, each directory is
+   responsible for roughly 1/1000 of descriptor identifiers.  There are
+   two replicas for each descriptor (that is, each descriptor is stored
+   under two descriptor identifiers), and descriptor identifiers change
+   once per day (which means that, during a 24-hour period, there are two
+   opportunities for each directory to see a descriptor).  Hence, each
+   descriptor is stored to four places in
+   identifier space throughout a 24-hour period.  The probability of any
+   given directory to see a given hidden-service identity is
+   1-(1-1/1000)^4 = 0.00399 = 1/250.  This approximation constitutes an
+   upper threshold, because it assumes that services are running all day.
+   An extrapolation based on this formula will lead to undercounting the
+   total number of hidden services.
+
+   A possible inaccuracy in the estimation algorithm comes from the fact
+   that a relay may not be acting as hidden-service directory during the
+   full statistics interval.  We'll have to look at consensuses to
+   determine when the relay first received the "HSDir" flag, and only
+   consider the part of the statistics interval following the valid-after
+   time of that consensus.
+
+4.3. Why does the obfuscation work?
+
+   By applying data binning, we smudge the original value making it
+   harder for attackers to guess it. Specifically, an attacker who
+   knows the bin, can only guess the underlying value with probability
+   1/bin_size.
+
+   By applying additive noise, we make it harder for the adversary to
+   find out the current bin, which makes it even harder to get the
+   original value. If additive noise was not applied, an adversary
+   could try to detect changes in the original value by checking when
+   we switch bins.
+
+5. Acknowledgements
+
+   Thanks go to 'pfm' for the helpful Laplace graphs.
+
+6. References
+
+[GUARD-DISCOVERY]: https://lists.torproject.org/pipermail/tor-dev/2014-September/007474.html
+
+[DIFF-PRIVACY]: http://research.microsoft.com/en-us/projects/databaseprivacy/dwork.pdf
+
+[DATA-BINNING]: https://en.wikipedia.org/wiki/Data_binning
+
+[CELL-LAPLACE-GRAPH]: https://raw.githubusercontent.com/corcra/pioton/master/vis/laplacePDF_mu0.0_b6826.67.png
+                      https://raw.githubusercontent.com/corcra/pioton/master/vis/laplaceCDF_mu0.0_b6826.67.png
+
+[ONIONS-LAPLACE-GRAPH]: https://raw.githubusercontent.com/corcra/pioton/master/vis/laplacePDF_mu0.0_b26.67.png
+                        https://raw.githubusercontent.com/corcra/pioton/master/vis/laplaceCDF_mu0.0_b26.67.png
