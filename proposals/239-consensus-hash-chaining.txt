@@ -1,0 +1,99 @@
+Filename: 239-consensus-hash-chaining.txt
+Title: Consensus Hash Chaining
+Author: Nick Mathewson, Andrea Shepard
+Created: 06-Jan-2015
+Status: Draft
+
+1. Introduction and overview
+
+  To avoid some categories of attacks against directory authorities
+  and their keys, it would be handy to have an explicit hash chain in
+  consensuses.
+
+2. Directory authority operation
+
+  We add the following field to votes and consensuses:
+
+          previous-consensus ISOTIME [SP HashName "=" Base16]* NL
+
+  where HashName is any keyword.
+
+  This field may occur any number of times.
+
+  The date in a previous-consensus line in a vote is the valid-after
+  date of the consensus the line refers to.  The hash should be
+  computed over the signed portion of the consensus document. A
+  directory authority should include a previous-consensus line for a
+  consensus using all hashes it supports for all consensuses it knows
+  which are still valid, together with the two most recently expired
+  ones.
+
+  When this proposal is implemented, a new consensus method should be
+  allocated for adding previous-consensus lines to the consensus.
+
+  A previous-consensus line is included in the consensus if and only
+  if a line with that date was listed by more than half of the
+  authorities whose votes are under consideration.  A hash is included
+  in that line if the hash was listed by more than half of the
+  authorities whose votes are under consideration.  Hashes are sorted
+  lexically with a line by hashname; dates are sorted in temporal
+  order.
+
+  If, when computing a consensus, the authorities find that any
+  previous-consensus line is *incompatible* with another, they must
+  issue a loud warning.  Two lines are incompatible if they have the
+  same ISOTIME, but different values for the the same HashName.
+
+  The hash "sha256" is mandatory.
+
+3. Client and cache operation
+
+  All parties receiving consensus documents should validate
+  previous-consensus lines, and complain loudly if a hash fails to
+  match.
+
+  When a party receives a consensus document, it SHOULD check all
+  previous-consensus lines against any previous consensuses it has
+  retained, and if a hash fails to match it SHOULD warn loudly in the
+  log mentioning the specific hashes and valid-after times in
+  question, and store both the new consensus containing the
+  mismatching hashes and the old consensus being checked for later
+  analysis.  An option SHOULD be provided to disable operation as a
+  client or as a hidden service if this occurs.
+
+  All relying parties SHOULD by default retain all valid consensuses
+  they download plus two; but see "Security considerations" below.
+
+  If a hash is not mismatched, the relying party may nonetheless be
+  unable to validate the chain: either because there is a gap in the
+  chain itself, or because the relying party does not have any of the
+  consensuses that the latest consensus mentions.  If this happens,
+  the relying party should log a warning stating the specific cause,
+  the hashes and valid-after time of both the consensus containing the
+  unverifiable previous-consensus line and the hashes and valid-after
+  time of the line for each such line, and retain a copy of the
+  consensus document in question.  A relying party MAY provide an
+  option to disable operation as a client or hidden service in this
+  event, but due to the risk that breaks in the chain may occur
+  accidentally, such an option SHOULD be disabled by default if
+  provided.
+
+  If a relying party starts up and finds only very old consensuses
+  such that no previous-consensus lines can be verified, it should log
+  a notice of the gap along the lines of "consensus (date, hash) is
+  quite new.  Can't chain back to old consensus (date, hash)".  If it
+  has no old consensuses at all, it should log an info-level message
+  of the form "we got consensus (date, hash).  We haven't got any
+  older consensuses, so we won't do any hash chain verification"
+
+4. Security Considerations:
+
+   * Retaining consensus documents on clients might leak information
+     about when the client was active if a disk is later stolen or the
+     client compromised.  This should be documented somewhere and an
+     option to disable (but thereby also disable verifying
+     previous-consensus hashes) should be provided.
+
+   * Clients MAY offer the option to retain previous consensuses in
+     memory only to allow for validation without the potential disk
+     leak.

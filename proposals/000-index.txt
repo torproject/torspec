@@ -159,6 +159,7 @@ Proposals by number:
 236  The move to a single guard node [OPEN]
 237  All relays are directory servers [OPEN]
 238  Better hidden service stats from Tor relays [DRAFT]
+239  Consensus Hash Chaining [DRAFT]
 
 
 Proposals by status:
@@ -182,6 +183,7 @@ Proposals by status:
    231  Migrating authority RSA1024 identity keys [for 0.2.?]
    235  Stop assigning (and eventually supporting) the Named flag [for 0.2.5]
    238  Better hidden service stats from Tor relays
+   239  Consensus Hash Chaining
  NEEDS-REVISION:
    131  Help users to verify they are using Tor
    190  Bridge Client Authorization Based on a Shared Secret
