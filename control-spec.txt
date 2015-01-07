@@ -780,6 +780,14 @@
       where the first integer is the number of bytes written, and the second
       is the number of requests answered.
 
+    "bw-event-cache"
+      A space-separated summary of recent BW events in chronological order
+      from oldest to newest.  Each event is represented by a comma-separated
+      tuple of "R,W", R is the number of bytes read, and W is the number of
+      bytes written.  These entries each represent about one second's worth
+      of traffic.
+      [New in Tor 0.2.6.3-alpha]
+
   Examples:
      C: GETINFO version desc/name/moria1
      S: 250+desc/name/moria=
