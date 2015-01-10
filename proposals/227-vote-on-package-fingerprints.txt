@@ -44,8 +44,11 @@ Status: Open
    Votes and consensuses may include any number of "package" lines,
    but no vote or consensus may include more than one "package" line
    with the same PACKAGENAME and VERSION values.  All "package"
-   lines must be sorted by PACKAGENAME, and then by VERSION, in
+   lines must be sorted by "PACKAGENAME VERSION", in
    lexical (strcmp) order.
+
+   (If a vote contains multiple entries with the same PACKAGENAME and
+   VERSION, then only the last one is considered.)
 
    If the consensus-method is at least (TBD), then when computing
    the consensus, package lines for a given PACKAGENAME/VERSION pair
@@ -140,4 +143,5 @@ Status: Open
 
    This proposal is not a substitute for a proper software update
    tool.
+
 
