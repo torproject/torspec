@@ -1,0 +1,48 @@
+Filename: 240-auth-cert-revocation.txt
+Title: Early signing key revocation for directory authorities.
+Author: Nick Mathewson
+Created: 09-Jan-2015
+Status: Draft
+
+1. Overview
+
+   This proposal describes a simple way for directory authorities to
+   perform signing key revocation.
+
+2. Specification
+
+   We add the following lines to the authority signing certificate
+   format:
+
+     revoked-signing-key SP algname SP FINGERPRINT NL
+
+   This line may appear zero or more times.
+
+   It indicates that a particular not-yet-expired signing key should not
+   be used.
+
+3. Client and cache operation
+
+   No client or cache should retain, use, or serve any certificate whose
+   signing key is described in a revoked-signing-key line in a
+   certificate with the same authority identity key.  (If the signing
+   key fingerprint appears in a cert with a different identity key, it
+   has no effect: you aren't allowed to revoke other people's keys.)
+
+   No Tor instance should download a certificate whose signing
+   key,identity key combination is known to be revoked.
+
+4. Authority operator interface.
+
+   The 'tor-gencert' command will take a number of older certificates to
+   revoke as optional command-line arguments.  It will include their
+   keys in revoked-signing-key lines only if they are still valid, or
+   have been expired for no more than a month.
+
+5. Circular revocation
+
+   My first attempt at writing a proposal here included a lengthy
+   section about how to handle cases where certificate A revokes the key
+   of certificate B, and certificate B revokes the key of certificate A.
+
+   Instead, I am inclined to say that this is a MUST NOT.

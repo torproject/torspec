@@ -31,12 +31,11 @@ Status: Open
       VERSION = NONSPACE
       URL = NONSPACE
       DIGESTS = DIGEST | DIGESTS SP DIGEST
-      DIGEST = DIGESTTYPE "=" BASE64
+      DIGEST = DIGESTTYPE "=" DIGESTVAL
 
       NONSPACE = one or more non-space printing characters
 
-      BASE64 = one or more base-64 characters, with trailing =s
-               removed.
+      DIGESTVAL = any number of non-=, non-" " characters.
 
       SP = " "
       NL = a newline
