@@ -1318,7 +1318,10 @@
           [SP "BUILD_FLAGS=" BuildFlags] [SP "PURPOSE=" Purpose]
           [SP "HS_STATE=" HSState] [SP "REND_QUERY=" HSAddress]
           [SP "TIME_CREATED=" TimeCreated]
-          [SP "REASON=" Reason [SP "REMOTE_REASON=" Reason]] CRLF
+          [SP "REASON=" Reason [SP "REMOTE_REASON=" Reason]]
+          [SP "SOCKS_USERNAME=" EscapedUsername]
+          [SP "SOCKS_PASSWORD=" EscapedPassword]
+          CRLF
 
       CircStatus =
                "LAUNCHED" / ; circuit ID assigned to new circuit
@@ -1346,6 +1349,8 @@
                 "HSCR_ESTABLISHED_WAITING" / "HSCR_JOINED" /
                 "HSSI_CONNECTING" / "HSSI_ESTABLISHED" /
                 "HSSR_CONNECTING" / "HSSR_JOINED"
+
+      SocksUsername = SocksPassword = a quoted string
 
       HSAddress = 16*Base32Character
       Base32Character = ALPHA / "2" / "3" / "4" / "5" / "6" / "7"
