@@ -35,7 +35,7 @@ Status: Open
 
       NONSPACE = one or more non-space printing characters
 
-      DIGESTVAL = any number of non-=, non-" " characters.
+      DIGESTVAL = DIGESTTYPE = any number of non-=, non-" " characters.
 
       SP = " "
       NL = a newline
@@ -49,7 +49,7 @@ Status: Open
    (If a vote contains multiple entries with the same PACKAGENAME and
    VERSION, then only the last one is considered.)
 
-   If the consensus-method is at least (TBD), then when computing
+   If the consensus-method is at least 19, then when computing
    the consensus, package lines for a given PACKAGENAME/VERSION pair
    should be included if at least three authorities list such a
    package in their votes.  (Call these lines the "input" lines for
