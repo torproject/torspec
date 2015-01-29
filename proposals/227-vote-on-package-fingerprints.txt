@@ -35,7 +35,7 @@ Status: Open
 
       NONSPACE = one or more non-space printing characters
 
-      DIGESTVAL = DIGESTTYPE = any number of non-=, non-" " characters.
+      DIGESTVAL = DIGESTTYPE = one or more non-=, non-" " characters.
 
       SP = " "
       NL = a newline
