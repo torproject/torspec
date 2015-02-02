@@ -161,6 +161,7 @@ Proposals by number:
 238  Better hidden service stats from Tor relays [DRAFT]
 239  Consensus Hash Chaining [DRAFT]
 240  Early signing key revocation for directory authorities [DRAFT]
+241  Resisting guard-turnover attacks [DRAFT]
 
 
 Proposals by status:
@@ -186,6 +187,7 @@ Proposals by status:
    238  Better hidden service stats from Tor relays
    239  Consensus Hash Chaining
    240  Early signing key revocation for directory authorities
+   241  Resisting guard-turnover attacks
  NEEDS-REVISION:
    131  Help users to verify they are using Tor
    190  Bridge Client Authorization Based on a Shared Secret

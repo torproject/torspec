@@ -1,0 +1,174 @@
+Filename: 241-suspicious-guard-turnover.txt
+Title: Resisting guard-turnover attacks
+Author: Aaron Johnson, Nick Mathewson
+Created: 2015-01-27
+Status: Draft
+
+1. Introduction
+
+  Tor uses entry guards to prevent an attacker who controls some
+  fraction of the network from observing a fraction of every user's
+  traffic. If users chose their entries and exits uniformly at
+  random from the list of servers every time they build a circuit,
+  then an adversary who had (k/N) of the network would deanonymize
+  F=(k/N)^2 of all circuits... and after a given user had built C
+  circuits, the attacker would see them at least once with
+  probability 1-(1-F)^C.  With large C, the attacker would get a
+  sample of every user's traffic with probability 1.
+
+  To prevent this from happening, Tor clients choose a small number
+  of guard nodes (currently 1: see proposal 236).  These guard nodes
+  are the only nodes that the client will connect to directly.  If
+  they are not compromised, the user's paths are not compromised.
+
+  But attacks remain.  Consider an attacker who can run a firewall
+  between a target user and the Tor network, and make
+  many of the guards they don't control appear to be unreachable.
+  Or consider an attacker who can identify a user's guards, and mount
+  denial-of-service attacks on them until the user picks a guard
+  that the attacker controls.
+
+  In the presence of these attacks, we can't continue to connect to
+  the Tor network unconditionally.  Doing so would eventually result
+  in the user chosing a hostile node as their guard, and losing
+  anonymity.
+
+
+
+
+2. Proposed behavior
+
+   Keep a record of all the guards we've tried to connect to,
+   connected to, or extended circuits through in the last PERIOD
+   days.
+
+   (We have connected to a guard if we authenticate its identity.
+   We have extended a circuit through a guard if we built a
+   multi-hop circuit with it.)
+
+   If the number of guards we have *tried* to connect to in the last
+   PERIOD days is greater than CANDIDATE_THRESHOLD, do not attempt
+   to connect to any other guards; only attempt the ones we have
+   previously *tried* to connect to.
+
+   If the number of guards we *have* connected to in the last PERIOD
+   days is greater than CONNECTED_THRESHOLD, do not attempt to
+   connect to any other guards; only attempt ones we have already
+   *successfully* connected to.
+
+   If we fail to connect to NET_THRESHOLD guards in a row, conclude
+   that the network is likely down. Stop/notify the user; retry
+   later; add no new guards for consideration.
+
+ [[ optional
+   If we notice that USE_THRESHOLD guards that we *used for
+   circuits* in the last FAST_REACT_PERIOD days are not working, but
+   some other guards are, assume that an attack is in progress, and
+   stop/notify the user.
+  ]]
+
+2.1. Suggested parameter thresholds.
+
+  PERIOD -- 60 days
+
+  FAST_REACT_PERIOD -- 10 days
+
+  CONNECTED_THRESHOLD -- 8
+
+  CANDIDATE_THRESHOLD -- 20
+
+  NET_THRESHOLD -- 10 (< CANDIDATE_THRESHOLD)
+
+ [[ optional
+  USE_THRESHOLD -- 3 (< CONNECTED_THRESHOLD)
+ ]]
+  (Each of the above should have a corresponding consensus parameter.)
+
+2.2. What do we mean by "Stop/warn"?
+
+  By default, we should probably give warnings in most of the above
+  cases for the first version that deploys them.  We can have an
+  on/off/auto setting for whether we will build circuits at all if we're
+  in a "stopped" mode.  Default should be auto, meaning off for now.
+
+  The warning needs to be carefully chosen, and suggest a workaround
+  better than "get a better network" or "clear your state file".
+
+2.3. What's with making USE_THRESHOLD optional?
+
+  Aaron thinks that getting rid of it might help in the fascistfirewall
+  case.  I'm a little unclear whether that makes any of the attacks
+  easier.
+
+3. State storage requirements
+
+Right now, we save for each guard that we have made contact with:
+
+   ID
+   Added
+   is dircache?
+   down-since
+   last-attempted
+   bad-since
+   chosen-on-date, chosen-by-version
+   path bias info (circ_attempts, successes, close_success)
+
+To implement the above proposal, we'll need to add, for each guard
+*or guard candidate*:
+   when did we first decide to try connecting to it?
+   when did we last do one of:
+       decide to try connecting to it?
+       connect to it?
+       build a multihop circuit through it?
+   which one was it?
+
+Probably round these to the nearest day or so.
+
+4. Future work
+
+   We need to make this play nicely with mobility.  When a user has
+   three guards on port 9001 and they move to a firewall that only
+   allows 80/443, we'd prefer that they not simply grind to a halt.  If
+   nodes are configured to stop when too many of their guards have gone
+   away, this will confuse them.
+
+   If people need to turn FascistFirewall on and off, great.  But if
+   they just clear their state file as a workaround, that's not so good.
+
+
+   If we could tie guard choice to location, that would help a great
+   deal, but we'd need to answer the question, "Where am I on the
+   network", which is not so easy to do passively if you're behind a
+   NAT.
+
+
+
+Appendix A. Scenario analysis
+
+A.1. Example attacks
+
+ * Filter Alice's connection so they can only talk to your guards.
+
+ * Whenever Alice is using a guard you don't control, DOS it.
+
+A.2. Example non-attacks
+
+ * Alice's guard goes down.
+
+ * Alice is on a laptop that is sometimes behind a firewall that
+   blocks a guard, and sometimes is not.
+
+ * Alice is on a laptop that's behind a firewall that blocks a lot
+   of the tor network, (like, everything not on 80/443).
+
+ * Alice has a network connection that sometimes turns off and turns
+   on again.
+
+ * Alice reboots her computer periodically, and tor starts a little
+   while before the network is live.
+
+Appendix B. Acknowledgements
+
+  Thanks to Rob Jansen and David Goulet for comments on earlier versions of
+  this draft.
+
