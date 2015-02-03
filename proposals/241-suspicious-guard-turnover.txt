@@ -30,7 +30,7 @@ Status: Draft
 
   In the presence of these attacks, we can't continue to connect to
   the Tor network unconditionally.  Doing so would eventually result
-  in the user chosing a hostile node as their guard, and losing
+  in the user choosing a hostile node as their guard, and losing
   anonymity.
 
 

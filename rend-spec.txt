@@ -249,7 +249,6 @@
        created by the service.
 
        "time-period" changes periodically as a function of time and
-
        "permanent-id". The current value for "time-period" can be calculated
        using the following formula:
 
