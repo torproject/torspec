@@ -767,6 +767,76 @@
    for any other address along her circuit to Bob; if she does, Bob MUST reject
    them.
 
+1.12. Closing streams
+
+   The payload of a RELAY_END cell begins with a single 'reason' byte to
+   describe why the stream is closing, plus optional data (depending on the
+   reason.) These can be found in section 6.3 of tor-spec. The following
+   describes some of the hidden service related reasons.
+
+       1 -- REASON_MISC
+
+       Catch-all for unlisted reasons. Shouldn't happen much in practice.
+
+       2 -- REASON_RESOLVEFAILED
+
+       Tor tried to fetch the hidden service descriptor from the hsdirs but
+       none of them had it. This implies that the hidden service has not
+       been running in the past 24 hours.
+
+       3 -- REASON_CONNECTREFUSED
+
+       Every step of the rendezvous worked great, and that the hidden
+       service is indeed up and running and configured to use the virtual
+       port you asked for, but there was nothing listening on the other end
+       of that virtual port. For example, the HS's Tor client is running
+       fine but its apache service is down.
+
+       4 -- REASON_EXITPOLICY
+
+       The destination port that you tried is not configured on the hidden
+       service side. That is, the hidden service was up and reachable, but
+       it isn't listening on this port. Since Tor 0.2.6.2-alpha and later
+       hidden service don't send this error code; instead they send back an
+       END cell with reason DONE reason then close the circuit on you. This
+       behavior can be controlled by a config option.
+
+       5 -- REASON_DESTROY
+
+       The circuit closed before you could get a response back -- transient
+       failure, e.g. a relay went down unexpectedly. Trying again might
+       work.
+
+       6 -- REASON_DONE
+
+       Anonymized TCP connection was closed. If you get an END cell with
+       reason DONE, *before* you've gotten your CONNECTED cell, that
+       indicates a similar situation to EXITPOLICY, but the hidden service
+       is running 0.2.6.2-alpha or later, and it has now closed the circuit
+       on you.
+
+       7 -- REASON_TIMEOUT
+
+       Either like CONNECTREFUSED above but connect() got the ETIMEDOUT
+       errno, or the client-side timeout of 120 seconds kicked in and we
+       gave up.
+
+       8 -- REASON_NOROUTE
+
+       Like CONNECTREFUSED except the errno at the hidden service when
+       trying to connect() to the service was ENETUNREACH, EHOSTUNREACH,
+       EACCES, or EPERM.
+
+       10 -- REASON_INTERNAL
+
+       Internal error inside the Tor client -- hopefully you will not see
+       this much. Please report if you do!
+
+       12 -- REASON_CONNRESET
+
+       Like CONNECTREFUSED except the errno at the hidden service when
+       trying to connect() to the service was ECONNRESET.
+
 2. Authentication and authorization.
 
    The rendezvous protocol as described in Section 1 provides a few options
