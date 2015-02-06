@@ -1709,7 +1709,8 @@
 
         An estimate of the bandwidth of this relay, in an arbitrary
         unit (currently kilobytes per second).  Used to weight router
-        selection.
+        selection. See section 3.4.2 for details on how the value of
+        Bandwidth is determined in a consensus.
 
         Additionally, the Measured= keyword is present in votes by
         participating bandwidth measurement authorities to indicate
