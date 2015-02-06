@@ -1718,7 +1718,7 @@
 
         The "Unmeasured=1" value is included in consensuses generated
         with method 17 or later when the 'Bandwidth=' value is not
-        based on a threshold of 3 or more measurements.
+        based on a threshold of 3 or more measurements for this relay.
 
         Other weighting keywords may be added later.
         Clients MUST ignore keywords they do not recognize.
