@@ -605,8 +605,8 @@
         is deprecated and should not be used.]
 
       [Older versions of Tor (before 0.1.2.x-final) generated 'down' instead
-       of unlisted/unusable. Before 0.2.6.3-alpha, 'down' was never
-       generated.]
+       of unlisted/unusable. Between 0.1.2.x-final and 0.2.6.3-alpha,
+       'down' was never generated.]
 
       [XXXX ServerID2 differs from ServerID in not prefixing fingerprints
        with a $.  This is an implementation error.  It would be nice to add
