@@ -527,7 +527,7 @@
       [In 0.2.0.9-alpha this switched from v2 directory style to v3]
 
     "desc/all-recent" -- the latest server descriptor for every router that
-      Tor knows about.  (See note about desc/id/* and desc/name/* above.)
+      Tor knows about.  (See md note about desc/id/* and desc/name/* above.)
 
     "network-status" -- a space-separated list (v1 directory style)
       of all known OR identities. This is in the same format as the
