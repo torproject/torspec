@@ -147,7 +147,7 @@ Proposals by number:
 224  Next-Generation Hidden Services in Tor [DRAFT]
 225  Strawman proposal: commit-and-reveal shared rng [DRAFT]
 226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS" [OPEN]
-227  Include package fingerprints in consensus documents [OPEN]
+227  Include package fingerprints in consensus documents [FINISHED]
 228  Cross-certifying identity keys with onion keys [OPEN]
 229  Further SOCKS5 extensions [DRAFT]
 230  How to change RSA1024 relay identity keys [DRAFT]
@@ -218,7 +218,6 @@ Proposals by status:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    223  Ace: Improved circuit-creation key exchange
    226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS"
-   227  Include package fingerprints in consensus documents
    228  Cross-certifying identity keys with onion keys
    232  Pluggable Transport through SOCKS proxy [for 0.2.6.x]
    233  Making Tor2Web mode faster
@@ -244,6 +243,7 @@ Proposals by status:
    162  Publish the consensus in multiple flavors [in 0.2.3.1-alpha]
    204  Subdomain support for Hidden Service addresses
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
+   227  Include package fingerprints in consensus documents
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]

@@ -2,7 +2,7 @@ Filename: 227-vote-on-package-fingerprints.txt
 Title: Include package fingerprints in consensus documents
 Author: Nick Mathewson, Mike Perry
 Created: 2014-02-14
-Status: Open
+Status: Finished
 
 0. Abstract
 
