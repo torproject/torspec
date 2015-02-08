@@ -1,8 +1,8 @@
-[Last updated 28 Feb 2014]
+[Last updated 7 Feb 2015]
 
-This list of open Tor proposals is based on one I sent out back in
-December[0], based on the one I did in November[1] based on the
-one I did in June of 2012[2], based on the one I did in May[3] of 2011.
+This is an update to the Tor proposal status overview.  I last sent one
+of these out almost a year ago; since 0.2.6 has entered feature freeze,
+I really ought to do this regularly again.
 
 Future versions of this document will be maintained in the torspec
 repository as "proposals/proposal-status.txt".  I'll still send them
@@ -10,10 +10,6 @@ to tor-dev periodically.
 
 If you're looking for something to review, think about, or comment
 on:
-
-     Review 212 (using older consensuses) or 215 (obsoleting
-     consensus methods) if you understand the directory system even
-     a little bit; they are quite simple.
 
      Review 219 if you're a DNS geek, or you'd like Tor to work
      better with more DNS types.
@@ -34,6 +30,9 @@ on:
 
      Review 226 if you're interested in bridgedb development.
 
+     Review 241 for a big chance at making Tor clients and hidden services
+     more secure.
+
      Review something else if you want to take a possibly good idea
      that needs more momentum and promote it, fix it up, or finally
      kill it off.
@@ -51,11 +50,6 @@ any time soon?  Other suggestions would be welcome.
 Finally: if you've sent something to tor-dev or to me that should
 have a proposal number, but doesn't have one yet, please ping me
 again to remind me!
-
-[0] https://lists.torproject.org/pipermail/tor-dev/2013-December/005957.html
-[1] https://lists.torproject.org/pipermail/tor-dev/2013-November/005798.html
-[2] https://lists.torproject.org/pipermail/tor-dev/2012-June/003641.html
-[3] https://lists.torproject.org/pipermail/tor-dev/2011-May/002637.html
 
 **NOTE**: The dates after each paragraph indicate when I last
           revised the paragraph.
@@ -100,13 +94,9 @@ again to remind me!
 
      This proposal describes a way to transmit less directory
      traffic by sending only differences between consensuses, rather
-     than the consensuses themselves.  It is mainly languishing for
-     lack of an appropriately licensed, well-written, very small,
-     pure-C implementation of the "diff" and "patch" algorithms.
-     (The good diffs seem to be GPL (which we can't use without
-     changing Tor's license), or spaghetti code, or not easily
-     usable as a library, or not written in C, or very large, or
-     some combination of those.)  (5/2011)
+     than the consensuses themselves.  Daniel Marti implemented this for his
+     GSoC project last summer; it is still under revision and on target
+     for merge into 0.2.7.  (See ticket #13339)  (2/2015)
 
 141  Download server descriptors on demand
 
@@ -135,7 +125,10 @@ again to remind me!
      the ring is that the hidden service host and the hidden
      service client may have different views of which servers
      exist. We need to re-do the analysis with some fraction of
-     recent consensuses. (11/2013)
+     recent consensuses.
+
+     This is probably superseded by proposal 224; we should close it
+     IMO. (2/2014)
 
 
 144  Increase the diversity of circuits by detecting nodes
@@ -161,7 +154,11 @@ again to remind me!
 
      It's not clear whether this has anonymity issues, and it's not
      clear whether the imagined performance gains are actually
-     worthwhile. (5/2011)
+     worthwhile.
+
+     This is probably superseded by proposal 236, which has a better
+     approach for weighting guard node selection probabilities; we
+     should probably close this ticket. (2/2015)
 
 156  Tracking blocked ports on the client side
 
@@ -185,7 +182,10 @@ again to remind me!
 
      This one is a paradigmatic "open" proposal: it needs more
      discussion.  The patch probably also needs to be ported to
-     0.2.3.x; it touches some code that has changed. (5/2011)
+     0.2.3.x; it touches some code that has changed.
+
+     This is likely also to be relevant for the ideas of proposal 241,
+     and maybe superseded by some version of that proposal. (2/2015)
 
 159  Exit Scanning
 
@@ -301,7 +301,10 @@ again to remind me!
      relays drop in any any self-signed or CA-issued certificate
      that they like.  Some of this is done in ticket #7145;
      we should decide, however, how much we want to push towards
-     normalizing the main Tor protocol. (11/2013)
+     normalizing the main Tor protocol. Some of the NSA documents
+     published in Der Spiegel this past December imply that this kind of
+     fingerprinting can be helpful for snoops; we should take another
+     look at it. (2/2015)
 
 196  Extended ORPort and TransportControlPort
 
@@ -378,14 +381,6 @@ again to remind me!
      was some tor-dev discussion on this one that should get
      incorporated into a final, implementable version. (11/2013)
 
-215  Let the minimum consensus method change with time
-
-     This proposal describes how we can raise the minimum
-     allowable consensus method that all authorities must
-     support, since the ancient "consensus method 1" would not
-     actually be viable to keep the Tor network running.  We
-     should do this; see ticket #10163. (11/2013)
-
 219  Support for full DNS and DNSSEC resolution in Tor
 
      Here's a design to allow Tor to support a full range of DNS
@@ -400,7 +395,7 @@ again to remind me!
      once more servers have upgraded.  (12/2013)
 
 220  Migrate server identity keys to Ed25519
-
+v
      This one is a design to migrate server identity keys to
      Ed25519 for improved security margin.  It needs more analysis of
      long-term migration to other signing key types -- what do we do
@@ -409,9 +404,9 @@ again to remind me!
      make sure it enables us to eventually drop RSA1024 keys
      entirely.
 
-     I've started building this, though, so we'd better figure out
-     out fairly soon.  Other proposals, like 224, depend on this one.
-     (2/2014)
+     I've started building this in #12498, though, so we'd better figure
+     out out fairly soon.  Other proposals, like 224, depend on this
+     one.  (2/2015)
 
 223  Ace: Improved circuit-creation key exchange
 
@@ -435,7 +430,7 @@ again to remind me!
      Some parts of this one are clearly right; some (like
      scalability) are entirely unwritten. This proposal needs a lot
      of attention and improvements to get it done right. I hope to
-     implement this over the course of 2014. (12/2013)
+     implement this over the course of 2015-2016. (2/2015)
 
 225  Strawman proposal: commit-and-reveal shared rng
 
@@ -457,18 +452,13 @@ again to remind me!
      This one outlines design and behavior changes for a seriously
      refactored bridgedb.  (2/2014)
 
-227  Include package fingerprints in consensus documents
-
-     Here we outline a scheme for including the digests of the latest
-     versions of Tor software in consensuses, to help with update
-     security. (2/2014)
-
 228  Cross-certifying identity keys with onion keys
 
      This proposal signs each server's identity key with its onion
      keys, to prove onion key ownership in the router descriptor.
      It's not clear that this actually improves security, but it
-     fixes an annoying gap in our key authentication. (2/2014)
+     fixes an annoying gap in our key authentication.  I have it coded
+     up in my #12498 branch, targetting 0.2.7. (2/2015)
 
 229  Further SOCKS5 extensions
 
@@ -476,21 +466,110 @@ again to remind me!
      extension to relay information between clients and Tor, and
      between Tor and pluggable transports, more effectively.  It
      also adds some additional SOCKS5 error codes. There are some
-     open questions to answer. (2/2014)
+     open questions to answer. "Trunnel" has an implementation of
+     the protocol extension formats in its examples directory. (2/2015)
+
+230  How to change RSA1024 relay identity keys [DRAFT]
+231  Migrating authority RSA1024 identity keys [DRAFT]
+
+     Who remembers the OpenSSL "Heartbleed" vulnerability?
+     These proposals I wrote try to explain safer mechanisms for a bunch
+     of servers to migrate their RSA1024 identity keys at once.  I'm not
+     sure we'll be able to build thee, though: implementating proposal
+     220 above seems cleverer to me. (2/2015)
+
+232  Pluggable Transport through SOCKS proxy [OPEN]
+
+     Arturo Filastò wrote this proposal for chaining pluggable
+     transports which themselves need to go through proxies. Seems
+     potentially useful! (2/2015)
+
+233  Making Tor2Web mode faster [OPEN]
+
+     This one by Virgil, Fabio, and Giovanni describes a couple of ways
+     that Tor2Web builds of Tor can save some circuit hops that they use
+     today.  Potentially useful for Tor2Web; any implementation needs to
+     be sure that it never changes the behavior of non-tor2web clients.
+     (2/2015)
+
+234  Adding remittance field to directory specification [OPEN]
+
+     Virgil, Leif, and Rob added this proposal for relays to specify
+     payment addresses for schemes that want to compensate relay
+     operators for their use of bandwidth.  (2/2015)
+
+235  Stop assigning (and eventually supporting) the Named flag [DRAFT]
+
+     This proposal is about removing the Named flag.  (Thanks to
+     Sebastian Hahn for writing it!)  The rationale is that the naming
+     system for relays never worked particularly well, and it had
+     strange and hard-to-explain security properties.  We've implemented
+     the key part of this already: directory authorities don't assign
+     the Named flag any longer.  Next up will be removing client support
+     for parsing and understanding it. (2/2015)
+
+236  The move to a single guard node [OPEN]
+
+     This proposal suggests that to limit client fingerprinting, and to
+     limit opportunities for attacks, clients should use a single guard
+     node, rotated infrequently.  This transition is in progress; we use
+     a single guard node for circuit traffic now, but in order to make
+     guards more long-lived, we need to adjust how they are chosen.
+     George has a patch for that as #9321, targetting inclusion into
+     0.2.6.  (Thanks to George Kadianakis and Nicholas Hopper for
+     writing this one.) (2/2015)
+
+237  All relays are directory servers [OPEN]
+
+     Matthew Finkel wrote this proposal to describe a transition to a
+     world where Tor relays can be directory servers without having an
+     open DirPort -- and eventually, where every relay can be a
+     DirServer.  He has an implementation, possibly for 0.2.6 or 0.2.7,
+     in ticket #12538.  (2/2015)
+
+238  Better hidden service stats from Tor relays [DRAFT]
+
+     Here's an important one that needs many eyes.  George Kadianakis,
+     David Goulet, Karsten Loesing, and Aaron Johnson wrote this to
+     describe a mechanism for the tor network to securely produce
+     aggregate hidden service usage statistics without exposing
+     sensitive intermediate results.  This has an implementation in
+     0.2.6 and should probably be marked closed.  (2/2015)
+
+239  Consensus Hash Chaining [DRAFT]
+
+     Here's the start of a good idea that Andrea Shepard wrote up (with
+     some help from Nick).  The idea is to make it hard even for a set
+     of corrupt authorities (or authority-key-thieves) to make a
+     personalized false consensus for a target user, by authenticating
+     the whole sequence as a hash chain.  Others on tor-dev suggested
+     improvements and had good questions (thanks, Leif and Sebastian G!)
+     (2/2015)
+
+240  Early signing key revocation for directory authorities [DRAFT]
+
+     This one is another Andrea+Nick collaboration about certificate
+     revocation for our most sensitive keys.  If an authority key needs
+     to be replaced, it would be great to take the old one out of
+     circulation as fast as possible.  Peter Palfrader on tor-dev had
+     some ideas for making this better. (2/2015)
+
+241  Resisting guard-turnover attacks [DRAFT]
+
+     I wrote this one with good ideas from Aaron Johnson and Rob
+     Jansen.  It describes a way to respond to an important class of
+     attacks where an adversary kills off a targeted user's guards until
+     the user has chosen a guard the attacker controls.  (See the
+     "Sniper Attack") paper.  The defense is tricky, and if not done
+     right, might lead clients to kick themselves off the network out of
+     paranoia. So, this proposal could use more analysis.  (2/2015)
+
 
 Since last time:
 
-     147 was closed as unnecessary.  See discussion in the new "Reasons
-     for Rejection" section at the end of that proprosal.
+     Proposal 140 and 227 have been implemented and closed.
 
-     165 got clarified a little.
+     Proposal 215 was implemented and closed
 
-     185 has been tweaked based on commentary from Karsten: the flag it
-     proposes now works a little differently.
-
-     220 has been revised to have a more unified certificate format.
-
-     224 has been cleaned up, expanded, revised, and tightened.
-
-     Proposals 226, 227, 228, and 229 are new.
+     Proposals 230 through 241 are new.
 
