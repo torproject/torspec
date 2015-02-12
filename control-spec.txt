@@ -789,6 +789,13 @@
       of traffic.
       [New in Tor 0.2.6.3-alpha]
 
+     "consensus/valid-after"
+     "consensus/fresh-until"
+     "consensus/valid-until"
+      Each of these produces an ISOTime describing part of the lifetime of
+      the current (valid, accepted) consensus that Tor has.
+      [New in Tor 0.2.6.3-alpha]
+
   Examples:
      C: GETINFO version desc/name/moria1
      S: 250+desc/name/moria=
