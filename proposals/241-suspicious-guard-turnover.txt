@@ -172,3 +172,6 @@ Appendix B. Acknowledgements
   Thanks to Rob Jansen and David Goulet for comments on earlier versions of
   this draft.
 
+Appendix C. Desirable revisions
+
+  Incorporate ideas from proposal 156.

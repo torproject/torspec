@@ -65,7 +65,7 @@ Proposals by number:
 142  Combine Introduction and Rendezvous Points [DEAD]
 143  Improvements of Distributed Storage for Tor Hidden Service Descriptors [OPEN]
 144  Increase the diversity of circuits by detecting nodes belonging the same provider [DRAFT]
-145  Separate "suitable as a guard" from "suitable as a new guard" [NEEDS-RESEARCH]
+145  Separate "suitable as a guard" from "suitable as a new guard" [SUPERSEDED]
 146  Add new flag to reflect long-term stability [SUPERSEDED]
 147  Eliminate the need for v2 directories in generating v3 directories [REJECTED]
 148  Stream end reasons from the client side should be uniform [CLOSED]
@@ -76,7 +76,7 @@ Proposals by number:
 153  Automatic software update protocol [SUPERSEDED]
 154  Automatic Software Update Protocol [SUPERSEDED]
 155  Four Improvements of Hidden Service Performance [FINISHED]
-156  Tracking blocked ports on the client side [OPEN]
+156  Tracking blocked ports on the client side [SUPERSEDED]
 157  Make certificate downloads specific [CLOSED]
 158  Clients download consensus + microdescriptors [FINISHED]
 159  Exit Scanning [OPEN]
@@ -152,10 +152,10 @@ Proposals by number:
 229  Further SOCKS5 extensions [DRAFT]
 230  How to change RSA1024 relay identity keys [DRAFT]
 231  Migrating authority RSA1024 identity keys [DRAFT]
-232  Pluggable Transport through SOCKS proxy [OPEN]
+232  Pluggable Transport through SOCKS proxy [FINISHED]
 233  Making Tor2Web mode faster [OPEN]
 234  Adding remittance field to directory specification [OPEN]
-235  Stop assigning (and eventually supporting) the Named flag [DRAFT]
+235  Stop assigning (and eventually supporting) the Named flag [FINISHED]
 236  The move to a single guard node [OPEN]
 237  All relays are directory servers [OPEN]
 238  Better hidden service stats from Tor relays [DRAFT]
@@ -183,7 +183,6 @@ Proposals by status:
    229  Further SOCKS5 extensions
    230  How to change RSA1024 relay identity keys [for 0.2.?]
    231  Migrating authority RSA1024 identity keys [for 0.2.?]
-   235  Stop assigning (and eventually supporting) the Named flag [for 0.2.5]
    238  Better hidden service stats from Tor relays
    239  Consensus Hash Chaining
    240  Early signing key revocation for directory authorities
@@ -191,11 +190,8 @@ Proposals by status:
  NEEDS-REVISION:
    131  Help users to verify they are using Tor
    190  Bridge Client Authorization Based on a Shared Secret
- NEEDS-RESEARCH:
-   145  Separate "suitable as a guard" from "suitable as a new guard"
  OPEN:
    143  Improvements of Distributed Storage for Tor Hidden Service Descriptors
-   156  Tracking blocked ports on the client side
    159  Exit Scanning
    164  Reporting the status of server votes
    165  Easy migration for voting authority sets
@@ -219,7 +215,6 @@ Proposals by status:
    223  Ace: Improved circuit-creation key exchange
    226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS"
    228  Cross-certifying identity keys with onion keys
-   232  Pluggable Transport through SOCKS proxy [for 0.2.6.x]
    233  Making Tor2Web mode faster
    234  Adding remittance field to directory specification
    236  The move to a single guard node
@@ -244,6 +239,8 @@ Proposals by status:
    204  Subdomain support for Hidden Service addresses
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
    227  Include package fingerprints in consensus documents
+   232  Pluggable Transport through SOCKS proxy [in 0.2.6]
+   235  Stop assigning (and eventually supporting) the Named flag [in 0.2.6, 0.2.7]
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]
@@ -305,10 +302,12 @@ Proposals by status:
    113  Simplifying directory authority administration
    118  Advertising multiple ORPorts at once
    124  Blocking resistant TLS certificate usage
+   145  Separate "suitable as a guard" from "suitable as a new guard"
    146  Add new flag to reflect long-term stability
    149  Using data from NETINFO cells
    153  Automatic software update protocol
    154  Automatic Software Update Protocol
+   156  Tracking blocked ports on the client side
    163  Detecting whether a connection comes from a client
    169  Eliminate TLS renegotiation for the Tor connection handshake
    170  Configuration options regarding circuit building

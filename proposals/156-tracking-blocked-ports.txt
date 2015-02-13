@@ -2,7 +2,9 @@ Filename: 156-tracking-blocked-ports.txt
 Title: Tracking blocked ports on the client side
 Author: Robert Hogan
 Created: 14-Oct-2008
-Status: Open
+Status: Superseded
+
+[Superseded by 156, which recognizes the security issues here.]
 
 
 Motivation:
