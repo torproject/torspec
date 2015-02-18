@@ -1180,7 +1180,7 @@
   [Unlike other commands besides AUTHENTICATE, AUTHCHALLENGE may be
   used (but only once!) before AUTHENTICATE.]
 
-  [AUTHCHALLENGE was added in Tor FIXME.]
+  [AUTHCHALLENGE was added in Tor 0.2.3.13-alpha.]
 
 3.25. DROPGUARDS
 
