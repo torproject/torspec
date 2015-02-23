@@ -108,6 +108,36 @@
   accept LF.  Tor, however, MUST NOT generate LF instead of CRLF.
   Controllers SHOULD always send CRLF.
 
+2.1.1. Notes on an escaping bug
+
+     CString = DQUOTE *qcontent DQUOTE
+
+  Note that although these nonterminals have the same grammar, they
+  are interpreted differently.  In a QuotedString, a backslash
+  followed by any character represents that character.  But
+  in a CString, the escapes "\n", "\t", "\r", and the octal escapes
+  "\0" ... "\377" represent newline, tab, carriage return, and the
+  256 possible octet values respectively.
+
+  The use of CString in this document reflect a bug in Tor;
+  they should have been QuotedString instead.  In the future, they
+  may migrate to use QuotedString instead.  If they do, the
+  QuotedString implementation will never place a backslash before a
+  "n", "t", "r", or digit, to ensure that old controllers don't get
+  confused.
+
+  For future-proofing, controller implementors MAY use the following
+  rules to be compatible with buggy Tor implementations and with
+  future ones that implement the spec as intended:
+
+    Read \n \t \r and \0 ... \377 as C escapes.
+    Treat a backslash followed by any other character as that character.
+
+  Currently, many of the QuotedString instances below are in fact
+  CStrings.  We intend to fix this in future versions of Tor, and
+  document which ones were broken.  (See bugtracker ticket #14555
+  for a bit more information.)
+
 2.2. Commands from controller to Tor
 
     Command = Keyword OptArguments CRLF / "+" Keyword OptArguments CRLF CmdData
@@ -1426,12 +1456,9 @@
 
    The "SOCKS_USERNAME" and "SOCKS_PASSWORD" fields indicate the credentials
    that were used by a SOCKS client to connect to Tor's SOCKS port and
-   initiate this circuit. Special characters sent by the SOCKS client are
-   escaped, namely \\, \", \', \r, \n, \t, and byte values > 127 printed as
-   octal values, such as \377 for character 255. (Streams for SOCKS clients
-   connected with different usernames and/or passwords are isolated on
-   separate circuits if the IsolateSOCKSAuth flag is active; see Proposal
-   171.)
+   initiate this circuit. (Streams for SOCKS clients connected with different
+   usernames and/or passwords are isolated on separate circuits if the
+   IsolateSOCKSAuth flag is active; see Proposal 171.)
 
    The "REND_QUERY" field is provided only for hidden-service-related
    circuits, and only in versions 0.2.3.11-alpha and later.  Clients
