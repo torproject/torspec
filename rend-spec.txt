@@ -348,7 +348,7 @@
            The identifier of this introduction point: the base32 encoded
            hash of this introduction point's identity key.
 
-         "ip-address" SP ip-address NL
+         "ip-address" SP ip4 NL
 
            [Exactly once]
 
