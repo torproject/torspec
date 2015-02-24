@@ -954,6 +954,45 @@
         limit the number of listed ports and subsume any remaining opened
         streams under port "other".
 
+    "hidserv-stats-end" YYYY-MM-DD HH:MM:SS (NSEC s) NL
+        [At most once.]
+
+        YYYY-MM-DD HH:MM:SS defines the end of the included measurement
+        interval of length NSEC seconds (86400 seconds by default).
+
+        A "hidserv-stats-end" line, as well as any other "hidserv-*" line,
+        is first added after the relay has been running for at least 24
+        hours.
+
+    "hidserv-rend-relayed-cells" SP num SP key=val SP key=val ... NL
+        [At most once.]
+
+        Approximate number of RELAY cells seen in either direction on a
+        circuit after receiving and successfully processing a RENDEZVOUS1
+        cell.
+
+        The original measurement value is obfuscated in several steps:
+        first, it is rounded up to the nearest multiple of 'bin_size'
+        which is reported in the key=val part of this line; second, a
+        (possibly negative) noise value is added to the result of the
+        first step by randomly sampling from a Laplace distribution with
+        mu = 0 and b = (delta_f / epsilon) with 'delta_f' and 'epsilon'
+        being reported in the key=val part, too; third, the result of the
+        previous obfuscation steps is truncated to the next smaller
+        integer and included as 'num'.
+
+    "hidserv-dir-onions-seen" SP num SP key=val SP key=val ... NL
+        [At most once.]
+
+        Approximate number of unique hidden-service identities seen in
+        descriptors published to and accepted by this hidden-service
+        directory.
+
+        The original measurement value is obfuscated in the same way as
+        the 'num' value reported in "hidserv-rend-relayed-cells", but
+        possibly with different parameters as reported in the key=val part
+        of this line.
+
     "transport" transportname address:port [arglist] NL
         [Any number.]
 
