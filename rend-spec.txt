@@ -277,7 +277,8 @@
 
        [Exactly once]
 
-       The version number of this descriptor's format.  In this case: 2.
+       The version number of this descriptor's format. Version numbers are a
+       positive integer.
 
      "permanent-key" NL a public key in PEM format
 
@@ -309,7 +310,7 @@
 
        A comma-separated list of recognized and permitted version numbers
        for use in INTRODUCE cells; these versions are described in section
-       1.8 below.
+       1.8 below. Version numbers are positive integers.
 
      "introduction-points" NL encrypted-string
 
@@ -348,7 +349,7 @@
            The identifier of this introduction point: the base32 encoded
            hash of this introduction point's identity key.
 
-         "ip-address" SP ip-address NL
+         "ip-address" SP ip4 NL
 
            [Exactly once]
 
