@@ -33,7 +33,7 @@
 
    Early versions of Tor (0.0.2) introduced "Directory authorities": servers
    that served signed "directory" documents containing a list of signed
-   "router descriptors", along with short summary of the status of each
+   "server descriptors", along with short summary of the status of each
    router.  Thus, clients could get up-to-date information on the state of
    the network automatically, and be certain that the list they were getting
    was attested by a trusted directory authority.
@@ -56,7 +56,7 @@
    documents in order to address two major problems:
 
       * Directories had grown quite large (over 1MB), and most directory
-        downloads consisted mainly of router descriptors that clients
+        downloads consisted mainly of server descriptors that clients
         already had.
 
       * Every directory authority was a trust bottleneck: if a single
@@ -75,10 +75,10 @@
    statements about routers iff they were attested to by more than half of
    the authorities.
 
-   Instead of downloading all router descriptors at once, clients
+   Instead of downloading all server descriptors at once, clients
    downloaded only the descriptors that they did not have.  Descriptors
    were indexed by their digests, in order to prevent malicious caches
-   from giving different versions of a router descriptor to different
+   from giving different versions of a server descriptor to different
    clients.
 
    Routers began working harder to upload new descriptors only when their
@@ -90,7 +90,7 @@
    Version 3 of the Tor directory protocol tries to solve the following
    issues:
 
-      * A great deal of bandwidth used to transmit router descriptors was
+      * A great deal of bandwidth used to transmit server descriptors was
         used by two fields that are not actually used by Tor routers
         (namely read-history and write-history).  We save about 60% by
         moving them into a separate document that most clients do not
@@ -153,7 +153,7 @@
    directory authorities describing their keys, capabilities, and other
    information.  Routers may also upload signed "extra info documents"
    containing information that is not required for the Tor protocol.
-   Directory authorities serve router descriptors indexed by router
+   Directory authorities serve server descriptors indexed by router
    identity, or by hash of the descriptor.
 
    Routers may act as directory caches to reduce load on the directory
@@ -170,7 +170,7 @@
    Clients, directory caches, and directory authorities all use consensus
    documents to find out when their list of routers is out-of-date.
    (Directory authorities also use vote statuses.) If it is, they download
-   any missing router descriptors.  Clients download missing descriptors
+   any missing server descriptors.  Clients download missing descriptors
    from caches; caches and authorities download from authorities.
    Descriptors are downloaded by the hash of the descriptor, not by the
    relay's identity key: this prevents directory servers from attacking
@@ -193,7 +193,7 @@
 
 1.2. Document meta-format
 
-  Router descriptors, directories, and running-routers documents all obey the
+  Server descriptors, directories, and running-routers documents all obey the
   following lightweight extensible information format.
 
   The highest level object is a Document, which consists of one or more
@@ -319,9 +319,9 @@
 
 2. Router operation and formats
 
-2.1. Uploading router descriptors and extra-info documents
+2.1. Uploading server descriptors and extra-info documents
 
-   ORs SHOULD generate a new router descriptor and a new extra-info
+   ORs SHOULD generate a new server descriptor and a new extra-info
    document whenever any of the following events have occurred:
 
       - A period of time (18 hrs by default) has passed since the last
@@ -338,7 +338,7 @@
       [XXX this list is incomplete; see router_differences_are_cosmetic()
        in routerlist.c for others]
 
-   ORs SHOULD NOT publish a new router descriptor or extra-info document
+   ORs SHOULD NOT publish a new server descriptor or extra-info document
    if none of the above events have occurred and not much time has passed
    (12 hours by default).
 
@@ -347,13 +347,13 @@
 
       http://<hostname:port>/tor/
 
-   Router descriptors may not exceed 20,000 bytes in length; extra-info
+   Server descriptors may not exceed 20,000 bytes in length; extra-info
    documents may not exceed 50,000 bytes in length. If they do, the
    authorities SHOULD reject them.
 
-2.1.1. Router descriptor format
+2.1.1. Server descriptor format
 
-   Router descriptors consist of the following items.  For backward
+   Server descriptors consist of the following items.  For backward
    compatibility, there should be an extra NL at the end of each router
    descriptor.
 
@@ -365,7 +365,7 @@
 
        [At start, exactly once.]
 
-       Indicates the beginning of a router descriptor.  "nickname" must be a
+       Indicates the beginning of a server descriptor.  "nickname" must be a
        valid router nickname as specified in section 2.1.3.  "address" must
        be an IPv4
        address in dotted-quad format.  The last three numbers indicate the
@@ -490,9 +490,9 @@
        [At end, exactly once]
 
        The "SIGNATURE" object contains a signature of the PKCS1-padded
-       hash of the entire router descriptor, taken from the beginning of the
+       hash of the entire server descriptor, taken from the beginning of the
        "router" line, through the newline after the "router-signature" line.
-       The router descriptor is invalid unless the signature is performed
+       The server descriptor is invalid unless the signature is performed
        with the router's identity key.
 
     "contact" info NL
@@ -632,7 +632,7 @@
 
        The time, in UTC, when this document (and its corresponding router
        descriptor if any) was generated.  It MUST match the published time
-       in the corresponding router descriptor.
+       in the corresponding server descriptor.
 
     "read-history" YYYY-MM-DD HH:MM:SS (NSEC s) NUM,NUM,NUM,NUM,NUM... NL
         [At most once.]
@@ -975,17 +975,17 @@
 2.1.2.1. Moving history fields to extra-info documents
 
    Tools that want to use the read-history and write-history values SHOULD
-   download extra-info documents as well as router descriptors.  Such
+   download extra-info documents as well as server descriptors.  Such
    tools SHOULD accept history values from both sources; if they appear in
    both documents, the values in the extra-info documents are authoritative.
 
-   New versions of Tor no longer generate router descriptors
+   New versions of Tor no longer generate server descriptors
    containing read-history or write-history.  Tools should continue to
-   accept read-history and write-history values in router descriptors
+   accept read-history and write-history values in server descriptors
    produced by older versions of Tor until all Tor versions earlier
    than 0.2.0.x are obsolete.
 
-2.1.3. Nonterminals in router descriptors
+2.1.3. Nonterminals in server descriptors
 
    nickname ::= between 1 and 19 alphanumeric characters ([A-Za-z0-9]),
       case-insensitive.
@@ -1098,7 +1098,7 @@
    Authorities MUST generate a new signing key and corresponding
    certificate before the key expires.
 
-3.2. Accepting router descriptor and extra-info document uploads
+3.2. Accepting server descriptor and extra-info document uploads
 
    When a router posts a signed descriptor to a directory authority, the
    authority first checks whether it is well-formed and correctly
@@ -1120,7 +1120,7 @@
       - Enough time has passed between the descriptors' publication times.
         (Currently, 12 hours.)
 
-   Differences between router descriptors are "non-cosmetic" if they would be
+   Differences between server descriptors are "non-cosmetic" if they would be
    sufficient to force an upload as described in section 2.1 above.
 
    Note that the "cosmetic difference" test only applies to uploaded
@@ -1135,7 +1135,7 @@
 
 3.3. Computing microdescriptors
 
-   Microdescriptors are a stripped-down version of router descriptors
+   Microdescriptors are a stripped-down version of server descriptors
    generated by the directory authorities which may additionally contain
    authority-generated information.  Microdescriptors contain only the
    most relevant parts that clients care about.  Microdescriptors are
@@ -1144,7 +1144,7 @@
    use to decide which servers to fetch information about, or which
    servers to fetch information from.
 
-   Microdescriptors are a straight transform from the router descriptor
+   Microdescriptors are a straight transform from the server descriptor
    and the consensus method.  Microdescriptors have no header or footer.
    Microdescriptors are identified by the hash of its concatenated
    elements without a signature by the router.  Microdescriptors do not
@@ -1152,9 +1152,9 @@
    by the consensus method.
 
    Starting with consensus method 8, microdescriptors contain the
-   following elements taken from or based on the router descriptor.  Order
+   following elements taken from or based on the server descriptor.  Order
    matters here, because different directory authorities must be able to
-   transform a given router descriptor and consensus method into the exact
+   transform a given server descriptor and consensus method into the exact
    same microdescriptor.
 
      "onion-key" NL a public key in PEM format
@@ -1955,7 +1955,7 @@
    The bandwidth in a "w" line should be taken as the best estimate
    of the router's actual capacity that the authority has.  For now,
    this should be the lesser of the observed bandwidth and bandwidth
-   rate limit from the router descriptor.  It is given in kilobytes
+   rate limit from the server descriptor.  It is given in kilobytes
    per second, and capped at some arbitrary value (currently 10 MB/s).
 
    The Measured= keyword on a "w" line vote is currently computed
@@ -1976,7 +1976,7 @@
 
    XXX when to download certificates.
 
-3.6. Downloading router descriptors from other directory authorities
+3.6. Downloading server descriptors from other directory authorities
 
    Periodically (currently, every 10 seconds), directory authorities check
    whether there are any specific descriptors that they do not have and that
@@ -2011,7 +2011,7 @@
 3.7. Downloading extra-info documents from other directory authorities
 
    Periodically, an authority checks whether it is missing any extra-info
-   documents: in other words, if it has any router descriptors with an
+   documents: in other words, if it has any server descriptors with an
    extra-info-digest field that does not match any of the extra-info
    documents currently held.  If so, it downloads whatever extra-info
    documents are missing.  We follow the same splitting and back-off rules
@@ -2608,7 +2608,7 @@
    length.  Caches serve all consensus flavors from the same locations as
    the directory authorities.
 
-4.2. Downloading router descriptors from directory authorities
+4.2. Downloading server descriptors from directory authorities
 
    Periodically (currently, every 10 seconds), directory caches check
    whether there are any specific descriptors that they do not have and that
@@ -2658,7 +2658,7 @@
    section.
 
    Periodically, the Tor instance checks whether it is missing any extra-info
-   documents: in other words, if it has any router descriptors with an
+   documents: in other words, if it has any server descriptors with an
    extra-info-digest field that does not match any of the extra-info
    documents currently held.  If so, it downloads whatever extra-info
    documents are missing.  Caches download from authorities.  We follow the
@@ -2732,7 +2732,7 @@
    the same update strategy as for the normal consensus.  They should not
    download more than one consensus flavor.
 
-5.2. Downloading router descriptors or microdescriptors
+5.2. Downloading server descriptors or microdescriptors
 
    Clients try to have the best descriptor for each router.  A descriptor is
    "best" if:
@@ -2754,7 +2754,7 @@
    client tried to download descriptors, it launches requests for all
    downloadable descriptors.
 
-   When downloading multiple router descriptors, the client chooses multiple
+   When downloading multiple server descriptors, the client chooses multiple
    mirrors so that:
      - At least 3 different mirrors are used, except when this would result
        in more than one request for under 4 descriptors.
@@ -2783,7 +2783,7 @@
 
    Clients which chose to download the microdescriptor consensus instead
    of the general consensus must download the referenced microdescriptors
-   instead of router descriptors.  Clients fetch and cache
+   instead of server descriptors.  Clients fetch and cache
    microdescriptors preemptively from dir mirrors when starting up, like
    they currently fetch descriptors.  After bootstrapping, clients only
    need to fetch the microdescriptors that have changed.
@@ -2811,7 +2811,7 @@
    Note that generally, clients don't need extra-info documents.
 
    Periodically, the Tor instance checks whether it is missing any extra-info
-   documents: in other words, if it has any router descriptors with an
+   documents: in other words, if it has any server descriptors with an
    extra-info-digest field that does not match any of the extra-info
    documents currently held.  If so, it downloads whatever extra-info
    documents are missing.  Clients try to download from caches.
@@ -2932,8 +2932,8 @@
   them.
 
   Servers SHOULD disable caching of multiple network statuses or multiple
-  router descriptors.  Servers MAY enable caching of single descriptors,
-  single network statuses, the list of all router descriptors, a v1
+  server descriptors.  Servers MAY enable caching of single descriptors,
+  single network statuses, the list of all server descriptors, a v1
   directory, or a v1 running routers document.  XXX mention times.
 
 6.2. HTTP status codes

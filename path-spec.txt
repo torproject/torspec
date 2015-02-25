@@ -602,9 +602,9 @@ of their choices.
   Tor does not add a guard persistently to the list until the first time we
   have connected to it successfully.
 
-6. Router descriptor purposes
+6. Server descriptor purposes
 
-  There are currently three "purposes" supported for router descriptors:
+  There are currently three "purposes" supported for server descriptors:
   general, controller, and bridge. Most descriptors are of type general
   -- these are the ones listed in the consensus, and the ones fetched
   and used in normal cases.
