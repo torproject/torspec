@@ -1,6 +1,6 @@
 Filename: 242-better-families.txt
 Title: Better performance and usability for the MyFamily option.
-Author: Aaron Johnson, Nick Mathewson
+Author: Nick Mathewson
 Created: 2015-02-27
 Status: Open
 
