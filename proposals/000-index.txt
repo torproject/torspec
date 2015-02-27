@@ -162,6 +162,7 @@ Proposals by number:
 239  Consensus Hash Chaining [DRAFT]
 240  Early signing key revocation for directory authorities [DRAFT]
 241  Resisting guard-turnover attacks [DRAFT]
+242  Better performance and usability for the MyFamily option [OPEN]
 
 
 Proposals by status:
@@ -219,6 +220,7 @@ Proposals by status:
    234  Adding remittance field to directory specification
    236  The move to a single guard node
    237  All relays are directory servers [for 0.2.6.x]
+   242  Better performance and usability for the MyFamily option
  ACCEPTED:
    140  Provide diffs between consensuses
    172  GETINFO controller option for circuit information

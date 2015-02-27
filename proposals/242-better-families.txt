@@ -1,0 +1,96 @@
+Filename: 242-better-families.txt
+Title: Better performance and usability for the MyFamily option.
+Author: Aaron Johnson, Nick Mathewson
+Created: 2015-02-27
+Status: Open
+
+1. Problem statement.
+
+   The current family interface allows well-behaved relays to
+   identify that they all belong to the same 'family', and should
+   not be used in the same circuits.
+
+   Right now, this interface works by having every family member
+   list every other family member in its server descriptor.  This
+   winds up using O(n^2) space in microdescriptors, server
+   descriptors, and RAM.  Adding or removing a server from the
+   family requires all the other servers to change their torrc
+   settings.
+
+   One proposal is to eliminate the use of the Family option
+   entirely; see ticket #6676.  But if we don't, let's come up with
+   a way to make it better.  (I'm writing this down mainly to get it
+   out of my head.)
+
+2. Design overview.
+
+   In this design, every family has a master ed25519 key.  A node is
+   in the family iff its server descriptor includes a certificate of
+   its ed25519 identity key with the master ed25519 key.  The
+   certificate format is as in proposal 220 section 2.1.
+
+   Note that because server descriptors are signed with the node's
+   ed25519 signing key, this creates a bidirectional relationship
+   where nodes can't be put in families without their consent.
+
+3. Changes to server descriptors
+
+   We add a new entry to server descriptors:
+      "family-cert"
+
+   This line contains a base64-encoded certificate as described
+   above.  It may appear any number of times.
+
+4. Changes to microdescriptors
+
+   We add a new entry to microdescriptors:
+      "family-keys"
+
+   This line contains one or more space-separated strings describing
+   families to which the node belongs.  These strings MUST be
+   between 1 and 64 characters long, and sorted in lexical order.
+   Clients MUST NOT depend on any particular property of these
+   strings.
+
+5. Changes to voting algorithm
+
+   We allocate a new consensus method number for voting on these keys.
+
+   When generating microdescriptors using a suitable consensus
+   method, the authorities include a "family-keys" line if the
+   underlying server descriptor contains any family-cert lines.
+   For reach family-cert in the server descriptor, they add a
+   base-64-encoded string of that family-cert's signing key.
+
+6. Client behavior
+
+   Clients should treat node A and node B as belonging to the same
+   family if ANY of these is true:
+
+       * The client has server descriptors or microdescriptors for A
+         and B, and A's descriptor lists B in its family line, and
+         B's descriptor lists A in its family line.
+
+       * The client has a server descriptor for A and one for B, and
+         they both contain valid family-cert lines whose certs are
+         signed by the family key.
+
+       * The client has microdescriptors for A and B, and they both
+         contain some string in common on their family-cert line.
+
+7. Deprecating the old family lines.
+
+   Once all clients that support the old family line format are
+   deprecated, servers can stop including family lines in their
+   descriptors, and authorities can stop including them in their
+   microdescriptors.
+
+8. Open questions
+
+   The rules in section 6 above leave open the possibility of old
+   clients and new clients reaching different decisions about who is
+   in a family.  We should evaluate this for anonymity implications.
+
+   It's possible that families are a bad idea entirely; see ticket
+   #6676.
+
