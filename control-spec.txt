@@ -1887,6 +1887,7 @@
       "REASON=" Keyword
       "COUNT=" num
       "RECOMMENDATION=" Keyword
+      [HOST=" QString
      ]
 
        Tor has made some progress at establishing a connection to the
@@ -1926,6 +1927,9 @@
        a pile of problems to show the user if the user asks; if warn,
        the controller should alert the user that Tor is pretty sure
        there's a bootstrapping problem.
+
+       The "host" values are a description of the node that we're trying to
+       connect to.  This can be a LongName, or an Address : Port .
 
        Currently Tor uses recommendation=ignore for the first
        nine bootstrap problem reports for a given phase, and then
