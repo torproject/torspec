@@ -1425,6 +1425,30 @@
         version-spec.txt. If absent, no opinion is held about server
         versions.
 
+    "package" SP PackageName SP Version SP URL SP DIGESTS NL
+
+        [Any number of times.]
+
+        For this element:
+
+        PACKAGENAME = NONSPACE
+        VERSION = NONSPACE
+        URL = NONSPACE
+        DIGESTS = DIGEST | DIGESTS SP DIGEST
+        DIGEST = DIGESTTYPE "=" DIGESTVAL
+        NONSPACE = one or more non-space printing characters
+        DIGESTVAL = DIGESTTYPE = one or more non-=, non-" " characters.
+
+        Indicates that a package called "package" of version VERSION may be
+        found at URL, and its digest as computed with DIGESTTYPE is equal to
+        DIGESTVAL.  In consensuses, these lines are sorted lexically by
+        "PACKAGENAME VERSION" pairs, and DIGESTTYPES must appear in ascending
+        order.  A consensus must not contain the same "PACKAGENAME VERSION"
+        more than once.  If a vote contains the same "PACKAGENAME VERSION"
+        more than once, all but the last is ignored.
+
+        Included in consensuses only for method 19 and later.
+
     "known-flags" SP FlagList NL
 
         [Exactly once.]
@@ -2050,6 +2074,13 @@
      by more than half of the voting authorities that included a
      client-versions or server-versions lines in their votes.
 
+     With consensus method 19 or later, a package line is generated for a
+     given PACKAGENAME/VERSION pair if at least three authorities list such a
+     package in their votes.  (Call these lines the "input" lines for
+     PACKAGENAME.)  The consensus will contain every "package" line that is
+     listed verbatim by more than half of the authorities listing a line for
+     the PACKAGENAME/VERSION pair, and no others.
+
      The authority item groups (dir-source, contact, fingerprint,
      vote-digest) are taken from the votes of the voting
      authorities. These groups are sorted by the digests of the
@@ -2179,6 +2210,8 @@
      "16" -- Adds ntor keys to microdescriptors
      "17" -- Adds "Unmeasured=1" flags to "w" lines
      "18" -- Adds 'id' to microdescriptors.
+     "19" -- Adds "package" lines to consensuses
+     "20" -- Adds GuardFraction information to microdescriptors.
 
    Before generating a consensus, an authority must decide which consensus
    method to use.  To do this, it looks for the highest version number
