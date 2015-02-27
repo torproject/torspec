@@ -1883,12 +1883,11 @@
      "PROGRESS=" num
      "TAG=" Keyword
      "SUMMARY=" String
-     ["WARNING=" String
-      "REASON=" Keyword
-      "COUNT=" num
-      "RECOMMENDATION=" Keyword
-      [HOST=" QString
-     ]
+     ["WARNING=" String]
+     ["REASON=" Keyword]
+     ["COUNT=" num]
+     ["RECOMMENDATION=" Keyword]
+     ["HOST=" QuotedString]
 
        Tor has made some progress at establishing a connection to the
        Tor network, fetching directory information, or making its first
