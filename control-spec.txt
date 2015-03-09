@@ -1929,7 +1929,8 @@
        there's a bootstrapping problem.
 
        The "host" value is the identity digest (in hex) of the node we're
-       trying to connect to; the "hostaddr" is an address:port combination.
+       trying to connect to; the "hostaddr" is an address:port combination,
+       where 'address' is an ipv4 or ipv6 address.
 
        Currently Tor uses recommendation=ignore for the first
        nine bootstrap problem reports for a given phase, and then
