@@ -1883,11 +1883,12 @@
      "PROGRESS=" num
      "TAG=" Keyword
      "SUMMARY=" String
-     ["WARNING=" String
-      "REASON=" Keyword
-      "COUNT=" num
-      "RECOMMENDATION=" Keyword
-     ]
+     ["WARNING=" String]
+     ["REASON=" Keyword]
+     ["COUNT=" num]
+     ["RECOMMENDATION=" Keyword]
+     ["HOST=" QuotedString]
+     ["HOSTADDR=" QuotedString]
 
        Tor has made some progress at establishing a connection to the
        Tor network, fetching directory information, or making its first
@@ -1926,6 +1927,10 @@
        a pile of problems to show the user if the user asks; if warn,
        the controller should alert the user that Tor is pretty sure
        there's a bootstrapping problem.
+
+       The "host" value is the identity digest (in hex) of the node we're
+       trying to connect to; the "hostaddr" is an address:port combination,
+       where 'address' is an ipv4 or ipv6 address.
 
        Currently Tor uses recommendation=ignore for the first
        nine bootstrap problem reports for a given phase, and then
