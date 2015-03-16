@@ -979,7 +979,8 @@
         mu = 0 and b = (delta_f / epsilon) with 'delta_f' and 'epsilon'
         being reported in the key=val part, too; third, the result of the
         previous obfuscation steps is truncated to the next smaller
-        integer and included as 'num'.
+        integer and included as 'num'. Note that the overall reported
+        value can be negative.
 
     "hidserv-dir-onions-seen" SP num SP key=val SP key=val ... NL
         [At most once.]
@@ -991,7 +992,8 @@
         The original measurement value is obfuscated in the same way as
         the 'num' value reported in "hidserv-rend-relayed-cells", but
         possibly with different parameters as reported in the key=val part
-        of this line.
+        of this line. Note that the overall reported value can be
+        negative.
 
     "transport" transportname address:port [arglist] NL
         [Any number.]
