@@ -1,0 +1,83 @@
+Filename: 243-hsdir-flag-need-stable.txt
+Title: Give out HSDir flag only to relays with Stable flag
+Author: George Kadianakis
+Created: 2015-03-23
+Status: Open
+
+1. Introduction
+
+   The descriptors of hidden services are stored by hidden service
+   directories. Those are chosen by directory authorities who assign
+   the "HSDir" flag to those relays according to their uptime.
+
+   It's important for new relays to not be able to get the HSDir flag
+   too easily, because a few correctly placed HSDirs can launch a
+   denial of service attack on a hidden service. We should make sure
+   that a naive Sybil attacker that injects thousands of new Tor
+   relays to the network cannot position herself like this.
+
+2. Motivation
+
+   Currently, directory authorities give out the HSDir flag to relays
+   that volunteer to be hidden service directories by sending a
+   "hidden-service-dir" line in their relay descriptor, which is the
+   default relay behavior. Furthermore, the HSDir flag is only given
+   to relays that have been up for more than MinUptimeHidServDirectoryV2 hours.
+   MinUptimeHidServDirectoryV2 is a parameter locally set at the
+   directory authorities and it's somewhere between 25 to 96 hours.
+
+   We propose changing that last requirement, and instead giving the
+   HSDir flag only to relays that have the Stable flag. We believe
+   that this will result in a few benefits:
+
+   - We stop using the ad-hoc uptime calculation that we are currently
+     doing (see dirserv_thinks_router_is_hs_dir()). Instead, we use
+     the MTBF uptime calculation that is performed for the Stable flag
+     which is more robust.
+
+   - We increase the time required to get the HSDir flag, making it
+     harder for naive adversaries that flood the network with relays
+     to actually get the HSDir flag.
+
+   - After implementing non-deterministic HSDir picks (#8244) we also
+     make it harder for sophisticated adversaries to DoS a hidden
+     service, since at that point their main attack strategy is to
+     flood the network with relays.
+
+   - By increasing the stability of HSDirs, we reduce the misses
+     during descriptor fetching that get caused by natural churn of
+     relays on the list of HSDirs.
+
+3. Specification
+
+   We are suggesting changing the criteria that directory authorities
+   use to vote for HSDirs to the following:
+
+   - The relay has included the "hidden-service-dir\n" line in its
+     descriptor.
+
+   - The relay is eligible for having the "Stable" flag.
+
+4. Security considerations
+
+   As it currently is, a router is 'Stable' if it is active, and
+   either its Weighted MTBF is at least the median for known active
+   routers or its Weighted MTBF corresponds to at least 7 days. This
+   is stricter criteria than what's required for HSDir, which means
+   that the number of HSDirs will decrease after the suggested changes.
+
+   Currently there are about 2400 HSDirs in the consensus, and about
+   2300 of them are Stable, which means that we will lose about 100 HSDirs.
+   We believe that this is an acceptable temporary loss. In the
+   short-term future, the number of HSDirs will greatly improve as
+   more directory authorities upgrade to #14202 and more relays
+   upgrade to #12538.
+
+5. Future
+
+   Should we give out the HSDir flag only to relays that are Fast? Is
+   being an HSDir a demanding job bandwidth-wise?
+
+   With the upcoming keyblinding scheme (#8106) and non-deterministic
+   HSDir selection (#8244), are there any other criteria that we
+   should use when assigning HSDir flags?
