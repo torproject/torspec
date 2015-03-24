@@ -163,6 +163,7 @@ Proposals by number:
 240  Early signing key revocation for directory authorities [DRAFT]
 241  Resisting guard-turnover attacks [DRAFT]
 242  Better performance and usability for the MyFamily option [OPEN]
+243  Give out HSDir flag only to relays with Stable flag [OPEN]
 
 
 Proposals by status:
@@ -221,6 +222,7 @@ Proposals by status:
    236  The move to a single guard node
    237  All relays are directory servers [for 0.2.6.x]
    242  Better performance and usability for the MyFamily option
+   243  Give out HSDir flag only to relays with Stable flag
  ACCEPTED:
    140  Provide diffs between consensuses
    172  GETINFO controller option for circuit information
