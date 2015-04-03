@@ -73,7 +73,7 @@ How new proposals get added:
   community exists that this idea warrants consideration, the proposal editor
   will officially add the proposal.
 
-  To get your proposal in, send it to or-dev.
+  To get your proposal in, send it to the tor-dev mailing list.
 
   The current proposal editors are Nick Mathewson and Jacob Appelbaum.
 
