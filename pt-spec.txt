@@ -103,7 +103,6 @@ connection  |     +-----------+    ^       +------------+    |
   whichever one is listed first.
 
   TODO: Document external mode
-  TODO: Document '*' transport
 
 2.1.0.1. Bridge torrc lines
 
