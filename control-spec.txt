@@ -854,6 +854,10 @@
          HSAddress
       [New in Tor 0.2.7.1-alpha.]
 
+      "network-liveness"
+      The string "up" or "down", indicating whether we currently believe the
+      network is reachable.
+
   Examples:
      C: GETINFO version desc/name/moria1
      S: 250+desc/name/moria=
@@ -2781,6 +2785,16 @@
   this event will reply either the descriptor's content or an empty one.
 
   [HS_DESC_CONTENT was added in Tor 0.2.7.1-alpha]
+
+4.1.27. Network liveness has changed
+
+  Syntax:
+     "650" SP "NETWORK_LIVENESS" SP Status ... CRLF
+     Status = "UP" | "DOWN"
+
+  The Status values are:
+    "UP"   -- The network now seems to be reachable.
+    "DOWN" -- The network now seems to be unreachable.
 
 5. Implementation notes
 
