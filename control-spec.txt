@@ -2796,6 +2796,9 @@
     "UP"   -- The network now seems to be reachable.
     "DOWN" -- The network now seems to be unreachable.
 
+  Controllers MUST ignore unrecognized Status values, and MUST ignore
+  unrecognized material at the end of the event line.
+
 5. Implementation notes
 
 5.1. Authentication
