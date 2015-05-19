@@ -2789,15 +2789,13 @@
 4.1.27. Network liveness has changed
 
   Syntax:
-     "650" SP "NETWORK_LIVENESS" SP Status ... CRLF
-     Status = "UP" | "DOWN"
+     "650" SP "NETWORK_LIVENESS" SP Status CRLF
+     Status = "UP" /  ; The network now seems to be reachable.
+              "DOWN" /  ; The network now seems to be unreachable.
 
-  The Status values are:
-    "UP"   -- The network now seems to be reachable.
-    "DOWN" -- The network now seems to be unreachable.
+  Controllers MUST tolerate unrecognized status types.
 
-  Controllers MUST ignore unrecognized Status values, and MUST ignore
-  unrecognized material at the end of the event line.
+  [NETWORK_LIVENESS was added in Tor 0.2.7.2-alpha]
 
 5. Implementation notes
 
