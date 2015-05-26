@@ -852,7 +852,7 @@ Status: Draft
 
        salt = 16 random bytes
 
-       secret_input = nonce | blinded_public_key | subcredential |
+       secret_input = blinded_public_key | subcredential |
              INT_4(revision_counter)
        keys = KDF(secret_input, salt, "hsdir-encrypted-data",
                   S_KEY_LEN + S_IV_LEN + MAC_KEY_LEN)
