@@ -26,6 +26,8 @@ Status: Draft
        2014-02-20: Move more things to the revised certificate format in the
            new updated proposal 220.
 
+       2015-05-26: Fix two typos.
+
 
 0. Hidden services: overview and preliminaries.
 
@@ -389,7 +391,7 @@ Status: Draft
    may decide to respond or not respond to the client's request
    depending on the contents of the request. The protocol is extensible
    at this point: at a minimum, the server requires that the client
-   demonstrate knowledge od the contents of the encrypted portion of the
+   demonstrate knowledge of the contents of the encrypted portion of the
    hidden service descriptor. The service may additionally require a
    user- or group-specific access token before it responds to requests.
 
@@ -730,7 +732,7 @@ Status: Draft
    that, in order to make the system better tolerate disappearing
    HSDirs, hsdir_spread_fetch may be less than hsdir_spread_store.)
 
-   An HSDir should rejects a descriptor if that HSDir is not one of the
+   An HSDir should reject a descriptor if that HSDir is not one of the
    first hsdir_spread_accept HSDirs for that node.
 
    [TODO: Incorporate the findings from proposal 143 here. But watch
