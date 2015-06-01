@@ -224,6 +224,11 @@ Status: Draft
    key also signs all three keys as part of signing the descriptor.
 
 
+   When an ed25519 signature is present, there MAY be a "master-key-ed25519"
+   element containing the base64 encoded ed25519 master key as a single
+   argument.  If it is present, it MUST match the identity key in
+   the certificate.
+
 2.5.1. Checking descriptor signatures.
 
    Current versions of Tor will handle these new formats by ignoring the
