@@ -1,0 +1,41 @@
+Filename: 244-use-rfc5705-for-tls-binding.txt
+Title: Use RFC5705 Key Exporting in our AUTHENTICATE calls
+Author: Nick Mathewson
+Created: 2015-05-14
+Status: Draft
+
+1. Proposal
+
+  We use AUTHENTICATE cells to bind the connection-initiator's Tor
+  identity to a TLS session.  Our current type of authentication
+  ("RSA-SHA256-TLSSecret", see tor-spec.txt section 4.4) does this by
+  signing a document that includes an HMAC of client_random and
+  server_random, using the TLS master secret as a secret key.
+
+  There is a more standard way to get at this information, by using the
+  facility defined in RFC5705.  Further, it is likely to continue to
+  work with more TLS libraries, including TLS libraries like OpenSSL 1.1
+  that make master secrets and session data opaque.
+
+  I propose that we introduce a new authentication type, with AuthType
+  and TYPE field to be determined, that works the same as our current
+  "RSA-SHA256-TLSSecret" authentication, except for these fields:
+
+    TYPE is a different constant string.
+
+    TLSSECRETS is replaced by the output of the Exporter function in
+    RFC5705, using as its inputs:
+        * The label string "EXPORTER FOR TOR TLS CLIENT BINDING " + TYPE
+        * The context value equal to the client's identity key digest.
+        * The length 32.
+
+  I propose that proposal 224's section on authenticating with ed25519
+  keys be amended accordingly:
+
+    TYPE is a different constant string, different from the one above.
+
+    TLSSECRETS is replaced by the output of the Exporter function in
+    RFC5705, using as its inputs:
+        * The label string "EXPORTER FOR TOR TLS CLIENT BINDING " + TYPE
+        * The context value equal to the client's Ed25519 identity key
+        * The length 32.
