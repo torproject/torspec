@@ -164,6 +164,8 @@ Proposals by number:
 241  Resisting guard-turnover attacks [DRAFT]
 242  Better performance and usability for the MyFamily option [OPEN]
 243  Give out HSDir flag only to relays with Stable flag [OPEN]
+244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [DRAFT]
+245  Deprecating and removing the TAP circuit extension protocol [DRAFT]
 
 
 Proposals by status:
@@ -189,6 +191,8 @@ Proposals by status:
    239  Consensus Hash Chaining
    240  Early signing key revocation for directory authorities
    241  Resisting guard-turnover attacks
+   244  Use RFC5705 Key Exporting in our AUTHENTICATE calls
+   245  Deprecating and removing the TAP circuit extension protocol
  NEEDS-REVISION:
    131  Help users to verify they are using Tor
    190  Bridge Client Authorization Based on a Shared Secret
