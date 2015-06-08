@@ -1,0 +1,96 @@
+Filename: 245-tap-out.txt
+Title: Deprecating and removing the TAP circuit extension protocol
+Author: Nick Mathewson
+Created: 2015-06-02
+Status: Draft
+
+0. Introduction
+
+  This proposal describes a series of steps necessary for deprecating
+  TAP without breaking functionality.
+
+  TAP is the original protocol for one-way authenticated key negotiation
+  used by Tor.  Before Tor version 0.2.4, it was the only supported
+  protocol.  Its key length is unpleasantly short, however, and it had
+  some design warts.  Moreover, it had no name, until Ian Goldberg wrote
+  a paper about the design warts.
+
+  Why deprecate and remove it?  Because ntor is better in basically
+  every way.  It's actually got a proper security proof, the key
+  strength seems to be 20th-century secure, and so on.  Meanwhile, TAP
+  is lingering as a zombie, taking up space in descriptors and
+  microdescriptors.
+
+1. TAP is still in (limited) use today for hidden service hops.
+
+  The original hidden service protocol only describes a way to tell
+  clients and servers about an introduction point's or a rendezvous
+  point's TAP onion key.
+
+  We can do a bit better (see section 4), but we can't break TAP
+  completely until current clients and hidden services are obsolete.
+
+2. The step-by-step process.
+
+  Step 1. Adjust the parsing algorithm for descriptors and microdescriptors
+  on servers so that it accepts MDs without a TAP key.  See section 3 below.
+  Target: 0.2.7.
+
+  Step 1b. Optionally, when connecting to a known IP/RP, extend by ntor.
+  (See section 4 below.)
+
+  Step 2. Wait until proposal 224 is implemented.  (Clients and hidden
+  services implementing 224 won't need TAP for anything.)
+
+  Step 3. Begin throttling TAP answers even more aggressively at relays.
+  Target: prop224 is stable.
+
+  Step 4. Wait until all versions of Tor without prop224 support are
+  obsolete/deprecated.
+
+  Step 5. Stop generating TAP keys; stop answering TAP requests; stop
+  advertising TAP keys in descriptors; stop including them in
+  microdescriptors.
+  Target: prop224 has been stable for 12-18 months, and 0.2.7 has been stable
+  for 2-3 years.
+
+
+3. Accepting descriptors without TAP keys. (Step 1)
+
+  Our microdescriptor parsing code uses the string "onion-key" at the
+  start of the line to identify the boundary between microdescriptors,
+  so we can't remove it entirely.  Instead, we will make the body
+  optional.
+
+  We will make the following changes to dir-spec:
+
+   - In router descriptors, make the onion-key field "at most once"
+     instead of "exactly once."
+
+   - In microdescriptors, make the body of "onion-key" optional.
+
+  Until Step 4, authorities MUST still reject any descriptor without a
+  TAP key.
+
+  If we do step 1 before proposal 224 is implemented, we'll need to make
+  sure that we never choose a relay without a TAP key as an introduction
+  point or a rendezvous point.
+
+4. Avoiding TAP earlier for HS usage (Step 1b)
+
+  We could begin to move more circuits off TAP now by adjusting our
+  behavior for extending circuits to Introduction Points and Rendezvous
+  Points.  The new rule would be:
+
+     If you've been told to extend to an IP/RP, and you know a directory
+     entry for that relay (matching by identity), you extend using the
+     node_t you have instead.
+
+  This would improve cryptographic security a bit, at the expense of
+  making it possible to probe for whether a given hidden service has an
+  up-to-date consensus or not, and learn whether each client has an
+  up-to-date consensus or not. We need to figure out whether that
+  enables an attack.
+
+  (For reference, the functions to patch would be
+  rend_client_get_random_intro_impl and find_rp_for_intro.)
