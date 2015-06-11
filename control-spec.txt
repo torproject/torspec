@@ -2736,7 +2736,7 @@
     Reason = "BAD_DESC" / "QUERY_REJECTED" / "UPLOAD_REJECTED" / "NOT_FOUND" /
              "UNEXPECTED"
 
-    These events will be triggerred when required HiddenService descriptor is
+    These events will be triggered when required HiddenService descriptor is
     not found in the cache and a fetch or upload with the network is performed.
 
     If the fetch was triggered with only a DescriptorID (using the HSFETCH
@@ -2744,7 +2744,8 @@
     since there is no way to know the HSAddress from the DescriptorID thus
     the value will be "UNKNOWN".
 
-    If we already had the v0 descriptor, the newly fected v2 descriptor will be
+    If we already had the v0 descriptor, the newly fetched v2 descriptor
+    will be
     ignored and a "HS_DESC" event with "IGNORE" action will be generated.
 
     For HsDir, LongName is always prefered. If HsDir cannot be found in node
