@@ -1044,12 +1044,12 @@ Status: Draft
 
    In this older protocol, an ESTABLISH_INTRO cell contains:
 
-        KEY_LENGTH     [2 bytes]
-        KEY            [KEY_LENGTH bytes]
+        KEY_LEN     [2 bytes]
+        KEY            [KEY_LEN bytes]
         HANDSHAKE_AUTH [20 bytes]
         SIG            [variable, up to end of relay payload]
 
-   The KEY_LENGTH variable determines the length of the KEY field.
+   The KEY_LEN variable determines the length of the KEY field.
 
    The KEY field is a ASN1-encoded RSA public key.
 
@@ -1060,7 +1060,7 @@ Status: Draft
    earlier fields.
 
    Note that since the relay payload itself may be no more than 498
-   bytes long, the KEY_LENGTH field can never have a first byte other
+   bytes long, the KEY_LEN field can never have a first byte other
    than [00] or [01]. These values are used to distinguish legacy
    ESTABLISH_INTRO cells from newer ones.
 
@@ -1369,7 +1369,7 @@ Status: Draft
 
    and sends, as the ENCRYPTED part of the INTRODUCE1 cell:
 
-          CLIENT_PK                [G_LENGTH bytes]
+          CLIENT_PK                [G_LEN bytes]
           ENCRYPTED_DATA           [Padded to length of plaintext]
           MAC                      [MAC_LEN bytes]
 
@@ -1385,7 +1385,7 @@ Status: Draft
                EXT_FIELD_LEN            [1 byte]
                EXT_FIELD                [EXT_FIELD_LEN bytes]
             ENCRYPTED:
-               CLIENT_PK                [G_LENGTH bytes]
+               CLIENT_PK                [G_LEN bytes]
                ENCRYPTED_DATA           [Padded to length of plaintext]
                MAC                      [MAC_LEN bytes]
 
@@ -1436,8 +1436,8 @@ Status: Draft
       (The above are used to finish the ntor handshake.)
 
    The server's handshake reply is:
-       SERVER_PK   Y                       [G_LENGTH bytes]
-       AUTH        H(auth_input, t_mac)    [H_LENGTH bytes]
+       SERVER_PK   Y                       [G_LEN bytes]
+       AUTH        H(auth_input, t_mac)    [H_LEN bytes]
 
    These faileds can be send to the client in a RENDEZVOUS1 cell.
    (See [JOIN_REND] below.)
