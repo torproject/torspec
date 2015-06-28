@@ -232,7 +232,7 @@ Status: Draft
 
       40 -- RELAY_COMMAND_INTRODUCE_ACK
 
-            Sent form introduction point to client; acknowledges
+            Sent from introduction point to client; acknowledges
             receipt of INTRODUCE1 cell and reports success/failure.
             Discussed in [INTRO_ACK]
 
@@ -281,6 +281,7 @@ Status: Draft
       Matthew Finkel
       George Kadianakis,
       Peter Palfrader,
+      Tim Wilson-Brown ("teor"),
 
 
    [XXX  Acknowledge the huge bunch of people working on 8106.]
@@ -703,8 +704,9 @@ Status: Draft
 
         for replicanum in 1...hsdir_n_replicas:
             hs_index(replicanum) = H("store-at-idx" |
-                                 blinded_public_key | replicanum |
-                                 periodnum)
+                                 blinded_public_key |
+                                 INT_8(replicanum) |
+                                 INT_8(periodnum) )
 
    where blinded_public_key is specified in section KEYBLIND, and
    periodnum is defined in section TIME-PERIODS.
@@ -974,7 +976,7 @@ Status: Draft
      N_EXTENSIONS times:
         EXT_FIELD_TYPE [1 byte]
         EXT_FIELD_LEN  [1 byte]
-        EXT_FIELD      [EXTRA_FIELD_LEN bytes]
+        EXT_FIELD      [EXT_FIELD_LEN bytes]
      HANDSHAKE_AUTH   [MAC_LEN bytes]
      SIGLEN           [1 byte]
      SIG              [SIGLEN bytes]
@@ -1173,7 +1175,7 @@ Status: Draft
      N_EXTENSIONS times:
        EXT_FIELD_TYPE [1 byte]
        EXT_FIELD_LEN  [1 byte]
-       EXT_FIELD      [EXTRA_FIELD_LEN bytes]
+       EXT_FIELD      [EXT_FIELD_LEN bytes]
      ENCRYPTED        [Up to end of relay payload]
 
    [TODO: Should we have a field to determine the type of ENCRYPTED, or
@@ -1208,7 +1210,7 @@ Status: Draft
      N_EXTENSIONS times:
        EXT_FIELD_TYPE [1 byte]
        EXT_FIELD_LEN  [1 byte]
-       EXT_FIELD      [EXTRA_FIELD_LEN bytes]
+       EXT_FIELD      [EXT_FIELD_LEN bytes]
 
    Recognized status values are:
      [00 00] -- Success: cell relayed to hidden service host.
@@ -1234,7 +1236,7 @@ Status: Draft
 
        EXT_FIELD_TYPE [1 byte]
        EXT_FIELD_LEN  [1 byte]
-       EXT_FIELD      [EXTRA_FIELD_LEN bytes]
+       EXT_FIELD      [EXT_FIELD_LEN bytes]
 
      ENCRYPTED        [Up to end of relay payload]
 
@@ -1274,7 +1276,7 @@ Status: Draft
       N_EXTENSIONS times:
           EXT_FIELD_TYPE                         [1 byte]
           EXT_FIELD_LEN                          [1 byte]
-          EXT_FIELD                              [EXTRA_FIELD_LEN bytes]
+          EXT_FIELD                              [EXT_FIELD_LEN bytes]
       ONION_KEY_TYPE                             [2 bytes]
       ONION_KEY                                  [depends on ONION_KEY_TYPE]
       NSPEC      (Number of link specifiers)     [1 byte]
@@ -1381,7 +1383,7 @@ Status: Draft
             N_EXTENSIONS times:
                EXT_FIELD_TYPE           [1 byte]
                EXT_FIELD_LEN            [1 byte]
-               EXT_FIELD                [EXTRA_FIELD_LEN bytes]
+               EXT_FIELD                [EXT_FIELD_LEN bytes]
             ENCRYPTED:
                CLIENT_PK                [G_LENGTH bytes]
                ENCRYPTED_DATA           [Padded to length of plaintext]
@@ -1575,7 +1577,7 @@ Status: Draft
    end-to-end traffic encryption and authentication as in the regular
    Tor relay encryption protocol, applying encryption with these keys
    before other encryption, and decrypting with these keys before other
-   encryption. The client encrypts with Kf and decrypts with Kb; the
+   decryption. The client encrypts with Kf and decrypts with Kb; the
    service host does the opposite.
 
 6. Open Questions:
