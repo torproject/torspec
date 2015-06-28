@@ -1128,7 +1128,7 @@ see tor-design.pdf.
    but it probably won't get fixed until a later version of Tor.  Thus,
    clients SHOULD NOT send a TRUNCATE cell to a node running any current
    version of Tor if a) they have sent relay cells through that node,
-   and b) they aren't sure whether those cells have been sent on yes.]
+   and b) they aren't sure whether those cells have been sent on yet.]
 
    When an unrecoverable error occurs along one connection in a
    circuit, the nodes on either side of the connection should, if they
