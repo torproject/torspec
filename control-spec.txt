@@ -785,6 +785,10 @@
       formatted the same as the CLIENTS_SEEN status event described in
       Section 4.1.14. This GETINFO option is currently available only
       for bridge relays.
+    "status/fresh-relay-descs"
+      Provides fresh server and extra-info descriptors for our relay. Note
+      this is *not* the latest descriptors we've published, but rather what we
+      would generate if we needed to make a new descriptor right now.
 
     "net/listeners/or"
     "net/listeners/dir"
