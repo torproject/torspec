@@ -1,0 +1,296 @@
+Filename: 246-merge-hsdir-and-intro.txt
+Title: Merging Hidden Service Directories and Introduction Points
+Author: John Brooks, George Kadianakis
+Created: 2015-07-12
+Status: Open
+
+1. Overview and Motivation
+
+   This document describes a modification to proposal 224 ("Next-Generation
+   Hidden Services in Tor"), which simplifies and improves the architecture by
+   combining hidden service directories and introduction points at the same
+   relays.
+
+   A reader will want to be familiar with the existing hidden service design,
+   and with the changes in proposal 224. If accepted, this proposal should be
+   combined with proposal 224 to make a superseding specification.
+
+1.1. Overview
+
+   In the existing hidden service design and proposal 224, there are three
+   distinct steps building a connection: fetching the descriptor from a
+   directory, contacting an introduction point listed in the descriptor, and
+   rendezvous as specified during the introduction. The hidden service
+   directories are selected algorithmically, and introduction points are
+   selected at random by the service.
+
+   We propose to combine the responsibilities of the introduction point and
+   hidden service directory. The list of introduction points responsible for a
+   service will be selected using the algorithm specified for HSDirs [proposal
+   224, section 2.2.3]. The service builds a long-term introduction circuit to
+   each of these, identified by its blinded public key. Clients can calculate
+   the same set of relays, build an introduction circuit, retrieve the
+   ephemeral keys, and proceed with sending an introduction to the service in
+   the same ways as before.
+
+1.2. Benefits over proposal 224
+
+   With this change, client connections are made more efficient by needing only
+   two circuits (for introduction and rendezvous), instead of the three needed
+   previously, and need to contact fewer relays. Clients also no longer cache
+   descriptors, which substantially simplifies code and removes a common source
+   of bugs and reliability issues.
+
+   Hidden services are able to stay online by simply maintaining their
+   introduction circuits; there is no longer a need to periodically update
+   descriptors. This reduces network load and traffic fingerprinting
+   opportunities for a hidden service.
+
+   The number and churn of relays a hidden service depends on is also reduced.
+   In particular, prior hidden service designs may frequently choose new
+   introduction points, and each of these has an opportunity to observe the
+   popularity or connection behavior of clients.
+
+1.3. Other effects on proposal 224
+
+   An adversarial introduction point is not significantly more capable than a
+   hidden service directory under proposal 224. The differences are:
+
+     1. The introduction point maintains a long-lived circuit with the service
+     2. The introduction point can break that circuit and cause the service to
+        rebuild it
+
+   See section 4 ("Discussion") for other impacts and open discussion
+   questions.
+
+2. Specification
+
+2.1. Picking introduction points for a service
+
+   Instead of picking HSDirs, hidden services pick their introduction points
+   using the same algorithm as defined in proposal 224 section 2.2 [HASHRING].
+
+   To be used as an introduction point, a relay must have the Stable flag in
+   the consensus and an uptime of at least twice the shared random period
+   defined in proposal 224 section 2.3.
+
+   This also specifies the lifetime of introduction points, since they will be
+   rotated with the change of time period and shared randomness.
+
+2.2. Hidden service sets up introduction points
+
+   After a hidden service has picked its intro points, it needs to establish
+   long-term introduction circuits to them and also send them an encrypted
+   descriptor that should be forwarded to potential clients. The descriptor
+   contains a service key that should be used by clients to encrypt the
+   INTRODUCE1 cell that will be sent to the hidden service. The encrypted parts
+   of the descriptor are encrypted with the symmetric keys specified in prop224
+   section [ENCRYPTED-DATA].
+
+2.2.1. Hidden service uploads a descriptor
+
+   Services post a descriptor by opening a directory stream with BEGIN_DIR, and
+   sending a HTTP POST request as described in proposal 224, section 2.2.4.
+
+   The relay must verify the signatures of the descriptor, and check whether it
+   is responsible for that blinded public key in the hash ring. Relays should
+   connect the descriptor to the circuit used to upload it, which will be
+   repurposed as the service introduction circuit. The descriptor does not need
+   to be cached by the introduction point after that introduction circuit has
+   closed.
+
+   It is unexpected and invalid to send more than one descriptor on the same
+   introduction circuit.
+
+2.2.2. Descriptor format
+
+   The format for the hidden service descriptor is as described in proposal 224
+   sections 2.4 and 2.5, with the following modifications:
+
+       * The "revision-counter" field is removed
+       * The introduction-point section is removed
+       * The "auth-key" field is removed
+       * The "enc-key legacy" field is removed
+       * The "enc-key ntor" field must be specified exactly once per descriptor
+
+   Unlike previous versions, the descriptor does not encode the entire list of
+   introduction points. The descriptor only contains a key for the particular
+   introduction point it was sent to.
+
+2.2.3. ESTABLISH_INTRO cell
+
+   When a hidden service is establishing a new introduction point, it sends the
+   ESTABLISH_INTRO cell, which is formatted as described by proposal 224
+   section 3.1.1, except for the following:
+
+   The AUTH_KEY_TYPE value 02 is changed to:
+
+     [02] -- Signing key certificate cross-certified with the blinded key, in
+             the same format as in the hidden service descriptor.
+
+   In this case, SIG is a signature of the cell with the signing key specified
+   in AUTH_KEY. The relay must verify this signature, as well as the
+   certification with the blinded key. The relay should also verify that it has
+   received a valid descriptor with this blinded key.
+
+   [XXX: Other options include putting only the blinded key, or only the
+   signing key in this cell. In either of these cases, we must look up the
+   descriptor to fully validate the contents, but we require the descriptor
+   to be present anyway. -special]
+
+   [XXX: What happens with the MAINT_INTRO process defined in proposal 224
+   section 3.1.3? -special]
+
+2.3. Client connection to a service
+
+   A client that wants to connect to a hidden service should first calculate
+   the responsible introduction points for the onion address as described in
+   section 2.1 above.
+
+   The client chooses one introduction point at random, builds a circuit, and
+   fetches the descriptor. Once it has received, verified, and decrypted the
+   descriptor, the client can use the same circuit to send the INTRODUCE1 cell.
+
+2.3.1. Client requests a descriptor
+
+   Clients can request a descriptor by opening a directory stream with
+   BEGIN_DIR, and sending a HTTP GET request as described in proposal 224,
+   section 2.2.4.
+
+   The client must verify the signatures of the descriptor, and decrypt the
+   encrypted portion to access the "enc-key". This key is used to encrypt the
+   contents of the INTRODUCE1 cell to the service.
+
+   Because the descriptor is specific to each introduction point, client-side
+   descriptor caching changes significantly. There is little point in caching
+   these descriptors, because they are inexpensive to request and will always
+   be available when a service-side introduction circuit is available. A client
+   that does caching must be prepared to handle INTRODUCE1 failures due to
+   rotated keys.
+
+2.3.2. Client sends INTRODUCE1
+
+   After requesting the descriptor, the client can use the same circuit to send
+   an INTRODUCE1 cell, which is forwarded to the service and begins the
+   rendezvous process.
+
+   The INTRODUCE1 cell is the same as proposal 224 section 3.2.1, except that
+   the AUTH_KEYID is the blinded public key, instead of the now-removed
+   introduction point authentication key.
+
+   The relay must permit this circuit to change purpose from the directory
+   request to a client or server introduction.
+
+3. Other changes to proposal 224
+
+3.1. Removing proposal 224 legacy relay support
+
+   Proposal 224 defines a process for using legacy relays as introduction
+   points; see section 3.1.2 [LEGACY_EST_INTRO], and 3.2.3 [LEGACY-INTRODUCE1].
+   With the changes to the introduction point in this proposals, it's no longer
+   possible to maintain support for legacy introduction points.
+
+   These sections of proposal 224 are removed, along with other references to
+   legacy introduction points and RSA introduction point keys. We will need to
+   handle the migration process to ensure that sufficient relays are available
+   as introduction points. See the discussion in section 4.1 for more details.
+
+3.2. Removing the "introduction point authentication key"
+
+   The "introduction point authentication key" defined in proposal 224 is
+   removed.  The "descriptor signing key" is used to sign descriptors and the
+   ESTABLISH_INTRO2 cell. Descriptors are unique for each introduction point,
+   and there is no point in generating a new key used only to sign the
+   ESTABLISH_INTRO2 cell.
+
+4. Discussion
+
+4.1. No backwards compatibility with legacy relays
+
+   By changing the introduction procedure in such a way, we are unable to
+   maintain backwards compatibility. That is, hidden services will be unable to
+   use old relays as their introduction points, and similarly clients will be
+   unable to introduce through old relays.
+
+   To maintain an adequate anonymity set of intro points, clients and hidden
+   services should perform this introduction method only after most relays have
+   upgraded. For this reason we introduce the consensus parameter
+   HSMergedIntroduction which controls whether hidden services should perform
+   this merged introduction or fall back to the old one.
+
+   [XXX: Do we? This sounds like we have to implement both in the client, which
+   I thought we wanted to avoid. An alternative is to make sure that the intro
+   point side is done early enough, and that clients know not to rely on the
+   security of 224 services until enough relays are upgraded and the
+   implementation is done. -special]
+
+4.2. Restriction on the number of intro points and impact on load balancing
+
+   One drawback of this proposal is that the number of introduction points of a
+   hidden service is now a constant global parameter. Hence, a hidden service
+   can no longer adjust how many introduction points it uses, or select the
+   nodes that will serve as its introduction points.
+
+   While bad, we don't consider this a major drawback since we don't believe
+   that introduction points are a significant bottleneck on hidden services
+   performance.
+
+   However, our system significantly impacts the way some load balancing
+   schemes for hidden services work. For example, onionbalance is a third-party
+   application that manages the introduction points of a hidden service in a
+   way that allows traffic load-balancing.  This is achieved by compiling a
+   master descriptor that mixes and matches the introduction points of
+   underlying hidden service instances.
+
+   With our system there are no descriptors that onionbalance can use to mix
+   and match introduction points. A variant of the onionbalance idea that could
+   work with our system would involve onionbalance starting a hidden service,
+   not establishing any intro points, and then ordering the underlying hidden
+   service load-balancing instances to establish intro points to all the right
+   introduction points.
+
+4.3. Behavior when introduction points go offline or misbehave
+
+   In this new system, it's the Tor network that decides which relays should be
+   used as the intro points of a hidden service for every time period. This
+   means, that a hidden service is forced to use those relays as intro points
+   if it wants clients to connect to it.
+
+   This brings up the topic of what should happen when the designated relays go
+   offline or refuse connections. Our behavior here should block guard
+   discovery attacks (as in #8239) while allowing maximum reachability for
+   clients.
+
+   We should also make sure that an adversary cannot manipulate the hash ring
+   in such a way that forces us to rotate introduction points quickly. This is
+   enforced by the uptime check that is necessary for acquiring the HSDir flag
+   (#8243).
+
+   For this reason we propose the following rules:
+
+    - After every consensus and when the blinded public key changes as a result
+      of the time period, hidden services need to recalculate their
+      introduction points and adjust themselves by establishing intro points to
+      the new relays.
+
+    - When an introduction point goes offline or drops connections, we attempt
+      to re-establish to it INTRO_RETRIES times per consensus. If the intro
+      point failed more than INTRO_RETRIES times for a consensus period, we
+      abandon it and stay with one less intro point.
+
+      If a new consensus is released and that relay is still listed as online,
+      then we reset our retry counter and start trying again.
+
+   [XXX: Is this crazy? -asn]
+   [XXX: INTRO_RETRIES = 3? -asn]
+
+4.4. Defining constants; how many introduction points for a service?
+
+   We keep the same intro point configuration as in proposal 224. That is, each
+   hidden service uses 6 relays and keeps them for a whole time period.
+
+   [XXX: Are these good constants? We don't have a chance to change them
+   in the future!! -asn]
+   [XXX: 224 makes them consensus parameters, which we can keep, but they
+   can still only be changed on a network-wide basis. -special]
+

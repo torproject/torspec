@@ -166,6 +166,7 @@ Proposals by number:
 243  Give out HSDir flag only to relays with Stable flag [OPEN]
 244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [DRAFT]
 245  Deprecating and removing the TAP circuit extension protocol [DRAFT]
+246  Merging Hidden Service Directories and Introduction Points [OPEN]
 
 
 Proposals by status:
@@ -224,9 +225,10 @@ Proposals by status:
    233  Making Tor2Web mode faster
    234  Adding remittance field to directory specification
    236  The move to a single guard node
-   237  All relays are directory servers [for 0.2.6.x]
+   237  All relays are directory servers [for 0.2.7.x]
    242  Better performance and usability for the MyFamily option
    243  Give out HSDir flag only to relays with Stable flag
+   246  Merging Hidden Service Directories and Introduction Points
  ACCEPTED:
    140  Provide diffs between consensuses
    172  GETINFO controller option for circuit information
