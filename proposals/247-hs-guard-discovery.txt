@@ -1,0 +1,221 @@
+Filename: 247-hs-guard-discovery.txt
+Title: Defending Against Guard Discovery Attacks using Vanguards
+Author: George Kadianakis
+Created: 2015-07-10
+Status: Draft
+
+0. Motivation
+
+  A guard discovery attack allow attackers to determine the guard
+  node of a Tor client. The hidden service rendezvous protocol
+  provides an attack vector for a guard discovery attack since anyone
+  can force an HS to construct a 3-hop circuit to a relay (#9001).
+
+  Following the guard discovery attack with a compromise or coercion
+  of the guard node can lead to the deanonymization of a hidden
+  service.
+
+1. Overview
+
+  This document tries to make the above guard discovery + coersion
+  attack harder to launch. It introduces an optional configuration
+  option which makes the hidden service also pin the second and third
+  hops of its circuits for a longer duration.
+
+  With this new path selection, we force the adversary to perform a
+  Sybil attack and two coercion attacks before succeeding.  This is
+  an improvement over the current state where the Sybil attack is
+  trivial to pull off, and only a single coercion attack is required.
+
+  With this new path selection, an attacker is forced to do a
+  coercion attack before learning the guard node of a hidden
+  service. This increases the uncertainty of the attacker, since he
+  will need to perform a coercion attack before he learns the
+  identity of the guard node and whether he can compromise
+  it. Coercion attacks are costly and potentially detectable, so an
+  attacker will have to think twice before beginning a chain of
+  coercion attacks that he might not be able to complete.
+
+1.1. Visuals
+
+  Here is how a hidden service rendezvous circuit currently looks like:
+
+	                 -> middle_1 -> middle_A
+		             -> middle_2 -> middle_B
+	                 -> middle_3 -> middle_C
+	                 -> middle_4 -> middle_D
+	   HS -> guard   -> middle_5 -> middle_E -> Rendezvous Point
+	                 -> middle_6 -> middle_F
+	                 -> middle_7 -> middle_G
+	                 -> middle_8 -> middle_H
+                     ->   ...    ->  ...
+                     -> middle_n -> middle_n
+
+  this proposal pins the two middles nodes to a much more restricted
+  set, as follows:
+
+                                  -> guard_3_A
+                                  -> guard_3_B
+       HS -> guard_1 -> guard_2_A -> guard_3_C -> Rendezvous Point
+                     -> guard_2_B -> guard_3_D
+                                  -> guard_3_E
+                                  -> guard_3_F
+
+2. Design
+
+  This feature requires the HiddenServiceGuardDiscovery torrc option
+  to be enabled.
+
+  When a hidden service picks its guard nodes, it also picks two
+  additional sets of guard nodes `second_guard_set` and
+  `third_guard_set` of size NUM_SECOND_GUARDS and NUM_THIRD_GUARDS
+  respectively.
+
+  When a hidden service needs to establish a circuit to an HSDir,
+  introduction point or a rendezvous point, it uses nodes from
+  `second_guard_set` as the second hop of the circuit and nodes from
+  `third_guard_set` as third hops of the circuit.
+
+  A hidden service rotates 'second_guard_set' every
+  SECOND_GUARD_ROTATION hours, and 'third_guard_set' every
+  THIRD_GUARD_ROTATION hours.
+
+  These extra guard nodes should be picked with the same path
+  selection procedure that is used for regular guard nodes. Care
+  should be taken such that guard sets do not share any common
+  relays. XXX or simply that they are not used in the same circuit?
+
+  XXX maybe pick the second and third layer guards from the set of
+      middle nodes but also enforce some kind of uptime requirement?
+      that should greatly help our load balancing.
+
+  XXX maybe we should also introduce consensus flags for the extra
+      guard layers? Vanguard?
+
+  XXX how should proposal 241 ("Resisting guard-turnover attacks") be
+      applied here?
+
+2.1. Security parameters
+
+  We set NUM_SECOND_GUARDS to 2 nodes and NUM_THIRD_GUARDS to 6 nodes.
+  We set SECOND_GUARD_ROTATION to 2 weeks and THIRD_GUARD_ROTATION to 1 day.
+
+  See the discussion section for more analysis on these constants.
+
+3. Discussion
+
+3.1 How were these security parameters chosen?
+
+  Consider an adversary with the following powers:
+
+     - Can launch a Sybil guard discovery attack against any node of a
+       rendezvous circuit. The slower the rotation period of the node,
+       the longer the attack takes.
+
+     - Can compromise any node on the network. We assume that the
+       adversary cannot compromise too many nodes, otherwise Tor's
+       security would be breached anyhow.
+
+  We now calculate the time it takes for the adversary to launch a
+  Sybil attack with 50% success assuming 5% network control. This
+  depends solely on how frequently the hidden service rotates that node:
+
+       +-------------------+-------------------------------+------------------------+----------------------------+
+       |  Rotation period  | Sybil attack with 50% success | Sybil attack (2 guards)|  Sybil attack (6 guards)   |
+       +-------------------+-------------------------------+------------------------+----------------------------+
+       |      1 hour       |        14 hours               |      7 hours           |       2.5 hours            |
+       |      1 day        |        14 days                |      7 days            |       2.5 days             |
+       |      1 week       |        3.5 months             |      6 weeks           |       2.5 weeks            |
+       |      2 weeks      |        7 months               |      3.5 months        |       5 weeks              |
+       |      1 month      |        1 year and 2 months    |      6 months          |       2.5 months           |
+       |      3 months     |        3.5 years              |      1.7 years         |       6 months             |
+       +-------------------+-------------------------------+------------------------+----------------------------+
+                                    Required time for Sybil attack by a 5% adversary
+
+  Our security parameters were selected so that the first two layers
+  of guards should be hard to attack using a Sybil guard discovery
+  attack and hence require a coercion attack. On the other hand, the
+  outmost layer of guards should rotate fast enough to _require_ a
+  Sybil attack.
+
+  XXX does this security model even make sense? what about a network
+      adversary, or an adversary that can launch congestion attacks
+      etc.????
+
+3.2. Distinguishing new HS circuits from normal HS circuits
+
+  By pinning the middle nodes of rendezvous circuits, we make it
+  easier for all hops of the circuit to detect that they are part of a
+  special hidden service circuit.
+  XXX hm how does the outermost guard knows?
+
+  Compare this to the current Tor network, where only the guard and
+  the third hop of the HS circuit can trivially distinguish whether
+  it's part of an HS circuit.
+
+3.3. Circuit nodes can now be linked to specific hidden services
+
+  With this proposal the hops of hidden service circuits will be
+  static, and hence an adversrary will be able to map them to specific
+  hidden services. For example, a middle node that sees two hidden
+  service circuits with the same guard node in different times, can
+  assume with non-negligible probability that both circuits correspond
+  to the same hidden service.
+
+  That said, this is also partially the case for the current Tor
+  network, where the middle node can associate a guard with a specific
+  hidden service.
+
+3.4 Why is the torrc setting disabled by default, if it's so good?
+
+  We suggest this torrc option to be optional because it puts
+  additional load on guard nodes and we are not sure if the network
+  will be able to handle it.
+
+  However, by having this setting be disabled by default, we make
+  hidden services who use it stand out a lot. For this reason, we
+  should eventually fix our hidden service circuit load balancing so
+  that we can enable this globally.
+
+  XXX But hidden services traffic is only 6% of the total network, so
+      maybe it's not that big of a problem and we should just enable
+      this feature by default anyway
+
+3.4.1. How should we load balance to enable this feature globally?
+
+  The load balancing issue with this feature is that hidden service
+  traffic that would otherwise be passing through middle nodes, will
+  now be passing through guard nodes.
+
+  Furthermore, this additional traffic is not accounted for in our
+  bandwidth weights. This means that a guard node that had 1%
+  probability of being chosen as a guard for normal circuits, will
+  still have the same probability of being chosen as a guard even
+  though the hidden service traffic that it pushes increases.
+
+  To improve the load balancing here, we could have each relay report
+  the amount of hidden service traffic it pushes every day (#15254),
+  and have the authorities take this into account when they calculate
+  bandwidth weights. The idea here would be that the dirauths would
+  know that N% of the network is hidden services traffic, hence they
+  would tweak the bandwidth weights such that guards would reserve
+  some N% of their bandwidth for hidden service purposes.
+
+4. Future directions
+
+  Here are some more ideas for improvements that should be done sooner
+  or later:
+
+  - Maybe we should make the size and rotation period of
+    secondary/third guard sets to be configurable by the user.
+
+  - To make it harder for an adversary, a hidden service MAY extend
+    the path length of its circuits by an additional static hop. This
+    forces the adversary to use another coercion attack to walk the
+    chain up to the hidden service.
+
+5. Acknowledgements
+
+ Thanks to Aaron Johnson, John Brooks, Mike Perry and everyone else
+ who helped with this idea.
+
