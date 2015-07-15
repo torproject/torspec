@@ -1,0 +1,88 @@
+Filename: 248-removing-rsa-identities.txt
+Title: Remove all RSA identity keys
+Authors: Nick Mathewson
+Created: 15 August 2015
+Status: Draft
+
+1. Summary
+
+   With 0.2.7.2-alpha, all relays will have Ed25519 identity keys.  Old
+   identity keys are 1024-bit RSA, which should not really be considered
+   adequate.  In proposal 220, we describe a migration path to start
+   using Ed25519 keys.  This proposal describes an additional migration
+   path, for finally removing our old Ed25519 keys.
+
+   See also proposal 245, which describes a migration path away from the
+   old TAP RSA1024-based circuit extension protocol.
+
+1.1. Steps of migration
+
+   Phase 1. Prepare for routers that do not advertise their RSA
+     identities, by teaching clients and relays and other dependent
+     software how to handle them.  Reject such routers at the authority
+     level.
+
+   Phase 2. Once all supported routers and clients are updated to phase
+     1, we can accept routers at the authority level which lack RSA
+     keys.
+
+   Phase 3. Once all authorities accept routers without RSA keys, we can
+     finally remove RSA keys from relays.
+
+2. Accepting descriptors without RSA identities
+
+   We make the following changes to the descriptor format:
+
+   If an ed25519 key and signature are present, then these elements may
+   be omitted: "fignerprint", "signing-key", "router-signature".  They
+   must either be all present or all absent.  If they are all absent,
+   then the router has no RSA identity key.
+
+   Authorities MUST NOT accept routers descriptors of this form in phase
+   1.
+
+3. Accepting handshakes without RSA identities
+
+   When performing a new version of our link handshake, only the Ed25519
+   key and certificates and authentication need to be performed.  If the
+   link handshake is performed this way, it is accepted as
+   authenticating the route with an ed25519 key but no RSA key.
+
+   A circuit extension EXTEND2 cell may contain an Ed25519 identity but
+   not an RSA identity.  In this case, the relay should connect the
+   circuit to any connection with the correct ed25519 identity,
+   regardless of RSA identity.  If an EXTEND2 cell contains an RSA
+   identity fingerprint, however, its the relay receiving it should not
+   connect to any relay that has a different RSA identity or that has no
+   identity, even if the Ed25519 identity does match.
+
+4. UI updates
+
+   In phase 1 we can update our UIs to refer to all relays that have
+   Ed25519 keys by their Ed25519 keys.  We can update our configuration
+   and control port interfaces so that they accept Ed keys as well as
+   RSA keys.
+
+   During phase 1, we should warn about identifying any dual-identity
+   relays by their Ed identity alone.
+
+   For backward compatibility, we should consider a default that refers
+   to referring to Ed25519 relays by the first 160 bits of their key.
+   This would allow many controller-based tools to work transparently
+   with the new key types.
+
+5. Changes to external tools
+
+   This is the big one.  We need a relatively comprehensive list of
+   tools we can break with the above changes.  Anything that refers to
+   relays by SHA1(RSA1024_id) will need to be able to remember and use
+   an Ed25519 key instead.
+
+5. Testing
+
+   Before going forward with phase 2 and phase 3, we need to verify that
+   we did phase 1 correctly.  To do so, we should create a small
+   temporary testing network, and verify that it works correctly as we
+   make the phase 2 and phase 3 changes.
+
+
