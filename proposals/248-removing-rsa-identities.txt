@@ -67,7 +67,7 @@ Status: Draft
    relays by their Ed identity alone.
 
    For backward compatibility, we should consider a default that refers
-   to referring to Ed25519 relays by the first 160 bits of their key.
+   to Ed25519 relays by the first 160 bits of their key.
    This would allow many controller-based tools to work transparently
    with the new key types.
 
@@ -75,8 +75,8 @@ Status: Draft
 
    This is the big one.  We need a relatively comprehensive list of
    tools we can break with the above changes.  Anything that refers to
-   relays by SHA1(RSA1024_id) will need to be able to remember and use
-   an Ed25519 key instead.
+   relays by SHA1(RSA1024_id) will need to be able to receive, store,
+   and use an Ed25519 key instead.
 
 5. Testing
 
