@@ -10,7 +10,7 @@ Status: Draft
    identity keys are 1024-bit RSA, which should not really be considered
    adequate.  In proposal 220, we describe a migration path to start
    using Ed25519 keys.  This proposal describes an additional migration
-   path, for finally removing our old Ed25519 keys.
+   path, for finally removing our old RSA identity keys.
 
    See also proposal 245, which describes a migration path away from the
    old TAP RSA1024-based circuit extension protocol.
