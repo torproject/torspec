@@ -1,7 +1,7 @@
 Filename: 248-removing-rsa-identities.txt
 Title: Remove all RSA identity keys
 Authors: Nick Mathewson
-Created: 15 August 2015
+Created: 15 July 2015
 Status: Draft
 
 1. Summary

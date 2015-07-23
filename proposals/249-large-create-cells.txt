@@ -1,0 +1,162 @@
+Filename: 249-large-create-cells.txt
+Title: Allow CREATE cells with >505 bytes of handshake data
+Authors: Nick Mathewson
+Created: 23 July 15
+Status: Draft
+
+1. Summary
+
+   There have been multiple proposals over the last year or so for
+   adding post-quantum cryptography to Tor's circuit extension
+   handshakes.  (See for example https://eprint.iacr.org/2015/008 or
+   https://eprint.iacr.org/2015/287 .) These proposals share the property
+   that the request and reply for a handshake message do not fit in a
+   single RELAY cell.
+
+   In this proposal I describe a new CREATE2V cell for handshakes that
+   don't fit in a 505-byte CREATE2 cell's HDATA section, and a means for
+   fragmenting these CREATE2V cells across multiple EXTEND2 cells.  I
+   also discuss replies, migration, and DoS-mitigation strategies.
+
+2. CREATE2V and CREATED2V
+
+   First, we add two variable-width cell types, CREATE2V and CREATED2V.
+
+   These cell formats are nearly the same as CREATE2 and CREATED2.  (Here
+   specified using Trunnel.)
+
+     struct create2v_cell_body {
+        /* Handshake type */
+        u16 htype;
+        /* Length of handshake data */
+        u16 hlen;
+        /* Handshake data */
+        u8 hdata[hlen];
+        /* Padding data to be ignored */
+        u8 ignored[];
+     };
+
+     struct created2v_cell_body {
+        /* Handshake replay length */
+        u16 hlen;
+        /* Handshake reply data */
+        u8 hdata[hlen];
+        /* Padding data to be ignored */
+        u8 ignored[];
+     };
+
+   The 'ignored' fields, which extend to the end of the variable-length
+   cells, are reserved.  Initiators MAY set them to any length, but MUST
+   fill them with zero-valued bytes.  Responders MUST ignore them,
+   regardless of what they contain.  When a CREATE2V cell is generated
+   in response to a set of EXTEND2 cells, these fields are set by the
+   relay that receives the EXTEND2 cells.
+
+   (The purpose of the 'ignored' fields here is future-proofing and
+   padding.)
+
+3. Fragmented EXTEND2 cells
+
+   Without changing the current EXTEND2 cell format, we change its
+   semantics:
+
+   If the 'HLEN' field in an EXTEND2 cell describes a handshake data
+   section that would be too long to fit in the EXTEND2 cell's payload,
+   the handshake data of the EXTEND2 cell is to be continued in one or
+   more subsequent EXTEND2 cells.  These subsequent cells MUST have zero
+   link specifiers, handshake type 0xFFFF, and handshake data length
+   field set to zero.
+
+   Similarly, if the 'HLEN' field in an EXTENDED2 cell would be too long
+   to fit into the EXTENDED2 cell's payload, the handshake reply data of
+   the EXTENDED2 cell is to be continued in one or more subsequent
+   EXTENDED2 cells.  These subsequent cells must have the handshake data
+   length field set to zero.
+
+   These cells must be sent on the circuit with no intervening cells.
+   If any intervening cells are received, the receiver SHOULD destroy
+   the circuit.
+
+4. Example
+
+   So for example, if we are a client, and we need to send a 2000-byte
+   handshake to extend a circuit from relay X to relay Y, we might send
+   cells as follows:
+
+      EXTEND2 {
+        nspec = 2;
+          { node ID for Y, taking 22 bytes. }
+          { node address for Y, taking 8 bytes }
+        htype = {whatever the handshake type is.}
+        hlen = 2000
+        hdata = { the first 462 bytes of the handshake }
+      }
+      EXTEND2 {
+        nspec = 0;
+        htype = 0xffff;
+        hlen = 0;
+        hdata = { the next 492 bytes of the handshake }
+      }
+      EXTEND2 {
+        nspec = 0;
+        htype = 0xffff;
+        hlen = 0;
+        hdata = { the next 492 bytes of the handshake }
+      }
+      EXTEND2 {
+        nspec = 0;
+        htype = 0xffff;
+        hlen = 0;
+        hdata = { the next 492 bytes of the handshake }
+      }
+      EXTEND2 {
+        nspec = 0;
+        htype = 0xffff;
+        hlen = 0;
+        hdata = { the final 62 bytes of the handshake }
+      }
+
+   Upon receiving this last cell, the relay X would send a create2v cell
+   to Y, containing the entire handshake.
+
+5. Migration
+
+   We can and should implement the EXTEND2 fragmentation feature before
+   we implement anything that uses it.  If we can get it widely deployed
+   before it's needed, we can use the new handshake types whenever both
+   of the involved relays support this proposal.
+
+   Clients MUST NOT sent fragmented EXTEND2 cells to relays that don't
+   support them, since this would cause them to close the circuit.
+
+   Relays MAY send CREATE2V and CREATED2V cells to relays that don't
+   support them, since unrecognized cell types are ignored.
+
+6. Resource management issues
+
+   This feature requires relays and clients to buffer EXTEND2 cell
+   bodies for incoming cells until the entire CREATE2V/CREATED2V body
+   has arrived.  To avoid memory-related denial-of-service attacks,
+   the buffers allocated for this data need to be counted against the
+   total data usage of the circuit.
+
+
+
+Appendix A. A rejected idea for migration
+
+   In section 5 above, I gave up on the idea of allowing relay A to
+   extend to relay B with a large CREATE cell when relay A does not
+   support this proposal.
+
+   There are other ways to do this, but they are impressively kludgey.
+   For example, we could have a fake CREATE cell for new handshake types
+   that always elicits a "yes, keep going!" CREATED cell.  Then the
+   client could send the rest of the handshake and receive the rest of
+   the CREATED cell as RELAY cells inside the circuit.
+
+   This design would add an extra round-trip to circuit extension
+   whenever it was used, however, and would violate a number of Tor's
+   assumptions about circuits (e.g., by having half-created circuits,
+   where authentication hasn't actually been performed).  So I'm
+   guessing we shouldn't do that.
+
