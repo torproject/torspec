@@ -2743,7 +2743,7 @@
              [SP DescriptorID] [SP "REASON=" Reason]
 
     Action =  "REQUESTED" / "UPLOAD" / "RECEIVED" / "UPLOADED" / "IGNORE" /
-              "FAILED"
+              "FAILED" / "CREATED"
     HSAddress = 16*Base32Character / "UNKNOWN"
     AuthType = "NO_AUTH" / "BASIC_AUTH" / "STEALTH_AUTH" / "UNKNOWN"
     HsDir = LongName / Fingerprint
