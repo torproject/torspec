@@ -170,6 +170,7 @@ Proposals by number:
 247  Defending Against Guard Discovery Attacks using Vanguards [DRAFT]
 248  Remove all RSA identity keys [DRAFT]
 249  Allow CREATE cells with >505 bytes of handshake data [DRAFT]
+250  Random Number Generation  During Tor Voting [DRAFT]
 
 
 Proposals by status:
@@ -200,6 +201,7 @@ Proposals by status:
    247  Defending Against Guard Discovery Attacks using Vanguards
    248  Remove all RSA identity keys
    249  Allow CREATE cells with >505 bytes of handshake data
+   250  Random Number Generation  During Tor Voting
  NEEDS-REVISION:
    131  Help users to verify they are using Tor
    190  Bridge Client Authorization Based on a Shared Secret
