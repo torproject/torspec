@@ -2740,7 +2740,7 @@
   The syntax is:
 
     "650" SP "HS_DESC" SP Action SP HSAddress SP AuthType SP HsDir
-             [SP DescriptorID] [SP "REASON=" Reason]
+             [SP DescriptorID] [SP "REASON=" Reason] [SP "REPLICA=" Replica]
 
     Action =  "REQUESTED" / "UPLOAD" / "RECEIVED" / "UPLOADED" / "IGNORE" /
               "FAILED" / "CREATED"
@@ -2773,6 +2773,9 @@
        - "UPLOAD_REJECTED" - descriptor was rejected by HS directory.
        - "NOT_FOUND" - HS descriptor with given identifier was not found.
        - "UNEXPECTED" - nature of failure is unknown.
+
+    If Action is "CREATED", Tor should send Replica field as well. The replica
+    field contains the replica number of the generated descriptor.
 
 4.1.26. HiddenService descriptors content
 
