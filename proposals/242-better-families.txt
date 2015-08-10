@@ -59,7 +59,7 @@ Status: Open
    When generating microdescriptors using a suitable consensus
    method, the authorities include a "family-keys" line if the
    underlying server descriptor contains any family-cert lines.
-   For reach family-cert in the server descriptor, they add a
+   For each family-cert in the server descriptor, they add a
    base-64-encoded string of that family-cert's signing key.
 
 6. Client behavior
