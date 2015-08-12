@@ -317,10 +317,6 @@
    VoteSeconds and DistSeconds MUST each be at least 20 seconds; FU-VA and
    VU-FU MUST each be at least 5 minutes.
 
-1.4. Terminology and preliminaries
-
-   
-
 2. Router operation and formats
 
 2.1. Uploading server descriptors and extra-info documents
@@ -519,6 +515,10 @@
 
        To compute the ed25519 public key corresponding to a
        curve25519 key, see appendix C.
+
+       This signature proves that the party creating the descriptor
+       had control over the secret key corresponding to the
+       ntor-onion-key.
 
     "signing-key" NL a public key in PEM format
 
@@ -1238,6 +1238,19 @@
    Finally, the authority MAY check that the router is not blacklisted
    because of its key, IP, or another reason.
 
+   An authority also keeps a record of all the Ed25519/RSA1024
+   identity key pairs that it has seen before.  It rejects any
+   descriptor that has a known Ed/RSA identity key that it has
+   already seen accompanied by a different RSA/Ed identity key
+   in an older descriptor.
+
+   At a future date, authorities will begin rejecting all
+   descriptors whose RSA key was previously accompanied by an
+   Ed25519 key, if the descriptor does not list and Ed25519 key.
+
+   At a future date, authorities will begin rejecting all descriptors
+   that do not list an Ed25519 key.
+
    If the descriptor passes these tests, and the authority does not already
    have a descriptor for a router with this public key, it accepts the
    descriptor and remembers it.
@@ -1262,6 +1275,7 @@
    and checks that its matches the extra-info-digest in some router
    descriptor that it believes is currently useful.  If so, it accepts it and
    stores it and serves it as requested.  If not, it drops it.
+
 
 3.3. Computing microdescriptors
 
@@ -2242,8 +2256,13 @@
         * is included in the result if some router status entry with the same
           identity is included by more than half of the authorities (total
           authorities, not just those whose votes we have).
+          (Consensus method earlier than 21)
 
-        * For any given identity, we include at most one router status entry.
+        * is included according to the rules in section 3.8.0.1 and
+          3.8.0.2 below. (Consensus method 21 or later)
+
+        * For any given RSA or Ed25519 identity, we include at most
+          one router status entry.
 
         * A router entry has a flag set if that is included by more than half
           of the authorities who care about that flag.
@@ -2329,6 +2348,36 @@
 
    All ties in computing medians are broken in favor of the smaller or
    earlier item.
+
+3.8.0.1. Deciding which Ids to include.
+
+  For each <id-Ed, id-RSA> that is listed by more than half of the total
+    authorities (not just total votes), include it.  (No other <id-Ed, id-RSA'>
+    can have as many votes.)
+
+  Log any other id-RSA values corresponding to an id-Ed we included, and any
+    other id-Ed values corresponding to an id-RSA we included.
+
+  For each <id-RSA> that is not yet included, if it is listed by more than
+    half of the total authorities, and we do not already have it listed with
+    some <id-Ed>, include it without an id-Ed.
+
+3.8.0.2 Deciding which descriptors to include
+
+   Deciding which descriptors to include.
+
+   A tuple belongs to an <id-RSA, id-Ed> identity if it is a new tuple that
+   matches both ID parts, or if it is an old tuple that matches the RSA part.
+   A tuple belongs to an <id-RSA> identity if its RSA identity matches.
+
+   A tuple matches another tuple if all the fields that are present in both
+   tuples are the same.
+
+   For every included identity, consider the tuples belonging to that
+   identity.  Group them into sets of matching tuples.  Include the tuple
+   that matches the largest set, breaking ties in favor of the most recently
+   published, and then in favor of the smaller server descriptor digest.
+
 
 3.8.1. Forward compatibility
 
