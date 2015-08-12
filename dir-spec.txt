@@ -317,6 +317,10 @@
    VoteSeconds and DistSeconds MUST each be at least 20 seconds; FU-VA and
    VU-FU MUST each be at least 5 minutes.
 
+1.4. Terminology and preliminaries
+
+   
+
 2. Router operation and formats
 
 2.1. Uploading server descriptors and extra-info documents
@@ -377,6 +381,28 @@
        number.  (At least one of DirPort and ORPort SHOULD be set;
        authorities MAY reject any descriptor with both DirPort and ORPort of
        0.)
+
+    "identity-ed25519" NL "-----BEGIN ED25519 CERT-----" NL certificate
+           "-----END ED25519 CERT-----" NL
+
+        [At most once, in second or first position in document]
+
+        The certificate is a base64-encoded Ed25519 certificate (see
+        cert-spec.txt) terminating =s removed.  When this element is
+        present, it MUST appear as the first or second element in
+        the router descriptor.
+
+        The certificate has CERT_TYPE of [04].  It must include a
+        signed-with-ed25519-key extension (see cert-spec.txt,
+        section 2.2.1), so that we can extract the master identity key.
+
+     "master-key-ed25519" SP MasterKey NL
+
+        [At most once]
+
+        Contains the base-64 encoded ed25519 master key as a single
+        argument.  If it is present, it MUST match the identity key
+        in the identity-ed25519 entry.
 
     "bandwidth" bandwidth-avg bandwidth-burst bandwidth-observed NL
 
@@ -446,21 +472,59 @@
        structure, encoded in base64, and wrapped in "-----BEGIN RSA PUBLIC
        KEY-----" and "-----END RSA PUBLIC KEY-----".
 
+    "onion-key-crosscert" NL a RSA signature in PEM format.
+
+       [At most once, required when identity-25519 is present]
+
+       This element contains an RSA signature, generated using the
+       onion-key, of the following:
+
+          A SHA1 hash of the identity key  [20 bytes]
+          The Ed25519 identity key [32 bytes]
+
+       If there is no ed25519 identity key, or if in some future version
+       there is no RSA identity key, the corresponding field must be
+       zero-filled.
+
+       Parties verifying this signature MUST allow additional data
+       beyond the 52 bytes listed above.
+
+       This signature proves that the party creating the descriptor
+       had control over the secret key corresponding to the
+       onion-key.
+
     "ntor-onion-key" base-64-encoded-key
 
        [At most once]
 
-       A public key used for the ntor circuit extended handshake.  It's the
-       standard encoding of the OR's curve25519 public key, encoded in base
-       64.  The trailing = sign may be omitted from the base64 encoding.  The
-       key MUST be accepted for at least 1 week after any new key is
-       published in a subsequent descriptor.
+       A curve25519 public key used for the ntor circuit extended
+       handshake.  It's the standard encoding of the OR's curve25519
+       public key, encoded in base 64.  The trailing = sign may be
+       omitted from the base64 encoding.  The key MUST be accepted
+       for at least 1 week after any new key is published in a
+       subsequent descriptor.
+
+    "ntor-onion-key-crosscert" SP Bit NL
+           "-----BEGIN ED25519 CERT-----" NL certificate
+           "-----END ED25519 CERT-----" NL
+
+       [At most once, required when identity-25519 is present]
+
+       A signature created with the ntor-onion-key, using the
+       certificate format documented in cert-spec.txt, with type
+       [0a].  The signed key here is the master identity key.
+
+       Bit must be "0" or "1".  It indicates the sign of the ed25519
+       public key corresponding to the ntor onion key.
+
+       To compute the ed25519 public key corresponding to a
+       curve25519 key, see appendix C.
 
     "signing-key" NL a public key in PEM format
 
        [Exactly once]
 
-       The OR's long-term identity key.  It MUST be 1024 bits.
+       The OR's long-term RSA identity key.  It MUST be 1024 bits.
 
        The encoding is as for "onion-key" above.
 
@@ -483,7 +547,26 @@
        An exit-policy summary as specified in sections 3.4.1 and 3.8.2,
        summarizing
        the router's rules for connecting to IPv6 addresses. A missing
-       "ipv6-policy" line is equivalent to "ipv6-policy reject 1-65535".
+       "ipv6-policy" line is equivalent to "ipv6-policy reject
+       1-65535".
+
+    "router-sig-ed25519" SP Signature NL
+
+       [At most once]
+
+       When an identity-ed25519 element is present, there must also
+       be a "router-sig-ed25519" element.  It MUST be the
+       next-to-last element in the descriptor, appearing immediately
+       before the RSA signature. It MUST contain an ed25519
+       signature of a SHA256 digest of the entire document, from the
+       first character up to and including the first space after the
+       "router-sig-ed25519" string, prefixed with the string "Tor
+       router descriptor signature v1".  Its format is:
+
+       The signature is encoded in Base64 with terminating =s remove.
+
+       The signing key in the identity-ed25519 certificate MUST
+       be the one used to sign the document.
 
     "router-signature" NL Signature NL
 
@@ -625,6 +708,9 @@
         Identifies what router this is an extra info descriptor for.
         Fingerprint is encoded in hex (using upper-case letters), with
         no spaces.
+
+    "identity-ed25519"
+        [As in router descriptors]
 
     "published" YYYY-MM-DD HH:MM:SS NL
 
@@ -1006,6 +1092,9 @@
         Pluggable transports are only relevant to bridges, but these entries
         can appear in non-bridge relays as well.
 
+    "router-sig-ed25519"
+        [As in router descriptors]
+
     "router-signature" NL Signature NL
         [At end, exactly once.]
 
@@ -1262,6 +1351,19 @@
 
         (Only included when generating microdescriptors for
         consensus-method 18 or later.)
+
+     "id" SP "ed25519" SP base64-encoded-ed25519-identity NL
+
+        [At most once]
+
+        The node's master Ed25519 identity key, base64 encoded,
+        without trailing =s.
+
+        Implementations MUST ignore "id" lines with unrecognized
+        key-types in place of "rsa1024" or "ed25519"
+
+        (Only included when generating microdescriptors for
+        consensus-method 21 or later.)
 
    (Note that with microdescriptors, clients do not learn the identity of
    their routers: they only learn a hash of the identity key.  This is all
@@ -1814,6 +1916,10 @@
         this algorithm.  "digest" is the base64 encoding of the hash of
         the router's microdescriptor with trailing =s omitted.
 
+     "id" SP "ed25519" SP ed25519-identity NL
+     "id" SP "ed25519" SP "none" NL
+        [vote only, at most once]
+
    The footer section is delineated in all votes and consensuses supporting
    consensus method 9 and above with the following:
 
@@ -2253,6 +2359,8 @@
      "18" -- Adds 'id' to microdescriptors.
      "19" -- Adds "package" lines to consensuses
      "20" -- Adds GuardFraction information to microdescriptors.
+     "21" -- Adds Ed25519 keys to microdescriptors and to voting
+            algorithm.
 
    Before generating a consensus, an authority must decide which consensus
    method to use.  To do this, it looks for the highest version number
@@ -3164,4 +3272,25 @@ B. General-use HTTP URLs
 
    [XXX Add new URLs for microdescriptors, consensus flavors, and
    microdescriptor consensus. -KL]
+
+C. Converting a curve25519 public key to an ed25519 public key
+
+   Given a curve25519 x-coordinate (u), we can get the y coordinate
+   of the ed25519 key using
+
+         y = (u-1)/(u+1)
+
+   and then we can apply the usual ed25519 point decompression
+   algorithm to find the x coordinate of the ed25519 point to check
+   signatures with.
+
+   Note that we need the sign of the X coordinate to do this
+   operation; otherwise, we'll have two possible X coordinates that
+   might have correspond to the key.  Therefore, we need the 'sign'
+   of the X coordinate, as used by the ed25519 key expansion
+   algorithm.
+
+   To get the sign, the easiest way is to take the same private key,
+   feed it to the ed25519 public key generation algorithm, and see
+   what the sign is.
 

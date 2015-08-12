@@ -1,0 +1,134 @@
+                    Ed25519 certificates in Tor
+
+1. Scope and Preliminaries
+
+   This document describes a certificate format that Tor uses for
+   its Ed25519 internal certificates.  It is not the only
+   certificate format that Tor uses.  For the certificates that
+   authorities use for their signing keys, see dir-spec.txt.
+   Additionally, Tor uses TLS, which depends on X.509 certificates;
+   see tor-spec.txt for details.
+
+   The certificates in this document were first introduced in
+   proposal 220, and were first supported by Tor in Tor version
+   0.2.7.2-alpha.
+
+1.1. Signing
+
+   All signatures here, unless otherwise specified, are computed
+   using an Ed25519 key.
+
+   In order to future-proof the format, before signing anything, the
+   signed document is prefixed with a personalization string, which
+   will be different in each case.
+
+2. Document formats
+
+2.1. Certificates
+
+   When generating a signing key, we also generate a certificate for it.
+   Unlike the certificates for authorities' signing keys, these
+   certificates need to be sent around frequently, in significant
+   numbers.  So we'll choose a compact representation.
+
+         VERSION         [1 Byte]
+         CERT_TYPE       [1 Byte]
+         EXPIRATION_DATE [4 Bytes]
+         CERT_KEY_TYPE   [1 byte]
+         CERTIFIED_KEY   [32 Bytes]
+         N_EXTENSIONS    [1 byte]
+         EXTENSIONS      [N_EXTENSIONS times]
+         SIGNATURE       [64 Bytes]
+
+   The "VERSION" field holds the value [01].  The "CERT_TYPE" field
+   holds a value depending on the type of certificate. (See appendix
+   A.1.) The CERTIFIED_KEY field is an Ed25519 public key if
+   CERT_KEY_TYPE is [01], or a SHA256 hash of some other key type
+   depending on the value of CERT_KEY_TYPE. The EXPIRATION_DATE is a
+   date, given in HOURS since the epoch, after which this
+   certificate isn't valid. (A four-byte field here will work fine
+   until 10136 A.D.)
+
+   The EXTENSIONS field contains zero or more extensions, each of
+   the format:
+
+         ExtLength [2 bytes]
+         ExtType   [1 byte]
+         ExtFlags  [1 byte]
+         ExtData   [Length bytes]
+
+   The meaning of the ExtData field in an extension is type-dependent.
+
+   The ExtFlags field holds flags; this flag is currently defined:
+
+      1 -- AFFECTS_VALIDATION. If this flag is present, then the
+           extension affects whether the certificate is valid; clients
+           must not accept the certificate as valid unless they
+           understand the extension.
+
+   It is an error for an extension to be truncated; such a
+   certificate is invalid.
+
+   Before processing any certificate, parties SHOULD know which
+   identity key it is supposed to be signed by, and then check the
+   signature.  The signature is formed by signing the first N-64
+   bytes of the certificate prefixed with the string "Tor node
+   signing key certificate v1".
+
+2.2. Basic extensions
+
+2.2.1. Signed-with-ed25519-key extension [type 04]
+
+   In several places, it's desirable to bundle the key signing a
+   certificate along with the certificate.  We do so with this
+   extension.
+
+        ExtLength = 32
+        ExtData =
+           An ed25519 key    [32 bytes]
+
+   When this extension is present, it MUST match the key used to
+   sign the certificate.
+
+A.1. List of certificate types
+
+   The values marked with asterisks are not types corresponding to
+   the certificate format of section 2.1.  Instead, they are
+   reserved for RSA-signed certificates to avoid conflicts between
+   the certificate type enumeration of the CERTS cell and the
+   certificate type enumeration of in our Ed25519 certificates.
+
+
+   **[00],[01],[02],[03] - Reserved to avoid conflict with types used
+          in CERTS cells.
+
+   [04] - signing a signing key with an identity key (Section 2.5)
+
+   [05] - TLS link certificate signed with ed25519 signing key
+         (Section 4.2)
+
+   [06] - Ed25519 authentication key signed with ed25519 signing key
+          (Section 4.2)
+
+   **[07] - reserved for RSA identity cross-certification (Section 4.2)
+
+   [0A] - ntor onion key cross-certifying ntor identity key
+
+A.2. List of extension types
+
+   [01] - signed-with-ed25519-key (section 2.2.1)
+
+A.3. List of signature prefixes
+
+   We describe various documents as being signed with a prefix. Here
+   are those prefixes:
+
+   "Tor node signing key certificate v1" (section 2.1)
+   "Tor router descriptor signature v1" (see dir-spec.txt)
+
+A.4. List of certified key types
+
+   [01] ed25519 key
+   [02] SHA256 hash of an RSA key
+   [03] SHA256 hash of an X.509 certificate
+

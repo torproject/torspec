@@ -132,7 +132,7 @@ A. Converting a curve25519 public key to an ed25519 public key
 
          y = (u-1)/(u+1)
 
-   and then we can apply the usual ed25519 point decomporession
+   and then we can apply the usual ed25519 point decompression
    algorithm to find the x coordinate of the ed25519 point to check
    signatures with.
 

@@ -142,9 +142,11 @@ see tor-design.pdf.
 
    Every Tor relay has multiple public/private keypairs:
 
+   These are 1024-bit RSA keys:
+
     - A long-term signing-only "Identity key" used to sign documents and
       certificates, and used to establish relay identity.
-    - A medium-term "Onion key" used to decrypt onion skins when accepting
+    - A medium-term TAP "Onion key" used to decrypt onion skins when accepting
       circuit extend attempts.  (See 5.1.)  Old keys MUST be accepted for at
       least one week after they are no longer advertised.  Because of this,
       relays MUST retain old keys for a while after they're rotated.
@@ -152,8 +154,28 @@ see tor-design.pdf.
       Tor implementations MAY rotate this key as often as they like, and
       SHOULD rotate this key at least once a day.
 
-   Tor relays are also identified by "nicknames"; these are specified in
-   dir-spec.txt.
+   This is Curve25519 key:
+
+    - A medium-term ntor "Onion key" used to handle onion key handshakes when
+      accepting incoming circuit extend requests.  As with TAP onion keys,
+      old ntor keys MUST be accepted for at least one week after they are no
+      longer advertised.  Because of this, relays MUST retain old keys for a
+      while after they're rotated.
+
+   These are Ed25519 keys:
+
+    - A long-term "master identity" key.  This key never
+      changes; it is used only to sign the "signing" key below.  It may be
+      kept offline.
+    - A medium-term "signing" key.  This key is signed by the master identity
+      key, and must be kept online.  A new one should be generated
+      periodically.
+    - A short-term "link authentication" key.  Not yet used.
+
+   The RSA identity key and Ed25519 master identity key together identify a
+   router uniquely.  Once a router has used an Ed25519 master identity key
+   together with a given RSA identity key, neither of those keys may ever be
+   used with a different key.
 
 2. Connections
 
