@@ -2,7 +2,7 @@ Filename: 228-cross-certification-onionkeys.txt
 Title: Cross-certifying identity keys with onion keys
 Author: Nick Mathewson
 Created: 25 February 2014
-Status: Open
+Status: Closed
 
 
 0. Abstract

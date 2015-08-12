@@ -3,11 +3,14 @@ Title: Migrate server identity keys to Ed25519
 Authors: Nick Mathewson
 Created: 12 August 2013
 Target: 0.2.x.x
-Status: Draft
+Status: Open
 
    [Note: This is a draft proposal; I've probably made some important
    mistakes, and there are parts that need more thinking.  I'm
    publishing it now so that we can do the thinking together.]
+
+   (Sections 0-3 are currently implemented, except for section 2.3.  Sections
+   4-8 are a work in progress.)
 
 0. Introduction
 
