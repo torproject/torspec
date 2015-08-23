@@ -140,7 +140,7 @@ Proposals by number:
 217  Tor Extended ORPort Authentication [FINISHED]
 218  Controller events to better understand connection/circuit usage [CLOSED]
 219  Support for full DNS and DNSSEC resolution in Tor [DRAFT]
-220  Migrate server identity keys to Ed25519 [DRAFT]
+220  Migrate server identity keys to Ed25519 [OPEN]
 221  Stop using CREATE_FAST [CLOSED]
 222  Stop sending client timestamps [CLOSED]
 223  Ace: Improved circuit-creation key exchange [OPEN]
@@ -148,7 +148,7 @@ Proposals by number:
 225  Strawman proposal: commit-and-reveal shared rng [DRAFT]
 226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS" [OPEN]
 227  Include package fingerprints in consensus documents [CLOSED]
-228  Cross-certifying identity keys with onion keys [OPEN]
+228  Cross-certifying identity keys with onion keys [CLOSED]
 229  Further SOCKS5 extensions [DRAFT]
 230  How to change RSA1024 relay identity keys [DRAFT]
 231  Migrating authority RSA1024 identity keys [DRAFT]
@@ -171,6 +171,7 @@ Proposals by number:
 248  Remove all RSA identity keys [DRAFT]
 249  Allow CREATE cells with >505 bytes of handshake data [DRAFT]
 250  Random Number Generation  During Tor Voting [DRAFT]
+251  Padding for netflow record resolution reduction [DRAFT]
 
 
 Proposals by status:
@@ -186,7 +187,6 @@ Proposals by status:
    195  TLS certificate normalization for Tor 0.2.4.x [for 0.2.4.x]
    203  Avoiding censorship by impersonating an HTTPS server
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
-   220  Migrate server identity keys to Ed25519 [for 0.2.x.x]
    224  Next-Generation Hidden Services in Tor
    225  Strawman proposal: commit-and-reveal shared rng
    229  Further SOCKS5 extensions
@@ -202,6 +202,7 @@ Proposals by status:
    248  Remove all RSA identity keys
    249  Allow CREATE cells with >505 bytes of handshake data
    250  Random Number Generation  During Tor Voting
+   251  Padding for netflow record resolution reduction
  NEEDS-REVISION:
    131  Help users to verify they are using Tor
    190  Bridge Client Authorization Based on a Shared Secret
@@ -227,9 +228,9 @@ Proposals by status:
    210  Faster Headless Consensus Bootstrapping [for 0.2.4.x+]
    211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
+   220  Migrate server identity keys to Ed25519 [for 0.2.x.x]
    223  Ace: Improved circuit-creation key exchange
    226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS"
-   228  Cross-certifying identity keys with onion keys
    233  Making Tor2Web mode faster
    234  Adding remittance field to directory specification
    236  The move to a single guard node
@@ -315,6 +316,7 @@ Proposals by status:
    221  Stop using CREATE_FAST [for 0.2.5.x]
    222  Stop sending client timestamps [in 0.2.4.18]
    227  Include package fingerprints in consensus documents [in 0.2.6.3-alpha]
+   228  Cross-certifying identity keys with onion keys
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration

@@ -1,0 +1,359 @@
+Filename: 251-netflow-padding.txt
+Title: Padding for netflow record resolution reduction
+Authors: Mike Perry
+Created: 20 August 2015
+Status: Draft
+
+
+0. Motivation
+
+ It is common practice by many ISPs to record data about the activity of
+ endpoints that use their uplink, if nothing else for billing purposes, but
+ sometimes also for monitoring for attacks and general failure.
+
+ Unfortunately, Tor node operators typically have no control over the data
+ recorded and retained by their ISP. They are often not even informed about
+ their ISP's retention policy, or the associated data sharing policy of those
+ records (which tends to be "give them to whoever asks" in practice[1]).
+
+ It is also likely that defenses for this problem will prove useful against
+ proposed data retention plans in the EU and elsewhere, since these schemes
+ will likely rely on the same technology.
+
+0.1. Background
+
+ At the ISP level, this data typically takes the form of Netflow, jFlow,
+ Netstream, or IPFIX flow records. These records are emitted by gateway
+ routers in a raw form and then exported (often over plaintext) to a
+ "collector" that either records them verbatim, or reduces their granularity
+ further[2].
+
+ Netflow records and the associated data collection and retention tools are
+ very configurable, and have many modes of operation, especially when
+ configured to handle high throughput. However, at ISP scale, per-flow records
+ are very likely to be employed, since they are the default, and also provide
+ very high resolution in terms of endpoint activity, second only to full packet
+ and/or header capture.
+
+ Per-flow records record the endpoint connection 5-tuple, as well as the
+ total number of bytes sent and received by that 5-tuple during a particular
+ time period. They can store additional fields as well, but it is primarily
+ timing and bytecount information that concern us.
+
+ When configured to provide per-flow data, routers emit these raw flow
+ records periodically for all active connections passing through them
+ based on two parameters: the "active flow timeout" and the "inactive
+ flow timeout".
+
+ The "active flow timeout" causes the router to emit a new record
+ periodically for every active TCP session that continuously sends data. The
+ default active flow timeout for most routers is 30 minutes, meaning that a
+ new record is created for every TCP session at least every 30 minutes, no
+ matter what. This value can be configured to be from 1 minute to 60 minutes
+ on major routers.
+
+ The "inactive flow timeout" is used by routers to create a new record if a
+ TCP session is inactive for some number of seconds. It allows routers to
+ avoid the need to track a large number of idle connections in memory, and
+ instead emit a separate record only when there is activity. This value
+ ranges from 10 seconds to 600 seconds on common routers. It appears as
+ though no routers support a value lower than 10 seconds.
+
+0.2. Default timeout values of major routers
+
+ For reference, here are default values and ranges (in parenthesis when
+ known) for common routers, along with citations to their manuals.
+
+ Some routers speak other collection protocols than Netflow, and in the
+ case of Juniper, use different timeouts for these protocols. Where this
+ is known to happen, it has been noted.
+
+                         Inactive Timeout              Active Timeout
+ Cisco IOS[3]              15s (10-600s)               30min (1-60min)
+ Cisco Catalyst[4]         5min                        32min
+ Juniper (jFlow)[5]        15s (10-600s)               30min (1-60min)
+ Juniper (Netflow)[6,7]    60s (10-600s)               30min (1-30min)
+ H3C (Netstream)[8]        60s (60-600s)               30min (1-60min)
+ Fortinet[9]               15s                         30min
+ MicroTik[10]              15s                         30min
+
+
+1. Proposal Overview
+
+ The combination of the active and inactive netflow record timeouts allow us
+ to devise a low-cost padding defense that causes what would otherwise be
+ split records to "collapse" at the router even before they are exported to
+ the collector for storage. So long as a connection transmits data before the
+ "inactive flow timeout" expires, then the router will continue to count the
+ total bytes on that flow before finally emitting a record at the "active
+ flow timeout".
+
+ This means that for a minimal amount of padding that prevents the "inactive
+ flow timeout" from expiring, it is possible to reduce the resolution of raw
+ per-flow netflow data to the total amount of bytes send and received in a 30
+ minute window. This is a vast reduction in resolution for HTTP, IRC, XMPP,
+ SSH, and other intermittent interactive traffic, especially when all
+ user traffic in that time period is multiplexed over a single connection
+ (as it is with Tor).
+
+
+2. Implementation
+
+ Tor clients currently maintain one TLS connection to their Guard node to
+ carry actual application traffic, and make up to 3 additional connections to
+ other nodes to retrieve directory information.
+
+ We propose to pad only the client's connection to the Guard node, and not
+ any other connection. We propose to treat Bridge node connections to the Tor
+ network as client connections, and pad them, but otherwise not pad between
+ normal relays.
+
+ Both clients and Guards will maintain a timer for all application (ie:
+ non-directory) TLS connections. Every time a non-padding packet is sent or
+ received by either end, that endpoint will sample a timeout value from
+ between 4 seconds and 14 seconds. If the connection becomes active for any
+ reason before this timer expires, the timer is reset to a new random value
+ between 4 and 14 seconds. If the connection remains inactive until the timer
+ expires, a single CELL_PADDING cell will be sent on that connection.
+
+ In this way, the connection will only be padded in the event that it is idle.
+
+2.1. Tunable parameters
+
+ We propose that the defense be controlled by the following consensus
+ parameters:
+
+   * nf_ito_low
+     - The low end of the range to send padding when inactive, in ms.
+     - Default: 4000
+   * nf_ito_high
+     - The high end of the range to send padding, in ms.
+     - Default: 14000
+
+   * nf_pad_relays
+     - If set to 1, we also pad inactive relay-to-relay connections
+     - Default: 0
+
+   * conn_timeout_low
+     - The low end of the range to decide when we should close an idle
+       connection (not counting padding).
+     - Default: 900 seconds after last circuit closes
+
+   * conn_timeout_high
+     - The high end of the range to decide when we should close an idle
+       connection.
+     - Default: 1800 seconds after last circuit close
+
+ If nf_ito_low == nf_ito_high == 0, padding will be disabled.
+
+2.2. Maximum overhead bounds
+
+ With the default parameters, we expect a padded connection to send one
+ padding cell every 8 seconds (see Appendix A for the statistical analysis of
+ expected padding packet rate on an idle link). This averages to 63 bytes per
+ second, assuming a 512 byte cell and 55 bytes of TLS+TCP+IP headers. For a
+ connection that remains idle for a full 30 minutes of inactivity, this is
+ about 112KB of overhead.
+
+ With 2.5M completely idle clients connected simultaneously, 63 bytes per
+ second still amounts to only 157MB/second network-wide, which is roughly
+ 1.5X the current amount of Tor directory traffic[11]. Of course, our 2.5M
+ daily users will neither be connected simultaneously, nor entirely idle,
+ so we expect the actual overhead to be much lower than this.
+
+ If we choose to set the range such it is no longer even possible to
+ configure an inactive timeout low enough such that a new record would be
+ generated, (for example: 6.5 to 9.5 seconds for an average of 8 seconds),
+ then the maximum possible overhead is 70 bytes/second, 125KB per connection,
+ and 175MB/sec network-wide.
+
+2.3. Measuring actual overhead
+
+ To measure the actual padding overhead in practice, we propose to export
+ the following statistics in extra-info descriptors for the previous (fixed,
+ non-rolling) 24 hour period:
+
+    * Total cells read (padding and non-padding)
+    * Total cells written (padding and non-padding)
+    * Total CELL_PADDING cells read
+    * Total CELL_PADDING cells written
+    * Total RELAY_COMMAND_DROP cells read
+    * Total RELAY_COMMAND_DROP cells written
+
+ These values will be rounded to 100 cells each, and no values are reported if
+ the relay has read or written less than 10000 cells in the previous period.
+
+ RELAY_COMMAND_DROP cells are circuit-level padding not used by this defense,
+ but we may as well start recording statistics about them now, too, to aid in
+ the development of future defenses.
+
+2.4. Load balancing considerations
+
+ Eventually, we will likely want to update the consensus weights to properly
+ load balance the selection of Guard nodes that must carry this overhead.
+
+ We propose that we use the extra-info documents to get a more accurate value
+ for the total average Guard and Guard+Exit node overhead of this defense in
+ practice, and then use that value to fractionally reduce the consensus
+ selection weights for Guard nodes and Guard+Exit nodes, to reflect their
+ reduced capacity relative to middle nodes.
+
+
+3. Threat model and adversarial considerations
+
+ This defense does not assume fully adversarial behavior on the part of the
+ upstream network administrator, as that administrator typically has no
+ specific interest in trying to deanonymize Tor, but only in monitoring their
+ own network for signs of overusage, attack, or failure.
+
+ Therefore, in a manner closer to the "honest but curious" threat model, we
+ assume that the netflow collector will be using standard equipment not
+ specifically tuned to capturing Tor traffic. We want to reduce the resolution
+ of logs that are collected incidentally, so that if they happen to fall into
+ the wrong hands, we can be more certain will not be useful.
+
+ We feel that this assumption is a fair one because correlation attacks (and
+ statistical attacks in general) will tend to accumulate false positives very
+ quickly if the adversary loses resolution at any observation points. It is
+ especially unlikely for the the attacker to benefit from only a few
+ high-resolution collection points while the remainder of the Tor network
+ is only subject to connection-level netflow configuration data retention,
+ or even less data retention than that.
+
+ Nonetheless, it is still worthwhile to consider what the adversary is capable
+ of, especially in light of looming data retention regulation.
+
+ Because no major router appears to have the ability to set the inactive
+ flow timeout below 10 seconds, it would seem as though the adversary is left
+ with three main options: reduce the active record timeout to the minimum (1
+ minute), begin logging full packet and/or header data, or develop a custom
+ solution.
+
+ It is an open question to what degree these approaches would help the
+ adversary, especially if only some of its observation points implemented
+ these changes.
+
+3.1 What about sampled data?
+
+ At scale, it is known that some Internet backbone routers at AS boundaries
+ and exchanges perform sampled packet header collection and/or produce
+ netflow records based on a subset of the packets that pass through their
+ infrastructure.
+
+ The effects of this against Tor were studied before against the (much
+ smaller) Tor network as it was in 2007[12]. At sampling rate of 1 out of
+ every 2000 packets, the attack did not achieve high accuracy until over
+ 100MB of data were transmitted, even when correlating only 500 flows in
+ a closed-world lab setting.
+
+ We suspect that this type of attack is unlikely to be effective at scale on
+ the Tor network today, but we make no claims that this defense will make any
+ impact upon sampled correlation, primarily because the amount of padding
+ that this defense introduces is comparatively low relative to the amount of
+ transmitted traffic that sampled correlation attacks require to attain
+ any accuracy.
+
+3.2. What about long-term statistical disclosure?
+
+ This defense similarly does not claim to defeat long-term correlation
+ attacks involving many observations over large amounts of time.
+
+ However, we do believe it will significantly increase the amount of traffic
+ and the number of independent observations required to attain the same
+ accuracy if the adversary uses default per-flow netflow records.
+
+3.3. What about prior information/confirmation?
+
+ In truth, the most dangerous aspect of these netflow logs is not actually
+ correlation at all, but confirmation.
+
+ If the adversary has prior information about the location of a target, and/or
+ when and how that target is expected to be using Tor, then the effectiveness
+ of this defense will be very situation-dependent (on factors such as the
+ number of other tor users in the area at that time, etc).
+
+ In any case, the odds that there is other concurrent activity (to
+ create a false positive) within a single 30 minute record are much higher
+ than the odds that there is concurrent activity that aligns with a
+ subset of a series of smaller, more frequent inactive timeout records.
+
+
+4. Synergistic effects with future padding and other changes
+
+ Because this defense only sends padding when the OR connection is completely
+ idle, it should still operate optimally when combined with other forms of
+ padding (such as padding for website traffic fingerprinting and hidden
+ service circuit fingerprinting). If those future defenses choose to send
+ padding for any reason at any layer of Tor, then this defense
+ automatically will not.
+
+ In addition to interoperating optimally with any future padding defenses,
+ simple changes to Tor network usage can serve to further reduce the
+ usefulness of any data retention, as well as reduce the overhead from this
+ defense.
+
+ For example, if all directory traffic were also tunneled through the main
+ Guard node instead of independent directory guards, then the adversary
+ would lose additional resolution in terms of the ability to differentiate
+ directory traffic from normal usage, especially when it is occurs within
+ the same netflow record. As written and specified, the defense will pad
+ such tunneled directory traffic optimally.
+
+ Similarly, if bridge guards[13] are implemented such that bridges use their
+ own guard node to route all of their connecting client traffic through, then
+ users who run bridges bridges will also benefit from the concurrent traffic of
+ their connected clients, which will also be optimally padded when it is
+ concurrent with their own.
+
+
+Appendix A: Padding Cell Timeout Distribution Statistics
+
+ It turns out that because the padding is bidirectional, and because both
+ endpoints are maintaining timers, this creates the situation where the time
+ before sending a padding packet in either direction is actually
+ min(client_timeout, server_timeout).
+
+ If client_timeout and server_timeout are uniformly sampled, then the
+ distribution of min(client_timeout,server_timeout) is no longer uniform, and
+ the resulting average timeout (Exp[min(X,X)]) is much lower than the
+ midpoint of the timeout range.
+
+ To compensate for this, instead of sampling each endpoint timeout uniformly,
+ we instead sample it from max(X,X), where X is uniformly distributed.
+
+ If X is a random variable uniform from 0..R-1 (where R=high-low), then the
+ random variable Y = max(X,X) has Prob(Y == i) = (2.0*i + 1)/(R*R).
+
+ Then, when both sides apply timeouts sampled from Y, the resulting
+ bidirectional padding packet rate is now third random variable:
+ Z = min(Y,Y).
+
+ The distribution of Z is slightly bell-shaped, but mostly flat around the
+ mean. It also turns out that Exp[Z] ~= Exp[X]. Here's a table of average
+ values for each random variable:
+
+    R      Exp[X]    Exp[Z]    Exp[min(X,X)]   Exp[Y=max(X,X)]
+    5000    2499.5    2662       1666.2           3332.8
+    6000    2999.5    3195       1999.5           3999.5
+    10000   4999.5    5328       3332.8           6666.2
+    15000   7499.5    7995       4999.5           9999.5
+    20000   9900.5    10661      6666.2           13332.8
+
+ In this way, we maintain the property that the midpoint of the timeout range
+ is the expected mean time before a padding packet is sent in either
+ direction.
+
+
+1. https://lists.torproject.org/pipermail/tor-relays/2015-August/007575.html
+2. https://en.wikipedia.org/wiki/NetFlow
+3. http://www.cisco.com/en/US/docs/ios/12_3t/netflow/command/reference/nfl_a1gt_ps5207_TSD_Products_Command_Reference_Chapter.html#wp1185203
+4. http://www.cisco.com/c/en/us/support/docs/switches/catalyst-6500-series-switches/70974-netflow-catalyst6500.html#opconf
+5. https://www.juniper.net/techpubs/software/erx/junose60/swconfig-routing-vol1/html/ip-jflow-stats-config4.html#560916
+6. http://www.jnpr.net/techpubs/en_US/junos15.1/topics/reference/configuration-statement/flow-active-timeout-edit-forwarding-options-po.html
+7. http://www.jnpr.net/techpubs/en_US/junos15.1/topics/reference/configuration-statement/flow-active-timeout-edit-forwarding-options-po.html
+8. http://www.h3c.com/portal/Technical_Support___Documents/Technical_Documents/Switches/H3C_S9500_Series_Switches/Command/Command/H3C_S9500_CM-Release1648%5Bv1.24%5D-System_Volume/200901/624854_1285_0.htm#_Toc217704193
+9. http://docs-legacy.fortinet.com/fgt/handbook/cli52_html/FortiOS%205.2%20CLI/config_system.23.046.html
+10. http://wiki.mikrotik.com/wiki/Manual:IP/Traffic_Flow
+11. https://metrics.torproject.org/dirbytes.html
+12. http://freehaven.net/anonbib/cache/murdoch-pet2007.pdf
+13. https://gitweb.torproject.org/torspec.git/tree/proposals/188-bridge-guards.txt
