@@ -381,7 +381,7 @@
     "identity-ed25519" NL "-----BEGIN ED25519 CERT-----" NL certificate
            "-----END ED25519 CERT-----" NL
 
-        [At most once, in second or first position in document]
+        [At most once, in second position in document.]
 
         The certificate is a base64-encoded Ed25519 certificate (see
         cert-spec.txt) terminating =s removed.  When this element is
@@ -1358,10 +1358,8 @@
         encoded, without trailing =s.  This line is included to prevent
         collisions between microdescriptors.
 
-        Implementations MUST ignore "id" lines with unrecognized
-        key-types in place of "rsa1024". Implementations SHOULD ignore
-        "id rsa1024" lines as well: they are added to microdescriptors
-        only to prevent collisions.
+        Implementations SHOULD ignore these lines: they are
+        added to microdescriptors only to prevent collisions.
 
         (Only included when generating microdescriptors for
         consensus-method 18 or later.)
@@ -1373,16 +1371,22 @@
         The node's master Ed25519 identity key, base64 encoded,
         without trailing =s.
 
-        Implementations MUST ignore "id" lines with unrecognized
-        key-types in place of "rsa1024" or "ed25519"
-
         (Only included when generating microdescriptors for
         consensus-method 21 or later.)
 
-   (Note that with microdescriptors, clients do not learn the identity of
-   their routers: they only learn a hash of the identity key.  This is all
-   they need to confirm the actual identity key when doing a TLS handshake,
-   and all they need to put the identity key digest in their CREATE cells.)
+     "id" SP keytype ... NL
+
+        [At most once per distinct keytype.]
+
+        Implementations MUST ignore "id" lines with unrecognized
+        key-types in place of "rsa1024" or "ed25519"
+
+
+   (Note that with microdescriptors, clients do not learn the RSA identity of
+   their routers: they only learn a hash of the RSA identity key.  This is
+   all they need to confirm the actual identity key when doing a TLS
+   handshake, and all they need to put the identity key digest in their
+   CREATE cells.)
 
 3.4. Exchanging votes
 
