@@ -1,0 +1,258 @@
+Filename: 252-single-onion.txt
+Title: Single Onion Services
+Author: John Brooks, Paul Syverson, Roger Dingledine
+Created: 2015-07-13
+Status: Draft
+
+1. Overview
+
+   Single onion services are a modified form of onion services, which trade
+   service-side location privacy for improved performance, reliability, and
+   scalability.
+
+   Single onion services have a .onion address identical to any other onion
+   service. The descriptor contains information sufficient to do a relay
+   extend of a circuit to the onion service and to open a stream for the onion
+   address. The introduction point and rendezvous protocols are bypassed for
+   these services.
+
+   We also specify behavior for a tor instance to publish a single onion
+   service, which requires a reachable OR port, without necessarily acting
+   as a public relay in the network.
+
+2. Motivation
+
+   Single onion services have a few benefits over double onion services:
+
+      * Connection latency is much lower by skipping rendezvous
+      * Stream latency is reduced on a 4-hop circuit
+      * Removing rendezvous circuits improves service scalability
+      * A single onion service can use multiple relays for load balancing
+
+   Single onion services are not location hidden on the service side,
+   but clients retain all of the benefits and privacy of onion
+   services. More details, relation to double onion services, and the
+   rationale for the 'single' and 'double' nomenclature are further
+   described in section 7.4.
+
+   We believe these improvements, along with the other benefits of onion
+   services, will be a significant incentive for website and other internet
+   service operators to provide these portals to preserve the privacy of their
+   users.
+
+3. Onion descriptors
+
+   The onion descriptor format is extended to add:
+
+     "service-extend-locations" NL encrypted-string
+       [At most once]
+
+       A list of relay extend info, which is used instead of introduction
+       points and rendezvous for single onion services. This field is
+       encoded and optionally encrypted in the same way as the
+       "introduction-points" field.
+
+       The encoded contents of this field contains no more than 10 entries,
+       each containing the following data:
+
+         "service-extend-location" SP link-specifiers NL
+            [At start, exactly once]
+            link-specifiers is a base64 encoded link specifier block, in
+            the format described by proposal 224 [BUILDING-BLOCKS] and the
+            EXTEND2 cell.
+
+          "onion-key" SP key-type NL onion-key
+            [Exactly once]
+            Describes the onion key that must be used when extending to the
+            single onion service relay.
+
+            The key-type field is one of:
+               "tap"
+                  onion-key is a PEM-encoded RSA relay onion key
+               "ntor"
+                  onion-key is a base64-encoded NTOR relay onion key
+
+   [XXX: Should there be some kind of cookie to prove that we have the desc?
+   See also section 7.1. -special]
+
+   A descriptor may contain either or both of "introduction-points" and
+   "service-extend-locations"; see section 5.2.
+
+   [XXX: What kind of backwards compatibility issues exist here? Will existing
+   relays accept one of those descriptors? -special]
+
+4. Reaching a single onion service as a client
+
+   Single onion services use normal onion hostnames, so the client will first
+   request the service's descriptor. If the descriptor contains a
+   "service-extend-locations" field, the client should ignore the introduction
+   points and rendezvous process in favor of the process defined here.
+
+   The descriptor's "service-extend-locations" information is sufficient for a
+   client to extend a circuit to the onion service, regardless of whether it
+   is also listed as a relay in the network consensus. This extend info must
+   not be used for any other purpose. If multiple extend locations are
+   specified, the client should randomly select one.
+
+   The client uses a 3-hop circuit to extend to the service location from the
+   descriptor. Once this circuit is built, the client sends a BEGIN cell to
+   the relay, with the onion address as hostname and the desired TCP port.
+
+   If the circuit or stream fails, the client should retry using another
+   extend location from the descriptor. If all extend locations fail, and the
+   descriptor contains an "introduction-points" field, the client may fall
+   back to a full rendezvous operation.
+
+5. Publishing a single onion service
+
+   To act as a single onion service, a tor instance (or cooperating group of
+   tor instances) must:
+
+      * Have a publicly accessible OR port
+      * Publish onion descriptors in the same manner as any onion service
+      * Include a "service-extend-locations" section in the onion descriptor
+      * Accept RELAY_BEGIN cells for the service as defined in section 5.3
+
+5.1. Configuration options
+
+   The tor server operating a single onion service must accept connections as
+   a tor relay, but is not required to be published in the consensus or to
+   allow extending circuits. To enable this, we propose the following
+   configuration option:
+
+      RelayAllowExtend 0|1
+         If set, allow clients to extend circuits from this relay. Otherwise,
+         refuse all extend cells. PublishServerDescriptor must also be disabled
+         if this option is disabled. If ExitRelay is also disabled, this relay
+         will not pass through any traffic.
+
+5.2. Publishing descriptors
+
+   A single onion service must publish descriptors in the same manner as any
+   onion service, as defined by rend-spec and section 3 of this proposal.
+
+   Optionally, a set of introduction points may be included in the descriptor
+   to provide backwards compatibility with clients that don't support single
+   onion services, or to provide a fallback when the extend locations fail.
+
+5.3. RELAY_BEGIN
+
+   When a RELAY_BEGIN cell is received with a configured single onion hostname
+   as the destination, the stream should be connected to the configured
+   backend server in the same manner as a service-side rendezvous stream.
+
+   All relays must reject any RELAY_BEGIN cell with an address ending in
+   ".onion" that does not match a locally configured single onion service.
+
+6. Other considerations
+
+6.1. Load balancing
+
+   High capacity services can distribute load by including multiple entries in
+   the "service-extend-locations" section of the descriptor, or by publishing
+   several descriptors to different onion service directories, or by a
+   combination of these methods.
+
+6.2. Benefits of also running a Tor relay
+
+   If a single onion service also acts as a published tor relay, it will keep
+   connections to many other tor relays. This can significantly reduce the
+   latency of connections to the single onion service, and also helps the tor
+   network.
+
+6.3. Proposal 224 ("Next-Generation Hidden Services")
+
+   This proposal is compatible with proposal 224, with small changes to the
+   service descriptor format. In particular:
+
+   The "service-extend-location" sections are included in the encrypted
+   portion of the descriptor, adjacent to any "introduction-point" sections.
+   The "service-extend-locations" field is no longer present. An onion service
+   is also single onion service if any "service-extend-location" field is
+   present.
+
+6.4. Proposal 246 ("Merging Hidden Service Directories and Intro Points")
+
+   This proposal is compatible with proposal 246. The onion service will
+   publish its descriptor to the introduction points in the same manner as any
+   other onion service. The client may choose to build a circuit to the
+   specified relays, or to continue with the rendezvous protocol.
+
+   The client should not extend from the introduction point to the single
+   onion service's relay, to avoid overloading the introduction point. The
+   client may truncate the circuit and extend through a new relay.
+
+7. Discussion
+
+7.1. Authorization
+
+   Client authorization for a single onion service is possible through
+   encryption of the service-extend-locations section in the descriptor, or
+   "stealth" publication under a new onion address, as with traditional onion
+   services.
+
+   One problem with this is that if you suspect a relay is also serving a
+   single onion service, you can connect to it and send RELAY_BEGIN without
+   any further authorization. To prevent this, we would need to include a
+   cookie from the descriptor in the RELAY_BEGIN information.
+
+7.2. Preventing relays from being unintentionally published
+
+   Many single onion servers will not want to relay other traffic, and will
+   set 'PublishServerDescriptor 0' to prevent it. Even when they do, they will
+   still generate a relay descriptor, which could be downloaded and published
+   to a directory authority without the relay's consent. To prevent this, we
+   should insert a field in the relay descriptor when PublishServerDescriptor
+   is disabled that instructs relays to never include it as part of a
+   consensus.
+
+   [XXX: Also see task #16564]
+
+7.3. Ephemeral single onion services (ADD_ONION)
+
+   The ADD_ONION control port command could be extended to support ephemerally
+   configured single onion services. We encourage this, but specifying its
+   behavior is out of the scope of this proposal.
+
+7.4. Onion service taxonomy and nomenclature
+
+   Onion services in general provide several benefits. First, by requiring a
+   connection via Tor they provide the client the protections of Tor and make
+   it much more difficult to inadvertently bypass those protections than when
+   connecting to a non .onion site.  Second, because .onion addresses are
+   self-authenticating, onion services have look-up, routing, and
+   authentication protections not provided by sites with standard domain
+   addresses. These benefits apply to all onion services.
+
+   Onion services as originally introduced also provide network location
+   hiding of the service itself: because the client only ever connects through
+   the end of a Tor circuit created by the onion service, the IP address of
+   the onion service also remains protected.
+
+   Applications and services already exist that use existing onion service
+   protocols for the above described general benefits without the need for
+   network location hiding. This Proposal is accordingly motivated by a desire
+   to provide the general benefits, without the complexity and overhead of
+   also protecting the location of the service.
+
+   Further, as with what had originally been called 'location hidden
+   services', there may be useful and valid applications of this design that
+   are not reflected in our current intent. Just as 'location hidden service'
+   is a misleading name for many current onion service applications, we prefer
+   a name that is descriptive of the system but flexible with respect to
+   applications of it. We also prefer a nomenclature that consistently works
+   for the different types of onion services.
+
+   It is also important to have short, simple names lest usage efficiencies
+   evolve easier names for us. For example, 'hidden service' has replaced the
+   original 'location hidden service' in Tor Proposals and other writings.
+
+   For these reasons, we have chosen 'onion services' to refer to both those
+   as set out in this Proposal and those with the client-side and server-side
+   protections of the original---also for referring indiscriminately to any
+   and all onion services. We use 'double-onion service' to refer to services
+   that join two Tor circuits, one from the server and one from the client. We
+   use 'single-onion' when referring to services that use only a client-side
+   Tor circuit. In speech we sometimes use the even briefer, 'two-nion' and
+   'one-ion' respectively.
+
