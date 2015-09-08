@@ -849,7 +849,8 @@
 
     "hs/service/desc/id/<ADDR>"
       Prints the content of the hidden service descriptor corresponding to
-      the given <ADDR> which is an onion address without the ".onion" part. The service's local descriptor cache is queried to find the descriptor.
+      the given <ADDR> which is an onion address without the ".onion" part.
+      The service's local descriptor cache is queried to find the descriptor.
       The format of the descriptor is described in section 1.3 of the
       rend-spec.txt document.
 
