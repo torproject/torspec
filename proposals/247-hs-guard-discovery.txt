@@ -1,6 +1,6 @@
 Filename: 247-hs-guard-discovery.txt
 Title: Defending Against Guard Discovery Attacks using Vanguards
-Author: George Kadianakis
+Authors: George Kadianakis and Mike Perry
 Created: 2015-07-10
 Status: Draft
 
@@ -11,211 +11,712 @@ Status: Draft
   provides an attack vector for a guard discovery attack since anyone
   can force an HS to construct a 3-hop circuit to a relay (#9001).
 
-  Following the guard discovery attack with a compromise or coercion
-  of the guard node can lead to the deanonymization of a hidden
-  service.
+  Following the guard discovery attack with a compromise and/or
+  coercion of the guard node can lead to the deanonymization of a
+  hidden service.
 
 1. Overview
 
-  This document tries to make the above guard discovery + coersion
+  This document tries to make the above guard discovery + compromise
   attack harder to launch. It introduces an optional configuration
   option which makes the hidden service also pin the second and third
   hops of its circuits for a longer duration.
 
   With this new path selection, we force the adversary to perform a
-  Sybil attack and two coercion attacks before succeeding.  This is
+  Sybil attack and two compromise attacks before succeeding. This is
   an improvement over the current state where the Sybil attack is
-  trivial to pull off, and only a single coercion attack is required.
+  trivial to pull off, and only a single compromise attack is required.
 
-  With this new path selection, an attacker is forced to do a
-  coercion attack before learning the guard node of a hidden
-  service. This increases the uncertainty of the attacker, since he
-  will need to perform a coercion attack before he learns the
-  identity of the guard node and whether he can compromise
-  it. Coercion attacks are costly and potentially detectable, so an
-  attacker will have to think twice before beginning a chain of
-  coercion attacks that he might not be able to complete.
+  With this new path selection, an attacker is forced to do a one or
+  more node compromise attacks before learning the guard node of a hidden
+  service. This increases the uncertainty of the attacker, since
+  compromise attacks are costly and potentially detectable, so an
+  attacker will have to think twice before beginning a chain of node
+  compromise attacks that he might not be able to complete.
 
 1.1. Visuals
 
   Here is how a hidden service rendezvous circuit currently looks like:
 
-	                 -> middle_1 -> middle_A
-		             -> middle_2 -> middle_B
-	                 -> middle_3 -> middle_C
-	                 -> middle_4 -> middle_D
-	   HS -> guard   -> middle_5 -> middle_E -> Rendezvous Point
-	                 -> middle_6 -> middle_F
-	                 -> middle_7 -> middle_G
-	                 -> middle_8 -> middle_H
+                     -> middle_1 -> middle_A
+                     -> middle_2 -> middle_B
+                     -> middle_3 -> middle_C
+                     -> middle_4 -> middle_D
+       HS -> guard   -> middle_5 -> middle_E -> Rendezvous Point
+                     -> middle_6 -> middle_F
+                     -> middle_7 -> middle_G
+                     -> middle_8 -> middle_H
                      ->   ...    ->  ...
                      -> middle_n -> middle_n
 
   this proposal pins the two middles nodes to a much more restricted
   set, as follows:
 
-                                  -> guard_3_A
-                                  -> guard_3_B
-       HS -> guard_1 -> guard_2_A -> guard_3_C -> Rendezvous Point
-                     -> guard_2_B -> guard_3_D
-                                  -> guard_3_E
-                                  -> guard_3_F
+                                  -> guard_3A_A
+                     -> guard_2_A -> guard_3A_B
+                                  -> guard_3A_C -> Rendezvous Point
+       HS -> guard_1
+                                  -> guard_3B_D
+                     -> guard_2_B -> guard_3B_E
+                                  -> guard_3B_F -> Rendezvous Point
+
+
+  Note that the third level guards are partitioned into buckets such that
+  they are only used with one specific second-level guard. In this way,
+  we ensure that even if an adversary is able to execute a Sybil attack
+  against the third layer, they only get to learn one of the second-layer
+  Guards, and not all of them. This prevents the adversary from gaining
+  the ability to take their pick of the weakest of the second-level
+  guards for further attack.
 
 2. Design
 
   This feature requires the HiddenServiceGuardDiscovery torrc option
   to be enabled.
 
-  When a hidden service picks its guard nodes, it also picks two
-  additional sets of guard nodes `second_guard_set` and
-  `third_guard_set` of size NUM_SECOND_GUARDS and NUM_THIRD_GUARDS
-  respectively.
+  When a hidden service picks its guard nodes, it also picks an
+  additional NUM_SECOND_GUARDS-sized set of middle nodes for its
+  `second_guard_set`. For each of those middle layer guards, it
+  picks NUM_THIRD_GUARDS that will be used only with a specific
+  middle node. These sets are unique to each hidden service created
+  by a single Tor client, and must be kept separate and distinct.
 
   When a hidden service needs to establish a circuit to an HSDir,
   introduction point or a rendezvous point, it uses nodes from
   `second_guard_set` as the second hop of the circuit and nodes from
-  `third_guard_set` as third hops of the circuit.
+  that second hop's corresponding `third_guard_set` as third hops of
+  the circuit.
 
-  A hidden service rotates 'second_guard_set' every
-  SECOND_GUARD_ROTATION hours, and 'third_guard_set' every
-  THIRD_GUARD_ROTATION hours.
+  A hidden service rotates nodes from the 'second_guard_set' at a random
+  time between MIN_SECOND_GUARD_LIFETIME hours and
+  MAX_SECOND_GUARD_LIFETIME hours.
 
-  These extra guard nodes should be picked with the same path
-  selection procedure that is used for regular guard nodes. Care
-  should be taken such that guard sets do not share any common
-  relays. XXX or simply that they are not used in the same circuit?
+  A hidden service rotates nodes from the 'third_guard_set' at a random
+  time between MIN_THIRD_GUARD_LIFETIME and MAX_THIRD_GUARD_LIFETIME
+  hours.
 
-  XXX maybe pick the second and third layer guards from the set of
-      middle nodes but also enforce some kind of uptime requirement?
-      that should greatly help our load balancing.
+  These extra guard nodes should be picked with the same path selection
+  procedure that is used for regular middle nodes (though see Section 4.3
+  and Section 5.1 for reasons to restrict this slightly beyond the current
+  path selection rules).
 
-  XXX maybe we should also introduce consensus flags for the extra
-      guard layers? Vanguard?
+  Each node's rotation time is tracked independently, to avoid disclosing
+  the rotation times of the primary and second-level guards.
 
   XXX how should proposal 241 ("Resisting guard-turnover attacks") be
       applied here?
 
 2.1. Security parameters
 
-  We set NUM_SECOND_GUARDS to 2 nodes and NUM_THIRD_GUARDS to 6 nodes.
-  We set SECOND_GUARD_ROTATION to 2 weeks and THIRD_GUARD_ROTATION to 1 day.
+  We set NUM_SECOND_GUARDS to 4 nodes and NUM_THIRD_GUARDS to 4 nodes (ie
+  four sets of four). However, see Section 5.2 for some performance
+  versus security tradeoffs and discussion.
 
-  See the discussion section for more analysis on these constants.
+  We set MIN_SECOND_GUARD_LIFETIME to 1 day, and
+  MAX_SECOND_GUARD_LIFETIME to 32 days inclusive, for an average rotation
+  rate of ~11 days, using the min(X,X) distribution specified in Section
+  3.2.3.
 
-3. Discussion
+  We set MIN_THIRD_GUARD_LIFETIME to 1 hour, and
+  MAX_THIRD_GUARD_LIFETIME to 18 hours inclusive, for an average rotation
+  rate of ~12 hours, using the max(X,X) distribution specified in Section
+  3.2.3.
 
-3.1 How were these security parameters chosen?
+  The above parameters should be configurable in the Tor consensus and
+  torrc.
+
+  See Section 3 for more analysis on these constants.
+
+
+3. Rationale and Security Parameter Selection
+
+3.1. Threat model, Assumptions, and Goals
 
   Consider an adversary with the following powers:
 
      - Can launch a Sybil guard discovery attack against any node of a
        rendezvous circuit. The slower the rotation period of the node,
-       the longer the attack takes.
+       the longer the attack takes. Similarly, the higher the percentage
+       of the network is compromised, the faster the attack runs.
 
-     - Can compromise any node on the network. We assume that the
-       adversary cannot compromise too many nodes, otherwise Tor's
-       security would be breached anyhow.
+     - Can compromise any node on the network, but this compromise takes
+       time and potentially even coercive action, and also carries risk
+       of discovery.
 
-  We now calculate the time it takes for the adversary to launch a
-  Sybil attack with 50% success assuming 5% network control. This
-  depends solely on how frequently the hidden service rotates that node:
+  We also make the following assumptions about the types of attacks:
 
-       +-------------------+-------------------------------+------------------------+----------------------------+
-       |  Rotation period  | Sybil attack with 50% success | Sybil attack (2 guards)|  Sybil attack (6 guards)   |
-       +-------------------+-------------------------------+------------------------+----------------------------+
-       |      1 hour       |        14 hours               |      7 hours           |       2.5 hours            |
-       |      1 day        |        14 days                |      7 days            |       2.5 days             |
-       |      1 week       |        3.5 months             |      6 weeks           |       2.5 weeks            |
-       |      2 weeks      |        7 months               |      3.5 months        |       5 weeks              |
-       |      1 month      |        1 year and 2 months    |      6 months          |       2.5 months           |
-       |      3 months     |        3.5 years              |      1.7 years         |       6 months             |
-       +-------------------+-------------------------------+------------------------+----------------------------+
-                                    Required time for Sybil attack by a 5% adversary
+  1. A Sybil attack is observable by both people monitoring the network
+     for large numbers of new nodes, as well as vigilant hidden service
+     operators. It will require either large amounts of traffic sent
+     towards the hidden service, multiple test circuits, or both.
 
-  Our security parameters were selected so that the first two layers
-  of guards should be hard to attack using a Sybil guard discovery
-  attack and hence require a coercion attack. On the other hand, the
-  outmost layer of guards should rotate fast enough to _require_ a
-  Sybil attack.
+  2. A Sybil attack against the second or first layer Guards will be
+     more noisy than a Sybil attack against the third layer guard, since the
+     second and first layer Sybil attack requires a timing side channel in
+     order to determine success, where as the Sybil success is almost
+     immediately obvious to third layer guard, since it will be instructed
+     to connect to a cooperating malicious rend point by the adversary.
 
-  XXX does this security model even make sense? what about a network
-      adversary, or an adversary that can launch congestion attacks
-      etc.????
+  3. As soon as the adversary is confident they have won the Sybil attack,
+     an even more aggressive circuit building attack will allow them to
+     determine the next node very fast (an hour or less).
 
-3.2. Distinguishing new HS circuits from normal HS circuits
+  4. The adversary is strongly disincentivized from compromising nodes that
+     may prove useless, as node compromise is even more risky for the
+     adversary than a Sybil attack in terms of being noticed.
+
+  Given this threat model, our security parameters were selected so that
+  the first two layers of guards should be hard to attack using a Sybil
+  guard discovery attack and hence require a node compromise attack. Ideally,
+  we want the node compromise attacks to carry a non-negligible probability of
+  being useless to the adversary by the time they complete.
+
+  On the other hand, the outermost layer of guards should rotate fast enough to
+  _require_ a Sybil attack.
+
+3.2. Parameter Tuning
+
+3.2.1. Sybil rotation counts for a given number of Guards
+
+  The probability of Sybil success for Guard discovery can be modeled as
+  the probability of choosing 1 or more malicious middle nodes for a
+  sensitive circuit over some period of time.
+
+  P(At least 1 bad middle) = 1 - P(All Good Middles)
+                           = 1 - P(One Good middle)^(num_middles)
+                           = 1 - (1 - c/n)^(num_middles)
+
+  c/n is the adversary compromise percentage
+
+  In the case of Vanguards, num_middles is the number of Guards you rotate
+  through in a given time period. This is a function of the number of vanguards
+  in that position (v), as well as the number of rotations (r).
+
+  P(At least one bad middle) = 1 - (1 - c/n)^(v*r)
+
+  Here's detailed tables in terms of the number of rotations required for
+  a given Sybil success rate for certain number of guards.
+
+  1.0% Network Compromise:
+   Sybil Success   One   Two  Three  Four  Five  Six  Eight  Nine  Ten  Twelve  Sixteen
+    10%            11     6     4     3     3     2     2     2     2     1       1
+    15%            17     9     6     5     4     3     3     2     2     2       2
+    25%            29    15    10     8     6     5     4     4     3     3       2
+    50%            69    35    23    18    14    12     9     8     7     6       5
+    60%            92    46    31    23    19    16    12    11    10     8       6
+    75%           138    69    46    35    28    23    18    16    14    12       9
+    85%           189    95    63    48    38    32    24    21    19    16      12
+    90%           230   115    77    58    46    39    29    26    23    20      15
+    95%           299   150   100    75    60    50    38    34    30    25      19
+    99%           459   230   153   115    92    77    58    51    46    39      29
+
+  5.0% Network Compromise:
+   Sybil Success   One   Two  Three  Four  Five  Six  Eight  Nine  Ten  Twelve  Sixteen
+    10%             3     2     1     1     1     1     1     1     1     1       1
+    15%             4     2     2     1     1     1     1     1     1     1       1
+    25%             6     3     2     2     2     1     1     1     1     1       1
+    50%            14     7     5     4     3     3     2     2     2     2       1
+    60%            18     9     6     5     4     3     3     2     2     2       2
+    75%            28    14    10     7     6     5     4     4     3     3       2
+    85%            37    19    13    10     8     7     5     5     4     4       3
+    90%            45    23    15    12     9     8     6     5     5     4       3
+    95%            59    30    20    15    12    10     8     7     6     5       4
+    99%            90    45    30    23    18    15    12    10     9     8       6
+
+  10.0% Network Compromise:
+   Sybil Success   One   Two  Three  Four  Five  Six  Eight  Nine  Ten  Twelve  Sixteen
+    10%             2     1     1     1     1     1     1     1     1     1       1
+    15%             2     1     1     1     1     1     1     1     1     1       1
+    25%             3     2     1     1     1     1     1     1     1     1       1
+    50%             7     4     3     2     2     2     1     1     1     1       1
+    60%             9     5     3     3     2     2     2     1     1     1       1
+    75%            14     7     5     4     3     3     2     2     2     2       1
+    85%            19    10     7     5     4     4     3     3     2     2       2
+    90%            22    11     8     6     5     4     3     3     3     2       2
+    95%            29    15    10     8     6     5     4     4     3     3       2
+    99%            44    22    15    11     9     8     6     5     5     4       3
+
+  The rotation counts in these tables were generated with:
+     def num_rotations(c, v, success):
+       r = 0
+       while 1-math.pow((1-c), v*r) < success: r += 1
+       return r
+
+3.2.2. Rotation Period
+
+  As specified in Section 3.1, the primary driving force for the third
+  layer selection was to ensure that these nodes rotate fast enough that
+  it is not worth trying to compromise them, because it is unlikely for
+  compromise to succeed and yield useful information before the nodes stop
+  being used. For this reason we chose 1 to 18 hours, with a weighted
+  distribution (Section 3.2.3) causing the expected average to be 12 hours.
+
+  From the table in Section 3.2.1, with NUM_SECOND_GUARDS=4 and
+  NUM_THIRD_GUARDS=4, it can be seen that this means that the Sybil attack
+  will complete with near-certainty (99%) in 29*12 hours (14.5 days) for
+  the 1% adversary, 3 days for the 5% adversary, and 1.5 days for the 10%
+  adversary.
+
+  Since rotation of each node happens independently, the distribution of
+  when the adversary expects to win this Sybil attack in order to discover
+  the next node up is uniform. This means that on average, the adversary
+  should expect that half of the rotation period of the next node is already
+  over by the time that they win the Sybil.
+
+  With this fact, we choose our range and distribution for the second
+  layer rotation to be short enough to cause the adversary to risk
+  compromising nodes that are useless, yet long enough to require a
+  Sybil attack to be noticeable in terms of client activity. For this
+  reason, we choose a minimum second-layer guard lifetime of 1 day,
+  since this gives the adversary a minimum expected value of 12 hours for
+  during which they can compromise a guard before it might be rotated.
+  If the total expected rotation rate is 11 days, then the adversary can
+  expect overall to have 5.5 days remaining after completing their Sybil
+  attack before a second-layer guard rotates away.
+
+3.2.3. Rotation distributions
+
+  In order to skew the distribution of the third layer guard towards
+  higher values, we use max(X,X) for the distribution, where X is a
+  random variable that takes on values from the uniform distribution.
+
+  In order to skew the distribution of the second layer guard towards
+  low values (to increase the risk of compromising useless nodes) we
+  skew the distribution towards lower values, using min(X,X).
+
+  Here's a table of expectation (arithmetic means) for relevant
+  ranges of X (sampled from 0..N-1). The table was generated with the
+  following python functions:
+
+  def ProbMinXX(N, i): return (2.0*(N-i)-1)/(N*N)
+  def ProbMaxXX(N, i): return (2.0*i+1)/(N*N)
+
+  def ExpFn(N, ProbFunc):
+    exp = 0.0
+    for i in xrange(N): exp += i*ProbFunc(N, i)
+    return exp
+
+  The current choice for second-layer guards is noted with **, and
+  the current choice for third-layer guards is noted with ***.
+
+   Range  Exp[Min(X,X)]   Exp[Max(X,X)]
+   10        2.85            6.15
+   11        3.18            6.82
+   12        3.51            7.49
+   13        3.85            8.15
+   14        4.18            8.82
+   15        4.51            9.49
+   16        4.84            10.16
+   17        5.18            10.82***
+   18        5.51            11.49
+   19        5.84            12.16
+   20        6.18            12.82
+   21        6.51            13.49
+   22        6.84            14.16
+   23        7.17            14.83
+   24        7.51            15.49
+   25        7.84            16.16
+   26        8.17            16.83
+   27        8.51            17.49
+   28        8.84            18.16
+   29        9.17            18.83
+   30        9.51            19.49
+   31        9.84            20.16
+   32        10.17**         20.83
+   33        10.51           21.49
+   34        10.84           22.16
+   35        11.17           22.83
+   36        11.50           23.50
+   37        11.84           24.16
+   38        12.17           24.83
+   39        12.50           25.50
+
+  The Cumulative Density Function (CDF) tells us the probability that a
+  guard will no longer be in use after a given number of time units have
+  passed.
+
+  Because the Sybil attack on the third node is expected to complete at any
+  point in the second node's rotation period with uniform probability, if we
+  want to know the probability that a second-level Guard node will still be in
+  use after t days, we first need to compute the probability distribution of
+  the rotation duration of the second-level guard at a uniformly random point
+  in time. Let's call this P(R=r).
+
+  For P(R=r), the probability of the rotation duration depends on the selection
+  probability of a rotation duration, and the fraction of total time that
+  rotation is likely to be in use. This can be written as:
+
+  P(R=r) = ProbMinXX(X=r)*r / \sum_{i=1}^N ProbMinXX(X=i)*i
+
+  or in Python:
+
+  def ProbR(N, r, ProbFunc=ProbMinXX):
+     return ProbFunc(N, r)*r/ExpFn(N, ProbFunc)
+
+  For the full CDF, we simply sum up the fractional probability density for
+  all rotation durations. For rotation durations less than t days, we add the
+  entire probability mass for that period to the density function. For
+  durations d greater than t days, we take the fraction of that rotation
+  period's selection probability and multiply it by t/d and add it to the
+  density. In other words:
+
+  def FullCDF(N, t, ProbFunc=ProbR):
+    density = 0.0
+    for d in xrange(N):
+      if t >= d: density += ProbFunc(N, d)
+      # The +1's below compensate for 0-indexed arrays:
+      else: density += ProbFunc(N, d)*(float(t+1))/(d+1)
+    return density
+
+  Computing this yields the following distribution for our current parameters:
+
+   t          P(SECOND_ROTATION <= t)
+   1               0.07701
+   2               0.15403
+   3               0.22829
+   4               0.29900
+   5               0.36584
+   6               0.42869
+   7               0.48754
+   8               0.54241
+   9               0.59338
+  10               0.64055
+  11               0.68402
+  12               0.72392
+  13               0.76036
+  14               0.79350
+  15               0.82348
+  16               0.85043
+  17               0.87452
+  18               0.89589
+  19               0.91471
+  20               0.93112
+  21               0.94529
+  22               0.95738
+  23               0.96754
+  24               0.97596
+  25               0.98278
+  26               0.98817
+  27               0.99231
+  28               0.99535
+  29               0.99746
+  30               0.99881
+  31               0.99958
+  32               0.99992
+  33               1.00000
+
+  This CDF tells us that for the second-level Guard rotation, the
+  adversary can expect that 7.7% of the time, their third-level Sybil
+  attack will provide them with a second-level guard node that has only
+  1 day remaining before it rotates. 15.4% of the time, there will
+  be only 2 day or less remaining, and 22.8% of the time, 3 days or less.
+
+  Note that this distribution is still a day-resolution approximation. The
+  actual numbers are likely even more biased towards lower values.
+
+  In this way, we achieve our goal of ensuring that the adversary must
+  do the prep work to compromise multiple second-level nodes before
+  likely being successful, or be extremely fast in compromising a
+  second-level guard after winning the Sybil attack.
+
+
+4. Security concerns and mitigations
+
+4.1. Mitigating fingerprinting of new HS circuits
 
   By pinning the middle nodes of rendezvous circuits, we make it
   easier for all hops of the circuit to detect that they are part of a
-  special hidden service circuit.
-  XXX hm how does the outermost guard knows?
+  special hidden service circuit with varying degrees of certainty.
 
-  Compare this to the current Tor network, where only the guard and
-  the third hop of the HS circuit can trivially distinguish whether
-  it's part of an HS circuit.
+  The Guard node is able to recognize a Vanguard client with a high
+  degree of certainty because it will observe a client IP creating the
+  overwhelming majority of its circuits to just a few middle nodes in
+  any given 10-18 day time period.
 
-3.3. Circuit nodes can now be linked to specific hidden services
+  The middle nodes will be able to tell with a variable certainty that
+  depends on both its traffic volume and upon the popularity of the
+  service, because they will see a large number of circuits that tend to
+  pick the same Guard and Exit.
 
-  With this proposal the hops of hidden service circuits will be
-  static, and hence an adversrary will be able to map them to specific
-  hidden services. For example, a middle node that sees two hidden
-  service circuits with the same guard node in different times, can
-  assume with non-negligible probability that both circuits correspond
-  to the same hidden service.
+  The final nodes will be able to tell with a similar level certainty
+  that depends on their capacity and the service popularity, because they
+  will see a lot of rend handshakes that all tend to have the same second
+  hop. The final nodes can also actively confirm that they have been
+  selected for the third hop by creating multiple Rend circuits to a
+  target hidden service, and seeing if they are chosen for the Rend point.
 
-  That said, this is also partially the case for the current Tor
-  network, where the middle node can associate a guard with a specific
-  hidden service.
+  The most serious of these is the Guard fingerprinting issue. When
+  proposal xxx-padding-negotiation is implemented, services that enable
+  this feature should use those padding primitives to create fake circuits
+  to random middle nodes that are not their guards, in an attempt to look
+  more like a client.
 
-3.4 Why is the torrc setting disabled by default, if it's so good?
+  Additionally, if Tor Browser implements "virtual circuits" based on
+  SOCKS username+password isolation in order to enforce the re-use of
+  paths when SOCKS username+passwords are re-used, then the number of
+  middle nodes in use during a typical user's browsing session will be
+  proportional to the number of sites they are viewing at any one time.
+  This is likely to be much lower than one new middle node every ten
+  minutes, and for some users, may be close to the number of Vanguards
+  we're considering.
 
-  We suggest this torrc option to be optional because it puts
-  additional load on guard nodes and we are not sure if the network
-  will be able to handle it.
+  This same reasoning is also an argument for increasing the number of
+  second-level guards beyond just two, as it will spread the hidden
+  service's traffic over a wider set of middle nodes, making it both
+  easier to cover, and behave closer to a client using SOCKS virtual
+  circuit isolation.
 
-  However, by having this setting be disabled by default, we make
-  hidden services who use it stand out a lot. For this reason, we
-  should eventually fix our hidden service circuit load balancing so
-  that we can enable this globally.
+4.2. Hidden service linkability
 
-  XXX But hidden services traffic is only 6% of the total network, so
-      maybe it's not that big of a problem and we should just enable
-      this feature by default anyway
+  Multiple hidden services on the same Tor instance should use separate
+  second and third level guard sets, otherwise an adversary is trivially
+  able to determine that the two hidden services are co-located by
+  inspecting their current chosen rend point nodes.
 
-3.4.1. How should we load balance to enable this feature globally?
+  Unfortunately, if the adversary is still able to determine that two or
+  more hidden services are run on the same Tor instance through some other
+  means, then they are able to take advantage of this fact to execute a
+  Sybil attack more effectively, since there will now be an extra set of
+  guard nodes for each hidden service in use.
 
-  The load balancing issue with this feature is that hidden service
-  traffic that would otherwise be passing through middle nodes, will
-  now be passing through guard nodes.
+  For this reason, if Vanguards are enabled, and more than one hidden
+  service is configured, the user should be advised to ensure that they do
+  not accidentally leak that the two hidden services are from the same Tor
+  instance.
 
-  Furthermore, this additional traffic is not accounted for in our
-  bandwidth weights. This means that a guard node that had 1%
-  probability of being chosen as a guard for normal circuits, will
-  still have the same probability of being chosen as a guard even
-  though the hidden service traffic that it pushes increases.
+  For cases where the user or application wants to deliberately link multiple
+  different hidden services together (for example, to support concurrent file
+  transfer and chat for the same identity), this behavior should be
+  configurable. A torrc option DisjointHSVanguards should be provided that
+  defaults to keeping the Vanguards separate for each hidden service should
+  be provided.
 
-  To improve the load balancing here, we could have each relay report
-  the amount of hidden service traffic it pushes every day (#15254),
-  and have the authorities take this into account when they calculate
-  bandwidth weights. The idea here would be that the dirauths would
-  know that N% of the network is hidden services traffic, hence they
-  would tweak the bandwidth weights such that guards would reserve
-  some N% of their bandwidth for hidden service purposes.
+4.3. Long term information leaks
 
-4. Future directions
+  Due to Tor's path selection constraints, the client will never chose
+  its primary guard node as later positions in the circuit. Over time,
+  the absence of these nodes will give away information to the adversary.
+
+  Unfortunately, the current solution (from bug #14917) of simply creating
+  a temporary second guard connection to allow the primary guard to appear
+  in some paths will make the hidden service fingerprinting problem worse,
+  since only hidden services will exhibit this behavior on the local
+  network. The simplest mitigation is to require that no Guard-flagged nodes
+  be used for the second and third-level nodes at all, and to allow the
+  primary guard to be chosen as a rend point.
+
+  Additionally, in order to further limit the exposure of secondary guards
+  to sybil attacks, the bin position of the third-level guards should be
+  stable over long periods of time. When choosing third-level guards, these
+  guards should be given a fixed bin number so that if they are selected
+  at a later point in the future, they are placed after the same
+  second-level guard, and not a different one. A potential stateless way
+  of accomplishing this is to assign third-level guards to a bin number
+  such that H(bin_number | HS addr) is closest to the key for the
+  third-level relay.
+
+4.4. Denial of service
+
+  Since it will be fairly trivial for the adversary to enumerate the
+  current set of rend nodes for a hidden service, denial of service
+  becomes a serious risk for Vanguard users.
+
+  For this reason, it is important to support a large number of
+  third-level guards, to increase the amount of resources required to
+  bring a hidden service offline by DoSing just a few Tor nodes.
+
+  Even with multiple third-level guards, an adversary is still able to
+  degrade either performance or user experience significantly, simply by
+  taking out a fraction of them. The solution to this is to make use
+  of the circuit build timeout code (Section 5.2) to have the hidden
+  service retry the rend connection multiple times. Unfortunately, it
+  unwise to simply replace unresponsive third-level guards that fail to
+  complete circuits, as this will accelerate the Sybil attack.
+
+
+5. Performance considerations
+
+  The switch to a restricted set of nodes will very likely cause
+  significant performance issues, especially for high-traffic hidden
+  services. If any of the nodes they select happen to be temporarily
+  overloaded, performance will suffer dramatically until the next
+  rotation period.
+
+5.1. Load Balancing
+
+  Since the second and third level "guards" are chosen from the set of all
+  nodes eligible for use in the "middle" hop (as per hidden services
+  today), this proposal should not significantly affect the long-term load
+  on various classes of the Tor network, and should not require any
+  changes to either the node weight equations, or the bandwidth
+  authorities.
+
+  Unfortunately, transient load is another matter, as mentioned
+  previously. It is very likely that this scheme will increase instances
+  of transient overload at nodes selected by high-traffic hidden services.
+
+  One option to reduce the impact of this transient overload is to
+  restrict the set of middle nodes that we chose from to some percentage
+  of the fastest middle-capable relays in the network. This may have
+  some impact on load balancing, but since the total volume of hidden
+  service traffic is low, it may be unlikely to matter.
+
+5.2. Circuit build timeout and topology
+
+  The adaptive circuit build timeout mechanism in Tor is what corrects
+  for instances of transient node overload right now.
+
+  The timeout will naturally tend to select the current fastest and
+  least-loaded paths even through this set of restricted routes, but it
+  may fail to behave correctly if there are a very small set of nodes in
+  each guard set, as it is based upon assumptions about the current path
+  selection algorithm, and it may need to be tuned specifically for
+  Vanguards, especially if the set of possible routes is small.
+
+  It turns out that a fully-connected/mesh (aka non-binned) second guard to
+  third guard mapping topology is a better option for CBT for performance,
+  because it will create a larger total set of paths for CBT to choose
+  from while using fewer nodes.
+
+  This comes at the expense of exposing all second-layer guards to a
+  single sybil attack, but for small numbers of guard sets, it may be
+  worth the tradeoff. However, it also turns out that this need not block
+  implementation, as worst-case the data structures and storage needed to
+  support a fully connected mesh topology can do so by simply replicating
+  the same set of third-layer guards for each second-layer guard bin.
+
+  Since we only expect this tradeoff to be worth it when the sets are
+  small, this replication should not be expensive in practice.
+
+5.3. OnionBalance
+
+  At first glance, it seems that this scheme makes multi-homed hidden
+  services such as OnionBalance[1] even more important for high-traffic
+  hidden services.
+
+  Unfortunately, if it is equally damaging to the user for any of their
+  multi-homed hidden service locations to be discovered, then OnionBalance
+  is strictly equivalent to simply increasing the number of second-level
+  guard nodes in use, because an active adversary can perform simultaneous
+  Sybil attacks against all of the rend points offered by the multi-homed
+  OnionBalance introduction points.
+
+  XXX: This actually matters for high-perf censorship resistant publishing.
+  It is better for those users to use onionbalance than to up their guards,
+  since redundancy is useful for them.
+
+5.4. Default vs optional behavior
+
+  We suggest this torrc option to be optional because it changes path
+  selection in a way that may seriously impact hidden service performance,
+  especially for high traffic services that happen to pick slow guard
+  nodes.
+
+  However, by having this setting be disabled by default, we make hidden
+  services who use it stand out a lot. For this reason, we should in fact
+  enable this feature globally, but only after we verify its viability for
+  high-traffic hidden services, and ensure that it is free of second-order
+  load balancing effects.
+
+  Even after that point, until Single Onion Services are implemented,
+  there will likely still be classes of very high traffic hidden services
+  for whom some degree of location anonymity is desired, but for which
+  performance is much more important than the benefit of Vanguards, so there
+  should always remain a way to turn this option off.
+
+
+6. Future directions
 
   Here are some more ideas for improvements that should be done sooner
   or later:
 
-  - Maybe we should make the size and rotation period of
-    secondary/third guard sets to be configurable by the user.
+  - Do we want to consider using Tor's GeoIP country database (if present)
+    to ensure that the second-layer guards are chosen from a different
+    country as the first-layer guards, or does this leak too much information
+    to the adversary?
 
-  - To make it harder for an adversary, a hidden service MAY extend
-    the path length of its circuits by an additional static hop. This
-    forces the adversary to use another coercion attack to walk the
-    chain up to the hidden service.
+  - What does the security vs performance tradeoff actually look like
+    for different amounts of bins? Or for mesh vs bins? We may need
+    to simulate or run CBT tests to learn this.
 
-5. Acknowledgements
+  - With this tradeoff information, do we want to provide the user
+    (or application) with a choice of 3 different Vanguard sets?
+    One could imagine "small", "medium", and "large", for example.
+
+
+7. Acknowledgments
 
  Thanks to Aaron Johnson, John Brooks, Mike Perry and everyone else
  who helped with this idea.
 
+
+Appendix A: Full Python program for generating tables in this proposal
+
+#!/usr/bin/python
+import math
+
+############ Section 3.2.1 #################
+def num_rotations(c, v, success):
+  i = 0
+  while 1-math.pow((1-c), v*i) < success: i += 1
+  return i
+
+def rotation_line(c, pct):
+  print "    %2d%%        %6d%6d%6d%6d%6d%6d%6d%6d%6d%6d%8d" % \
+     (pct, num_rotations(c, 1, pct/100.0), num_rotations(c, 2, pct/100.0), \
+      num_rotations(c, 3, pct/100.0), num_rotations(c, 4, pct/100.0),
+      num_rotations(c, 5, pct/100.0), num_rotations(c, 6, pct/100.0),
+      num_rotations(c, 8, pct/100.0), num_rotations(c, 9, pct/100.0),
+      num_rotations(c, 10, pct/100.0), num_rotations(c, 12, pct/100.0),
+      num_rotations(c, 16, pct/100.0))
+
+def rotation_table_321():
+  for c in [1,5,10]:
+    print "\n  %2.1f%% Network Compromise: " % c
+    print "   Sybil Success   One   Two  Three  Four  Five  Six  Eight  Nine  Ten  Twelve  Sixteen"
+    for success in [10,15,25,50,60,75,85,90,95,99]:
+      rotation_line(c/100.0, success)
+
+############ Section 3.2.3 #################
+def ProbMinXX(N, i): return (2.0*(N-i)-1)/(N*N)
+def ProbMaxXX(N, i): return (2.0*i+1)/(N*N)
+
+def ExpFn(N, ProbFunc):
+  exp = 0.0
+  for i in xrange(N): exp += i*ProbFunc(N, i)
+  return exp
+
+def ProbR(N, r, ProbFunc=ProbMinXX):
+  return ProbFunc(N, r)*r/ExpFn(N, ProbFunc)
+
+def FullCDF(N, t, ProbFunc=ProbR):
+  density = 0.0
+  for d in xrange(N):
+    if t >= d: density += ProbFunc(N, d)
+    # The +1's below compensate for 0-indexed arrays:
+    else: density += ProbFunc(N, d)*float(t+1)/(d+1)
+  return density
+
+def expectation_table_323():
+  print "\n   Range  Min(X,X)   Max(X,X)"
+  for i in xrange(10,40):
+    print "   %2d      %2.2f       %2.2f" % (i, ExpFn(i,ProbMinXX), ExpFn(i, ProbMaxXX))
+
+def CDF_table_323():
+  print "\n   t          P(SECOND_ROTATION <= t)"
+  for i in xrange(1,34):
+    print "  %2d               %2.5f" % (i, FullCDF(33, i-1))
+
+########### Output ############
+
+# Section 3.2.1
+rotation_table_321()
+
+# Section 3.2.3
+expectation_table_323()
+CDF_table_323()
+
+
+----------------------
+
+1. https://onionbalance.readthedocs.org/en/latest/design.html#overview
