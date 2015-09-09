@@ -126,6 +126,7 @@ again to remind me!
      This is likely also to be relevant for the ideas of proposal 241,
      and maybe superseded by some version of that proposal. (2/2015)
 
+-----
 164  Reporting the status of server votes
 
      This proposal explains a way for authorities to provide a
