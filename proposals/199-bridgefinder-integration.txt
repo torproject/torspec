@@ -2,8 +2,7 @@ Filename: 199-bridgefinder-integration.txt
 Title: Integration of BridgeFinder and BridgeFinderHelper
 Author: Mike Perry
 Created: 18-03-2012
-Status: Open
-Target: 0.2.4.x+
+Status: OBSOLETE
 
 
 Overview
