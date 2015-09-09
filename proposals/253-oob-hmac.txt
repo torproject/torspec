@@ -1,4 +1,4 @@
-Filename: xxx-oob-hmac.txt
+Filename: 253-oob-hmac.txt
 Title: Out of Band Circuit HMACs
 Authors: Mike Perry
 Created: 01 September 2015

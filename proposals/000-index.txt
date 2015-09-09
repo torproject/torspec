@@ -173,6 +173,7 @@ Proposals by number:
 250  Random Number Generation  During Tor Voting [DRAFT]
 251  Padding for netflow record resolution reduction [DRAFT]
 252  Single Onion Services [DRAFT]
+253  Out of Band Circuit HMACs [DRAFT]
 
 
 Proposals by status:
@@ -200,6 +201,7 @@ Proposals by status:
    250  Random Number Generation  During Tor Voting
    251  Padding for netflow record resolution reduction
    252  Single Onion Services
+   253  Out of Band Circuit HMACs
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  OPEN:
