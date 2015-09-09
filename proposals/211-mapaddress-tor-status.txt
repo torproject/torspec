@@ -2,7 +2,7 @@ Filename: 211-mapaddress-tor-status.txt
 Title: Internal Mapaddress for Tor Configuration Testing
 Author: Mike Perry
 Created: 08-10-2012
-Status: Open
+Status: Reserve
 Target: 0.2.4.x+
 
 

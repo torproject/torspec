@@ -54,16 +54,6 @@ again to remind me!
 **NOTE**: The dates after each paragraph indicate when I last
           revised the paragraph.
 
-131  Help users to verify they are using Tor [NEEDS-REVISION]
-
-     This one is not a crazy idea, but I marked it as
-     needs-revision since it doesn't seem to work so well with
-     our current designs. It seems mostly superseded by proposal
-     211. (11/2013)
-
-     I say, mark it as OBSOLETE and make a note on proposal 211 to see it for
-     historical information. (9/2015)
-
 132  A Tor Web Service For Verifying Correct Browser Configuration
 
      This proposal was meant to give users a way to see if their
@@ -418,18 +408,6 @@ again to remind me!
      This needs an update; it's a pretty good idea, and Mike and Roger
      like it.  It goes will with FallbackDirSource stuff. (9/2015)
 
-211  Internal Mapaddress for Tor Configuration Testing
-
-     Here, the idea is to serve an XML document over HTTP that
-     would let the know when it's using Tor.  The XML document
-     would be returned when you make a request over Tor for a
-     magic address in 127.0.0.0/8.  I think we need to do
-     _something_to solve this problem, but I'm not thrilled with
-     the idea of having any more magical addresses like this; we
-     got rid of .noconnect for a reason, after all. (11/2013)
-
-     Mark as REJECTED. (9/2015)
-
 212  Increase Acceptable Consensus Age
 
      This proposal suggests that we increase the maximum age of a
@@ -673,5 +651,7 @@ TAKE ANOTHER LOOK AT THESE:
 
 
 Since last time:
+
+      Proposal 127 has been marked as obsolete.
 
       Proposals 242-252 are new.
