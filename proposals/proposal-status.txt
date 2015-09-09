@@ -55,7 +55,7 @@ again to remind me!
           revised the paragraph.
 
 
-133  Incorporate Unreachable ORs into the Tor Network
+133  Incorporate Unreachable ORs into the Tor Network [RESERVE]
 
      This proposal had an idea for letting ORs that can only make
      outgoing connections still relay data usefully in the network.
@@ -64,34 +64,18 @@ again to remind me!
      who wants to analyze new network topologies should definitely
      have a look. (5/2011)
 
-     For this I think we should introduce a new proposal status,
-     "RESERVE". A proposal is "on reserve" if we're not currently
-     planning to implement it, but we might someday want to do so if we
-     decide that what it provides is a great idea. (9/2015)
+     For this I have introduced a new proposal status, "RESERVE". A
+     proposal is "in reserve" if we're not currently planning to
+     implement it, but we might someday want to do so if we decide that
+     what it provides is a great idea. (9/2015)
 
-140  Provide diffs between consensuses
+140  Provide diffs between consensuses [ACCEPTED]
 
      This proposal describes a way to transmit less directory
      traffic by sending only differences between consensuses, rather
      than the consensuses themselves.  Daniel Marti implemented this for his
      GSoC project last summer; it is still under revision and on target
      for merge into 0.2.8.  (See ticket #13339)  (9/2015)
-
-     This needs code review, and needs to marked as ACCCEPTED. (9/2015)
-
-141  Download server descriptors on demand
-
-     The idea of this proposal was for clients to only download the
-     consensus, and later ask nodes for their own server descriptors
-     while building the circuit through them.  It would make each
-     circuit more time-consuming to build, but make bootstrapping
-     much cheaper.
-
-     Microdescriptors obsolete a lot of this proposal, and present
-     some difficulties in using in a way compatible with
-     it. (6/2012)
-
-     I say mark this as OBSOLETE or RESERVE. (9/2015)
 
 143  Improvements of Distributed Storage for Tor Hidden Service
      Descriptors
@@ -114,41 +98,6 @@ again to remind me!
      IMO. (2/2014)
 
      Time to mark this as SUPERSEDED. (9/2015)
-
-144  Increase the diversity of circuits by detecting nodes
-     belonging the same provider
-
-     This is a version of the good idea, "Let's do routing in a way
-     that tries to keep from routing traffic through the same
-     provider too much!"  There are complex issues here that the
-     proposal doesn't completely address, but I think it might be a
-     fine idea for somebody to see how much more we know now than we
-     did in 2008, particularly in light of the relevant paper(s) by
-     Matt Edmann and Paul Syverson. (5/2011)
-
-     Mark as OBSOLETE. The research field has advanced very far since
-     this proposal, and new papers on this topic come out every year.
-     (9/2015)
-
-145  Separate "suitable as a guard" from "suitable as a new guard"
-     [NEEDS-RESEARCH]
-
-     Currently, the Guard flag means both "You can use this node as a
-     guard if you need to pick a new guard" and "If this node is
-     currently your guard, you can keep using it as a guard."  This
-     proposal tries to separate these two concepts, so that clients can
-     stop picking a router once it is full of existing clients using it
-     as a guard, but the clients currently on it won't all drop it.
-
-     It's not clear whether this has anonymity issues, and it's not
-     clear whether the imagined performance gains are actually
-     worthwhile.
-
-     This is probably superseded by proposal 236, which has a better
-     approach for weighting guard node selection probabilities; we
-     should probably close this ticket. (2/2015)
-
-     I say, mark as OBSOLETE. (9/2015)
 
 156  Tracking blocked ports on the client side
 
@@ -176,13 +125,6 @@ again to remind me!
 
      This is likely also to be relevant for the ideas of proposal 241,
      and maybe superseded by some version of that proposal. (2/2015)
-
-159  Exit Scanning
-
-     This is an overview of SoaT, with some ideas for how to integrate
-     it into Tor. (5/2011)
-
-     (Mark as HISTORICAL? INFORMATIONAL?) (9/2015)
 
 164  Reporting the status of server votes
 
@@ -652,8 +594,12 @@ TAKE ANOTHER LOOK AT THESE:
 
 Since last time:
 
-      Proposals 127, 131, and 132 has been marked as obsolete.
+      Proposals 127, 131, 132, 141 has been marked as obsolete.
 
-      Proposal 211 is now "in-reserve".
+      Proposals 133, and 211 is now "in-reserve".
+
+      Proposal 145 is superseded.
+
+      Proposal 159 is informational.
 
       Proposals 242-252 are new.

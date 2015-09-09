@@ -53,7 +53,7 @@ Proposals by number:
 130  Version 2 Tor connection protocol [CLOSED]
 131  Help users to verify they are using Tor [OBSOLETE]
 132  A Tor Web Service For Verifying Correct Browser Configuration [OBSOLETE]
-133  Incorporate Unreachable ORs into the Tor Network [DRAFT]
+133  Incorporate Unreachable ORs into the Tor Network [RESERVE]
 134  More robust consensus voting with diverse authority sets [REJECTED]
 135  Simplify Configuration of Private Tor Networks [CLOSED]
 136  Mass authority migration with legacy keys [CLOSED]
@@ -61,10 +61,10 @@ Proposals by number:
 138  Remove routers that are not Running from consensus documents [CLOSED]
 139  Download consensus documents only when it will be trusted [CLOSED]
 140  Provide diffs between consensuses [ACCEPTED]
-141  Download server descriptors on demand [DRAFT]
+141  Download server descriptors on demand [OBSOLETE]
 142  Combine Introduction and Rendezvous Points [DEAD]
 143  Improvements of Distributed Storage for Tor Hidden Service Descriptors [OPEN]
-144  Increase the diversity of circuits by detecting nodes belonging the same provider [DRAFT]
+144  Increase the diversity of circuits by detecting nodes belonging the same provider [OBSOLETE]
 145  Separate "suitable as a guard" from "suitable as a new guard" [SUPERSEDED]
 146  Add new flag to reflect long-term stability [SUPERSEDED]
 147  Eliminate the need for v2 directories in generating v3 directories [REJECTED]
@@ -79,7 +79,7 @@ Proposals by number:
 156  Tracking blocked ports on the client side [SUPERSEDED]
 157  Make certificate downloads specific [CLOSED]
 158  Clients download consensus + microdescriptors [FINISHED]
-159  Exit Scanning [OPEN]
+159  Exit Scanning [INFORMATIONAL]
 160  Authorities vote for bandwidth offsets in consensus [FINISHED]
 161  Computing Bandwidth Adjustments [FINISHED]
 162  Publish the consensus in multiple flavors [FINISHED]
@@ -178,9 +178,6 @@ Proposals by number:
 Proposals by status:
 
  DRAFT:
-   133  Incorporate Unreachable ORs into the Tor Network
-   141  Download server descriptors on demand
-   144  Increase the diversity of circuits by detecting nodes belonging the same provider
    175  Automatically promoting Tor clients to nodes
    182  Credit Bucket
    195  TLS certificate normalization for Tor 0.2.4.x [for 0.2.4.x]
@@ -207,7 +204,6 @@ Proposals by status:
    190  Bridge Client Authorization Based on a Shared Secret
  OPEN:
    143  Improvements of Distributed Storage for Tor Hidden Service Descriptors
-   159  Exit Scanning
    164  Reporting the status of server votes
    165  Easy migration for voting authority sets
    168  Reduce default circuit window
@@ -344,5 +340,10 @@ Proposals by status:
    127  Relaying dirport requests to Tor download site / website
    131  Help users to verify they are using Tor
    132  A Tor Web Service For Verifying Correct Browser Configuration
+   141  Download server descriptors on demand
+   144  Increase the diversity of circuits by detecting nodes belonging the same provider
  RESERVE:
+   133  Incorporate Unreachable ORs into the Tor Network
    211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]
+ INFORMATIONAL:
+   159  Exit Scanning
