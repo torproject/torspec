@@ -1,4 +1,4 @@
-[Last updated 7 Feb 2015]
+[Last updated 9 Sep 2015]
 
 This is an update to the Tor proposal status overview.  I last sent one
 of these out almost a year ago; since 0.2.6 has entered feature freeze,
@@ -281,25 +281,6 @@ again to remind me!
 
      I think we should mark this FINISHED.  We're not going to do more
      than we have now, afaik. (9/2015)
-
-197  Message-based Inter-Controller IPC Channel
-
-     This proposal is for an architectural enhancement in Tor
-     deployments, where Tor coordinates communications between the
-     various programs (Vidalia, TorBrowser, etc) that are using
-     it. (6/2012)
-
-     Mark as RESERVE or REJECTED.  Nobody's asked for this in a really
-     long time, and I don't want to be dbus. (9/2015)
-
-199  Integration of BridgeFinder and BridgeFinderHelper
-
-     Here's a proposal for how Tor can integrate with a client
-     program that finds bridges for it. I've seen some work being
-     done on things called "BridgeFinder"; I don't know what the
-     status of the current proposal is, though. (11/2013)
-
-     Mark as OBSOLETE? I don't think this is still a thing. (9/2015)
 
 201  Make bridges report statistics on daily v3 network status requests
 
@@ -591,16 +572,13 @@ TAKE ANOTHER LOOK AT THESE:
 250  Random Number Generation During Tor Voting [DRAFT]
 251  Padding for netflow record resolution reduction [DRAFT]
 252  Single Onion Services [DRAFT]
+253  Out of Band Circuit HMACs [DRAFT]
 
 
 Since last time:
 
-      Proposals 127, 131, 132, 141 has been marked as obsolete.
+      Proposal 197 has been marked as rejected.
 
-      Proposals 133, and 211 is now "in-reserve".
+      Proposal 199 is now obsolete.
 
-      Proposal 145 is superseded.
-
-      Proposal 159 is informational.
-
-      Proposals 242-252 are new.
+      Proposal 253 is new.
