@@ -1,0 +1,272 @@
+Filename: xxx-oob-hmac.txt
+Title: Out of Band Circuit HMACs
+Authors: Mike Perry
+Created: 01 September 2015
+Status: Draft
+
+
+0. Motivation
+
+
+It is currently possible for Guard nodes (and MITM adversaries that
+steal their identity keys) to perform a "tagging" attack to influence
+circuit construction and resulting relay usage[1].
+
+Because Tor uses AES as a stream cipher, malicious or intercepted Guard
+nodes can simply XOR a unique identifier into the circuit cipherstream
+during circuit setup and usage. If this identifier is not removed by a
+colluding exit (either by performing another XOR, or making use of known
+plaintext regions of a cell to directly extract a complete side-channel
+value), then the circuit will fail. In this way, malicious or
+intercepted Guard nodes can ensure that all client traffic is directed
+only to colluding exit nodes, who can observe the destinations and
+deanonymize users.
+
+Most code paths in the Tor relay source code will emit loud warnings for
+the most obvious instances circuit failure caused by this attack.
+However, it is very difficult to ensure that all such error conditions
+are properly covered such that warnings will be emitted.
+
+This proposal aims to provide a mechanism to ensure that tagging and
+related malleability attacks are cryptographically detectable when they
+happen.
+
+
+1. Overview
+
+Since Tor Relays are already storing a running hash of all data
+transmitted on their circuits (via the or_circuit_t::n_digest and
+or_circuit_t::p_digest properties), it is possible to compute an
+out-of-band HMAC on circuit data, and verify that it is as expected.
+
+This proposal first defines an OOB_HMAC primitive that can be included
+standalone in a new relay cell command type, and additionally in other
+cell types.
+
+Use of the standalone relay cell command serves to ensure that circuits
+that are successfully built and used were not manipulated at a previous
+point.
+
+By altering the RELAY_COMMAND_TRUNCATED and CELL_DESTROY cells to also
+include the OOB_HMAC information, it is similarly possible to detect
+alteration of circuit contents that cause failures before the point of
+usage.
+
+
+2. The OOB_HMAC primitive
+
+The OOB_HMAC primitive uses the existing rolling hashes present in
+or_circuit_t to provide a Tor OP (aka client) with the hash history of
+the traffic that a given relay has seen it so far.
+
+Note that to avoid storing an additional 64 bytes of SHA256 digest for
+every circuit at every relay, we use SHA1 for the hash logs, since the
+circuits are already storing SHA1 hashes. It's not immediately clear how
+to upgrade the existing SHA1 digests to SHA256 with the current circuit
+protocol, either, since matching hash algorithms are essential to the
+'recognized' relay cell forwarding behavior. The version field exists
+primarily for this reason, should the rolling circuit hashes ever
+upgrade to SHA256.
+
+The OOB_HMAC primitive is specified in Trunnel as follows:
+
+     struct oob_hmac_body {
+        /* Version of this section. Must be 1 */
+        u8 version;
+       
+        /* SHA1 hash of all client-originating data on this circuit
+           (obtained from or_circuit_t::n_digest). */
+        u8 client_hash_log[20];
+        /* Number of cells processed in this hash, mod 2^32. Used
+           to spot-check hash position */
+        u32 client_cell_count;
+        
+        /* SHA1 hash of all server-originating data on this circuit
+           (obtained from or_circuit_t::p_digest). */
+        u8 server_hash_log[20];
+        /* Number of cells processed in this hash, mod 2^32. Used
+           to spot-check hash position.
+           XXX: Technically the server-side is not needed. */
+        u32 server_cell_count;
+
+        /* HMAC-SHA-256 of the entire cell contents up to this point,
+           using or_circuit_t::p_crypto as the hmac key.
+           XXX: Should we use a KDF here instead of p_crypto directly? */   
+        u8 cell_hmac_256[32];
+     };
+
+
+3. Usage of OOB_HMAC
+
+The OOB_HMAC body will be included in three places:
+
+ 1. In a new relay cell command RELAY_COMMAND_HMAC_SEND, which is sent in
+    response to a client-originating RELAY_COMMAND_HMAC_GET on stream 0.
+ 2. In CELL_DESTROY, immediately after the error code
+ 3. In RELAY_COMMAND_TRUNCATED, immediately after the CELL_DESTROY
+    contents
+
+3.1. RELAY_COMMAND_HMAC_GET/SEND relay commands
+
+Clients should use leaky-pipe topology to send RELAY_COMMAND_HMAC_GET to
+the second-to-last node (typically the middle node) in the circuit at
+three points during circuit construction and usage:
+
+  1. Immediately after the last RELAY_EARLY cell is sent
+  2. Upon any stream detachment, timeout, or failure.
+  3. Upon any OP-initiated circuit teardown (including timed-out partially
+     built circuits).
+
+We use RELAY_EARLY as the point at which to send these cells to avoid
+leaking the path length to the middle hop.
+
+3.2. Alteration of CELL_DESTROY and RELAY_COMMAND_TRUNCATED
+
+In order to provide an HMAC even when a circuit is torn down before use
+due to failure, the behavior for generating and handling CELL_DESTROY
+and RELAY_COMMAND_TRUNCATED should be modified as follows:
+
+Whenever an OR sends a CELL_DESTROY for a circuit towards the OP, if
+that circuit was already properly established, the OR should include the
+contents of oob_hmac_body immediately after the reason field. The HMAC
+must cover the error code from CELL_DESTROY.
+
+Upon receipt of a CELL_DESTROY, and in any other case where an OR would
+generate a RELAY_COMMAND_TRUNCATED due to error, a conformant relay
+would include the CELL_DESTROY oob_hmac_body, as well as its own
+locally created oob_hmac_body. The locally created oob_hmac_body must
+cover the entire payload contents of RELAY_COMMAND_TRUNCATED, including 
+the error code and the CELL_DESTROY oob_hmac_body.
+
+Here is a new Trunnel specification for RELAY_COMMAND_TRUNCATED:
+
+     struct relay_command_truncated {
+        /* Error code */
+        u8 error_code;
+
+        /* Number of oob_hmacs. Must be 0, 1, or 2 */
+        u8 num_hmac;
+
+        /* If there are 2 hmacs, the first one is from the CELL_DESTROY,
+           and the second one is from the truncating relay. If num_hmac
+           is 0, then this came from a relay without support for
+           oob_hmac. */
+        struct oob_hmac_body[num_hmac];
+     };
+
+The usage of a strong HMAC to cover the entire CELL_DESTROY contents
+also allows an OP to properly authenticate the reason a remote node
+needed to close a circuit, without relying on the previous hop to be
+honest about it.
+
+
+4. Ensuring proper ordering with respect to hashes
+
+4.1. RELAY_COMMAND_HMAC_GET/SEND
+
+The in-order delivery guarantee of circuits will mean that the incoming
+hashes will match upon receipt of the RELAY_COMMAND_HMAC_SEND cell, but
+any outgoing traffic the OP sent since RELAY_COMMAND_HMAC_GET will
+not have been seen by the responding OR.
+
+Therefore, immediately upon sending a RELAY_COMMAND_HMAC_GET, the OP
+must record and store its current outgoing hash state for that circuit,
+until the RELAY_COMMAND_HMAC_SEND arrives, and use that stored hash
+value for comparison against the oob_hmac_body's client_hash_log field.
+
+The server_hash_log should be checked against the corresponding
+crypt_path_t entry in origin_circuit_t for the relay that the command
+was sent to.
+
+4.2. RELAY_COMMAND_TRUNCATED
+
+Since RELAY_COMMAND_TRUNCATED may be sent in response to any error
+condition generated by a cell in either direction, the OP must check
+that its local cell counts match those present in the oob_hmac_body for
+that hop.
+
+If the counts do not match, the OP may generate a RELAY_COMMAND_HMAC_GET
+to the hop that sent RELAY_COMMAND_TRUNCATED, prior to tearing down the
+circuit.
+
+4.3. CELL_DESTROY
+
+If the cell counts of the destroy cell's oob_hmac_body do not match what
+the client sent for that hop, unfortunately that hash must be discarded.
+Otherwise, it may be checked against values held from before processing
+the RELAY_COMMAND_TRUNCATED envelope.
+
+
+5. Security concerns and mitigations
+
+5.1. Silent circuit failure attacks
+
+The primary way to game this oob-hmac is to omit or block cells
+containing HMACs from reaching the OP, or otherwise tear down circuits
+before responses arrive with proof of tampering.
+
+If a large fraction of circuits somehow fail without any
+RELAY_COMMAND_TRUNCATED oob_hmac_body payloads present, and without any
+responses to RELAY_COMMAND_HMAC_GET requests, the user should be alerted
+of this fact as well.
+
+This rate of silent circuit failure should be kept as an additional,
+separate per-Guard Path Bias statistic, and the user should be warned if
+this failure rate exceeds some (low) threshold for circuits containing
+relays that should have supported this proposal.
+
+5.2. Malicious/colluding middle nodes
+
+If the adversary is prevented from causing silent circuit failure
+without the client being able to notice and react, their next available
+vector is to ensure that circuits are only built to middle nodes that
+are malicious and colluding with them (or that do not support this
+proposal), so that they may lie about the proper hash values that they
+see (or omit them).
+
+Right now, the current path bias code also does not count circuit
+failures to the middle hop as circuit attempts. This was done to reduce
+the effect of ambient circuit failure on the path bias accounting (since
+an average ambient circuit failure of X per-hop causes the total circuit
+failure middle+exit circuits to be 2X). Unfortunately, not counting
+middle hop failure allows the adversary to only allow circuits to
+colluding middle hops to complete, so that they may lie about their hash
+logs. All failed circuits to non-colluding middle nodes could be torn
+down before RELAY_COMMAND_TRUNCATED is sent.
+
+For this reason, the per-Guard Path Bias counts should be augmented to
+additionally track middle-node-only failure as a separate statistic as
+well, and the user should be warned if middle-node failure drops below a
+similar threshold as the current end-to-end failure.
+
+5.3. Side channel issues, mitigations, and limitations
+
+Unfortunately, leaking information about circuit usage to the middle
+node prevents us from sending RELAY_COMMAND_HMAC_GET cells at more
+optimal points in circuit usage (such as immediately upon open,
+immediately after stream usage, etc).
+
+As such, we are limited to waiting until RELAY_EARLY cells stop being
+sent. It is debatable if we should send hashes periodically (perhaps
+with windowing information updates?) instead.
+
+
+6. Alternatives
+
+A handful of alternatives to this proposal have already been discussed,
+but have been dismissed for various reasons. Per-hop cell HMACs were
+ruled out because they will leak the total path length, as well as the
+current hop's position in the circuit.
+
+Wide-block ciphers have been discussed, which would provide the property
+that attempts to alter a cell at a previous hop would render it
+completely corrupted upon its final destination, thus preventing
+untagging and recovery, even by a colluding malicious peer.
+
+Unfortunately, performance analysis of modern provably secure versions
+of wide-block ciphers has shown them to be at least 10X slower than
+AES-NI[2].
+
+
+1. https://lists.torproject.org/pipermail/tor-dev/2012-March/003347.html
+2. http://archives.seul.org/tor/dev/Mar-2015/msg00137.html
