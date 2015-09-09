@@ -54,16 +54,6 @@ again to remind me!
 **NOTE**: The dates after each paragraph indicate when I last
           revised the paragraph.
 
-132  A Tor Web Service For Verifying Correct Browser Configuration
-
-     This proposal was meant to give users a way to see if their
-     browser and privoxy (yes, it was a while ago) are correctly
-     configured by running a local webserver on 127.0.0.1.  I'm not
-     sure the status here. Generally, I'm skeptical of designs
-     that run webservers on localhost, since they become a target
-     for cross-site attacks. (11/2013)
-
-     I say mark as OBSOLETE. (9/2015)
 
 133  Incorporate Unreachable ORs into the Tor Network
 
@@ -408,6 +398,16 @@ again to remind me!
      This needs an update; it's a pretty good idea, and Mike and Roger
      like it.  It goes will with FallbackDirSource stuff. (9/2015)
 
+211  Internal Mapaddress for Tor Configuration Testing [RESERVE]
+
+     Here, the idea is to serve an XML document over HTTP that
+     would let the know when it's using Tor.  The XML document
+     would be returned when you make a request over Tor for a
+     magic address in 127.0.0.0/8.  I think we need to do
+     _something_to solve this problem, but I'm not thrilled with
+     the idea of having any more magical addresses like this; we
+     got rid of .noconnect for a reason, after all. (9/2015)
+
 212  Increase Acceptable Consensus Age
 
      This proposal suggests that we increase the maximum age of a
@@ -418,7 +418,7 @@ again to remind me!
      was some tor-dev discussion on this one that should get
      incorporated into a final, implementable version. (11/2013)
 
-     Mark as ACCEPTED? (9/2015)
+     Mark as ACCEPTED? Needs another review first! (9/2015)
 
 219  Support for full DNS and DNSSEC resolution in Tor
 
@@ -652,6 +652,8 @@ TAKE ANOTHER LOOK AT THESE:
 
 Since last time:
 
-      Proposal 127 has been marked as obsolete.
+      Proposals 127, 131, and 132 has been marked as obsolete.
+
+      Proposal 211 is now "in-reserve".
 
       Proposals 242-252 are new.

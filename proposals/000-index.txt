@@ -47,12 +47,12 @@ Proposals by number:
 124  Blocking resistant TLS certificate usage [SUPERSEDED]
 125  Behavior for bridge users, bridge relays, and bridge authorities [CLOSED]
 126  Getting GeoIP data and publishing usage summaries [CLOSED]
-127  Relaying dirport requests to Tor download site / website [DRAFT]
+127  Relaying dirport requests to Tor download site / website [OBSOLETE]
 128  Families of private bridges [DEAD]
 129  Block Insecure Protocols by Default [CLOSED]
 130  Version 2 Tor connection protocol [CLOSED]
-131  Help users to verify they are using Tor [NEEDS-REVISION]
-132  A Tor Web Service For Verifying Correct Browser Configuration [DRAFT]
+131  Help users to verify they are using Tor [OBSOLETE]
+132  A Tor Web Service For Verifying Correct Browser Configuration [OBSOLETE]
 133  Incorporate Unreachable ORs into the Tor Network [DRAFT]
 134  More robust consensus voting with diverse authority sets [REJECTED]
 135  Simplify Configuration of Private Tor Networks [CLOSED]
@@ -131,7 +131,7 @@ Proposals by number:
 208  IPv6 Exits Redux [CLOSED]
 209  Tuning the Parameters for the Path Bias Defense [OPEN]
 210  Faster Headless Consensus Bootstrapping [OPEN]
-211  Internal Mapaddress for Tor Configuration Testing [OPEN]
+211  Internal Mapaddress for Tor Configuration Testing [RESERVE]
 212  Increase Acceptable Consensus Age [OPEN]
 213  Remove stream-level sendmes from the design [DEAD]
 214  Allow 4-byte circuit IDs in a new link protocol [CLOSED]
@@ -178,8 +178,6 @@ Proposals by number:
 Proposals by status:
 
  DRAFT:
-   127  Relaying dirport requests to Tor download site / website
-   132  A Tor Web Service For Verifying Correct Browser Configuration
    133  Incorporate Unreachable ORs into the Tor Network
    141  Download server descriptors on demand
    144  Increase the diversity of circuits by detecting nodes belonging the same provider
@@ -206,7 +204,6 @@ Proposals by status:
    251  Padding for netflow record resolution reduction
    252  Single Onion Services
  NEEDS-REVISION:
-   131  Help users to verify they are using Tor
    190  Bridge Client Authorization Based on a Shared Secret
  OPEN:
    143  Improvements of Distributed Storage for Tor Hidden Service Descriptors
@@ -228,7 +225,6 @@ Proposals by status:
    202  Two improved relay encryption protocols for Tor cells
    209  Tuning the Parameters for the Path Bias Defense [for 0.2.4.x+]
    210  Faster Headless Consensus Bootstrapping [for 0.2.4.x+]
-   211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    220  Migrate server identity keys to Ed25519 [for 0.2.x.x]
    223  Ace: Improved circuit-creation key exchange
@@ -344,3 +340,9 @@ Proposals by status:
  REJECTED:
    134  More robust consensus voting with diverse authority sets
    147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.4.x]
+ OBSOLETE:
+   127  Relaying dirport requests to Tor download site / website
+   131  Help users to verify they are using Tor
+   132  A Tor Web Service For Verifying Correct Browser Configuration
+ RESERVE:
+   211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]
