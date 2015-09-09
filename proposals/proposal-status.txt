@@ -54,19 +54,6 @@ again to remind me!
 **NOTE**: The dates after each paragraph indicate when I last
           revised the paragraph.
 
-
-127  Relaying dirport requests to Tor download site / website
-
-     The idea here was to make it easier to fetch and learn about
-     Tor by making it easy for relays to automatically act as
-     proxies to the Tor website.  It needs more discussion, and
-     there are some significant details to work out.  It's not at
-     all clear whether this is actually a good idea or not.
-     Probably, there are better choices when it comes to
-     distributing software and updates. (11/2013)
-
-     I say, mark it OBSOLETE. (9/2015)
-
 131  Help users to verify they are using Tor [NEEDS-REVISION]
 
      This one is not a crazy idea, but I marked it as

@@ -2,7 +2,7 @@ Filename: 127-dirport-mirrors-downloads.txt
 Title: Relaying dirport requests to Tor download site / website
 Author: Roger Dingledine
 Created: 2007-12-02
-Status: Draft
+Status: Obsolete
 
 1. Overview
 
