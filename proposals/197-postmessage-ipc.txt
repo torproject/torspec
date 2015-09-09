@@ -2,8 +2,8 @@ Filename: 197-postmessage-ipc.txt
 Title: Message-based Inter-Controller IPC Channel
 Author: Mike Perry
 Created: 16-03-2012
-Status: Open
-Target: 0.2.4.x
+Status: REJECTED
+
 
 Overview
 
