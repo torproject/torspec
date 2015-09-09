@@ -2,7 +2,7 @@ Filename: 159-exit-scanning.txt
 Title: Exit Scanning
 Author: Mike Perry
 Created: 13-Feb-2009
-Status: Open
+Status: Informational
 
 Overview:
 
