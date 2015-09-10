@@ -1,0 +1,392 @@
+Filename: xxx-padding-negotiation.txt
+Title: Padding Negotiation
+Authors: Mike Perry
+Created: 01 September 2015
+Status: Draft
+
+
+0. Overview
+
+This proposal aims to describe mechanisms for requesting various types
+of padding from relays.
+
+These padding primitives are general enough to use to defend against
+both website traffic fingerprinting as well as hidden service circuit
+setup fingerprinting.
+
+
+1. Motivation
+
+Tor already supports both link-level padding via (CELL_PADDING cell
+types), as well as circuit-level padding (via RELAY_COMMAND_DROP relay
+cells).
+
+Unfortunately, there is no way for clients to request padding from
+relays, or request that relays not send them padding to conserve
+bandwidth. This proposal aims to create a mechanism for clients to do
+both of these.
+
+
+2. Link-level padding
+
+Padding is most urgently needed to defend against a malicious or
+compromised guard node. However, link-level padding is still useful to
+defend against an adversary that can merely observe a Guard node
+externally. Right now, the only case where link-level padding is known
+to defend against any realistic attacker is for low-resolution
+netflow-based attacks.
+
+In that scenario, the primary mechanism we need is a way for mobile
+clients to tell their Guards to stop padding, or to pad less often. The
+following Trunnel payloads should cover the needed parameters:
+
+    const CELL_PADDING_COMMAND_STOP = 1;
+    const CELL_PADDING_COMMAND_START = 2;
+
+    /* This command tells the relay to stop sending any periodic
+       CELL_PADDING cells. */
+    struct cell_padding_stop {
+      u8 command IN [CELL_PADDING_COMMAND_STOP];
+    };
+
+    /* This command tells the relay to alter its min and max timeout
+       range values, and if needed, send 
+    struct cell_padding_start {
+      u8 command IN [CELL_PADDING_COMMAND_START];
+
+      /* Min must not be lower than the current consensus parameter
+         nf_ito_low. */
+      u16 ito_low_ms;
+
+      /* Max must not be lower than ito_low_ms */
+      u16 ito_high_ms;
+    };
+
+If more scenarios are discovered, future command numbers could be used
+to include the end-to-end padding command payloads below, or other
+defense parameterizations.
+
+
+3. End-to-end circuit padding
+
+For end-to-end padding, we need two types of additional features: the
+ability to schedule additional incoming cells at one or more fixed
+points in the future, and the ability to schedule a statistical
+distribution of arbitrary padding to overlay on top of non-padding
+traffic (aka "Adaptive Padding").
+
+In both cases, these messages will be sent from clients to middle nodes
+using "leaky pipe" property of the 'recognized' field of RELAY cells,
+allowing padding to originate from middle nodes on a circuit in a way
+that is not detectable from the Guard node.
+
+3.1. Fixed-schedule padding message (RELAY_COMMAND_PADDING_SCHEDULE)
+
+The fixed schedule padding will be encoded in a
+RELAY_COMMAND_PADDING_SCHEDULE cell. It specifies a set of up to 80
+fixed time points in the future to send cells.
+
+XXX: 80 timers is a lot to allow every client to create. We may want to
+have something that checks this structure to ensure it actually
+schedules no more than N in practice, until we figure out how to
+optimize either libevent or timer scheduling/packet delivery.
+
+The RELAY_COMMAND_PADDING_SCHEDULE body is specified in Trunnel as
+follows:
+
+    struct relay_padding_schedule {
+       /* Number of microseconds before sending cells (cumulative) */
+       u32 when_send[80];
+
+       /* Number of cells to send at time point sum(when_send[0..i]) */
+       u16 num_cells[80];
+ 
+       /* Adaptivity: If 1, and server-originating cells arrive before the
+          next when_send time, then decrement the next non-zero when_send
+          index, so we don't send a padding cell then, too */
+       u8 adaptive IN [0,1];
+    };
+
+To allow both high-resolution time values, and the ability to specify
+timeout values far in the future, the time values are cumulative. In
+other words, sending a cell with when_send = [MAX_INT, MAX_INT, MAX_INT,
+0...] and num_cells = [0, 0, 100, 0...] would cause the relay to reply
+with 100 cells in 3*MAX_INT microseconds from the receipt of this cell.
+ 
+3.2. Adaptive Padding message (RELAY_COMMAND_PADDING_ADAPTIVE)
+
+The following message is derived from the Adaptive Padding defense
+specified in "Timing Attacks and Defenses"[1].
+
+The message encodes either one or two state machines, each of which
+contain two histograms ("Burst" and "Gap") governing their behavior.
+
+The "Burst" histogram specifies the delay probabilities for sending a
+padding packet after the arrival of a non-padding data packet.
+
+The "Gap" histogram specifies the delay probabilities for sending
+another padding packet after a padding packet was just sent from this
+node. This self-triggering property of the "Gap" histogram allows the
+construction of multi-packet padding trains using a simple statistical
+distribution.
+
+Both "Gap" and "Burst" histograms each have a special "Infinity" bin,
+which means "We have decided not to send a packet".
+
+Each histograms is combined with state transition information, which
+allows a client to specify the types of incoming packets that cause the
+state machine to decide to schedule padding cells (and/or when to cease
+scheduling them).
+
+The histograms and the associated state machines are specified in
+Trunnel as follows:
+
+    /* These constants form a bitfield to specify the types of events
+     * that can cause padding to start or stop from a given state. */
+    const RELAY_PADDING_TRANSITION_EVENT_INFINITY_BIN = 0; // "Always set"
+    const RELAY_PADDING_TRANSITION_EVENT_NONPADDING_RECV = 1;
+    const RELAY_PADDING_TRANSITION_EVENT_NONPADDING_SENT = 2;
+    const RELAY_PADDING_TRANSITION_EVENT_PADDING_SENT = 4;
+    const RELAY_PADDING_TRANSITION_EVENT_PADDING_RECV = 8;
+
+    const RELAY_PADDING_HISTOGRAM_INFINITY_BIN = 50;
+    /* 
+      This encodes a histogram delay distribution representing the
+      probability of sending a single RELAY_DROP cell after a given
+      delay in response to a non-padding cell.
+     */
+    struct burst_state {
+      u16 histogram[51];
+      u32 start_usec;
+      u16 max_sec;
+
+      /* This is a bitfield that specifies which direction and types
+         of traffic should cause us to schedule a padding packet
+         (and potentially transition to the Gap state). */
+      u8 transition_events;
+
+      /* Should we remove tokens from the histogram as packets are sent? */
+      u8 remove_toks IN [0,1];
+    };
+
+    /*
+      This histogram encodes a delay distribution representing the
+      probability of sending a single additional padding packet after
+      sending a padding packet that originated at this hop.
+     */
+    struct gap_state {
+      u16 histogram[51];
+      u32 start_usec;
+      u16 max_sec;
+
+      /* 
+        Integer value to add to the "Infinity" bin after each successive
+        padding packet is sent. Used to create an increasing likelihood
+        of hitting the termination condition with each successive padding
+        packet. */
+      u16 decay_by;
+
+      /* This is a bitfield which specifies which direction and types
+         of traffic should cause us to transition back to the burst
+         state. */
+      u8 transition_events;
+
+      /* Should we remove tokens from the histogram as packets are sent? */
+      u8 remove_toks IN [0,1];
+    };
+
+    struct adaptive_padding_machine {
+       struct burst_state burst;
+       struct gap_state gap;
+    };
+
+    /* This is the full payload of a RELAY_COMMAND_PADDING_ADAPTIVE
+       cell. */
+    struct relay_command_padding_adaptive {
+       u8 num_machines IN [1,2];
+
+       struct adaptive_padding_machine machines[num_machines];
+    };
+
+3.2.1. Histogram state machine operation
+
+Each of pair of histograms ("Burst" and "Gap") together form a state
+machine whose transitions are governed by incoming traffic and/or
+locally generated padding traffic.
+
+Each state machine has a Start state S, a Burst state B, and a Gap state
+G.
+
+The state machine starts idle (state S) until it receives a packet of a
+type that matches the bitmask in burst.transition_events. 
+
+This causes it to enter burst mode (state B), in which a delay t is
+sampled from the Burst histogram, and a timer is scheduled to count down
+until either another matching packet arrives, or t expires.
+
+If a matching packet arrives before t expires, a new delay is sampled
+and the process is repeated again, i.e. it remains in burst mode.
+
+Otherwise, a padding message is sent to the other end and the machine
+switches to state G (Gap mode). In state G, the machine samples from the
+Gap histogram and sends padding messages when the time it samples
+expires. An infinite delay can be sampled from the histograms. When an
+infinite delay is sampled while being in state G we jump back to state
+B. Similarly, a transition to S occurs when we sample an infinite time
+in B.
+
+Optionally, a transition from G to B can also occur upon receiving a
+packet, as specified by gap.transition_events bitmask.
+
+Clients are expected to maintain their own local version of the state
+machines, for reacting to their own locally generated traffic, in
+addition to sending one or more state machines to the middle relay.
+
+The histograms that the client uses locally will likely differ from the
+ones it sends to the upstream relay.
+
+3.2.2. Histogram decoding/representation
+
+Each of the histograms' fields represent a probability distribution that
+is expanded into bins representing time periods a[i]..b[i] as follows:
+
+start_usec,max_sec initialized from appropriate histogram type.
+
+a[0] = start_usec;
+n = RELAY_PADDING_HISTOGRAM_INFINITY_BIN;
+
+a[i] = start_usec + max_sec*USEC_PER_SEC/2^(n-i)
+b[i] = start_usec + max_sec*USEC_PER_SEC/2^(n-i-1)
+
+To sample the delay time to send a padding packet, perform the
+following:
+
+  i = 0;
+  curr_weight = histogram[0];
+
+  tot_weight = sum(histogram);
+  bin_choice = crypto_rand_int(tot_weight);
+
+  while (curr_weight < bin_choice) {
+    curr_weight += histogram[i];
+    i++;
+  }
+
+  if (i == RELAY_PADDING_HISTOGRAM_INFINITY_BIN)
+    return; // Don't send a padding packet
+
+  // Sample uniformly between a[i] and b[i]
+  send_padding_packet_at = a[i] + crypto_rand_int(b[i] - a[i]); 
+
+In this way, the bin widths are exponentially increasing in width, where
+the width is set at max_sec/2^(n-i) seconds. This exponentially
+increasing bin width allows the histograms to most accurately represent
+small interpacket delay (where accuracy is needed), and devote less
+accuracy to larger timescales (where accuracy is not as important).
+
+3.2.3. Token removal and refill
+
+If the remove_tok field is set to true for a given state's histogram,
+then whenever a padding packet is sent, the corresponding histogram
+bin's token count is decremented by one.
+
+If a non-padding packet arrives from the server before the chosen
+padding timer expires, then a token is removed from the nearest
+non-empty bin corresponding to the delay since the last packet was sent,
+and the padding packet timer is re-sampled from the histogram.
+
+If the entire histogram becomes empty, it is then refilled to the
+original values.
+
+3.2.4. Constructing the histograms
+
+Care must be taken when constructing the histograms themselves, since
+their non-uniform widths means that the actual underlying probability
+distribution needs to be both normalized for total number of tokens, as
+well as the non-uniform histogram bin widths.
+
+Care should also be taken with interaction with the token removal rules
+from Section 3.2.3. Obviously using a large number of tokens will cause
+token removal to have much less of an impact upon the adaptive nature of
+the padding in the face of existing traffic.
+
+Actual optimal histogram construction for different traffic types is
+expected to be a topic for further research.
+
+
+4. Security considerations and mitigations
+
+The risks from this proposal are primarily DoS/resource exhaustion, and
+side channels.
+
+4.1. Traffic handling
+
+Fully client-requested padding introduces a vector for resource
+amplification attacks and general network overload due to
+overly-aggressive client implementations requesting too much padding.
+
+Current research indicates that this form of statistical padding should
+be effective at overhead rates of 50-60%. This suggests that clients
+that use more padding than this are likely to be overly aggressive in
+their behavior.
+
+We recommend that three consensus parameters be used in the event that
+the network is being overloaded from padding to such a degree that
+padding requests should be ignored:
+
+  * CircuitPaddingMaxRatio
+    - The maximum ratio of padding traffic to non-padding traffic
+      (expressed as a percent) to allow on a circuit before ceasing
+      to pad. Ex: 75 means 75 padding packets for every 100 non-padding
+      packets.
+    - Default: 100
+  * CircuitPaddingLimitCount
+    - The number of padding cells that must be transmitted before the
+      ratio limit is applied.
+    - Default: 500
+  * CircuitPaddingLimitTime
+    - The time period in seconds over which to count padding cells for
+      application of the ratio limit.
+    - Default: 60
+
+XXX: Should we cap padding at these rates, or fully disable it once
+they're crossed?
+
+Proposal 251 introduced extra-info accounting at relays to enable us to
+measure the total overhead of both link and circuit-level padding at
+various relays.
+
+4.2. Libevent timer exhaustion
+ 
+As mentioned in section 3.1, scheduled padding may create an excessive
+number of libevent timers. Care should be taken in the implementation to
+devise a way to prevent clients from sending padding requests
+specifically designed to impact the ability of relays to function by
+causing too many timers to be scheduled at once.
+
+XXX: Can we suggest any specifics here? I can imagine a few ways of
+lazily scheduling timers only when they are close to their expiry time,
+and other ways of minimizing the number of pending timer callbacks at a
+given time, but I am not sure which would be best for libevent.
+
+4.3. Side channels
+
+In order to prevent relays from introducing side channels by requesting
+padding from clients, all of these commands should only be valid in the
+outgoing (from the client/OP) direction.
+
+Clients should perform accounting on the amount of padding that they
+receive, and if it exceeds the amount that they have requested, they
+alert the user of a potentially misbehaving node, and/or close the
+circuit.
+
+Similarly, if RELAY_DROP cells arrive from the last hop of a circuit,
+rather than from the expected interior node, clients should alert the
+user of the possibility of that circuit endpoint introducing a
+side-channel attack, and/or close the circuit.
+ 
+ 
+------------------- 
+ 
+ 
+1. http://freehaven.net/anonbib/cache/ShWa-Timing06.pdf
