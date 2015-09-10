@@ -1,7 +1,8 @@
 Filename: 188-bridge-guards.txt
 Title: Bridge Guards and other anti-enumeration defenses
-Author: Nick Mathewson
+Author: Nick Mathewson, Isis Lovecruft
 Created: 14 Oct 2011
+Modified: 10 Sep 2015
 Status: Open
 
 1. Overview
@@ -76,111 +77,317 @@ Status: Open
    remove, and remove a layer of encryption on incoming cells on that
    circuit corresponding to the encryption that the guard will add.
 
-3.1. An example
+3.1. Loose-Source Routed Circuit Construction
 
-   This example doesn't add anything to the design above, but has some
-   interesting inline notes.
+   Alice, an OP, is using a bridge, Bob, and she has chosen the
+   following path through the network:
 
-      - Alice has connected to her bridge Bob, and built a circuit
-        through Bob, with the negotiated forward and reverse keys KB_f
-        and KB_r.
+       Alice -> Bob -> Charlie -> Deidra
 
-      - Alice then wants to extend the circuit to node Charlie.  She
-        makes a hybrid-encrypted onionskin, encrypted to Charlie's
-        public key, containing her chosen g^x value.  She puts this in
-        an extend cell: "Extend (Charlie's address) (Charlie's OR
-        Port) (Onionskin) (Charlie's ID)".  She encrypts this with
-        KB_f and sends it as a RELAY_EARLY cell to Bob.
+   However, Bob has decided to take advantage of the loose-source
+   routing circuit characteristic (for example, in order to use a bridge
+   guard), and Bob has chosen N additional loose-source routed hop(s),
+   through which he will transparently relays cells.
 
-      - Bob receives the RELAY_EARLY cell, and decrypts it with KB_f.
-        He then sees that it's an extend cell for him.
+   NOTE: For the purposes of bridge guards, N is always 1.  However, for
+   completion's sake, the following details of the circuit construction
+   are generalized to include N > 1.  Additionally, the following steps
+   should hold for a hop at any position in Alice's circuit that has
+   decided to take advantage of the loose-source routing feature, not
+   only for bridge ORs.
 
-        So far, this is exactly the same as the current procedure that
-        Alice and Bob would follow.  Now we diverge:
+   From Alice's perspective, her circuit path matches the one diagrammed
+   above.  However, the overall path of the circuit is:
 
-      - Instead of connecting to Charlie directly, Bob makes sure that
-        he is connected to his guard, Guillaume.  Bob uses a
-        CREATE_FAST cell (or a CREATE cell, but see 4.1 below) to open a
-        circuit to Guillaume.  Now Bob and Guillaume share keys KG_f
-        and KG_b.
+       Alice -> Bob -> Guillaume -> Charlie -> Deidra
 
-      - Now Bob encrypts the Extend cell body with KG_f and sends it
-        as a RELAY_EARLY cell to Guillaume.
+   From Bob's perspective, the circuit's path is:
 
-      - Guillaume receives it, decrypts it with KG_f, and sees:
-        "Extend (Charlie's address) (Charlie's OR Port) (Onionskin)
-        (Charlie's ID)".  Guillaume acts accordingly: creating a
-        connection to Charlie if he doesn't have one, ensuring that
-        the ID is as expected, and then sending the onionskin in a
-        create cell on that connection.
+       Alice -> Bob -> Guillaume -> Charlie -> UNKNOWN
 
-        Note that Guillaume is behaving exactly as a regular node
-        would upon receiving an Extend cell.
+   Interestingly, because Bob's behaviour towards Guillaume and choices
+   of cell types is that of a normal OP, Guillaume's perspective of the
+   circuit's path is:
 
-      - Now the handshake finishes.  Charlie receives the onionskin
-        and sends Guillaume "CREATED g^y,KH".  Guillaume sends Bob
-        "E(KG_r, EXTENDED g^y KH)".  (Charlie and Guillaume are still
-        running as regular Tor nodes do today).
+       Bob -> Guillaume -> Charlie -> UNKNOWN
 
-      - With this extend cell, and with all future relay cells
-        received on this circuit, Bob first decrypts the cell with
-        KG_r, then re-encrypts it with KB_r, then passes it to Alice.
-        When Alice receives the cell, it will be just as she would
-        have received if Bob had extended to Charlie directly.
+   That is, to Guillaume, Bob appears (for the most part) to be a
+   normally connecting client.  (See §4.1 for more detailed analysis.)
 
-      - With all future outgoing cells that he receives from Alice,
-        Bob first decrypts the cell with KA_f, and if the cell does
-        not have Bob as its destination, Bob encrypts it with KG_f
-        before passing it to Guillaume.
+3.1.1. Detailed Steps of Loose-Source Routed Circuit Construction
+
+   1. Connection from OP
+
+      Alice has connected to Bob, and she has sent to Bob either a
+      CREATE/CREATE_FAST or CREATE2 cell.
+
+   2. Loose-Source Path Selection
+
+      In anticipation of Alice's first RELAY_EARLY cell (which will
+      contain an EXTEND cell to Alice's next hop), Bob begins
+      constructing a loose-source routed circuit.  To do so, Bob chooses
+      N additional hop(s):
+
+      2.a. For the first additional hop, H_1, Bob chooses a suitable
+           entry guard node, Guillaume, using the same algorithm as OPs.
+           See "§5 Guard nodes" of path-spec.txt for additional
+           information on the selection algorithm.
+
+      2.b. Each additional hop, [H_2, ..., H_N], is chosen at random
+           from a list of suitable, non-excluded ORs.
+
+   3. Loose-Source Routed Circuit Extension and Cell Types
+
+      Bob now follows the same procedure as OPs use to complete the key
+      exchanges with his chosen additional hop(s).
+
+      While undergoing these following substeps, Bob SHOULD continue to
+      proceed with Step 4, below, in parallel, as an optimization for
+      speeding up circuit construction.
+
+      3.a. Create Cells
+
+           Bob sends the appropriate type of create cell to Guillaume.
+           For ORs new enough to support the NTor handshake (nearly all
+           of them at this point), Bob sends a CREATE2 cell.  Otherwise,
+           for ORs which only support the older TAP handshake, Bob sends
+           either a CREATE or CREATE_FAST cell, using the same
+           decision-making logic as OPs.
+
+           See §4.1 for more information the distinguishability of
+           bridges based upon whether they use CREATE versus
+           CREATE_FAST.  Also note that the CREATE2 cell has since
+           become ubiquitous after this proposal was originally drafted.
+           Thus, because we prefer ORs which use loose-source routing to
+           behave (as much as possible) like OPs, we now prefer to use
+           CREATE2.
+
+      3.b. Created Cells
+
+           Later, when Bob receives a corresponding CREATED/CREATED_FAST
+           or CREATED2 cell from Guillaume, Bob extracts key material
+           for the shared forward and reverse keys, KG_f and KG_b,
+           respectively.
+
+      3.c. Extend Cells
+
+           When N > 1, for each additional hop, H_i, in [H_2, ..., H_N],
+           Bob chooses the appropriate type of extend cell for H_i, and
+           sends this extend cell to H_i-1, who transforms it into a
+           create cell in order to perform the extension.  To choose
+           which type of extend cell to send, Bob uses the same
+           algorithm as an OP to determine whether to use EXTEND or
+           EXTEND2.  Similar to the CREATE* cells above, for most modern
+           ORs, this will very likely mean an EXTEND2 cell.
+
+      3.d. Extended Cells
+
+           When a corresponding EXTENDED/EXTENDED2 cell is received for
+           an additional hop, H_i, Bob extracts the shared forward and
+           reverse keys, Ki_f and Ki_b, respectively.
+
+   4. Responding to the OP
+
+      Now that the additional hops in Bob's loose-source routed circuit
+      are chosen, and construction of the loose-source routed circuit
+      has begun, Bob answers Alice's original CREATE/CREATE_FAST or
+      CREATE2 cell (from Step 1) by sending the corresponding created
+      cell type.
+
+      Alice has now built a circuit through Bob, and the two share the
+      negotiated forward and reverse keys, KB_n and KB_p, respectively.
+
+      Note that Bob SHOULD do this step in tandem with the loose-source
+      routed circuit construction procedure outlined in Step 3, above.
+
+   5. OP Circuit Extension
+
+      Alice then wants to extend the circuit to node Charlie.  She makes
+      a hybrid-encrypted onionskin, encrypted to Charlie's public key,
+      containing her chosen g^x value.  She puts this in an extend cell:
+      "Extend (Charlie's address) (Charlie's OR Port) (Onionskin)
+      (Charlie's ID)".  She encrypts this with KB_n and sends it as a
+      RELAY_EARLY cell to Bob.
+
+      Bob's behaviour is now dependent on whether the loose-source
+      routed circuit construction steps (as outlined in Step 3, above)
+      have already completed.
+
+      5.a. The Loose-Source Routed Circuit Construction is Incomplete
+
+           If Bob has not yet finished the loose-source routed circuit
+           construction, then Bob MUST store the first outgoing
+           (i.e. exitward) RELAY_EARLY cell received from Alice until
+           the loose-source routed circuit construction has been
+           completed.
+
+           If any incoming (i.e. toward the OP) RELAY* cell is received
+           while the loose-source routed circuit is not fully
+           constructed, Bob MUST drop the cell.
+
+           If Bob has already stored Alice's first RELAY_EARLY cell, and
+           Alice sends any additional RELAY* cell, then Bob SHOULD mark
+           the entire circuit for close with END_CIRC_REASON_TORPROTOCOL.
+
+      5.b. The Loose-Source Routed Circuit Construction is Completed
+
+           Later, when the loose-source routed circuit is fully
+           constructed, Bob MUST send any stored cells from Alice
+           outward by following the procedure described in Step 6.a.
+
+   6. Relay Cells
+
+      When receiving a RELAY* cell in either direction, Bob MAY keep
+      statistics on the number of relay cells encountered, as well as
+      the number of relay cells relayed.
+
+      6.a. Outgoing Relay Cells
+
+           Bob decrypts the RELAY* cell with KB_n.  If the cell becomes
+           recognized, Bob should now follow the relay command checks
+           described in Step 6.c.
+
+           Bob MUST encrypt the relay cell's underlying payload to each
+           additional hop in the loose-source routed circuit, in
+           reverse: for each additional hop, H_i, in [H_N, ..., H_1],
+           Bob encrypts the relay cell payload to Ki_f, the shared
+           forward key for the hop H_i.
+
+           Bob MUST update the forward digest, DG_f, of the relay cell,
+           regardless of whether or not the cell is recognized.  See
+           6.c. for additional information on recognized cells.
+
+           Bob now sends the cell outwards through the additional hops.
+           At each hop, H_i, the hop removes a layer of the onionskin by
+           decrypting the cell with Ki_f, and then hop H_i forwards the
+           cell to the next addition additional hop H_i+1.  When the
+           final additional hop, H_N, received the cell, the OP's cell
+           command and payload should be processed by H_N in the normal
+           manner for an OR.
+
+      6.b. Incoming Relay Cells
+
+           Bob MUST decrypt the relay cell's underlying payload from
+           each additional hop in the loose-source routed circuit (in
+           forward order, this time): For each additional hop, H_i, in
+           [H_1, ..., H_N], Bob decrypts the relay cell payload with
+           Ki_b, the shared backward key for the hop H_i.
+
+           If the cell has becomes recognized after all decryptions, Bob
+           should now follow the relay command checks described in Step
+           6.c.
+
+           Bob MUST update the backward digest, DG_b, of the relay cell,
+           regardless of whether or not the cell is recognized.  See
+           6.c. for additional information on recognized cells.
+
+           Bob encrypts the cell towards the OP with KB_p, and sends the
+           cell inwards.
+
+      6.c. Recognized Cells
+
+           If a relay cell, either incoming or outgoing, becomes
+           recognized (i.e. Bob sees that the cell was intended for him)
+           after decryption, and there is no stream attached to the
+           circuit, then Bob SHOULD mark the circuit for close if the
+           relay command contained within the cell is any of the
+           following types:
+
+               - RELAY_BEGIN
+               - RELAY_CONNECTED
+               - RELAY_END
+               - RELAY_RESOLVE
+               - RELAY_RESOLVED
+               - RELAY_BEGIN_DIR
+
+           Apart from the above checks, Bob SHOULD essentially treat
+           every cell as "unrecognized" by following the en-/de-cryption
+           procedures in Steps 6.a. and 6.b. regardless of whether the
+           cell is actually recognized or not.  That is, since this is a
+           loose-source routed circuit, Bob SHOULD relay cells not
+           intended for him *and* cells intended for him through the
+           leaky pipe, no matter what the cell's underlying payload and
+           command are.
+
+3.1.2. Example Loose-Source Circuit Construction
+
+   For example, given the following circuit path chosen by Alice:
+
+       Alice -> Bob -> Charlie -> Deidra
+
+   when Alice wishes to extend to node Charlie, and Bob the bridge is
+   using only one additional loose-source routed hop, Guillaume, as his
+   bridge guard, the following steps are taken:
+
+       - Alice packages the extend into a RELAY_EARLY cell and encrypts
+         the RELAY_EARLY cell with KB_f to Bob.
+
+       - Bob receives the RELAY_EARLY cell from Alice, and he follows
+         the procedure (outlined in §3.1.1. Step 6.a.) by:
+
+           * Decrypting the cell with KB_f,
+           * Encrypting the cell to the forward key, KG_f, which Bob
+             shares with his guard node, Guillaume,
+           * Updating the cell forward digest, DG_f, and
+           * Sending the cell as a RELAY_EARLY cell to Guillaume.
+
+       - When Guillaume receives the cell from Bob, he processes it by:
+
+           * Decrypting the cell with KG_f.  Guillaume now sees that it
+             is a RELAY_EARLY cell containing an extend cell "intended"
+             for him, containing: "Extend (Charlie's address) (Charlie's
+             OR Port) (Onionskin) (Charlie's ID)".
+           * Performing the circuit extension to the specified node,
+             Charlie, by acting accordingly: creating a connection to
+             Charlie if he doesn't have one, ensuring that the ID is as
+             expected, and then sending the onionskin in a create cell
+             on that connection.  Note that Guillaume is behaving
+             exactly as a regular node would upon receiving an Extend
+             cell.
+           * Now the handshake finishes.  Charlie receives the onionskin
+             and sends Guillaume "CREATED g^y,KH".
+           * Making an extended cell for Bob which contains
+             "E(KG_b, EXTENDED g^y KH)", and
+           * Sending the extended cell to Bob.  Note that Charlie and
+             Guillaume are both still behaving in a manner identical to
+             regular ORs.
+
+       - Bob receives the extended cell from Guillaume, and he follows
+         the procedure (outlined in §3.1.1. Step 6.b.) by:
+
+           * Decrypting the cell with KG_b,
+           * Encrypting the cell to Alice with KB_b,
+           * Updating the cell backward digest, DG_b, and
+           * Sending the cell to Alice.
+
+        - Alice receives the cell, and she decrypts it with KB_b, just
+          as she would have if Bob had extended to Charlie directly.
+          She then processes the extended cell contained within to
+          extract shared keys with Charlie.  Note that Alice's behaviour
+          is identical to regular OPs.
+
+3.2. Additional Notes on the Construction
 
    Note that this design does not require that our stream cipher
    operations be commutative, even though they are.
 
    Note also that this design requires no change in behavior from any
-   node other than Bob the bridge.
+   node other than Bob, and as we can see in the above example in §3.1.2
+   for Alice's circuit extension, Alice, Guillaume, and Charlie behave
+   identical to a normal OP and normal ORs.
 
-   Finally, observe that even though the circuit is one hop longer
-   than it would be otherwise, no relay's count of permissible
-   RELAY_EARLY cells falls lower than it otherwise would.  This is
-   because the extra hop that Bob adds is done with a CREATE_FAST
-   cell, and so he does not need to send any RELAY_EARLY cells not
-   originated by Alice.
+   Finally, observe that even though the circuit N hops longer than it
+   would be otherwise, no relay's count of permissible RELAY_EARLY cells
+   falls lower than it otherwise would.  This is because the extra hop
+   that Bob adds is done with RELAY_EARLY cells, then he continues to
+   relay Alice's cells as RELAY_EARLY, until the appropriate maximum
+   number of RELAY_EARLY cells is reached.  Afterwards, further
+   RELAY_EARLY cells from Alice are repackaged by Bob as normal RELAY
+   cells.
 
-4. Other ideas and alternative designs
+4. Alternative designs
 
-   In addition to the design above, there are more ways to try to
-   prevent enumeration.
-
-4.1. Make it harder to tell clients from bridges
-
-   Right now, there are multiple ways for the node after a bridge to
-   distinguish a circuit extended through the bridge from one
-   originating at the bridge.  (This lets the node after the bridge
-   tell that a bridge is talking to it.)
-
-   One of the giveaways here is that the first hop in a circuit is
-   created with CREATE_FAST cells, but all subsequent hops are created
-   with CREATE cells.  In the above design, it's no longer quite so
-   simple to tell, since all of the circuits that extend through a
-   bridge now reach its guards through CREATE_FAST cells, whether the
-   bridge originated them or not.
-
-   (If we adopt a faster circuit extension algorithm -- for example,
-   Goldberg, Stebila, and Ustaoglu's design instantiated over
-   curve25519 -- we could also solve this issue by eliminating
-   CREATE_FAST/CREATED_FAST entirely, which would also help our
-   security margin a little.)
-
-   The CREATE/CREATE_FAST distinction is not the only way for a
-   bridge's guard to tell bridges from orginary clients, however.
-   Most importantly, a busy bridge will open far more circuits than a
-   client would.  More subtly, the timing on response from the client
-   will be higher and more highly variable that it would be with an
-   ordinary client.  I don't think we can make bridges behave wholly
-   indistinguishably from clients: that's why we should go with guard
-   nodes for bridges.
-
-4.2. Client-enforced bridge guards
+4.1. Client-enforced bridge guards
 
    What if Tor didn't have loose source routing?  We could have
    bridges tell clients what guards to use by advertising those guard
@@ -191,7 +398,7 @@ Status: Open
 
    Fortunately, we don't need to go down this path.  So let's not!
 
-4.3. Separate bridge-guards and client-guards
+4.2. Separate bridge-guards and client-guards
 
    In the design above, I specify that bridges should use the same
    guard nodes for extending client circuits as they use for their own
@@ -209,11 +416,84 @@ Status: Open
    through the bridge to a node it controls, and finding out where the
    extend request arrives from).
 
-5. Other considerations
+5. Additional bridge enumeration methods and protections
+
+   In addition to the design above, there are more ways to try to
+   prevent enumeration.
+
+   Right now, there are multiple ways for the node after a bridge to
+   distinguish a circuit extended through the bridge from one
+   originating at the bridge.  (This lets the node after the bridge
+   tell that a bridge is talking to it.)
+
+5.1. Make it harder to tell clients from bridges
+
+   When using the older TAP circuit handshake protocol, one of the
+   giveaways is that the first hop in a circuit is created with
+   CREATE_FAST cells, but all subsequent hops are created with CREATE
+   cells.
+
+   However, because nearly everything in the network now uses the newer
+   NTor circuit handshake protocol, clients send CREATE2 cells to all
+   hops, regardless of position.  Therefore, in the above design, it's
+   no longer quite so simple to distinguish an OP connecting through
+   bridge from an actual OP, since all of the circuits that extend
+   through a bridge now reach its guards through CREATE2 cells (whether
+   the bridge originated them or not), and only as a fallback (e.g. if
+   an additional node in the loose-source routed path does not support
+   NTor) will the bridge ever use CREATE/CREATE_FAST.  (Additionally,
+   when using the fallback mathod, the behaviour for choosing either
+   CREATE or CREATE_FAST is identical to normal OP behaviour.)
+
+   The CREATE/CREATE_FAST distinction is not the only way for a
+   bridge's guard to tell bridges from orginary clients, however.
+   Most importantly, a busy bridge will open far more circuits than a
+   client would.  More subtly, the timing on response from the client
+   will be higher and more highly variable that it would be with an
+   ordinary client.  I don't think we can make bridges behave wholly
+   indistinguishably from clients: that's why we should go with guard
+   nodes for bridges.
+
+   [XXX For further research: we should study the methods by which a
+   bridge guard can determine that they are acting as a guard for a
+   bridge, rather than for a normal OP, and which methods are likely to
+   be more accurate or efficient than others. -IL]
+
+5.2. Bridge Reachability Testing
+
+   Currently, a bridge's reachability is tested both by the bridge
+   itself (called "self-testing") and by the BridgeAuthority.
+
+5.2.1. Bridge Reachability Self-Testing
+
+   Before a bridge uploads its descriptors to the BridgeAuthority, it
+   creates a special type of testing circuit which ends at itself:
+
+       Bob -> Guillaume -> Charlie -> Bob
+
+   Thus, going to all this trouble to later use loose-source routing in
+   order to relay Alice's traffic through Guillaume (rather than
+   connecting directly to Charlie, as Alice intended) is diminished by
+   the fact that Charlie can still passively enumerate bridges by
+   waiting to be asked to connect to a node which is not contained
+   within the consensus.
+
+   We could get around this option by disabling self-testing for bridges
+   entirely, by automatically setting "AssumeReachable 1" for all bridge
+   relays… although I am not sure if this is wise.
+
+5.2.2. Bridge Reachability Testing by the BridgeAuthority
+
+   After receiving Bob's descriptors, the BridgeAuthority attempts to
+   connect to Bob's ORPort by making a direct TLS connection to the
+   bridge's advertised ORPort.
+
+   Should we change this behaviour?  One the one hand, at least this
+   does not enable any random OR in the entire network to enumerate
+   bridges.  On the other hand, any adversary who can observe packets
+   from the BridgeAuthority is capable of enumeration.
+
+6. Other considerations
 
    What fraction of our traffic is bridge traffic?  Will this alter
    our circuit selection weights?
-
-   Are the current guard selection/evaluation/replacement mechanisms
-   adequate for bridge guards, or do bridges need to get more
-   sophisticated?
