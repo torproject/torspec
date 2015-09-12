@@ -174,6 +174,7 @@ specified in Trunnel as follows:
     const RELAY_PADDING_TRANSITION_EVENT_NONPADDING_SENT = 2;
     const RELAY_PADDING_TRANSITION_EVENT_PADDING_SENT = 4;
     const RELAY_PADDING_TRANSITION_EVENT_PADDING_RECV = 8;
+    const RELAY_PADDING_TRANSITION_EVENT_INFINITY = 16;
 
     /* This payload encodes a histogram delay distribution representing
      * the probability of sending a single RELAY_DROP cell after a
@@ -273,7 +274,7 @@ This causes it to enter burst mode (state B), in which a delay t is
 sampled from the Burst histogram, and a timer is scheduled to count down
 until either another matching packet arrives, or t expires. If the
 "Infinity" time is sampled from this histogram, the machine returns to
-the Start state.
+the lowest state with the INFINITY event bit set.
 
 If a packet that matches machines[i].burst.transition_start_events
 arrives before t expires, the machine transitions back to the Start
@@ -290,7 +291,8 @@ arrives (or is sent), the machine transitions to the Gap state G.
 
 In state G, the machine samples from the Gap histogram and sends padding
 messages when the time it samples expires. If an infinite delay is
-sampled while being in state G we jump back to state B.
+sampled while being in state G we jump back to state B or S,
+depending upon the usage of the infinity event bitmask.
 
 If a packet arrives that matches gap.transition_start_events, the
 machine transitions back to the Start state.
@@ -349,11 +351,15 @@ the relay state machines:
  machines[0].burst.transition_gap_events =
     RELAY_PADDING_TRANSITION_EVENT_PADDING_SENT;
 
+ machines[0].burst.transition_start_events =
+    RELAY_PADDING_TRANSITION_EVENT_INFINITY;
+
  machines[0].gap.transition_reschedule_events =
     RELAY_PADDING_TRANSITION_EVENT_PADDING_SENT;
 
  machines[0].gap.transition_burst_events =
-    RELAY_PADDING_TRANSITION_EVENT_NONPADDING_SENT;
+    RELAY_PADDING_TRANSITION_EVENT_NONPADDING_SENT |
+    RELAY_PADDING_TRANSITION_EVENT_INFINITY;
 
 The rest of the transition fields would be 0.
 
