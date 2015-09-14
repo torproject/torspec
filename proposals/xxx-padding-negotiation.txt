@@ -106,11 +106,13 @@ The RELAY_COMMAND_PADDING_SCHEDULE body is specified in Trunnel as
 follows:
 
     struct relay_padding_schedule {
+       u8 schedule_length IN [1..80];
+
        /* Number of microseconds before sending cells (cumulative) */
-       u32 when_send[80];
+       u32 when_send[schedule_length];
 
        /* Number of cells to send at time point sum(when_send[0..i]) */
-       u16 num_cells[80];
+       u16 num_cells[schedule_length];
 
        /* Adaptivity: If 1, and server-originating cells arrive before the
           next when_send time, then decrement the next non-zero when_send
@@ -123,6 +125,10 @@ timeout values far in the future, the time values are cumulative. In
 other words, sending a cell with when_send = [MAX_INT, MAX_INT, MAX_INT,
 0...] and num_cells = [0, 0, 100, 0...] would cause the relay to reply
 with 100 cells in 3*MAX_INT microseconds from the receipt of this cell.
+
+This scheduled padding is non-periodic. For any forms of periodic
+padding, implementations should use the RELAY_COMMAND_PADDING_ADAPTIVE
+cell from Section 3.2 instead.
 
 3.2. Adaptive Padding message (RELAY_COMMAND_PADDING_ADAPTIVE)
 
@@ -175,6 +181,13 @@ specified in Trunnel as follows:
     const RELAY_PADDING_TRANSITION_EVENT_PADDING_SENT = 4;
     const RELAY_PADDING_TRANSITION_EVENT_PADDING_RECV = 8;
     const RELAY_PADDING_TRANSITION_EVENT_INFINITY = 16;
+    const RELAY_PADDING_TRANSITION_EVENT_BINS_EMPTY = 32;
+
+    /* Token Removal rules. Enum, not bitfield. */
+    const RELAY_PADDING_REMOVE_NO_TOKENS = 0;
+    const RELAY_PADDING_REMOVE_LOWER_TOKENS = 1;
+    const RELAY_PADDING_REMOVE_HIGHER_TOKENS = 2;
+    const RELAY_PADDING_REMOVE_CLOSEST_TOKENS = 3;
 
     /* This payload encodes a histogram delay distribution representing
      * the probability of sending a single RELAY_DROP cell after a
@@ -205,7 +218,7 @@ specified in Trunnel as follows:
 
       /* If true, remove tokens from the histogram upon padding and
        * non-padding activity. */
-      u8 remove_toks IN [0,1];
+      u8 remove_tokens IN [0..3];
     };
 
     /* This histogram encodes a delay distribution representing the
@@ -237,7 +250,7 @@ specified in Trunnel as follows:
 
       /* If true, remove tokens from the histogram upon padding and
          non-padding activity. */
-      u8 remove_toks IN [0,1];
+      u8 remove_tokens IN [0..3];
     };
 
     struct adaptive_padding_machine {
@@ -253,6 +266,9 @@ specified in Trunnel as follows:
     /* This is the full payload of a RELAY_COMMAND_PADDING_ADAPTIVE
      * cell. */
     struct relay_command_padding_adaptive {
+       /* Technically, we could allow more than 2 state machines here,
+          but only two are sure to fit. More than 2 seems excessive
+          anyway. */
        u8 num_machines IN [1,2];
 
        struct adaptive_padding_machine machines[num_machines];
@@ -268,7 +284,9 @@ Each state machine has a Start state S, a Burst state B, and a Gap state
 G.
 
 The state machine starts idle (state S) until it receives a packet of a
-type that matches the bitmask in machines[i].transition_burst_events.
+type that matches the bitmask in machines[i].transition_burst_events. If
+machines[i].transition_burst_events is 0, transition to the burst state
+happens immediately.
 
 This causes it to enter burst mode (state B), in which a delay t is
 sampled from the Burst histogram, and a timer is scheduled to count down
@@ -382,7 +400,7 @@ n = histogram_len-1
 INFINITY_BIN = n
 
 a[0] = start_usec;
-b[0] = start_usec + max_sec*USEC_PER_SEC/2^(n);
+b[0] = start_usec + max_sec*USEC_PER_SEC/2^(n-1);
 for(i=1; i < n; i++) {
   a[i] = start_usec + max_sec*USEC_PER_SEC/2^(n-i)
   b[i] = start_usec + max_sec*USEC_PER_SEC/2^(n-i-1)
@@ -416,18 +434,25 @@ accuracy to larger timescales (where accuracy is not as important).
 
 3.2.4. Token removal and refill
 
-If the remove_tok field is set to true for a given state's histogram,
-then whenever a padding packet is sent, the corresponding histogram
-bin's token count is decremented by one.
+If the remove_tokens field is set to a non-zero value for a given
+state's histogram, then whenever a padding packet is sent, the
+corresponding histogram bin's token count is decremented by one.
 
 If a packet matching the current state's transition_reschedule_events
 bitmask arrives from the server before the chosen padding timer expires,
-then a token is removed from the nearest non-empty bin corresponding to
+then a token is removed from a non-empty bin corresponding to
 the delay since the last packet was sent, and the padding packet timer
 is re-sampled from the histogram.
 
+The three enums for the remove_tokens field govern if we take the token
+out of the nearest lower non-empty bin, the nearest higher non-empty
+bin, or simply the closest non-empty bin.
+
 If the entire histogram becomes empty, it is then refilled to the
-original values.
+original values. This refill happens prior to any state transitions due
+to RELAY_PADDING_TRANSITION_EVENT_BINS_EMPTY (but obviously does not
+prevent the transition from happening).
+
 
 3.2.5. Constructing the histograms
 
@@ -484,18 +509,19 @@ padding requests should be ignored:
       (expressed as a percent) to allow on a circuit before ceasing
       to pad. Ex: 75 means 75 padding packets for every 100 non-padding
       packets.
-    - Default: 100
+    - Default: 120
   * CircuitPaddingLimitCount
     - The number of padding cells that must be transmitted before the
       ratio limit is applied.
-    - Default: 500
+    - Default: 5000
   * CircuitPaddingLimitTime
     - The time period in seconds over which to count padding cells for
-      application of the ratio limit.
+      application of the ratio limit (ie: reset the limit count this
+      often).
     - Default: 60
 
 XXX: Should we cap padding at these rates, or fully disable it once
-they're crossed?
+they're crossed? Probably cap?
 
 Proposal 251 introduced extra-info accounting at relays to enable us to
 measure the total overhead of both link and circuit-level padding at
@@ -548,16 +574,18 @@ rather than from the expected interior node, clients should alert the
 user of the possibility of that circuit endpoint introducing a
 side-channel attack, and/or close the circuit.
 
-4.5 Memory exhaustion
+4.5. Memory exhaustion
 
 Because interior nodes do not have information on the current circuits
 SENDME windows, it is possible for malicious clients to consume the
 buffers of relays by specifying padding, and then not reading from the
 associated circuits.
 
-XXX: This is bad. We need to add padding-level flow control windows :(
+XXX: Tor already had a few flow-control related DoS's in the past[3]. Is
+that defense sufficient here without any mods? It seems like it may be!
 
 -------------------
 
 1. https://gitweb.torproject.org/torspec.git/tree/proposals/251-netflow-padding.txt
 2. http://freehaven.net/anonbib/cache/ShWa-Timing06.pdf
+3. https://blog.torproject.org/blog/new-tor-denial-service-attacks-and-defenses
