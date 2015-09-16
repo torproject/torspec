@@ -76,7 +76,7 @@ How new proposals get added:
   To get your proposal in, send it to the tor-dev mailing list.
 
   The current proposal editors are Nick Mathewson, Jacob Appelbaum, George
-  Kadianakis, Sebastian Hahn, Damian Johnson, Isis Lovecruft, and David
+  Kadianakis, Damian Johnson, Isis Lovecruft, and David
   Goulet.
 
 What should go in a proposal:
@@ -185,7 +185,7 @@ Proposal status:
       it into a new spec for a new subsystem.
 
    The editors maintain the correct status of proposals, based on rough
-   consensus and his own discretion.
+   consensus and their own discretion.
 
 Proposal numbering:
 
