@@ -70,12 +70,14 @@ How new proposals get added:
 
   Once an idea has been proposed on the development list, a properly formatted
   (see below) draft exists, and rough consensus within the active development
-  community exists that this idea warrants consideration, the proposal editor
+  community exists that this idea warrants consideration, the proposal editors
   will officially add the proposal.
 
   To get your proposal in, send it to the tor-dev mailing list.
 
-  The current proposal editors are Nick Mathewson and Jacob Appelbaum.
+  The current proposal editors are Nick Mathewson, Jacob Appelbaum, George
+  Kadianakis, Sebastian Hahn, Damian Johnson, Isis Lovecruft, and David
+  Goulet.
 
 What should go in a proposal:
 
@@ -174,8 +176,15 @@ Proposal status:
 
    Meta: This is not a proposal, but a document about proposals.
 
+   Reserve: This proposal is not something we're currently planning to
+      implement, but we might want to resurrect it some day if we decide to
+      do something like what it proposes.
 
-   The editor maintains the correct status of proposals, based on rough
+   Informational: This proposal is the last word on what it's doing.
+      It isn't going to turn into a spec unless somebody copy-and-pastes
+      it into a new spec for a new subsystem.
+
+   The editors maintain the correct status of proposals, based on rough
    consensus and his own discretion.
 
 Proposal numbering:
