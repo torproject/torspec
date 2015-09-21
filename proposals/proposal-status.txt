@@ -385,8 +385,6 @@ again to remind me!
      right, might lead clients to kick themselves off the network out of
      paranoia. So, this proposal could use more analysis.  (2/2015)
 
-TAKE ANOTHER LOOK AT THESE:
-
 242  Better performance and usability for the MyFamily option [OPEN]
 
      Describes a mechanism for using a new ed25519 signature type to
@@ -394,12 +392,52 @@ TAKE ANOTHER LOOK AT THESE:
      family lines. (9/2015)
 
 245  Deprecating and removing the TAP circuit extension protocol [DRAFT]
+
+     Explains a migration path for finally removing all support for the
+     TAP circuit extension protocol over several Tor versions. (9/2015)
+
 246  Merging Hidden Service Directories and Introduction Points [OPEN]
+
+     XXXX
+
 247  Defending Against Guard Discovery Attacks using Vanguards [DRAFT]
+
+     XXXX
+
 248  Remove all RSA identity keys [DRAFT]
+
+     Explains a migration path for removing RSA1024 identity keys in the
+     future, once all Tor instances support Ed25519 identity
+     keys. (9/2015)
+
 249  Allow CREATE cells with >505 bytes of handshake data [DRAFT]
+
+     Explains how to split CREATE cells (and other stuff) across
+     multiple RELAY_EXTEND cells.  This one will be helpful if we want
+     to add support for some kind of circuit extension protocol
+     containing a postquantum forward-secure handshake, like ntru or
+     ring-lwe. (9/2015)
+
 250  Random Number Generation During Tor Voting [DRAFT]
+
+     Describes a commit-and-reveal protocol for creating shared
+     randomness among the authorities during the voting process. Required
+     for a few other proposals, such as 224. (9/2015)
+
 251  Padding for netflow record resolution reduction [DRAFT]
+
+     Proposes a periodic "keepalive-like" packet be sent over quiet Tor
+     connections, so that incidental netflow record collection in
+     default router configurations reveals less about when flows begin
+     and end.
+
 252  Single Onion Services [DRAFT]
+
+     XXXX
+
 253  Out of Band Circuit HMACs [DRAFT]
+
+     Allows participating nodes to authenticate the whole contents of a
+     circuit point-to-point so as to better resist or detect some kinds
+     of tagging attacks. (9/2015)
 
