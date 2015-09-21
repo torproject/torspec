@@ -63,7 +63,7 @@ Proposals by number:
 140  Provide diffs between consensuses [ACCEPTED]
 141  Download server descriptors on demand [OBSOLETE]
 142  Combine Introduction and Rendezvous Points [DEAD]
-143  Improvements of Distributed Storage for Tor Hidden Service Descriptors [OPEN]
+143  Improvements of Distributed Storage for Tor Hidden Service Descriptors [SUPERSEDED]
 144  Increase the diversity of circuits by detecting nodes belonging the same provider [OBSOLETE]
 145  Separate "suitable as a guard" from "suitable as a new guard" [SUPERSEDED]
 146  Add new flag to reflect long-term stability [SUPERSEDED]
@@ -95,31 +95,31 @@ Proposals by number:
 172  GETINFO controller option for circuit information [ACCEPTED]
 173  GETINFO Option Expansion [ACCEPTED]
 174  Optimistic Data for Tor: Server Side [CLOSED]
-175  Automatically promoting Tor clients to nodes [DRAFT]
+175  Automatically promoting Tor clients to nodes [REJECTED]
 176  Proposed version-3 link handshake for Tor [CLOSED]
 177  Abstaining from votes on individual flags [OPEN]
 178  Require majority of authorities to vote for consensus parameters [CLOSED]
 179  TLS certificate and parameter normalization [CLOSED]
 180  Pluggable transports for circumvention [CLOSED]
 181  Optimistic Data for Tor: Client Side [CLOSED]
-182  Credit Bucket [DRAFT]
+182  Credit Bucket [OPEN]
 183  Refill Intervals [CLOSED]
 184  Miscellaneous changes for a v3 Tor link protocol [CLOSED]
-185  Directory caches without DirPort [OPEN]
+185  Directory caches without DirPort [SUPERSEDED]
 186  Multiple addresses for one OR or bridge [CLOSED]
 187  Reserve a cell type to allow client authorization [CLOSED]
-188  Bridge Guards and other anti-enumeration defenses [OPEN]
+188  Bridge Guards and other anti-enumeration defenses [ACCEPTED]
 189  AUTHORIZE and AUTHORIZED cells [OPEN]
 190  Bridge Client Authorization Based on a Shared Secret [NEEDS-REVISION]
 191  Bridge Detection Resistance against MITM-capable Adversaries [OPEN]
 192  Automatically retrieve and store information about bridges [OPEN]
 193  Safe cookie authentication for Tor controllers [CLOSED]
-194  Mnemonic .onion URLs [OPEN]
+194  Mnemonic .onion URLs [SUPERSEDED]
 195  TLS certificate normalization for Tor 0.2.4.x [DRAFT]
-196  Extended ORPort and TransportControlPort [OPEN]
-197  Message-based Inter-Controller IPC Channel [OPEN]
+196  Extended ORPort and TransportControlPort [FINISHED]
+197  Message-based Inter-Controller IPC Channel [REJECTED]
 198  Restore semantics of TLS ClientHello [CLOSED]
-199  Integration of BridgeFinder and BridgeFinderHelper [OPEN]
+199  Integration of BridgeFinder and BridgeFinderHelper [OBSOLETE]
 200  Adding new, extensible CREATE, EXTEND, and related cells [CLOSED]
 201  Make bridges report statistics on daily v3 network status requests [OPEN]
 202  Two improved relay encryption protocols for Tor cells [OPEN]
@@ -139,17 +139,17 @@ Proposals by number:
 216  Improved circuit-creation key exchange [CLOSED]
 217  Tor Extended ORPort Authentication [FINISHED]
 218  Controller events to better understand connection/circuit usage [CLOSED]
-219  Support for full DNS and DNSSEC resolution in Tor [DRAFT]
-220  Migrate server identity keys to Ed25519 [OPEN]
+219  Support for full DNS and DNSSEC resolution in Tor [OPEN]
+220  Migrate server identity keys to Ed25519 [ACCEPTED]
 221  Stop using CREATE_FAST [CLOSED]
 222  Stop sending client timestamps [CLOSED]
-223  Ace: Improved circuit-creation key exchange [OPEN]
+223  Ace: Improved circuit-creation key exchange [RESERVE]
 224  Next-Generation Hidden Services in Tor [DRAFT]
-225  Strawman proposal: commit-and-reveal shared rng [DRAFT]
+225  Strawman proposal: commit-and-reveal shared rng [SUPERSEDED]
 226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS" [OPEN]
 227  Include package fingerprints in consensus documents [CLOSED]
 228  Cross-certifying identity keys with onion keys [CLOSED]
-229  Further SOCKS5 extensions [DRAFT]
+229  Further SOCKS5 extensions [OPEN]
 230  How to change RSA1024 relay identity keys [DRAFT]
 231  Migrating authority RSA1024 identity keys [DRAFT]
 232  Pluggable Transport through SOCKS proxy [FINISHED]
@@ -158,13 +158,13 @@ Proposals by number:
 235  Stop assigning (and eventually supporting) the Named flag [FINISHED]
 236  The move to a single guard node [OPEN]
 237  All relays are directory servers [OPEN]
-238  Better hidden service stats from Tor relays [DRAFT]
+238  Better hidden service stats from Tor relays [CLOSED]
 239  Consensus Hash Chaining [DRAFT]
 240  Early signing key revocation for directory authorities [DRAFT]
 241  Resisting guard-turnover attacks [DRAFT]
 242  Better performance and usability for the MyFamily option [OPEN]
-243  Give out HSDir flag only to relays with Stable flag [OPEN]
-244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [DRAFT]
+243  Give out HSDir flag only to relays with Stable flag [CLOSED]
+244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [ACCEPTED]
 245  Deprecating and removing the TAP circuit extension protocol [DRAFT]
 246  Merging Hidden Service Directories and Introduction Points [OPEN]
 247  Defending Against Guard Discovery Attacks using Vanguards [DRAFT]
@@ -179,21 +179,14 @@ Proposals by number:
 Proposals by status:
 
  DRAFT:
-   175  Automatically promoting Tor clients to nodes
-   182  Credit Bucket
    195  TLS certificate normalization for Tor 0.2.4.x [for 0.2.4.x]
    203  Avoiding censorship by impersonating an HTTPS server
-   219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
    224  Next-Generation Hidden Services in Tor
-   225  Strawman proposal: commit-and-reveal shared rng
-   229  Further SOCKS5 extensions
    230  How to change RSA1024 relay identity keys [for 0.2.?]
    231  Migrating authority RSA1024 identity keys [for 0.2.?]
-   238  Better hidden service stats from Tor relays
    239  Consensus Hash Chaining
    240  Early signing key revocation for directory authorities
    241  Resisting guard-turnover attacks
-   244  Use RFC5705 Key Exporting in our AUTHENTICATE calls
    245  Deprecating and removing the TAP circuit extension protocol
    247  Defending Against Guard Discovery Attacks using Vanguards
    248  Remove all RSA identity keys
@@ -205,39 +198,35 @@ Proposals by status:
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  OPEN:
-   143  Improvements of Distributed Storage for Tor Hidden Service Descriptors
    164  Reporting the status of server votes
    165  Easy migration for voting authority sets
    168  Reduce default circuit window
    177  Abstaining from votes on individual flags [for 0.2.4.x]
-   185  Directory caches without DirPort
-   188  Bridge Guards and other anti-enumeration defenses
+   182  Credit Bucket
    189  AUTHORIZE and AUTHORIZED cells
    191  Bridge Detection Resistance against MITM-capable Adversaries
    192  Automatically retrieve and store information about bridges [for 0.2.[45].x]
-   194  Mnemonic .onion URLs
-   196  Extended ORPort and TransportControlPort [for 0.2.4.x]
-   197  Message-based Inter-Controller IPC Channel [for 0.2.4.x]
-   199  Integration of BridgeFinder and BridgeFinderHelper [for 0.2.4.x+]
    201  Make bridges report statistics on daily v3 network status requests [for 0.2.4.x]
    202  Two improved relay encryption protocols for Tor cells
    209  Tuning the Parameters for the Path Bias Defense [for 0.2.4.x+]
    210  Faster Headless Consensus Bootstrapping [for 0.2.4.x+]
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
-   220  Migrate server identity keys to Ed25519 [for 0.2.x.x]
-   223  Ace: Improved circuit-creation key exchange
+   219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
    226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS"
+   229  Further SOCKS5 extensions
    233  Making Tor2Web mode faster
    234  Adding remittance field to directory specification
    236  The move to a single guard node
    237  All relays are directory servers [for 0.2.7.x]
    242  Better performance and usability for the MyFamily option
-   243  Give out HSDir flag only to relays with Stable flag
    246  Merging Hidden Service Directories and Introduction Points
  ACCEPTED:
    140  Provide diffs between consensuses
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
+   188  Bridge Guards and other anti-enumeration defenses
+   220  Migrate server identity keys to Ed25519 [for 0.2.x.x]
+   244  Use RFC5705 Key Exporting in our AUTHENTICATE calls
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process
@@ -251,6 +240,7 @@ Proposals by status:
    160  Authorities vote for bandwidth offsets in consensus [for 0.2.1.x]
    161  Computing Bandwidth Adjustments [for 0.2.1.x]
    162  Publish the consensus in multiple flavors [in 0.2.3.1-alpha]
+   196  Extended ORPort and TransportControlPort [for 0.2.4.x]
    204  Subdomain support for Hidden Service addresses
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
    232  Pluggable Transport through SOCKS proxy [in 0.2.6]
@@ -313,11 +303,14 @@ Proposals by status:
    222  Stop sending client timestamps [in 0.2.4.18]
    227  Include package fingerprints in consensus documents [in 0.2.6.3-alpha]
    228  Cross-certifying identity keys with onion keys
+   238  Better hidden service stats from Tor relays
+   243  Give out HSDir flag only to relays with Stable flag
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration
    118  Advertising multiple ORPorts at once
    124  Blocking resistant TLS certificate usage
+   143  Improvements of Distributed Storage for Tor Hidden Service Descriptors
    145  Separate "suitable as a guard" from "suitable as a new guard"
    146  Add new flag to reflect long-term stability
    149  Using data from NETINFO cells
@@ -327,6 +320,9 @@ Proposals by status:
    163  Detecting whether a connection comes from a client
    169  Eliminate TLS renegotiation for the Tor connection handshake
    170  Configuration options regarding circuit building
+   185  Directory caches without DirPort
+   194  Mnemonic .onion URLs
+   225  Strawman proposal: commit-and-reveal shared rng
  DEAD:
    100  Tor Unreliable Datagram Extension Proposal
    115  Two Hop Paths
@@ -338,14 +334,18 @@ Proposals by status:
  REJECTED:
    134  More robust consensus voting with diverse authority sets
    147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.4.x]
+   175  Automatically promoting Tor clients to nodes
+   197  Message-based Inter-Controller IPC Channel
  OBSOLETE:
    127  Relaying dirport requests to Tor download site / website
    131  Help users to verify they are using Tor
    132  A Tor Web Service For Verifying Correct Browser Configuration
    141  Download server descriptors on demand
    144  Increase the diversity of circuits by detecting nodes belonging the same provider
+   199  Integration of BridgeFinder and BridgeFinderHelper
  RESERVE:
    133  Incorporate Unreachable ORs into the Tor Network
    211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]
+   223  Ace: Improved circuit-creation key exchange
  INFORMATIONAL:
    159  Exit Scanning

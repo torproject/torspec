@@ -2,7 +2,7 @@ Filename: 238-hs-relay-stats.txt
 Title: Better hidden service stats from Tor relays
 Author: George Kadianakis, David Goulet, Karsten Loesing, Aaron Johnson
 Created: 2014-11-17
-Status: Draft
+Status: Closed
 
 0. Motivation
 

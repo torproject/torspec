@@ -2,7 +2,7 @@ Filename: 223-ace-handshake.txt
 Title: Ace: Improved circuit-creation key exchange
 Author: Esfandiar Mohammadi, Aniket Kate, Michael Backes
 Created: 22-July-2013
-Status: Open
+Status: Reserve
 
 History:
 

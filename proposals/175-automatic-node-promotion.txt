@@ -2,7 +2,7 @@ Filename: 175-automatic-node-promotion.txt
 Title: Automatically promoting Tor clients to nodes
 Author: Steven Murdoch
 Created: 12-Mar-2010
-Status: Draft
+Status: Rejected
 
 1. Overview
 

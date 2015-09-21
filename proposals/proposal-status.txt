@@ -55,20 +55,6 @@ again to remind me!
           revised the paragraph.
 
 
-133  Incorporate Unreachable ORs into the Tor Network [RESERVE]
-
-     This proposal had an idea for letting ORs that can only make
-     outgoing connections still relay data usefully in the network.
-     It's something we should keep in mind, and it's a pretty neat
-     idea, but it radically changes the network topology.  Anybody
-     who wants to analyze new network topologies should definitely
-     have a look. (5/2011)
-
-     For this I have introduced a new proposal status, "RESERVE". A
-     proposal is "in reserve" if we're not currently planning to
-     implement it, but we might someday want to do so if we decide that
-     what it provides is a great idea. (9/2015)
-
 140  Provide diffs between consensuses [ACCEPTED]
 
      This proposal describes a way to transmit less directory
@@ -76,28 +62,6 @@ again to remind me!
      than the consensuses themselves.  Daniel Marti implemented this for his
      GSoC project last summer; it is still under revision and on target
      for merge into 0.2.8.  (See ticket #13339)  (9/2015)
-
-143  Improvements of Distributed Storage for Tor Hidden Service
-     Descriptors
-
-     Here's a proposal from Karsten about making the hidden
-     service DHT more reliable and secure to use.  It could use
-     more discussion and analysis. We should look into it as part
-     of efforts to improve designs for the next generation of
-     hidden services.
-
-     One problem with the analysis here, though, is that it
-     assumes a fixed set of servers that doesn't change.  One
-     reason that we upload to N servers at each chosen point in
-     the ring is that the hidden service host and the hidden
-     service client may have different views of which servers
-     exist. We need to re-do the analysis with some fraction of
-     recent consensuses.
-
-     This is probably superseded by proposal 224; we should close it
-     IMO. (2/2014)
-
-     Time to mark this as SUPERSEDED. (9/2015)
 
 156  Tracking blocked ports on the client side
 
@@ -126,7 +90,6 @@ again to remind me!
      This is likely also to be relevant for the ideas of proposal 241,
      and maybe superseded by some version of that proposal. (2/2015)
 
------
 164  Reporting the status of server votes
 
      This proposal explains a way for authorities to provide a
@@ -137,8 +100,6 @@ again to remind me!
      authority voted as it did.  It wouldn't be too hard to
      implement, and would be a fine project for somebody who wants
      to get to know the directory code. (5/2011)
-
-     Mark as RESERVE. (9/2015)
 
 165  Easy migration for voting authority sets
 
@@ -161,27 +122,15 @@ again to remind me!
 
      Should update Tor-spec, should close this. (9/2015)
 
-172  GETINFO controller option for circuit information
-173  GETINFO Option Expansion
+     Actually, wait, did we ever implement this?  Ugh. (9/2015)
+
+172  GETINFO controller option for circuit information [accepted]
+173  GETINFO Option Expansion [accepted]
 
      These would help controllers (particularly arm) provide more
      useful information about a running Tor process.  They're
      accepted and some parts of 173 are even implemented: somebody
      just needs to implement the rest. (5/2011)
-
-     Should mark as ACCEPTED; should open tickets for them; should
-     consider whether they're needed, though. (9/2015)
-
-175  Automatically promoting Tor clients to nodes
-
-     Here's Steven's proposal for adding a mode between "client
-     mode" and "relay mode" for "self-test to see if you would be a
-     good relay, and if so become one."  It didn't get enough
-     attention when it was posted to the list; more people should
-     review it. (5/2011)
-
-     Mark as REJECTED.  I don't see us doing this any time soon.
-     (9/2015)
 
 177  Abstaining from votes on individual flags
 
@@ -191,9 +140,6 @@ again to remind me!
      right.  With more discussion and review, somebody could/should
      build it, I think. (11/2013)
 
-     Mark as RESERVE. I still love this idea, but nobody else seems
-     to think it's necessary (9/2015)
-
 182  Credit Bucket
 
      This proposal suggests an alternative approach to our current
@@ -201,26 +147,11 @@ again to remind me!
      performance, less buffering insanity, and a possible end to
      double-gating issues. (6/2012)
 
-185  Directory caches without DirPort
-
-     The old HTTP directory port feature is no longer used by
-     clients and relays under most circumstances.  The proposal
-     explains how we can get rid of the requirement that non-bridge
-     directories have an open directory port. (6/2012)
-
-     Mark as ACCEPTED, after updating it to match in-progress work for
-     "everybody is a directory", which is ontrack for 0.2.8.  Or maybe
-     that work is closer to 237? (9/2015)
-
 188  Bridge Guards and other anti-enumeration defenses
 
      This proposal suggests some ways to make it harder for a relay
      on the Tor network to enumerate a list of Tor bridges. Worth
      investigating and possibly implementing. (6/2012)
-
-     Update and then mark as ACCEPTED; isis has code for this for 0.2.8.
-     (9/2015)
-
 189  AUTHORIZE and AUTHORIZED cells
 190  Bridge Client Authorization Based on a Shared Secret [NEEDS-REVISION]
 191  Bridge Detection Resistance against MITM-capable Adversaries
@@ -232,7 +163,7 @@ again to remind me!
      Number 190 needs revision, since its protocol isn't actually
      so great. (11/2013)
 
-     Mark as RESERVE. (9/2015)
+     Mark as RESERVE? (9/2015)
 
 192  Automatically retrieve and store information about bridges
 
@@ -242,17 +173,6 @@ again to remind me!
      help a lot with bridge churn. (6/2012)
 
      Mark as RESERVE? Do we still even want this? (9/2015)
-
-194  Mnemonic .onion URLs
-
-     Here's one of several competing "let's make .onion URLs
-     human-usable" proposals.  This one makes sentences using a
-     fixed map.  This kind of approach is likely to obsoleted if
-     we go ahead with current plans for hidden services that
-     would make .onion addresses much longer, though. (11/2013)
-
-     We're not going to do this like this, I think.  Mark as
-     SUPERSEDED. (9/2015)
 
 195  TLS certificate normalization for Tor 0.2.4.x
 
@@ -271,17 +191,7 @@ again to remind me!
      I think we should take a pass over this, pick the parts we still
      think are relevant, and call them ACCEPTED. (9/2015)
 
-196  Extended ORPort and TransportControlPort
-
-     Here are some remaining pieces of the pluggable transport
-     protocol that give Tor finer control over the behavior of
-     its transports.  Much of this is implemented in 0.2.5
-     now; we should figure out what's left, and whether we want
-     to build that. (11/2013)
-
-     I think we should mark this FINISHED.  We're not going to do more
-     than we have now, afaik. (9/2015)
-
+--- 
 201  Make bridges report statistics on daily v3 network status requests
 
      Here's a proposal for bridges to better estimate the number of
@@ -322,16 +232,6 @@ again to remind me!
      This needs an update; it's a pretty good idea, and Mike and Roger
      like it.  It goes will with FallbackDirSource stuff. (9/2015)
 
-211  Internal Mapaddress for Tor Configuration Testing [RESERVE]
-
-     Here, the idea is to serve an XML document over HTTP that
-     would let the know when it's using Tor.  The XML document
-     would be returned when you make a request over Tor for a
-     magic address in 127.0.0.0/8.  I think we need to do
-     _something_to solve this problem, but I'm not thrilled with
-     the idea of having any more magical addresses like this; we
-     got rid of .noconnect for a reason, after all. (9/2015)
-
 212  Increase Acceptable Consensus Age
 
      This proposal suggests that we increase the maximum age of a
@@ -357,36 +257,6 @@ again to remind me!
      done with reasonable confidence, and figure out the client side
      once more servers have upgraded.  (12/2013)
 
-     Mark as NEEDS-REVISION? (9/2015)
-
-220  Migrate server identity keys to Ed25519
-
-     This one is a design to migrate server identity keys to
-     Ed25519 for improved security margin.  It needs more analysis of
-     long-term migration to other signing key types -- what do we do
-     if we want to add support for EdDSA over Curve3617 or something?
-     Can we make it easier than this?  And it also needs analysis to
-     make sure it enables us to eventually drop RSA1024 keys
-     entirely.
-
-     I've started building this in #12498, though, so we'd better figure
-     out out fairly soon.  Other proposals, like 224, depend on this
-     one.  (2/2015)
-
-     Mark as ACCEPTED. Some is implemented in 0.2.7; the rest is
-     in-progress. (9/2015)
-
-223  Ace: Improved circuit-creation key exchange
-
-     Here's an interesting one. It proposes a replacement for the
-     ntor handshake, using the multi-exponentiation optimization, to
-     run a bit faster at an equivalent security level.
-
-     Assuming that more cryptographers like the security proof, and
-     that the ntor handshake winds up being critical-path in profiles
-     as more clients upgrade to 0.2.4 or 0.2.5, this is something we
-     should consider. (12/2013)
-
 224  Next-Generation Hidden Services in Tor
 
      This proposal outlines a more or less completely revised version
@@ -400,22 +270,6 @@ again to remind me!
      of attention and improvements to get it done right. I hope to
      implement this over the course of 2015-2016. (2/2015)
 
-225  Strawman proposal: commit-and-reveal shared rng
-
-     Proposal 224's solutions for bug #8244 require that authorities
-     regularly agree upon a shared random value which none of them
-     could have influenced or predicted in advance.  This proposal
-     outlines a simple one that isn't perfect (it's vulnerable to DOS
-     and to limited influence by one or more collaborating hostile
-     authorities), but it's quite simple, and it's meant to start
-     discussion.
-
-     I hope that we never build this, but instead replace it with
-     something better. Some alternatives have already been discussed
-     on tor-dev; more work is needed, though. (12/2013)
-
-     Mark as SUPERSEDED by proposal 250. (9/2015)
-
 226  Scalability and Stability Improvements to BridgeDB:
      Switching to a Distributed Database System and RDBMS
 
@@ -423,16 +277,6 @@ again to remind me!
      refactored bridgedb.  (2/2014)
 
      I should find out if Isis has a status update for this. (9/2015)
-
-228  Cross-certifying identity keys with onion keys
-
-     This proposal signs each server's identity key with its onion
-     keys, to prove onion key ownership in the router descriptor.
-     It's not clear that this actually improves security, but it
-     fixes an annoying gap in our key authentication.  I have it coded
-     up in my #12498 branch, targetting 0.2.7. (2/2015)
-
-     Implemented; should mark as CLOSED. (9/2015)
 
 229  Further SOCKS5 extensions
 
@@ -507,17 +351,6 @@ again to remind me!
      Compare to proposal 185; it may supersede that one.  Review again
      and mark as accepted maybe?  (9/2015)
 
-238  Better hidden service stats from Tor relays [DRAFT]
-
-     Here's an important one that needs many eyes.  George Kadianakis,
-     David Goulet, Karsten Loesing, and Aaron Johnson wrote this to
-     describe a mechanism for the tor network to securely produce
-     aggregate hidden service usage statistics without exposing
-     sensitive intermediate results.  This has an implementation in
-     0.2.6 and should probably be marked closed.  (2/2015)
-
-     Indeed, mark as closed. (9/2015)
-
 239  Consensus Hash Chaining [DRAFT]
 
      Here's the start of a good idea that Andrea Shepard wrote up (with
@@ -552,17 +385,13 @@ again to remind me!
      right, might lead clients to kick themselves off the network out of
      paranoia. So, this proposal could use more analysis.  (2/2015)
 
-
 TAKE ANOTHER LOOK AT THESE:
 
 242  Better performance and usability for the MyFamily option [OPEN]
-243  Give out HSDir flag only to relays with Stable flag [OPEN]
 
-     (I think we impleented this one! Mark as FINISHED?)
-
-244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [DRAFT]
-
-     (Mark as ACCEPTED?)
+     Describes a mechanism for using a new ed25519 signature type to
+     reduce the complexity of adding nodes to a family and the size of
+     family lines. (9/2015)
 
 245  Deprecating and removing the TAP circuit extension protocol [DRAFT]
 246  Merging Hidden Service Directories and Introduction Points [OPEN]
@@ -574,11 +403,3 @@ TAKE ANOTHER LOOK AT THESE:
 252  Single Onion Services [DRAFT]
 253  Out of Band Circuit HMACs [DRAFT]
 
-
-Since last time:
-
-      Proposal 197 has been marked as rejected.
-
-      Proposal 199 is now obsolete.
-
-      Proposal 253 is new.

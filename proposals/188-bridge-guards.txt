@@ -3,7 +3,7 @@ Title: Bridge Guards and other anti-enumeration defenses
 Author: Nick Mathewson, Isis Lovecruft
 Created: 14 Oct 2011
 Modified: 10 Sep 2015
-Status: Open
+Status: Accepted
 
 1. Overview
 

@@ -2,7 +2,8 @@ Filename: 225-strawman-shared-rand.txt
 Title: Strawman proposal: commit-and-reveal shared rng
 Author: Nick Mathewson
 Created: 2013-11-29
-Status: Draft
+Status: Superseded
+Superseded-by: 250
 
 1. Introduction
 

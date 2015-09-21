@@ -2,7 +2,7 @@ Filename: 244-use-rfc5705-for-tls-binding.txt
 Title: Use RFC5705 Key Exporting in our AUTHENTICATE calls
 Author: Nick Mathewson
 Created: 2015-05-14
-Status: Draft
+Status: Accepted
 
 1. Proposal
 

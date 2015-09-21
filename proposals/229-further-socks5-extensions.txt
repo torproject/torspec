@@ -2,7 +2,7 @@ Filename: 229-further-socks5-extensions.txt
 Title: Further SOCKS5 extensions
 Author: Yawning Angel
 Created: 25-Feb-2014
-Status: Draft
+Status: Open
 
 0. Abstract
 

@@ -4,7 +4,7 @@ Authors: Ondrej Mikle
 Created: 4 February 2012
 Modified: 2 August 2013
 Target: 0.2.5.x
-Status: Draft
+Status: Open
 
 0. Overview
 

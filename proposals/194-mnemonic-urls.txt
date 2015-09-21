@@ -2,7 +2,7 @@ Filename: 194-mnemonic-urls.txt
 Title: Mnemonic .onion URLs
 Author: Sai, Alex Fink
 Created: 29-Feb-2012
-Status: Open
+Status: Superseded
 
 1. Overview
 

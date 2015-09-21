@@ -2,7 +2,8 @@ Filename: 185-dir-without-dirport.txt
 Title: Directory caches without DirPort
 Author: Nick Mathewson
 Created: 20-Sep-2011
-Status: Open
+Status: Superseded
+Superseded-by: 237
 
 Overview:
 

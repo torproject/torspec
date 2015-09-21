@@ -2,7 +2,8 @@ Filename: 243-hsdir-flag-need-stable.txt
 Title: Give out HSDir flag only to relays with Stable flag
 Author: George Kadianakis
 Created: 2015-03-23
-Status: Open
+Status: Closed
+Implemented-in: 0.2.7
 
 1. Introduction
 
