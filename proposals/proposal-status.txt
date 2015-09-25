@@ -441,3 +441,9 @@ again to remind me!
      circuit point-to-point so as to better resist or detect some kinds
      of tagging attacks. (9/2015)
 
+254  Padding Negotiation [DRAFT]
+
+     Describes general mechanisms and new cells/commands for requesting
+     various types of padding between clients and relays, for use in defending
+     against both website traffic fingerprinting as well as hidden service
+     circuit setup fingerprinting. (9/2015)
