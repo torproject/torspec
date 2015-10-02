@@ -21,30 +21,53 @@ Design: Bootstrap Process Changes
  the first connection that completes.
 
  Connection attempts will be performed on an exponential backoff basis.
- Initially, connections will be performed to randomly chosen hard
- coded directory mirrors. If none of these connections complete within
- 5 seconds, connections will also be performed to randomly chosen
- canonical directory authorities.
+ Initially, connections will be performed to a randomly chosen hard
+ coded directory mirror and a randomly chosen canonical directory
+ authority. If neither of these connections complete, additional mirror
+ and authority connections are tried. Mirror connections are tried at
+ a faster rate than authority connections.
 
  We specify that mirror connections retry after half a second, and then
  double the retry time with every connection:
- 0, 0.5, 1, 2, 4, 8, 16, ...
+ 0, 1, 2, 4, 8, 16, 32, ...
 
- We specify that directory authority connections start after a 5 second
- delay, and retry after 5 seconds, doubling the retry time with every
- connection:
- 5, 10, 20, ...
+ We specify that directory authority connections retry after 5 seconds,
+ and then double the retry time with every connection:
+ 0, 10, 20, ...
+
+ If the client has both an IPv4 and IPv6 address, we try IPv4 and IPv6
+ mirrors and authorities on the following schedule:
+ IPv4, IPv6, IPv4, IPv6, ...
+
+ We try IPv4 first to avoid overloading IPv6-enabled authorities and
+ mirrors. Mirrors and auths get a separate IPv4/IPv6 schedule. This
+ ensures that we try an IPv6 authority within the first 10 seconds.
+ This helps implement #8374 and related tickets.
+
+ The maximum retry time for both timers is 3 days + 1 hour. This places a
+ small load on the mirrors and authorities, while allowing a client that
+ regains a network connection to eventually download a consensus.
+
+ The retry timers must reset on HUP and any network reachability events,
+ [ TODO: do we have network reachability events? ]
+ so that clients that have unreliable networks can recover from network
+ failures.
 
  The first connection to complete will be used to download the consensus
  document and the others will be closed, after which bootstrapping will
  proceed as normal.
 
+ A benefit of connecting to directory authorities is that clients are
+ warned if their clock is wrong. Therefore, when closing a directory
+ authority connection, we check to see if we have successfully connected
+ to an authority during this run of the Tor client. If not, we allow the
+ authority TLS connection to complete, then close the connection.
+
  We expect the vast majority of clients to succeed within 4 seconds,
- after making up to 5 connection attempts to mirrors. Clients which can't
- connect in the first 5 seconds, will then try to contact a directory
- authority. We expect almost all clients to succeed within 10 seconds,
- after up to 6 connection attempts to mirrors and up to 2 connection
- attempts to authorities. This is a much better success rate than the
+ after making up to 4 connection attempts to mirrors. Clients which can't
+ connect in the first 10 seconds, will try 1 more mirror, then try to
+ contact another directory authority. We expect almost all clients to
+ succeed within 10 seconds. This is a much better success rate than the
  current Tor implementation, which fails k/n of clients if k of the n
  directory authorities are down. (Or, if the connection fails in
  certain ways, (k/n)^2.)
@@ -60,7 +83,11 @@ Design: Fallback Dir Mirror Selection
  the 100 Guard nodes with the longest uptime.
 
  The fallback weights will be set using each mirror's fraction of
- consensus bandwidth out of the total of all 100 mirrors.
+ consensus bandwidth out of the total of all 100 mirrors, adjusted to
+ ensure no fallback directory sees more than 10% of clients. We will
+ also exclude fallback directories that are less than 1/1000 of the
+ consensus weight, as they are not large enough to make it worthwhile
+ including them.
 
  This list of fallback dir mirrors should be updated with every
  major Tor release. In future releases, the number of dir mirrors
@@ -84,7 +111,7 @@ Performance: Additional Load with Current Parameter Choices
  The dangerous case is in the event of a prolonged consensus failure
  that induces all clients to enter into the bootstrap process. In this
  case, the number of TLS connections to the fallback dir mirrors within
- the first second would be 3*C/100, or 60,000 for C=2,000,000 users. If
+ the first second would be 2*C/100, or 40,000 for C=2,000,000 users. If
  no connections complete before the 10 retries, 7 of which go to
  mirrors, this could reach as high as 140,000 connection attempts, but
  this is extremely unlikely to happen in full aggregate.
@@ -111,7 +138,7 @@ Implementation Notes: Code Modifications
 
  There appear to be a few options for altering this code to retry multiple
  simultaneous connections. Without refactoring, one approach would be to
- set mirror and authority retry helper function timers in
+ set a connection retry helper function timer in
  directory_initiate_command_routerstatus() from
  directory_get_from_dirserver() if the purpose is
  DIR_PURPOSE_FETCH_CONSENSUS and the only directory servers available
@@ -130,7 +157,7 @@ Implementation Notes: Code Modifications
  altered to examine the list of pending dircons, determine if this one is
  the first to complete, and if so, then call directory_send_command() to
  download the consensus and close the other pending dircons.
- connection_dir_finished_connecting() would also cancel both timers.
+ connection_dir_finished_connecting() would also cancel the timer.
 
 Reliability Analysis
 
@@ -140,22 +167,21 @@ Reliability Analysis
  uptime.)
 
  We expect the first 10 connection retry times to be:
- Mirror:   0s 0.5s  1s  2s  4s          8s           16s
- Auth:                            5s          10s           20s
- Success: 50%  75% 87% 94% 97% 99.4% 99.7% 99.94% 99.97% 99.99%
+ Mirror:   0s  1s  2s    4s    8s           16s             32s
+ Auth:     0s                        10s            20s
+ Success: 90% 95% 97% 98.7% 99.4% 99.89% 99.94% 99.988% 99.994%
 
- 97%    of clients succeed while only using directory mirrors.
-  2.4%  of clients succeed on their first auth connection.
-  0.24% of clients succeed after one more mirror and auth connection.
-  0.05% of clients succeed after two more mirror and auth connections.
-  0.01% of clients remain, but in this scenario, 3 authorities are down,
+ 97%    of clients succeed in the first 2 seconds.
+ 99.4%  of clients succeed without trying a second authority.
+ 99.89% of clients succeed in the first 10 seconds.
+  0.11% of clients remain, but in this scenario, 2 authorities are down,
         so the client is most likely blocked from the Tor network.
 
  The current implementation makes 1 or 2 authority connections within the
  first second, depending on exactly how the first connection fails. Under
  the 20% authority failure assumption, these clients would have a success
  rate of either 80% or 96% within a few seconds. The scheme above has a
- similar success rate in the first few seconds, while spreading the load
+ greater success rate in the first few seconds, while spreading the load
  among a larger number of directory mirrors. In addition, if all the
  authorities are blocked, current clients will inevitably fail, as they
  do not have a list of directory mirrors.
