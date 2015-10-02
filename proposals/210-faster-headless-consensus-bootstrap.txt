@@ -27,13 +27,19 @@ Design: Bootstrap Process Changes
  and authority connections are tried. Mirror connections are tried at
  a faster rate than authority connections.
 
- We specify that mirror connections retry after half a second, and then
+ We specify that mirror connections retry after one second, and then
  double the retry time with every connection:
  0, 1, 2, 4, 8, 16, 32, ...
 
  We specify that directory authority connections retry after 5 seconds,
  and then double the retry time with every connection:
  0, 10, 20, ...
+
+ [ XXX: should we add random noise to these scheduled times? - teor ]
+
+ The maximum retry time for both timers is 3 days + 1 hour. This places a
+ small load on the mirrors and authorities, while allowing a client that
+ regains a network connection to eventually download a consensus.
 
  If the client has both an IPv4 and IPv6 address, we try IPv4 and IPv6
  mirrors and authorities on the following schedule:
@@ -44,14 +50,19 @@ Design: Bootstrap Process Changes
  ensures that we try an IPv6 authority within the first 10 seconds.
  This helps implement #8374 and related tickets.
 
- The maximum retry time for both timers is 3 days + 1 hour. This places a
- small load on the mirrors and authorities, while allowing a client that
- regains a network connection to eventually download a consensus.
+ We don't want to keep on trying an IP version that always fails.
+ Therefore, once sufficient IPv4 and IPv6 connections have been
+ attempted, we select an IP version for new connections based on the ratio
+ of their failure rates, up to a maximum of 1:5. This may not make a
+ substantial difference to consensus downloads, as we only need one
+ successful consensus download to bootstrap. However, it is important for
+ future features like #17217, where clients try to automatically determine
+ if they can use IPv4 or IPv6 to contact the Tor network.
 
- The retry timers must reset on HUP and any network reachability events,
+ The retry timers and IP version schedules must reset on HUP and any
+ network reachability events, so that clients that have unreliable networks
+ can recover from network failures.
  [ TODO: do we have network reachability events? ]
- so that clients that have unreliable networks can recover from network
- failures.
 
  The first connection to complete will be used to download the consensus
  document and the others will be closed, after which bootstrapping will
@@ -64,13 +75,14 @@ Design: Bootstrap Process Changes
  authority TLS connection to complete, then close the connection.
 
  We expect the vast majority of clients to succeed within 4 seconds,
- after making up to 4 connection attempts to mirrors. Clients which can't
- connect in the first 10 seconds, will try 1 more mirror, then try to
- contact another directory authority. We expect almost all clients to
- succeed within 10 seconds. This is a much better success rate than the
- current Tor implementation, which fails k/n of clients if k of the n
- directory authorities are down. (Or, if the connection fails in
- certain ways, (k/n)^2.)
+ after making up to 4 connection attempts to mirrors and 1 connection
+ attempt to an authority. Clients which can't connect in the first
+ 10 seconds, will try 1 more mirror, then try to contact another
+ directory authority. We expect almost all clients to succeed within
+ 10 seconds. This is a much better success rate than the current Tor
+ implementation, which fails k/n of clients if k of the n directory
+ authorities are down. (Or, if the connection fails in certain ways,
+ (k/n)^2.)
 
  If at any time, the total outstanding bootstrap connection attempts
  exceeds 10, no new connection attempts are to be launched until an
