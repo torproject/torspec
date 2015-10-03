@@ -154,23 +154,30 @@ Implementation Notes: Code Modifications
  if the purpose is DIR_PURPOSE_FETCH_CONSENSUS and there is no valid
  (reasonably live) consensus. We can make multiple connections from
  update_consensus_networkstatus_downloads(), as the sockets are non-blocking.
- [ XXX - is this true for all platforms? ]
+ [ XXX - is this socket actually non-blocking for all platforms? ]
  As long as we can tolerate a timer resolution of ~1 second (due to the use
  of time_t), this requires no additional timers or callbacks. We can make 1
- connection for each schedule per second, for a total of 2 per second, or 4
- per second if the IPv4 and IPv6 schedules are implemented separately.
+ connection for each schedule per second, for a total of 2 per second.
 
  update_consensus_networkstatus_downloads() would also check the list of
  pending connections and, if it is 10 or greater, skip the connection
  attempt, and leave the retry time constant.
 
- The code in directory_initiate_command_rend() or
- connection_dir_finished_connecting() would need to be altered to check that
- we are not already downloading the consensus. If we’re not, then call
- directory_send_command() to download the consensus, and close any other
- pending consensus dircons. (We may still want to check our clock against an
- authority by allowing a TLS connection to complete, then immediately closing
- it.)
+ The code in connection_dir_finished_connecting() would need to be altered to
+ check that we are not already downloading the consensus. If we’re not, then
+ call directory_send_command() to download the consensus, and close any other
+ pending consensus dircons. Since we want to check our clock against an
+ authority at least once per run, we instead mark authority connections so
+ they only request a HTTP HEAD, and use the first date header we see to
+ detect if the client’s clock is skewed.
+ [ XXX - does Tor support HTTP HEAD? ]
+
+ We might also need to make similar changes in authority_certs_fetch_missing(),
+ as we can’t use a consensus until we have enough authority certificates.
+ However, Tor already makes multiple requests (one per certificate), and only
+ needs a majority of certificates to validate a consensus. Therefore, we will
+ only need to modify authority_certs_fetch_missing() if clients download a
+ consensus, then end up getting stuck downloading certificates.
 
 Reliability Analysis
 
