@@ -2761,8 +2761,8 @@
     the value will be "UNKNOWN".
 
     If we already had the v0 descriptor, the newly fetched v2 descriptor
-    will be
-    ignored and a "HS_DESC" event with "IGNORE" action will be generated.
+    will be ignored and a "HS_DESC" event with "IGNORE" action will be
+    generated.
 
     For HsDir, LongName is always prefered. If HsDir cannot be found in node
     list at the time event is sent, Fingerprint will be used instead.
@@ -2775,7 +2775,7 @@
        - "NOT_FOUND" - HS descriptor with given identifier was not found.
        - "UNEXPECTED" - nature of failure is unknown.
 
-    If Action is "CREATED", Tor should send Replica field as well. The replica
+    If Action is "CREATED", Tor SHOULD send Replica field as well. The Replica
     field contains the replica number of the generated descriptor.
 
 4.1.26. HiddenService descriptors content
