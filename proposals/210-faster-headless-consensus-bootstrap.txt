@@ -149,27 +149,28 @@ Implementation Notes: Code Modifications
  eventually made through directory_initiate_command_rend().
 
  There appear to be a few options for altering this code to retry multiple
- simultaneous connections. Without refactoring, one approach would be to
- set a connection retry helper function timer in
- directory_initiate_command_routerstatus() from
- directory_get_from_dirserver() if the purpose is
- DIR_PURPOSE_FETCH_CONSENSUS and the only directory servers available
- are the authorities and the fallback dir mirrors. (That is, there is no
- valid consensus.)  The retry helper function would check the list of
+ simultaneous connections. It looks like we can modify
+ update_consensus_networkstatus_downloads() to make connections more often
+ if the purpose is DIR_PURPOSE_FETCH_CONSENSUS and there is no valid
+ (reasonably live) consensus. We can make multiple connections from
+ update_consensus_networkstatus_downloads(), as the sockets are non-blocking.
+ [ XXX - is this true for all platforms? ]
+ As long as we can tolerate a timer resolution of ~1 second (due to the use
+ of time_t), this requires no additional timers or callbacks. We can make 1
+ connection for each schedule per second, for a total of 2 per second, or 4
+ per second if the IPv4 and IPv6 schedules are implemented separately.
+
+ update_consensus_networkstatus_downloads() would also check the list of
  pending connections and, if it is 10 or greater, skip the connection
  attempt, and leave the retry time constant.
 
- The code in directory_initiate_command_rend() would then need to be
- altered to maintain a list of the dircons created for this purpose as
- well as avoid immediately queuing the directory_send_command() request
- for the DIR_PURPOSE_FETCH_CONSENSUS purpose. A flag would need to be set
- on the dircon to be checked in connection_dir_finished_connecting().
-
- The function connection_dir_finished_connecting() would need to be
- altered to examine the list of pending dircons, determine if this one is
- the first to complete, and if so, then call directory_send_command() to
- download the consensus and close the other pending dircons.
- connection_dir_finished_connecting() would also cancel the timer.
+ The code in directory_initiate_command_rend() or
+ connection_dir_finished_connecting() would need to be altered to check that
+ we are not already downloading the consensus. If we’re not, then call
+ directory_send_command() to download the consensus, and close any other
+ pending consensus dircons. (We may still want to check our clock against an
+ authority by allowing a TLS connection to complete, then immediately closing
+ it.)
 
 Reliability Analysis
 
@@ -186,8 +187,9 @@ Reliability Analysis
  97%    of clients succeed in the first 2 seconds.
  99.4%  of clients succeed without trying a second authority.
  99.89% of clients succeed in the first 10 seconds.
-  0.11% of clients remain, but in this scenario, 2 authorities are down,
-        so the client is most likely blocked from the Tor network.
+  0.11% of clients remain, but in this scenario, 2 authorities are
+        unreachable, so the client is most likely blocked from the Tor
+        network.
 
  The current implementation makes 1 or 2 authority connections within the
  first second, depending on exactly how the first connection fails. Under
