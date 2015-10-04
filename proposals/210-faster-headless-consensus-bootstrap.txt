@@ -27,28 +27,51 @@ Design: Bootstrap Process Changes
  and authority connections are tried. Mirror connections are tried at
  a faster rate than authority connections.
 
- We specify that mirror connections retry after one second, and then
- double the retry time with every connection:
+ Client Schedules:
+ 
+ Clients represent the majority of the load on the network. They can use
+ directory mirrors to download their documents, as the mirrors download
+ their documents from the authorities early in the consensus validity
+ period.
+
+ We specify that client mirror connections retry after one second, and
+ then double the retry time with every connection:
  0, 1, 2, 4, 8, 16, 32, ...
 
- We specify that directory authority connections retry after 5 seconds,
- and then double the retry time with every connection:
+ We specify that client directory authority connections retry after
+ 10 seconds, and then double the retry time with every connection:
  0, 10, 20, ...
+
+ If a client has both an IPv4 and IPv6 address, it will try IPv4 and
+ IPv6 mirrors and authorities on the following schedule:
+ IPv4, IPv6, IPv4, IPv6, ...
+
+ Relay Schedules:
+
+ Relays represent a small load on the network, but place a proportionally
+ greater load on the authorities [citation needed]. They can’t use
+ directory mirrors to download their documents, as they themselves are
+ the mirrors.
+
+ We specify that relay directory authority connections retry after
+ 5 seconds, and then double the retry time with every connection:
+ 0, 5, 10, ...
+
+ If a relay has both an IPv4 and IPv6 address, it will try IPv4 and
+ IPv6 mirrors and authorities on the following schedule:
+ IPv4, IPv4, IPv6, IPv4, IPv6, ...
 
  [ XXX: should we add random noise to these scheduled times? - teor ]
 
- The maximum retry time for both timers is 3 days + 1 hour. This places a
- small load on the mirrors and authorities, while allowing a client that
- regains a network connection to eventually download a consensus.
-
- If the client has both an IPv4 and IPv6 address, we try IPv4 and IPv6
- mirrors and authorities on the following schedule:
- IPv4, IPv6, IPv4, IPv6, ...
+ The maximum retry time for all these timers is 3 days + 1 hour. This
+ places a small load on the mirrors and authorities, while allowing a
+ client that regains a network connection to eventually download a
+ consensus.
 
  We try IPv4 first to avoid overloading IPv6-enabled authorities and
- mirrors. Mirrors and auths get a separate IPv4/IPv6 schedule. This
- ensures that we try an IPv6 authority within the first 10 seconds.
- This helps implement #8374 and related tickets.
+ mirrors. Each timing schedule uses a separate IPv4/IPv6 schedule.
+ This ensures that clients and relays try an IPv6 authority within
+ the first 10 seconds. This helps implement #8374 and related tickets.
 
  We don't want to keep on trying an IP version that always fails.
  Therefore, once sufficient IPv4 and IPv6 connections have been
@@ -68,12 +91,6 @@ Design: Bootstrap Process Changes
  document and the others will be closed, after which bootstrapping will
  proceed as normal.
 
- A benefit of connecting to directory authorities is that clients are
- warned if their clock is wrong. Therefore, when closing a directory
- authority connection, we check to see if we have successfully connected
- to an authority during this run of the Tor client. If not, we allow the
- authority TLS connection to complete, then close the connection.
-
  We expect the vast majority of clients to succeed within 4 seconds,
  after making up to 4 connection attempts to mirrors and 1 connection
  attempt to an authority. Clients which can't connect in the first
@@ -82,12 +99,17 @@ Design: Bootstrap Process Changes
  10 seconds. This is a much better success rate than the current Tor
  implementation, which fails k/n of clients if k of the n directory
  authorities are down. (Or, if the connection fails in certain ways,
- (k/n)^2.)
+ it will retry once, failing 1-(1-(k/n)^2).)
 
  If at any time, the total outstanding bootstrap connection attempts
  exceeds 10, no new connection attempts are to be launched until an
  existing connection attempt experiences full timeout. The retry time
  is not doubled when a connection is skipped.
+
+ A benefit of connecting to directory authorities is that clients are
+ warned if their clock is wrong. Starting the authority and fallback
+ schedules at the same time should ensure that some clients check their
+ clock with an authority at each bootstrap.
 
 Design: Fallback Dir Mirror Selection
 
@@ -111,12 +133,13 @@ Performance: Additional Load with Current Parameter Choices
  This design and the connection count parameters were chosen such that
  no additional bandwidth load would be placed on the directory
  authorities. In fact, the directory authorities should experience less
- load, because they will not need to serve the consensus document for a
- connection in the event that one of the directory mirrors complete their
- connection before the directory authority does.
+ load, because they will not need to serve the entire consensus document
+ for a connection in the event that one of the directory mirrors complete
+ their connection before the directory authority does. (However, they
+ may need to serve the consensus document HEAD for clock checks.)
 
  However, the scheme does place additional TLS connection load on the
- fallback dir mirrors. Because bootstrapping is rare and all but one of 
+ fallback dir mirrors. Because bootstrapping is rare, and all but one of
  the TLS connections will be very short-lived and unused, this should not
  be a substantial issue.
 
@@ -154,23 +177,26 @@ Implementation Notes: Code Modifications
  if the purpose is DIR_PURPOSE_FETCH_CONSENSUS and there is no valid
  (reasonably live) consensus. We can make multiple connections from
  update_consensus_networkstatus_downloads(), as the sockets are non-blocking.
- [ XXX - is this socket actually non-blocking for all platforms? ]
- As long as we can tolerate a timer resolution of ~1 second (due to the use
- of time_t), this requires no additional timers or callbacks. We can make 1
- connection for each schedule per second, for a total of 2 per second.
+ (This socket appears to be non-blocking on Unixes (SOCK_NONBLOCK & O_NONBLOCK)
+ and Windows (FIONBIO).) As long as we can tolerate a timer resolution of
+ ~1 second (due to the use of time_t), this requires no additional timers or
+ callbacks. We can make 1 connection for each schedule per second, for a total
+ of 1-2 per second.
+
+ Since a tor relay fetches its directory material directly from the
+ authorities, it uses a different schedule. Multiple connections are
+ only useful to a relay if multiple authorities are down, so we retry
+ less often than for clients (clients use multiple fallbacks).
+ update_consensus_networkstatus_downloads() should check
+ directory_fetches_from_authorities() to choose the appropriate schedule.
 
  update_consensus_networkstatus_downloads() would also check the list of
  pending connections and, if it is 10 or greater, skip the connection
  attempt, and leave the retry time constant.
 
- The code in connection_dir_finished_connecting() would need to be altered to
- check that we are not already downloading the consensus. If we’re not, then
- call directory_send_command() to download the consensus, and close any other
- pending consensus dircons. Since we want to check our clock against an
- authority at least once per run, we instead mark authority connections so
- they only request a HTTP HEAD, and use the first date header we see to
- detect if the client’s clock is skewed.
- [ XXX - does Tor support HTTP HEAD? ]
+ The code in directory_send_command() would need to be altered to check that we
+ are not already downloading the consensus. If we’re not, then download the
+ consensus on this connection, and close any other pending consensus dircons.
 
  We might also need to make similar changes in authority_certs_fetch_missing(),
  as we can’t use a consensus until we have enough authority certificates.
@@ -187,6 +213,7 @@ Reliability Analysis
  uptime.)
 
  We expect the first 10 connection retry times to be:
+ (Research shows users tend to lose interest after 40 seconds.)
  Mirror:   0s  1s  2s    4s    8s           16s             32s
  Auth:     0s                        10s            20s
  Success: 90% 95% 97% 98.7% 99.4% 99.89% 99.94% 99.988% 99.994%
@@ -196,7 +223,7 @@ Reliability Analysis
  99.89% of clients succeed in the first 10 seconds.
   0.11% of clients remain, but in this scenario, 2 authorities are
         unreachable, so the client is most likely blocked from the Tor
-        network.
+        network. Alternately, they will likely succeed on relaunch.
 
  The current implementation makes 1 or 2 authority connections within the
  first second, depending on exactly how the first connection fails. Under
