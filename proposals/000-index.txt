@@ -175,6 +175,7 @@ Proposals by number:
 252  Single Onion Services [DRAFT]
 253  Out of Band Circuit HMACs [DRAFT]
 254  Padding Negotiation [DRAFT]
+255  Controller features to allow for load-balancing hidden services [DRAFT]
 
 
 Proposals by status:
@@ -197,6 +198,7 @@ Proposals by status:
    252  Single Onion Services
    253  Out of Band Circuit HMACs
    254  Padding Negotiation
+   255  Controller features to allow for load-balancing hidden services
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  OPEN:
