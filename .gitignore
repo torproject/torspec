@@ -9,3 +9,5 @@
 *.orig
 *.rej
 
+# OS X folder cruft
+.DS_Store
