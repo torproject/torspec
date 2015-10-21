@@ -1,9 +1,10 @@
 Filename: 210-faster-headless-consensus-bootstrap.txt
 Title: Faster Headless Consensus Bootstrapping
-Author: Mike Perry
+Author: Mike Perry, Tim Wilson-Brown, Peter Palfrader
 Created: 01-10-2012
+Last Modified: 02-10-2015
 Status: Open
-Target: 0.2.4.x+
+Target: 0.2.8.x+
 
 
 Overview and Motiviation
@@ -19,19 +20,90 @@ Design: Bootstrap Process Changes
  parallel during the bootstrap process, and download the consensus from
  the first connection that completes.
 
- Connection attempts will be done in batches of three. Only one
- connection will be performed to one of the canonical directory
- authorities. Two connections will be performed to randomly chosen hard
- coded directory mirrors.
+ Connection attempts will be performed on an exponential backoff basis.
+ Initially, connections will be performed to a randomly chosen hard
+ coded directory mirror and a randomly chosen canonical directory
+ authority. If neither of these connections complete, additional mirror
+ and authority connections are tried. Mirror connections are tried at
+ a faster rate than authority connections.
 
- If no connections complete within 5 seconds, another batch of three
- connections will be launched. Otherwise, the first connection to
- complete will be used to download the consensus document and the others
- will be closed, after which bootstrapping will proceed as normal.
+ Clients represent the majority of the load on the network. They can use
+ directory mirrors to download their documents, as the mirrors download
+ their documents from the authorities early in the consensus validity
+ period.
+
+ We specify that client mirror connections retry after one second, and
+ then double the retry time with every connection attempt:
+ 0, 1, 2, 4, 8, 16, 32, ...
+ (The timers currently implemented in Tor increment with every
+ connection failure.)
+
+ We specify that client directory authority connections retry after
+ 10 seconds, and then double the retry time with every connection:
+ 0, 10, 20, ...
+
+ If a client has both an IPv4 and IPv6 address, it will try IPv4 and
+ IPv6 mirrors and authorities on the following schedule:
+ IPv4, IPv6, IPv4, IPv6, ...
+
+ [ TODO: should we add random noise to these scheduled times? - teor
+         Tor doesn’t add random noise to the current failure-based
+         timers, but as failures are a network event, they are
+         somewhat random/arbitrary already. These attempt-based timers
+         will go off every few seconds, exactly erraon the second. ]
+
+ (Relays can’t use directory mirrors to download their documents,
+ as they *are* the directory mirrors.)
+
+ The maximum retry time for all these timers is 3 days + 1 hour. This
+ places a small load on the mirrors and authorities, while allowing a
+ client that regains a network connection to eventually download a
+ consensus.
+
+ We try IPv4 first to avoid overloading IPv6-enabled authorities and
+ mirrors. Each timing schedule uses a separate IPv4/IPv6 schedule.
+ This ensures that clients try an IPv6 authority within the first
+ 10 seconds. This helps implement #8374 and related tickets.
+
+ We don't want to keep on trying an IP version that always fails.
+ Therefore, once sufficient IPv4 and IPv6 connections have been
+ attempted, we select an IP version for new connections based on the ratio
+ of their failure rates, up to a maximum of 1:5. This may not make a
+ substantial difference to consensus downloads, as we only need one
+ successful consensus download to bootstrap. However, it is important for
+ future features like #17217, where clients try to automatically determine
+ if they can use IPv4 or IPv6 to contact the Tor network.
+
+ The retry timers and IP version schedules must reset on HUP and any
+ network reachability events, so that clients that have unreliable networks
+ can recover from network failures.
+ [ TODO: Do we do this for any other timers?
+         I think this needs another proposal, it’s out of scope here.
+         - teor ]
+
+ The first connection to complete will be used to download the consensus
+ document and the others will be closed, after which bootstrapping will
+ proceed as normal.
+
+ We expect the vast majority of clients to succeed within 4 seconds,
+ after making up to 4 connection attempts to mirrors and 1 connection
+ attempt to an authority. Clients which can't connect in the first
+ 10 seconds, will try 1 more mirror, then try to contact another
+ directory authority. We expect almost all clients to succeed within
+ 10 seconds. This is a much better success rate than the current Tor
+ implementation, which fails k/n of clients if k of the n directory
+ authorities are down. (Or, if the connection fails in certain ways,
+ it will retry once, failing 1-(1-(k/n)^2).)
 
  If at any time, the total outstanding bootstrap connection attempts
- exceeds 15, no new connection attempts are to be launched until existing
- connection attempts experience full timeout.
+ exceeds 10, no new connection attempts are to be launched until an
+ existing connection attempt experiences full timeout. The retry time
+ is not doubled when a connection is skipped.
+
+ A benefit of connecting to directory authorities is that clients are
+ warned if their clock is wrong. Starting the authority and fallback
+ schedules at the same time should ensure that some clients check their
+ clock with an authority at each bootstrap.
 
 Design: Fallback Dir Mirror Selection
 
@@ -39,42 +111,49 @@ Design: Fallback Dir Mirror Selection
  the 100 Guard nodes with the longest uptime.
 
  The fallback weights will be set using each mirror's fraction of
- consensus bandwidth out of the total of all 100 mirrors.
+ consensus bandwidth out of the total of all 100 mirrors, adjusted to
+ ensure no fallback directory sees more than 10% of clients. We will
+ also exclude fallback directories that are less than 1/1000 of the
+ consensus weight, as they are not large enough to make it worthwhile
+ including them.
 
  This list of fallback dir mirrors should be updated with every
  major Tor release. In future releases, the number of dir mirrors
- should be set at 20% of the current Guard nodes, rather than fixed at
- 100.
+ should be set at 20% of the current Guard nodes (approximately 200 as
+ of October 2015), rather than fixed at 100.
+
+ [TODO: change the script to dynamically calculate an upper limit.]
 
 Performance: Additional Load with Current Parameter Choices
 
  This design and the connection count parameters were chosen such that
  no additional bandwidth load would be placed on the directory
  authorities. In fact, the directory authorities should experience less
- load, because they will not need to serve the consensus document for a
- connection in the event that one of the directory mirrors complete their
- connection before the directory authority does.
+ load, because they will not need to serve the entire consensus document
+ for a connection in the event that one of the directory mirrors complete
+ their connection before the directory authority does.
 
  However, the scheme does place additional TLS connection load on the
- fallback dir mirrors. Because bootstrapping is rare and all but one of 
+ fallback dir mirrors. Because bootstrapping is rare, and all but one of
  the TLS connections will be very short-lived and unused, this should not
  be a substantial issue.
 
  The dangerous case is in the event of a prolonged consensus failure
  that induces all clients to enter into the bootstrap process. In this
- case, the number of initial TLS connections to the fallback dir mirrors
- would be 2*C/100, or 10,000 for C=500,000 users. If no connections
- complete before the five retries, this could reach as high as 50,000
- connection attempts, but this is extremely unlikely to happen in full
- aggregate.
+ case, the number of TLS connections to the fallback dir mirrors within
+ the first second would be 2*C/100, or 40,000 for C=2,000,000 users. If
+ no connections complete before the 10 retries, 7 of which go to
+ mirrors, this could reach as high as 140,000 connection attempts, but
+ this is extremely unlikely to happen in full aggregate.
 
  However, in the no-consensus scenario today, the directory authorities
- would already experience C/9 or 55,555 connection attempts. The
- 5-retry scheme increases their total maximum load to about 275,000
- connection attempts, but again this is unlikely to be reached
- in aggregate. Additionally, with this scheme, even if the dirauths
- are taken down by this load, the dir mirrors should be able to survive
- it.
+ would already experience 2*C/9 or 444,444 connection attempts. (Tor
+ currently tries 2 authorities, before delaying the next attempt.) The
+ 10-retry scheme, 3 of which go to authorities, increases their total
+ maximum load to about  666,666 connection attempts, but again this is
+ unlikely to be reached in aggregate. Additionally, with this scheme,
+ even if the dirauths are taken down by this load, the dir mirrors
+ should be able to survive it.
 
 Implementation Notes: Code Modifications
 
@@ -87,27 +166,69 @@ Implementation Notes: Code Modifications
  a single directory server is selected and a connection is
  eventually made through directory_initiate_command_rend().
 
- There appear to be a few options for altering this code to perform
- multiple connections. Without refactoring, one approach would be
- to make multiple calls to directory_initiate_command_routerstatus()
- from directory_get_from_dirserver() if the purpose is
- DIR_PURPOSE_FETCH_CONSENSUS and the only directory servers available
- are the authorities and the fallback dir mirrors.
+ There appear to be a few options for altering this code to retry multiple
+ simultaneous connections. It looks like we can modify
+ update_consensus_networkstatus_downloads() to make connections more often
+ if the purpose is DIR_PURPOSE_FETCH_CONSENSUS and there is no valid
+ (reasonably live) consensus. We can make multiple connections from
+ update_consensus_networkstatus_downloads(), as the sockets are non-blocking.
+ (This socket appears to be non-blocking on Unixes (SOCK_NONBLOCK & O_NONBLOCK)
+ and Windows (FIONBIO).) As long as we can tolerate a timer resolution of
+ ~1 second (due to the use of second_elapsed_callback and time_t), this
+ requires no additional timers or callbacks. We can make 1 connection for each
+ schedule per second, for a maximum of 2 per second.
 
- The code in directory_initiate_command_rend() would then need to be
- altered to maintain a list of the dircons created for this purpose as
- well as avoid immediately queuing the directory_send_command() request
- for the DIR_PURPOSE_FETCH_CONSENSUS purpose. A flag would need to be set
- on the dircon to be checked in connection_dir_finished_connecting().
+ The schedules can be specified in:
+ TestingClientBootstrapConsensusAuthorityDownloadSchedule
+ TestingClientBootstrapConsensusFallbackDownloadSchedule
+ (Similar to the existing TestingClientConsensusDownloadSchedule.)
 
- The function connection_dir_finished_connecting() would need to be
- altered to examine the list of pending dircons, determine if this one is
- the first to complete, and if so, then call directory_send_command() to
- download the consensus and close the other pending dircons.
+ TestingServerIPVersionPreferenceSchedule
+ (Consisting of a CSV like “4,6,4,6”, or perhaps “0,1,0,1”.)
 
- An additional timer would need to be installed to re-call
- update_consensus_networkstatus_downloads() or a related helper after 5
- seconds. connection_dir_finished_connecting() would cancel this timer.
- The helper would check the list of pending connections and ensure it
- never exceeds 15.
+ update_consensus_networkstatus_downloads() checks the list of pending
+ connections and, if it is 10 or greater, skip the connection attempt,
+ and leave the retry time constant.
 
+ The code in directory_send_command() and connection_finished_connecting()
+ would need to be altered to check that we are not already downloading the
+ consensus. If we’re not, then download the consensus on this connection, and
+ close any other pending consensus dircons.
+
+ We might also need to make similar changes in authority_certs_fetch_missing(),
+ as we can’t use a consensus until we have enough authority certificates.
+ However, Tor already makes multiple requests (one per certificate), and only
+ needs a majority of certificates to validate a consensus. Therefore, we will
+ only need to modify authority_certs_fetch_missing() if clients download a
+ consensus, then end up getting stuck downloading certificates. (Current tests
+ show bootstrapping working well without any changes to authority certificate
+ fetches.)
+
+Reliability Analysis
+
+ We make the pessimistic assumptions that 50% of connections to directory
+ mirrors fail, and that 20% of connections to authorities fail. (Actual
+ figures depend on relay churn, age of the fallback list, and authority
+ uptime.)
+
+ We expect the first 10 connection retry times to be:
+ (Research shows users tend to lose interest after 40 seconds.)
+ Mirror:   0s  1s  2s    4s    8s           16s             32s
+ Auth:     0s                        10s            20s
+ Success: 90% 95% 97% 98.7% 99.4% 99.89% 99.94% 99.988% 99.994%
+
+ 97%    of clients succeed in the first 2 seconds.
+ 99.4%  of clients succeed without trying a second authority.
+ 99.89% of clients succeed in the first 10 seconds.
+  0.11% of clients remain, but in this scenario, 2 authorities are
+        unreachable, so the client is most likely blocked from the Tor
+        network. Alternately, they will likely succeed on relaunch.
+
+ The current implementation makes 1 or 2 authority connections within the
+ first second, depending on exactly how the first connection fails. Under
+ the 20% authority failure assumption, these clients would have a success
+ rate of either 80% or 96% within a few seconds. The scheme above has a
+ greater success rate in the first few seconds, while spreading the load
+ among a larger number of directory mirrors. In addition, if all the
+ authorities are blocked, current clients will inevitably fail, as they
+ do not have a list of directory mirrors.
