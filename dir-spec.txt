@@ -2119,9 +2119,9 @@
    protocol that supports the functionality clients need.  (Currently, this
    is 0.1.1.9-alpha or later.)
 
-   "HSDir" -- A router is a v2 hidden service directory if it stores
-   and serves v2 hidden service descriptors, and the authority
-   believes that it's been up for at least 96 hours (or the current
+   "HSDir" -- A router is a v2 hidden service directory if it stores and
+   serves v2 hidden service descriptors, has the Stable and Fast flag, and the
+   authority believes that it's been up for at least 96 hours (or the current
    value of MinUptimeHidServDirectoryV2).
 
    Directory server administrators may label some relays or IPs as
