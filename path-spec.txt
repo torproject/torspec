@@ -602,6 +602,105 @@ of their choices.
   Tor does not add a guard persistently to the list until the first time we
   have connected to it successfully.
 
+5.1. Guard selection algorithm
+
+  If configured to use entry guards, and the circuit's purpose is not marked
+  for testing, then a random entry guard from the persisted state (as
+  mentioned earlier in §5) will be chosen (provided there is already some
+  persisted state storing previously chosen guard nodes).
+
+  Otherwise, if any the above conditions are not satisfied, then a new entry
+  guard node will be chosen for that circuit.  The algorithm is as follows:
+
+    - EXCLUDED_NODES is a list of nodes which, for some reason, are not
+      acceptable for use as an entry guard.
+
+    1. If an exit node has been chosen for the circuit:
+
+       1.a. Then that exit is added to EXCLUDED_NODES (and thus will not be
+            used as the entry guard).
+
+    2. If running behind a fascist firewall (e.g. outgoing connections are
+       only permitted to ports 80 and/or 443):
+
+       2.a. For all known routers in the network (as given in the
+            networkstatus document), a router is added to the list of
+            EXCLUDED_NODES iff it does not advertise the ability to be reached
+            via the ports allowed through the fascist firewall.
+
+    3. Add any entry guards currently in volatile storage, as well as all
+       nodes within their families, to EXCLUDED_NODES.
+
+    4. Determine which of the following flags should apply to the selection of
+       an entry guard:
+
+         * CRN_NEED_UPTIME: the router can only be chosen as an entry guard
+           iff has been available for at least some minimum uptime.
+         * CRN_NEED_CAPACITY: potentially suitable routers are weighted by
+           their advertised bandwidth capacity.
+         * CRN_ALLOW_INVALID: also consider using routers which have been
+           marked as invalid.
+         * CRN_NEED_GUARD: only consider routers which have the Guard flag.
+         * CRN_NEED_DESC: only consider routers for which we have enough
+           information to be used to build a circuit.
+
+       Additionally, if configured to allow nodes marked as invalid AND to
+       specifically allow entry guards which have been marked as invalid, then
+       the CRN_ALLOW_INVALID flag will be set.  Lastly, the CRN_NEED_GUARD and
+       CRN_NEED_DESC flags are always applied, regardless of configuration.
+
+    5. If configured to exclude routers which allow single-hop circuits, then
+       the list of known routers is traversed, and all routers which permit
+       single-hop circuits are added to EXCLUDED_NODES.
+
+    6. If we are an OR, add ourselves (and our family) to EXCLUDED_NODES.
+
+    7. The list of potential routers is weighted according to the bandwidth
+       weights from the consensus (cf. §5.1.1), and then a random selection is
+       chosen with respect to those weights.
+
+       7.a. If we've made a choice now, the algorithm finishes.
+       7.b. Otherwise, continue to step #8.
+
+    8. We couldn't find a suitable guard, so now we try much harder by
+       discarding the CRN_NEED_UPTIME, CRN_NEED_CAPACITY, and CRN_NEED_GUARD
+       selection flags.  This effectively means we'll use nearly any router,
+       except for ones already in EXCLUDED_LIST.
+
+       [XXX Does this mean we even include BadExits and other misbehaving
+       nodes?  This sounds bad.  —isis]
+
+5.1.1. How consensus bandwidth weights factor into entry guard selection
+
+  When weighting a list of routers for choosing an entry guard, the following
+  consensus parameters (from the "bandwidth-weights" line) apply:
+
+      Wgg - Weight for Guard-flagged nodes in the guard position
+      Wgm - Weight for non-flagged nodes in the guard Position
+      Wgd - Weight for Guard+Exit-flagged nodes in the guard Position
+      Wgb - Weight for BEGIN_DIR-supporting Guard-flagged nodes
+      Wmb - Weight for BEGIN_DIR-supporting non-flagged nodes
+      Web - Weight for BEGIN_DIR-supporting Exit-flagged nodes
+      Wdb - Weight for BEGIN_DIR-supporting Guard+Exit-flagged nodes
+
+  Please see "bandwidth-weights" in §3.4.1 of dir-spec.txt for more in depth
+  descriptions of these parameters.
+
+  If a router has been marked as both an entry guard and an exit, then we
+  prefer to use it more, with our preference for doing so (roughly) linearly
+  increasing w.r.t. the router's non-guard bandwidth and bandwidth weight
+  (calculated without taking the guard flag into account).  From proposal
+  #236:
+    |
+    | Let Wpf denote the weight from the 'bandwidth-weights' line a
+    | client would apply to N for position p if it had the guard
+    | flag, Wpn the weight if it did not have the guard flag, and B the
+    | measured bandwidth of N in the consensus.  Then instead of choosing
+    | N for position p proportionally to Wpf*B or Wpn*B, clients should
+    | choose N proportionally to F*Wpf*B + (1-F)*Wpn*B.
+
+  where F is the weight as calculated using the above parameters.
+
 6. Server descriptor purposes
 
   There are currently three "purposes" supported for server descriptors:
