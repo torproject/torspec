@@ -177,6 +177,7 @@ Proposals by number:
 254  Padding Negotiation [DRAFT]
 255  Controller features to allow for load-balancing hidden services [DRAFT]
 256  Key revocation for relays and authorities [OPEN]
+257  Refactoring authorities and taking parts offline [DRAFT]
 
 
 Proposals by status:
@@ -200,6 +201,7 @@ Proposals by status:
    253  Out of Band Circuit HMACs
    254  Padding Negotiation
    255  Controller features to allow for load-balancing hidden services
+   257  Refactoring authorities and taking parts offline
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  OPEN:

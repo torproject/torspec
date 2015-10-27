@@ -1,0 +1,206 @@
+Filename: 257-hiding-authorities.txt
+Title: Refactoring authorities and taking parts offline
+Authors: Nick Mathewson, Andrea Shepard
+Created: 2015-10-27
+Status: Draft
+
+1. Introduction
+
+   Directory authorities are critical to the Tor network, and represent
+   a DoS target to anybody trying to disable the network. This document
+   describes a strategy for making directory authorities in general less
+   vulnerable to DoS by separating the different parts of their
+   functionality.
+
+2. Design
+
+2.1. The status quo
+
+   This proposal is about splitting up the roles of directory
+   authorities.  But, what are these roles?  Currently, directory
+   authorities perform the following functions.
+
+   Some of these functions require large amounts of bandwidth; I've noted
+   that with a (BW).  Some of these functions require a publicly known
+   address; I've marked those with a (PUB). Some of these functions
+   inevitably leak the location from which they are performed. I've marked
+   those with a (LOC).
+
+   Not everything in this list is something that needs to be done by an
+   authority permanently!  This list is, again, just what authorities do now.
+
+     * Authorities receive uploaded server descriptors and extrainfo
+       descriptors from regular Tor servers and from each other. (BW, PUB?)
+
+     * Authorities periodically probe the routers they know about in
+       order to determine whether they are running or not.  By
+       remembering the past behavior of nodes, they also build a view of
+       each node's fractional uptime and mean time between
+       failures. (LOC, unless we're clever)
+
+     * Authorities perform the consensus protocol by:
+
+          * Generating 'vote' documents describing their view of the
+            network, along with a set of microdescriptors for later
+            client use.
+
+          * Uploading these votes to one another.
+
+          * Computing a 'consensus' of these votes.
+
+     * Authorities serve as a location for distributing consensus
+       documents, descriptors, extrainfo documents, and
+       microdescriptors...
+
+          * To directory mirrors. (BW?, PUB?, LOC?)
+
+          * To clients that do not yet know a directory mirror. (BW!!, PUB)
+
+   These functions are tied to directory authorities, but done
+   out-of-process:
+
+     * Bandwidth measurement (BW)
+
+     * Sybil detection
+
+     * 'Guardiness' measurement, possibly.
+
+2.2. Design goals
+
+   Principally, we attempt to isolate the security-critical,
+   high-resource, and availability-critical pieces of our directory
+   infrastructure from one another.
+
+   We would like to make the security-critical pieces of our
+   infrastructure easy to relocate, and the communications between them
+   easy to secure.
+
+   We require that the Tor network remain able to bootstrap itself in
+   the event of catastrophic failure.  So, while we can _use_ a running
+   Tor network to communicate, we should not _require_ that a running
+   Tor network exist in order to perform the voting process.
+
+2.3. Division of responsibility
+
+   We propose dividing directory authority operations into these modules:
+
+
+      ----------       ----------    --------------    ----------------
+      | Upload |======>| Voting |===>| Publishing |===>| Distribution |
+      ----------       ----------    --------------    ----------------
+          I                 ^
+          I    -----------  I
+          ====>| Metrics |===
+               -----------
+
+   A number of 'upload' servers are responsible for receiving
+   router descriptors.  These are publicly known, and responsible for
+   collecting descriptors.
+
+   Information from these servers is used by 'metrics' modules
+   (which check Tor servers for reliability and measure their history),
+   and fed into the voting process.
+
+   The voting process involves only communication (indirectly) from
+   authorities to authorities, to produce a consensus and a set of
+   microdescriptors.
+
+   When voting is complete, consensuses, descriptors, and microdescriptors
+   must be made available to the rest of the world.  This is done by
+   the 'publishing' module.  The consensuses, descriptors, and mds are then
+   taken up by the directory caches, and distributed.
+
+   The rest of this proposal will describe means of communication between
+   these modules.
+
+3. The modules in more detail
+
+   This section will outline possibilities for communication between the
+   various parts of the system to isolate them.  There will be plenty of
+   "may"s and "could"s and "might"s here: these are possibilities, in
+   need of further consideration.
+
+3.1. Sending descriptors to the Upload module
+
+   We retain the current mechanism: a set of well-known IP
+   addresses with well-known OR keys to which each relay should upload a
+   copy of its descriptors.
+
+   The worst that a hostile upload server can do is to drop descriptors.
+   (It could also generate large numbers of spurious descriptors in
+   order to increase the load on the metrics system. But an attacker
+   could do that without running an upload server)
+
+   With respect to dropping, upload servers can use an anytrust model:
+   so long as a single server receives and honestly reports descriptors
+   to the rest of the system, those descriptors will arrive correctly.
+
+   To avoid DoS attacks, we can require that any relay not previously known
+   to an upload module perform some kind of a proof of work as it first
+   registers itself.  (Details TBD)
+
+   If we're using TLS here, we should also consider a check-then-start TLS
+   design as described in A.1 below.
+
+   The location of Upload servers can change over time; they can be
+   published in the consensus.
+
+   (Note also that as an alternative, we could distribute this functionality
+   across the whole network.)
+
+3.2. Transferring descriptors to the metrics server and the voters
+
+   The simplest option here would be for the authorities and metrics
+   servers to mirror them using Tor.  rsync-over-ssh-over-Tor is a
+   possibility, if we don't feel like building more machinery.
+
+   (We could use hidden services here, but it is probably okay for
+   upload servers and to be known by the the voters and metrics.)
+
+   A fallback to a non-Tor connection could be done manually, or could
+   require explicit buy-in from the voter/metrics operator.
+
+3.3. Transferring information from metrics server to voters
+
+   The same approaches as 3.2 should work fine.
+
+3.4. Communication between voters
+
+   Voters can, we hope, communicate to each other over authenticated
+   hidden services.  But we'll need a fallback mechanism here.
+
+   Another option is to have public ledgers available for voters to talk
+   to anonymously.  This is probably a better idea.  We could re-use the
+   upload servers for this purpose, perhaps.
+
+   Giving voters each others' addresses seems like a bad idea.
+
+3.5. Communication from voters to directory nodes
+
+   We should design a flood-distribution mechanism for microdescriptors,
+   listed descriptors, and consensuses so that authorities can each
+   upload to a few targets anonymously, and have them propagate through
+   the rest of the network.
+
+4. Migration
+
+   To support old clients and old servers, the current authority IP
+   addresses should remain as Upload and Distribution points.  The
+   current authority identity keys keys should remain as the keys for
+   voters.
+
+A.1. Check-then-start TLS
+
+   Current TLS protocols are quite susceptible to denial-of-service
+   attacks, with large asymmetries in resource consumption.  (Client
+   sends junk, forcing server to perform private-key operation on junk.)
+
+   We could hope for a good TLS replacement to someday emerge, or for
+   TLS to improve its properties.  But as a replacement, I suggest that
+   we wrap TLS in a preliminary challenge-response protocol to establish
+   that the use is authorized before we allow the TLS handshake to
+   begin.
+
+   (We shouldn't do this for all the TLS in Tor: only for the cases
+   where we want to restrict the users of a given TLS server.)
+
