@@ -176,6 +176,7 @@ Proposals by number:
 253  Out of Band Circuit HMACs [DRAFT]
 254  Padding Negotiation [DRAFT]
 255  Controller features to allow for load-balancing hidden services [DRAFT]
+256  Key revocation for relays and authorities [OPEN]
 
 
 Proposals by status:
@@ -213,7 +214,7 @@ Proposals by status:
    201  Make bridges report statistics on daily v3 network status requests [for 0.2.4.x]
    202  Two improved relay encryption protocols for Tor cells
    209  Tuning the Parameters for the Path Bias Defense [for 0.2.4.x+]
-   210  Faster Headless Consensus Bootstrapping [for 0.2.4.x+]
+   210  Faster Headless Consensus Bootstrapping [for 0.2.8.x+]
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
    226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS"
@@ -224,6 +225,7 @@ Proposals by status:
    237  All relays are directory servers [for 0.2.7.x]
    242  Better performance and usability for the MyFamily option
    246  Merging Hidden Service Directories and Introduction Points
+   256  Key revocation for relays and authorities
  ACCEPTED:
    140  Provide diffs between consensuses
    172  GETINFO controller option for circuit information

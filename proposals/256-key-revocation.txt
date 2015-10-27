@@ -1,0 +1,242 @@
+Filename: 256-key-revocation.txt
+Title: Key revocation for relays and authorities
+Authors: Nick Mathewson
+Created: 27 October 2015
+Status: Open
+
+1. Introduction
+
+   This document examines the different kinds of long-lived public keys
+   in Tor, and discusses a way to revoke each.
+
+   The kind of keys at issue are:
+
+      * Authority identity keys
+      * Authority signing keys
+
+      * OR identity keys (ed25519)
+      * OR signing keys (ed25519)
+      * OR identity keys (RSA)
+
+   Additionally, we need to make sure that all other key types, if they
+   are compromised, can be replaced or rendered unusable.
+
+2. When to revoke keys
+
+   Revoking keys should happen when the operator of an authority or
+   relay believes that the key has been compromised, or has a
+   significant risk of having been compromised.  In this proposal we
+   deliberately leave this decision up to the authority/relay operators.
+
+   (If a third party believes that a key has been compromised, they
+   should attempt to get the key-issuing party to revoke their key.  If
+   that can't be done, the uncompromised authorities should block the
+   relay or de-list the authority in question.)
+
+   Our key-generation code (for authorities and relays) should generate
+   preemptive revocation documents at the same time it generates the
+   original keys, so that operators can retain those documents in the
+   event that access to the original keys is lost.  The operators should
+   keep these revocation documents private and available enough so that
+   they can issue the revocation if necessary, but nobody else can.
+
+   Additionally, the key generation code should be able to generate
+   retrospective revocation documents for existing keys and
+   certificates.  (This approach can be more useful when a subkey is
+   revoked, but the operator still has ready access to the issuing key.)
+
+3. Authority keys
+
+   Authority identity keys are the most important keys in Tor.  They are
+   kept offline and encrypted.  They are used to sign authority signing
+   keys, and for no other purpose.
+
+   Authority signing keys are kept online.  They are authenticated by
+   authority identity keys, and used to sign votes and consensus
+   documents.
+
+   (For the rest of section 2, all keys mentioned will be authority keys.)
+
+3.1. Revocation certificates for authorities
+
+   We add the following extensions to authority key certificates (see
+   dir-spec.txt section 3.1), for use in key revocation.
+
+   "dir-key-revocation-type" SP "master" | "signing" NL
+
+      Specifies which kind of revocation document this is.
+
+      If dir-key-revocation is absent, this is not a revocation.
+
+      [At most once]
+
+   "dir-key-revocation-notes" SP (any non-NL text) NL
+
+      An explanation of why the key was revoked.
+
+      Must be absent unless dir-key-revocation-type is set.
+
+      [Any number of times]
+
+   "dir-key-revocation-signing-key-unusable" NL
+
+      Present if the signing key in this document will not actually be
+      used to sign votes and consensuses.
+
+      [At most once]
+
+   "dir-key-revoked-signing-key" SP DIGEST NL
+
+      Fingerprints of signing keys being explicitly revoked by this
+      certificate. (All keys published before this one are _implicitly_
+      revoked.)
+
+      [Any number of times]
+
+   "dir-key-revocation-published" SP YYYY-MM-DD SP HH:MM:SS NL
+
+      The actual time when the revocation was generated. (Used since the
+      'published' field in the certificate will lie; see below.)
+
+      [at most once.]
+
+
+3.2. Generating revocations
+
+   Revocations for signing keys should be generated with:
+     * A 'published' time immediately following the published date on
+       the key that they are revoking.
+     * An 'expires' time at least 48 hours after the expires date on
+       the key that they are revoking, and at least one week in the
+       future.
+
+   (Note that this ensures as-correct-as-possible behavior for existing
+   Tor clients and servers.  For Tor versions before 0.2.6, having a
+   more recent published date than the older key will cause the revoked
+   key certificate to be removed by trusted_dirs_remove_old_certs() if
+   it is published at least 7 days in the past.  For Tor versions 0.2.6
+   or later, the interval is reduced to 2 days.)
+
+   If generating a signing key revocation ahead of time, the revocation
+   document should include a dummy signing key, to be thrown away
+   immediately after it is generated and used to make the revocation
+   document.  The "dir-key-revocation-signing-key-unusable" element
+   should be present.
+
+   If generating a signing key revocation in response to an event,
+   the revocation document should include the new signing key to be
+   used.   The "dir-key-revocation-signing-key-unusable" element
+   must be be absent.
+
+   All replacement certificates generated for the lifetime of the
+   original revoked certificate should be generated as revocations.
+
+
+
+   Revocations for master keys should be generated with:
+     * A 'published' time immediately following the published date on
+       the most recently generated certificate, if possible.
+     * An 'expires' time equal to 18 Jan 2038. (The next-to-last day
+       encodeable in time_t, to avoid Y2038 problems.)
+     * A dummy signing key, as above.
+
+3.3. Submitting revocations
+
+  In the event of a key revocation, authority operators should
+  upload the revocation document to every other authority.
+
+  If there is a replacement signing key, it should be included in the
+  authority's votes (as any new key certificate would be).
+
+3.4. Handling revocations
+
+  We add these additional rules for caching and storing revocations on
+  Tor servers and clients.
+     * Master key revocations should be stored indefinitely.
+     * If we have a master key revocation, no other certificates for
+       that key should be fetched, stored, or served.
+     * If we have a master key revocation, we should replace any
+       DirAuthority entry for that master key with a 'null' entry -- an
+       authority with no address and no keys, from which nothing can be
+       downloaded and nothing can be trusted, but which still counts against
+       the total number of authorities.
+
+     * Signing key revocations should be retained until their 'expires'
+       date.
+     * If we have a signing key revocation document, we should not trust
+       any signature generated with any key in an older signing key
+       certificates for the same master key.  We should not serve such
+       key certificates.
+     * We should not attempt to fetch any certificate document matching
+       an <identity, signing> pair for which a revocation document exists.
+
+  We add these additional rule for directory authorities:
+
+     * When generating or serving a consensus document, an authority
+       should include a dir-source entry based on the most recent
+       revocation cert it has from an authority, unless that authority
+       has a more recent valid key cert.
+
+       (This will require a new consensus method.)
+
+     * When generating or serving a consensus document, if no valid
+       signature exists from a given authority, and that authority has
+       a currently valid key revocation document with a signing key in
+       it, it should include a bogus signature purporting to be made
+       with that signing key.  (All-zeros is suggested.)
+
+       (Doing this will make old Tor clients download the revocation
+       certificates.)
+
+4. Router identity key revocations
+
+4.1. RSA identity keys
+
+   If the RSA key is compromised but the ed25519 identity and signing
+   keys are not, simply disable the router.  Key pinning should take
+   care of the rest.
+
+   (This isn't ideal when key pinning isn't deployed yet, but I'm
+   betting that key pinning comes online before this proposal does.)
+
+4.2. Ed25519 master identity keys
+
+   (We use the data format from proposal 220, section 2.3 here.)
+
+   To revoke a master identity key, create a revocation for the master
+   key and upload it to every authority.
+
+   Authorities should accept these documents as meaning that the signing
+   key should never be allowed to appear on the Tor network.  This can
+   be enforced with the key pinning mechanism.
+
+4.3. Ed25519 signing keys
+
+   (We use the data format from proposal 220, section 2.3 here.)
+
+   To revoke a signing key, include the revocation for every
+   not-yet-expired signing key in your routerinfo document, as in:
+
+      "revoked-signing-key" SP Base64-Ed25519-Key NL
+
+        Note that this doesn't need to be authenticated, since the newer
+        signing key certificate creates a trust path from the master
+        identity key to the the revocation.
+
+        [Up to 32 times.]
+
+   Upon receiving these entries, authorities store up to 32 such entries
+   per router per year.  (If you have more than 32 keys compromised,
+   give up and take your router down. Start it with a new master key.)
+
+   When voting, authorities include a "rev" line in the
+   microdescriptor for every revoked-signing-key in the routerinfo:
+
+      "rev" SP "ed25519" SP Base64-Ed25519-Key NL
+
+      (This will require a new microdescriptor version.)
+
+   Upon receiving such a line in the microdescriptor, Tor instances MUST
+   NOT trust any signing key certificate with a matching key.
+
+
