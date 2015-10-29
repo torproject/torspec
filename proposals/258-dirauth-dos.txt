@@ -1,0 +1,96 @@
+Filename: 258-dirauth-dos.txt
+Title: Denial-of-service resistance for directory authorities
+Author: Andrea Shepard
+Created: 2015-10-27
+Status: Open
+
+1. Problem statement
+
+   The directory authorities are few in number and vital for the functioning
+   of the Tor network; threats of denial of service attacks against them have
+   occurred in the past.  They should be more resistant to unreasonably large
+   connection volumes.
+
+2. Design overview
+
+   There are two possible ways a new connection to a directory authority can
+   be established, directly by a TCP connection to the DirPort, or tunneled
+   inside a Tor circuit and initiated with a begindir cell.  The client can
+   originate the former as direct connections or from a Tor exit, and the
+   latter either as fully anonymized circuits or one-hop links to the
+   dirauth's ORPort.
+
+   The dirauth will try to heuristically classify incoming requests as one of
+   these four indirection types, and then in the two non-anonymized cases
+   further sort them into hash buckets on the basis of source IP.  It will use
+   an exponentially-weighted moving average to measure the rate of connection
+   attempts in each bucket, and also separately limit the number of begindir
+   cells permitted on each circuit.  It will periodically scan the hash tables
+   and forget counters which have fallen below a threshold to prevent memory
+   exhaustion.
+
+3. Classification of incoming connections
+
+   Clients can originate connections as one of four indirection types:
+
+   - DIRIND_ONEHOP: begindir cell on a single-hop Tor circuit
+   - DIRIND_ANONYMOUS: begindir cell on a fully anonymized Tor circuit
+   - DIRIND_DIRECT_CONN: direct TCP connection to dirport
+   - DIRIND_ANON_DIRPORT: TCP connection to dirport from an exit relay
+
+   The directory authority can always tell a dirport connection from a
+   begindir, but it must use its knowledge of the current consensus and
+   exit policies to disambiguate whether the connection is anonymized.
+
+   It should treat a begindir as DIRIND_ANONYMOUS when the previous hop
+   in the circuit it appears on is in the current consensus, and as
+   DIRIND_ONEHOP otherwise; it should treat a dirport connection as
+   DIRIND_ANON_DIRPORT if the source address appears in the consensus
+   and allows exits to the dirport in question, or as DIRIND_DIRECT_CONN
+   otherwise.  In the case of relays which also act as clients, these
+   heuristics may falsely classify direct/onehop connections as anonymous,
+   but will never falsely classify anonymous connections as direct/onehop.
+
+4. Exponentially-weighted moving average counters and hash table
+
+   The directory authority implements a set of exponentially-weighted moving
+   averages to measure the rate of incoming connections in each bucket.  The
+   two anonymous connection types are each a single bucket, but the two non-
+   anonymous cases get a single bucket per source IP each, stored in a hash
+   table.  The directory authority must periodically scan this hash table for
+   counters which have decayed close to zero and free them to avoid permitting
+   memory exhaustion.
+
+   This introduces five new configuration parameters:
+
+    - DirDoSFilterEWMATimeConstant: the time for an EWMA counter to decay by a
+      factor of 1/e, in seconds.
+    - DirDoSFilterMaxAnonConnectRate: the threshold to trigger the DoS filter
+      on DIRIND_ANONYMOUS connections.
+    - DirDoSFilterMaxAnonDirportConnectRate: the threshold to trigger the DoS
+      filter on DIRIND_ANON_DIRPORT connections.
+    - DirDoSFilterMaxBegindirRatePerIP: the threshold per source IP to trigger
+      the DoS filter on DIRIND_ONEHOP connections.
+    - DirDoSFilterMaxDirectConnRatePerIP: the threshold per source IP to
+      trigger the DoS filter on DIRIND_DIRECT_CONN connections.
+
+   When incrementing a counter would put it over the relevant threshold, the
+   filter is said to be triggered.  In this case, the directory authority does
+   not update the counter, but instead suppresses the incoming request.  In
+   the DIRIND_ONEHOP and DIRIND_ANONYMOUS cases, the directory authority must
+   kill the circuit rather than merely refusing the request, to prevent
+   an unending stream of client retries on the same circuit.
+
+5. Begindir cap
+
+   Directory authorities limit the number of begindir cells permitted in the
+   lifetime of a particular circuit, separately from the EWMA counters.  This
+   can only affect the DIRIND_ANONYMOUS and DIRIND_ONEHOP connetion types.
+   A sixth configuration variable, DirDoSFilterMaxBegindirPerCircuit, controls
+   this feature.
+
+6. Limitations
+
+   Widely distributed DoS attacks with many source IPs may still be able to
+   avoid raising any single DIRIND_ONEHOP or DIRIND_DIRECT_CONN counter above
+   threshold.

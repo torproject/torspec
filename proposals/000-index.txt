@@ -178,6 +178,7 @@ Proposals by number:
 255  Controller features to allow for load-balancing hidden services [DRAFT]
 256  Key revocation for relays and authorities [OPEN]
 257  Refactoring authorities and taking parts offline [DRAFT]
+258  Denial-of-service resistance for directory authorities [OPEN]
 
 
 Proposals by status:
@@ -228,6 +229,7 @@ Proposals by status:
    242  Better performance and usability for the MyFamily option
    246  Merging Hidden Service Directories and Introduction Points
    256  Key revocation for relays and authorities
+   258  Denial-of-service resistance for directory authorities
  ACCEPTED:
    140  Provide diffs between consensuses
    172  GETINFO controller option for circuit information
