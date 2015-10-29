@@ -1,0 +1,303 @@
+Filename: xxx-guard-selection.txt
+Title: New Guard Selection Behaviour
+Author: Isis Lovecruft, George Kadianakis
+Created: 2015-10-28
+Status: Draft
+Extends: 241-suspicious-guard-turnover.txt
+
+
+§1. Overview
+
+  In addition to the concerns regarding path bias attacks, namely that the
+  space from which guards are selected by some specific client should not
+  consist of the entirely of nodes with the Guard flag (cf. §1 of proposal
+  #247), several additional concerns with respect to guard selection behaviour
+  remain.  This proposal outlines a new entry guard selection algorithm, which
+  additionally addresses the following concerns:
+
+    - Heuristics and algorithms for determining how and which guard(s)
+      is(/are) chosen should be kept as simple and easy to understand as
+      possible.
+
+    - Clients in censored regions or who are behind a fascist firewall who
+      connect to the Tor network should not experience any significant
+      disadvantage in terms of reachability or usability.
+
+    - Tor should make a best attempt at discovering the most appropriate
+      behaviour, with as little user input and configuration as possible.
+
+
+§2. Design
+
+  Alice, an OP attempting to connect to the Tor network, should undertake the
+  following steps to determine information about the local network and to
+  select (some) appropriate entry guards.  In the following scenario, it is
+  assumed that Alice has already obtained a recent, valid, and verifiable
+  consensus document.
+
+  Before attempting the guard selection procedure, Alice initialises the guard
+  data structures and prepopulates the guardlist structures, including the
+  UTOPIC_GUARDLIST and DYSTOPIC_GUARDLIST (cf. §XXX).  Additionally, the
+  structures have been designed to make updates efficient both in terms of
+  memory and time, in order that these and other portions of the code which
+  require an up-to-date guard structure are capable of obtaining such.
+
+    0. Determine if the local network is potentially accessible.
+
+       Alice should attempt to discover if the local network is up or down,
+       based upon information such as the availability of network interfaces
+       and configured routing tables.  See #16120. [0]
+
+       [XXX: This section needs to be fleshed out more.  I'm ignoring it for
+       now, but since others have expressed interest in doing this, I've added
+       this preliminary step. —isis]
+
+    1. Check that we have not already attempted to add too many guards
+       (cf. proposal #241).
+
+    2. Then, if the PRIMARY_GUARDS on our list are marked offline, the
+       algorithm attempts to retry them, to ensure that they were not flagged
+       offline erroneously when the network was down. This retry attempt
+       happens only once every 20 mins to avoid infinite loops.
+
+       [Should we do an exponential decay on the retry as s7r suggested? —isis]
+
+    3. Take the list of all available and fitting entry guards and return the
+       top one in the list.
+
+    4. If there were no available entry guards, the algorithm adds a new entry
+       guard and returns it.  [XXX detail what "adding" means]
+
+    5. Go through the steps 1-4 above algorithm, using the UTOPIC_GUARDLIST.
+
+       5.a. When the GUARDLIST_FAILOVER_THRESHOLD of the UTOPIC_GUARDLIST has
+            been tried (without success), Alice should begin trying steps 1-4
+            with entry guards from the DYSTOPIC_GUARDLIST as well.  Further,
+            if no nodes from UTOPIC_GUARDLIST work, and it appears that the
+            DYSTOPIC_GUARDLIST nodes are accessible, Alice should make a note
+            to herself that she is possibly behind a fascist firewall.
+
+       5.b. If no nodes from either the UTOPIC_GUARDLIST or the
+            DYSTOPIC_GUARDLIST are working, Alice should make a note to
+            herself that the network has potentially gone down.  Alice should
+            then schedule, at exponentially decaying times, to rerun steps 0-5.
+           
+            [XXX Should we do step 0? Or just 1-4?  Should we retain any
+            previous assumptions about FascistFirewall?  —isis]
+
+    6. [XXX Insert potential other fallback mechanisms, e.g. switching to
+       using bridges? —isis]
+
+
+§3. New Data Structures, Consensus Parameters, & Configurable Variables
+
+§3.1. Consensus Parameters & Configurable Variables
+
+    Variables marked with an asterisk (*) SHOULD be consensus parameters.
+
+    DYSTOPIC_GUARDS ¹ 
+        All nodes listed in the most recent consensus which are marked with
+        the Guard flag and which advertise their ORPort(s) on 80, 443, or any
+        other addresses and/or ports controllable via the FirewallPorts and
+        ReachableAddresses configuration options.
+
+    UTOPIC_GUARDS
+        All nodes listed in the most recent consensus which are marked with
+        the Guard flag and which do NOT advertise their ORPort(s) on 80, 443,
+        or any other addresses and/or ports controllable via the FirewallPorts
+        and ReachableAddresses configuration options.
+
+    PRIMARY_GUARDS * 
+       The number of first, active, PRIMARY_GUARDS on either the
+       UTOPIC_GUARDLIST or DYSTOPIC_GUARDLIST as "primary". We will go to
+       extra lengths to ensure that we connect to one of our primary guards,
+       before we fall back to a lower priority guard. By "active" we mean that
+       we only consider guards that are present in the latest consensus as
+       primary.
+
+    UTOPIC_GUARDS_ATTEMPTED_THRESHOLD *
+    DYSTOPIC_GUARDS_ATTEMPTED_THRESHOLD *
+       These thresholds limit the amount of guards from the UTOPIC_GUARDS and
+       DYSTOPIC_GUARDS which should be partitioned into a single
+       UTOPIC_GUARDLIST or DYSTOPIC_GUARDLIST respectively.  Thus, this
+       represents the maximum percentage of each of UTOPIC_GUARDS and
+       DYSTOPIC_GUARDS respectively which we will attempt to connect to.  If
+       this threshold is hit we assume that we are offline, filtered, or under
+       a path bias attack by a LAN adversary.
+
+       There are currently 1600 guards in the network.  We allow the user to
+       attempt 80 of them before failing (5% of the guards).  With regards to
+       filternet reachability, there are 450 guards on ports 80 or 443, so the
+       probability of picking such a guard guard here should be high.
+
+       This logic is not based on bandwidth, but rather on the number of
+       relays which possess the Guard flag.  This is for three reasons: First,
+       because each possible *_GUARDLIST is roughly equivalent to others of
+       the same category in terms of bandwidth, it should be unlikely [XXX How
+       unlikely? —isis] for an OP to select a guardset which contains less
+       nodes of high bandwidth (or vice versa).  Second, the path-bias attacks
+       detailed in proposal #241 are best mitigated through limiting the
+       number of possible entry guards which an OP might attempt to use, and
+       varying the level of security an OP can expect based solely upon the
+       fact that the OP picked a higher number of low-bandwidth entry guards
+       rather than a lower number of high-bandwidth entry guards seems like a
+       rather cruel and unusual punishment in addition to the misfortune of
+       already having slower entry guards.  Third, we favour simplicity in the
+       redesign of the guard selection algorithm, and introducing bandwidth
+       weight fraction computations seems like an excellent way to
+       overcomplicate the design and implementation.
+       
+
+§3.2. Data Structures
+
+    UTOPIC_GUARDLIST
+    DYSTOPIC_GUARDLIST
+        These lists consist of a subset of UTOPIC_GUARDS and DYSTOPIC_GUARDS
+        respectively.  The guards in these guardlists are the only guards to
+        which we will attempt connecting.
+
+        When an OP is attempting to connect to the network, she will construct
+        hashring structure containing all potential guard nodes from both
+        UTOPIC_GUARDS and DYSTOPIC_GUARDS.  The nodes SHOULD BE inserted into
+        the structure some number of times proportional to their consensus
+        bandwidth weight. From this, the client will hash some information
+        about themselves [XXX what info should we use? —isis] and, from that,
+        choose #P number of points on the ring, where #P is
+        {UTOPIC,DYSTOPIC}_GUARDLIST_ATTEMPTED_THRESHOLD proportion of the
+        total number of unique relays inserted (if a duplicate is selected, it
+        is discarded).  These selected nodes comprise the
+        {UTOPIC,DYSTOPIC}_GUARDLIST for (first) entry guards.  (We say "first"
+        in order to distinguish between entry guards and the vanguards
+        proposed for hidden services in proposal #247.)
+
+        [Perhaps we want some better terminology for this.  Suggestions
+        welcome. —isis]
+
+        Each GUARDLIST SHOULD have the property that the total sum of
+        bandwidth weights for the nodes contained within it is roughly equal
+        to each other guardlist of the same type (i.e. one UTOPIC_GUARDLIST is
+        roughly equivalent in terms of bandwidth to another UTOPIC_GUARDLIST,
+        but necessarily equivalent to a DYSTOPIC_GUARDLIST).
+
+        For space and time efficiency reasons, implementations of the
+        GUARDLISTs SHOULD support prepopulation(), update(), insert(), and
+        remove() functions.  A second data structure design consideration is
+        that the amount of "shifting" — that is, the differential between
+        constructed hashrings as nodes are inserted or removed (read: ORs
+        falling in and out of the network consensus) — SHOULD be minimised in
+        order to reduce the resources required for hashring update upon
+        receiving a newer consensus.
+
+        The implementation we propose is to use a Consistent Hashring,
+        modified to dynamically allocate replications in proportion to
+        fraction of total bandwidth weight.  As with a normal Consistent
+        Hashring, replications determine the number times the relay is
+        inserted into the hashring.  The algorithm goes like this:
+
+          router          ← ⊥
+          key             ← 0
+          replications    ← 0
+          bw_weight_total ← 0
+          while router ∈ GUARDLIST:
+           | bw_weight_total ← bw_weight_total + BW(router)
+          while router ∈ GUARDLIST:
+           | replications ← FLOOR(CONSENSUS_WEIGHT_FRACTION(BW(router), bw_total) * T)
+           | factor ← (S / replications)
+           | while replications != 0:
+           |  | key ← (TOINT(HMAC(ID)[:X] * replications * factor) mod S
+           |  | INSERT(key, router)
+           |  | replications <- replications - 1
+
+        where:
+ 
+          - BW is a function for extracting the value of an OR's `w bandwith=`
+            weight line from the consensus,
+          - GUARDLIST is either UTOPIC_GUARDLIST or DYSTOPIC_GUARDLIST,
+          - CONSENSUS_WEIGHT_FRACTION is a function for computing a router's
+            consensus weight in relation to the summation of consensus weights
+            (bw_total),
+          - T is some arbitrary number for translating a router's consensus
+            weight fraction into the number of replications,
+          - H is some collision-resistant hash digest,
+          - S is the total possible hash space of H (e.g. for SHA-1, with
+            digest sizes of 160 bits, this would be 2^160),
+          - HMAC is a keyed message authentication code which utilises H,
+          - ID is an hexadecimal string containing the hash of the router's
+            public identity key,
+          - X is some (arbitrary) number of bytes to (optionally) truncate the
+            output of the HMAC to,
+          - S[:X] signifies truncation of S, some array of bytes, to a
+            sub-array containing X bytes, starting from the first byte and
+            continuing up to and including the Xth byte, such that the
+            returned sub-array is X bytes in length.
+          - INSERT is an algorithm for inserting items into the hashring,
+          - TOINT convert hexadecimal to decimal integers,
+ 
+        For routers A and B, where B has a little bit more bandwidth than A,
+        this gets you a hashring which looks like this:
+
+                           B-´¯¯`-BA
+                        A,`        `.
+                        /            \
+                       B|            |B
+                        \            /
+                         `.        ,´A
+                          AB--__--´B
+ 
+        When B disappears, A remains in the same positions:
+
+                           _-´¯¯`-_A
+                        A,`        `.
+                        /            \
+                        |            |
+                        \            /
+                         `.        ,´A
+                          A`--__--´
+                                
+        And similarly if B disappears:
+
+                           B-´¯¯`-B
+                         ,`        `.
+                        /            \
+                       B|            |B
+                        \            /
+                         `.        ,´
+                           B--__--´B
+ 
+        Thus, no "shifting" problems, and recalculation of the hashring when a
+        new consensus arrives via the update() function is much more time
+        efficient.
+
+        Alternatively, for a faster and simpler algorithm, but non-uniform
+        distribution of the keys, one could remove the "factor" and replace
+        the derivation of "key" in the algorithm above with:
+
+                key ← HMAC(ID || replications)[:X]
+
+        A reference implementation in Python is available². [1]
+
+
+§4. Footnotes
+
+¹ "Dystopic" was chosen because those are the guards you should choose from if
+  you're behind a FascistFirewall.
+
+² One tiny caveat being that the ConsistentHashring class doesn't dynamically
+  assign replication count by bandwidth weight; it gets initialised with the
+  number of replications.  However, nothing in the current implementation
+  prevents you from doing:
+      >>> h = ConsistentHashring('SuperSecureKey', replications=6)
+      >>> h.insert(A)
+      >>> h.replications = 23
+      >>> h.insert(B)
+      >>> h.replications = 42
+      >>> h.insert(C)
+
+
+§5. References
+
+  [0]: https://trac.torproject.org/projects/tor/ticket/16120
+  [1]: https://gitweb.torproject.org/user/isis/bridgedb.git/tree/bridgedb/hashring.py?id=949d33e8#n481
+
+
+-*- coding: utf-8 -*-
