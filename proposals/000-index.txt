@@ -179,6 +179,7 @@ Proposals by number:
 256  Key revocation for relays and authorities [OPEN]
 257  Refactoring authorities and taking parts offline [DRAFT]
 258  Denial-of-service resistance for directory authorities [OPEN]
+259  New Guard Selection Behaviour [DRAFT]
 
 
 Proposals by status:
@@ -203,6 +204,7 @@ Proposals by status:
    254  Padding Negotiation
    255  Controller features to allow for load-balancing hidden services
    257  Refactoring authorities and taking parts offline
+   259  New Guard Selection Behaviour
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  OPEN:

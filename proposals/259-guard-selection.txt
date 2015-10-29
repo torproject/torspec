@@ -1,4 +1,4 @@
-Filename: xxx-guard-selection.txt
+Filename: 259-guard-selection.txt
 Title: New Guard Selection Behaviour
 Author: Isis Lovecruft, George Kadianakis
 Created: 2015-10-28
