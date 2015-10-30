@@ -254,7 +254,7 @@ Extends: 241-suspicious-guard-turnover.txt
                          `.        ,´A
                           A`--__--´
                                 
-        And similarly if B disappears:
+        And similarly if A disappears:
 
                            B-´¯¯`-B
                          ,`        `.
