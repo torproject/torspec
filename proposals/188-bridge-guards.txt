@@ -482,6 +482,24 @@ Status: Accepted
    entirely, by automatically setting "AssumeReachable 1" for all bridge
    relays… although I am not sure if this is wise.
 
+   Our best idea thus far, for bridge reachability self-testing, is to create
+   a circuit like so:
+
+       Bridge → Guard → Middle → OtherMiddle → Guard → Bridge
+
+   While, clearly, that circuit is just a little bit insane, it must be that
+   way because we cannot simply do:
+
+       Bridge → Guard → Middle → Guard → Bridge
+
+   because the Middle would refuse to extend back to the previous node
+   (all ORs follow this rule).  Similarly, it would be inane to do:
+
+       Bridge → Guard → Middle → OtherMiddle → Bridge
+
+   because, obviously, that merely shifts the problem to OtherMiddle and
+   accomplishes nothing.  [XXX Is there something smarter we could do? —IL]
+
 5.2.2. Bridge Reachability Testing by the BridgeAuthority
 
    After receiving Bob's descriptors, the BridgeAuthority attempts to
