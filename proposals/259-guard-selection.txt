@@ -10,7 +10,7 @@ Extends: 241-suspicious-guard-turnover.txt
 
   In addition to the concerns regarding path bias attacks, namely that the
   space from which guards are selected by some specific client should not
-  consist of the entirely of nodes with the Guard flag (cf. §1 of proposal
+  consist of the entirety of nodes with the Guard flag (cf. §1 of proposal
   #247), several additional concerns with respect to guard selection behaviour
   remain.  This proposal outlines a new entry guard selection algorithm, which
   additionally addresses the following concerns:
@@ -128,7 +128,7 @@ Extends: 241-suspicious-guard-turnover.txt
        There are currently 1600 guards in the network.  We allow the user to
        attempt 80 of them before failing (5% of the guards).  With regards to
        filternet reachability, there are 450 guards on ports 80 or 443, so the
-       probability of picking such a guard guard here should be high.
+       probability of picking such a guard here should be high.
 
        This logic is not based on bandwidth, but rather on the number of
        relays which possess the Guard flag.  This is for three reasons: First,
@@ -231,7 +231,7 @@ Extends: 241-suspicious-guard-turnover.txt
             continuing up to and including the Xth byte, such that the
             returned sub-array is X bytes in length.
           - INSERT is an algorithm for inserting items into the hashring,
-          - TOINT convert hexadecimal to decimal integers,
+          - TOINT converts hexadecimal to decimal integers,
  
         For routers A and B, where B has a little bit more bandwidth than A,
         this gets you a hashring which looks like this:
