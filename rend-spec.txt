@@ -326,20 +326,7 @@
        or not) is encoded in base64, and surrounded with
        "-----BEGIN MESSAGE-----" and "-----END MESSAGE-----".
 
-       The unencrypted string may begin with:
-
-         "service-authentication" auth-type auth-data NL
-
-           [Any number]
-
-           The service-specific authentication data can be used to perform
-           client authentication. This data is independent of the selected
-           introduction point as opposed to "intro-authentication" below. The
-           format of auth-data (base64-encoded or PEM format) depends on
-           auth-type. See section 2 of this document for details on auth
-           mechanisms.
-
-       Subsequently, an arbitrary number of introduction point entries may
+       An arbitrary number of introduction point entries may
        follow, each containing the following data:
 
          "introduction-point" SP identifier NL
