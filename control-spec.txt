@@ -43,11 +43,11 @@
 1.1. Forward-compatibility
 
   This is an evolving protocol; new client and server behavior will be
-  allowed in future versions.  To allow new backward-compatible client
+  allowed in future versions.  To allow new backward-compatible behavior
   on behalf of the client, we may add new commands and allow existing
   commands to take new arguments in future versions.  To allow new
   backward-compatible server behavior, we note various places below
-  where servers speaking a future versions of this protocol may insert
+  where servers speaking a future version of this protocol may insert
   new data, and note that clients should/must "tolerate" unexpected
   elements in these places.  There are two ways that we do this:
 
@@ -68,8 +68,8 @@
     For example, we might say "This field will be OPEN, CLOSED, or
     CONNECTED.  Clients MUST tolerate unexpected values."  This means
     that a client MUST NOT crash or otherwise fail to parse the message
-    or other subsequent when there are unexpected values, and that the
-    client SHOULD try to handle the rest of the message as well as it
+    or other subsequent messages when there are unexpected values, and
+    that it SHOULD try to handle the rest of the message as well as it
     can.  The most obvious way to do this is by pretending that each
     list of alternatives has an additional "unrecognized value" element,
     and mapping any unrecognized values to that element; the
