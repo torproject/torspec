@@ -77,7 +77,17 @@ Status: Draft
    If any intervening cells are received, the receiver SHOULD destroy
    the circuit.
 
-4. Example
+4. Interacting with RELAY_EARLY cells
+
+   The first EXTEND2 cell in a batch must arrive in a RELAY_EARLY cell.
+   The others MAY arrive in RELAY_EARLY cells.
+
+   Note that this change leaks the size of the handshake being used to
+   intermediate relays.  We should analyze this and see whether it matters.
+   Clients MAY send RELAY_DROP cells during circuit construction in order to
+   hide the true size of their handshakes.
+
+5. Example
 
    So for example, if we are a client, and we need to send a 2000-byte
    handshake to extend a circuit from relay X to relay Y, we might send
@@ -119,7 +129,7 @@ Status: Draft
    Upon receiving this last cell, the relay X would send a create2v cell
    to Y, containing the entire handshake.
 
-5. Migration
+6. Migration
 
    We can and should implement the EXTEND2 fragmentation feature before
    we implement anything that uses it.  If we can get it widely deployed
@@ -132,7 +142,7 @@ Status: Draft
    Relays MAY send CREATE2V and CREATED2V cells to relays that don't
    support them, since unrecognized cell types are ignored.
 
-6. Resource management issues
+7. Resource management issues
 
    This feature requires relays and clients to buffer EXTEND2 cell
    bodies for incoming cells until the entire CREATE2V/CREATED2V body
