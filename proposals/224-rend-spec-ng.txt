@@ -865,9 +865,12 @@ Status: Draft
 
    The encrypted data has the format:
 
-       SALT       (random bytes from above)       [16 bytes]
+       H(SALT)    H(random bytes from above)      [16 bytes]
        ENCRYPTED  The plaintext encrypted with S  [variable]
        MAC        MAC of both above fields        [32 bytes]
+
+   (We hash salt so that we don't leak the raw bytes returned by a PRNG
+   to the network. See [RANDOM-REFS].)
 
    The encryption format is ENCRYPTED =
                STREAM(SECRET_IV,SECRET_KEY) xor Plaintext
@@ -1479,7 +1482,9 @@ Status: Draft
         Pubkey    [32 bytes]
         Signature [64 bytes]
 
-   Nonce is a random value. Pubkey is the public key that will be used
+   Nonce is a random value. (Noncen should be derived from hashed PRNG
+   output, so that we don't leak the raw bytes returned by a PRNG to the
+   network. See [RANDOM-REFS].) Pubkey is the public key that will be used
    to authenticate. [TODO: should this be an identifier for the public
    key instead?]  Signature is the signature, using Ed25519, of:
 
@@ -1522,7 +1527,9 @@ Status: Draft
    by the client. The client SHOULD choose a new rendezvous cookie for
    each new connection attempt. If the rendezvous cookie is already in
    use on an existing circuit, the rendezvous point should reject it and
-   destroy the circuit.
+   destroy the circuit. RENDEZVOUS_COOKIE should be derived using hashed
+   PRNG output, so that we don't leak the raw bytes returned by a PRNG
+   to the network. See [RANDOM-REFS].
 
    Upon receiving a ESTABLISH_RENDEZVOUS cell, the rendezvous point
    associates the cookie with the circuit on which it was sent. It
@@ -1639,6 +1646,9 @@ References:
         J. Bernstein, Niels Duif, Tanja Lange, Peter Schwabe, and
         Bo-Yin Yang. http://cr.yp.to/papers.html#ed25519
 
+[RANDOM-REFS]:
+        http://projectbullrun.org/dual-ec/ext-rand.html
+        https://lists.torproject.org/pipermail/tor-dev/2015-November/009954.html
 
 Appendix A. Signature scheme with key blinding [KEYBLIND]
 
