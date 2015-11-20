@@ -372,9 +372,10 @@ Status: Draft
    In order to download a descriptor, clients must know which blinded
    signing key was used to sign it. (See the next section for more info
    on key blinding.)  This blinded signing key is derived from the
-   service's public key and, optionally, an additional secret that is
-   not part of the hidden service's onion address. The public key and
-   this secret together constitute the service's "credential".
+   service's public key, the descriptor replica number, and, optionally,
+   an additional secret that is not part of the hidden service's onion
+   address. The public key, replica number, and this secret together
+   constitute the service's "credential".
 
    When the secret is in use, the hidden service gains protections
    equivalent to the "stealth mode" in previous designs.
@@ -414,19 +415,19 @@ Status: Draft
    positions based on the key that was used to sign them. Note that
    hidden service descriptors are not signed with the services' public
    keys directly. Instead, we use a key-blinding system [KEYBLIND] to
-   create a new key-of-the-day for each hidden service. Any client that
-   knows the hidden service's credential can derive these blinded
-   signing keys for a given period. It should be impossible to derive
-   the blinded signing key lacking that credential.
+   create new keys-of-the-day for the descriptor replicas for each
+   hidden service. Any client that knows the hidden service's credential
+   can derive these blinded signing keys for a given period. It should be
+   impossible to derive the blinded signing keys lacking that credential.
 
    The body of each descriptor is also encrypted with a key derived from
    the credential.
 
    To avoid a "thundering herd" problem where every service generates
    and uploads a new descriptor at the start of each period, each
-   descriptor comes online at a time during the period that depends on
-   its blinded signing key. The keys for the last period remain valid
-   until the new keys come online.
+   descriptor replica comes online at a time during the period that
+   depends on its blinded signing key. The keys for the last period remain
+   valid until the new keys come online.
 
 1.5. In more detail: Scaling to multiple hosts
 
@@ -483,9 +484,9 @@ Status: Draft
    in advance).
    [TODO: Define revocation mechanism?]
 
-   It's important to not send the private part of the blinded signing
+   It's important to not send the private part of a blinded signing
    key to the Hidden Service since an attacker can derive from it the
-   secret master identity key. The secret blinded signing key should
+   secret master identity key. A secret blinded signing key should
    only be used to create credentials for the descriptor signing keys.
 
 1.8. In more detail: Encryption Keys And Replay Resistance
@@ -518,14 +519,16 @@ Status: Draft
         service's public identity key and an optional secret can derive
         the public blinded identity key for a service.  This key is used
         as an index in the DHT-like structure of the directory system
-        (see [SUBCRED]).
+        (see [SUBCRED]). Each descriptor replica may use a different
+        blinded signing key, based on its replicanum.
 
       Descriptor signing key -- A key used to sign hidden service
         descriptors.  This is signed by blinded signing keys. Unlike
         blinded signing keys and master identity keys, the secret part
         of this key must be stored online by hidden service hosts. The
         public part of this key is included in the unencrypted section
-        of HS descriptors (see [DESC-OUTER]).
+        of HS descriptors (see [DESC-OUTER]). Each descriptor replica must
+        use a different descriptor signing key.
 
       Introduction point authentication key -- A short-term signing
         keypair used to identify a hidden service to a given
@@ -546,7 +549,8 @@ Status: Draft
 
       Descriptor encryption keys -- A symmetric encryption key used to
         encrypt the body of hidden service descriptors. Derived from the
-        current period and the hidden service credential.
+        current period, the descriptor replica, the descriptor revision,
+        and the hidden service credential.
 
    Public/private keypairs defined elsewhere:
 
@@ -577,6 +581,8 @@ Status: Draft
    periods), a hidden service host uses a different blinded private key
    to sign its directory information, and clients use a different
    blinded public key as the index for fetching that information.
+   Each descriptor replica for each service may use different blinded
+   keys.
 
    For a candidate for a key derivation method, see Appendix [KEYBLIND].
 
@@ -593,7 +599,13 @@ Status: Draft
    The subcredential for a period is derived as:
        H("subcredential" |
          credential |
-         blinded-public-key).
+         blinded-public-key(replica-keynum)).
+
+   Where replica-keynum = replicanum % hsdir_num_replica_keys.
+   (This ensures that each replica has a blinded key, even if
+   hsdir_num_replicas is higher than hsdir_num_replica_keys. This ensures
+   hidden services can't predict future values of hsdir_num_replicas at
+   key blinding time.)
 
 2.2. Locating, uploading, and downloading hidden service descriptors
        [HASHRING]
@@ -601,7 +613,9 @@ Status: Draft
    To avoid attacks where a hidden service's descriptor is easily
    targeted for censorship, we store them at different directories over
    time, and use shared random values to prevent those directories from
-   being predictable far in advance.
+   being predictable far in advance. Each descriptor replica may use a
+   different blinded signing key, which prevents directories in one
+   replica locating directories in other replica(s).
 
    Which Tor servers hosts a hidden service depends on:
 
@@ -662,7 +676,8 @@ Status: Draft
    The time at which a key from the next interval becomes valid is
    determined by taking the first two bytes of
 
-     OFFSET = H(Key | INT_8(Next_Period_Num))
+     OFFSET = H("interval-offset" | blinded-public-key(replica-keynum) |
+              INT_8(Next_Period_Num))
 
    as a big-endian integer, dividing by 65536, and treating that as a
    fraction of the overlap interval.
@@ -683,11 +698,21 @@ Status: Draft
 
 2.2.3. Where to publish a service descriptor
 
+   The following constant controls how many blinded keys are created
+   per period for the different descriptor replicas:
+
+        hsdir_num_replica_keys = an integer constant 2.
+
+   (Since blinded keys can be generated ahead of time, a service can not
+   know the value of hsdir_n_replicas at the time the blinded keys will
+   be used. If hsdir_n_replicas is greater than hsdir_num_replica_keys,
+   some keys will be used for multiple replicas.)
+
    The following consensus parameters control where a hidden service
    descriptor is stored;
 
         hsdir_n_replicas = an integer in range [1,16]
-                             with default value 2.
+                             with default value hsdir_num_replica_keys.
 
         hsdir_spread_fetch = an integer in range [1,128]
                              with default value 3.
@@ -696,15 +721,15 @@ Status: Draft
                              with default value 3.
 
         hsdir_spread_accept = an integer in range [1,128]
-                             with default value 8.
+                             with default value 12.
 
    To determine where a given hidden service descriptor will be stored
-   in a given period, after the blinded public key for that period is
-   derived, the uploading or downloading party calculate
+   in a given period, after the blinded public key for that period and
+   replica is derived, the uploading or downloading party calculates:
 
         for replicanum in 1...hsdir_n_replicas:
             hs_index(replicanum) = H("store-at-idx" |
-                                 blinded_public_key |
+                                 blinded_public_key(replica-keynum) |
                                  INT_8(replicanum) |
                                  INT_8(periodnum) )
 
@@ -712,12 +737,13 @@ Status: Draft
    periodnum is defined in section TIME-PERIODS.
 
    where n_replicas is determined by the consensus parameter
-   "hsdir_n_replicas".
+   "hsdir_n_replicas", and replica-keynum is replicanum %
+   hsdir_num_replica_keys.
 
    Then, for each node listed in the current consensus with the HSDir3
    flag, we compute a directory index for that node as:
 
-           hsdir_index(node) = H(node_identity_digest |
+           hsdir_index(node) = H("node-idx" | node_identity_digest |
                                  shared_random |
                                  INT_8(period_num) )
 
@@ -727,15 +753,28 @@ Status: Draft
 
    Finally, for replicanum in 1...hsdir_n_replicas, the hidden service
    host uploads descriptors to the first hsdir_spread_store nodes whose
-   indices immediately follow hs_index(replicanum).
+   indices immediately follow hs_index(replicanum). If any of those
+   nodes have already been selected for a lower-numbered replica of the
+   service, any nodes already chosen are disregarded when choosing a
+   replica's hsdir_spread_store nodes.
+
+   [ XX/teor - because the positions don't match the key, this might leak
+     the fact that nodes from other replicas are nearby to a HSDir.
+     But this is preferable to having fewer HSDirs for a service.
+     I think the probability of a collision is approximately:
+     1 / (n_hsidrs / (hsdir_n_replicas * hsdir_spread_store)) = 6 / n_hsidrs ]
 
    When choosing an HSDir to download from, clients choose randomly from
    among the first hsdir_spread_fetch nodes after the indices.  (Note
    that, in order to make the system better tolerate disappearing
    HSDirs, hsdir_spread_fetch may be less than hsdir_spread_store.)
+   Again, nodes from lower-numbered replicas are disregarded when
+   choosing the spread for a replica.
 
    An HSDir should reject a descriptor if that HSDir is not one of the
-   first hsdir_spread_accept HSDirs for that node.
+   first hsdir_spread_accept HSDirs for that node. Since HSDirs can't
+   derive other replicas of a service, hsdir_spread_accept must be at
+   least hsdir_n_replicas * hsdir_spread_store.
 
    [TODO: Incorporate the findings from proposal 143 here. But watch
    out: proposal 143 did not analyze how much the set of nodes changes
@@ -748,7 +787,7 @@ Status: Draft
    /tor/rendezvous3/publish relative to the hidden service directory's
    root, and downloaded with an HTTP GET request for the URL
    /tor/rendezvous3/<z> where z is a base-64 encoding of the hidden
-   service's blinded public key.
+   service's blinded public key for the replica.
 
    [TODO: raw base64 is not super-nice for URLs, since it can have
    slashes. We already use it for microdescriptor URLs, though. Do we
@@ -806,8 +845,9 @@ Status: Draft
 
        The 'certificate' field contains a certificate in the format from
        proposal 220, with the short-term ed25519 descriptor-signing key
-       signed by the blinded public key.  It must contain a
-       ed25519-signing-key extension containing the blinded public key.
+       for the replica, signed by the blinded public key for the replica.
+       It must contain a ed25519-signing-key extension containing the
+       blinded public key for the replica.
 
      "time-period" SP YYYY-MM-DD HH:MM:SS NUM NL
 
@@ -829,6 +869,60 @@ Status: Draft
        prevents an attacker from replacing a newer descriptor signed by
        a given key with a copy of an older version.)
 
+       The revision-counter should be updated with each upload, regardless
+       of whether the descriptor has changed. This avoids leaking whether
+       the descriptor has changed.
+
+       [ XX/teor - is the extra load on the HSDirs worth it? ]
+
+       Services should randomise the start and increment values of
+       revision-counter for each replica, to avoid leaking service
+       stability, and avoid linking descriptor replicas via
+       revision-counter values.
+
+       Say that our goal is for services to start the period at a
+       random value near zero, and end it at a random value that does
+       not exceed 2 ^ 32 (while the length of revision-counter isn't
+       specified, it's included in hashes as INT_4(revision-counter)). We'd
+       like the revision-counters of all services to increment at
+       approximately the same randomised rate, regardless of RendPostPeriod.
+
+       revision-counter could be initialised and incremented using:
+         two-periods-time = (2 * 24 * 60 * 60)
+         elapsed-ratio    = elapsed-since-last-post / two-periods-time
+         max-increment    = 2^32 * elapsed-ratio
+       where elapsed-since-last-post is the time elapsed since descriptors
+       were last uploaded for the current blinded key.
+
+       The first upload for a blinded key for the next period sets
+       elapsed-since-last-post equal to the time since the current period
+       started. Assuming the keys have just become valid, this is:
+         elapsed-since-period-start = key-validity-start - period-start
+       where key-validity-start is when the keys became valid, and
+       period-start is when the current period started.
+
+       Then, each initialisation and increment is:
+         revision-counter += random(1, max-increment)
+
+       (The random() function should be careful not to leak the raw bytes
+       returned by the PRNG to the network. See [RANDOM-REFS].)
+
+       This scheme increments revision-counter at a maximum rate of:
+         2 ^ 32 / (2 * 24 * 60 * 60) = 24855 per second
+       with an expected average value of 12428 per second. This appears
+       sufficient to blur the exact number of revisions.
+
+       This scheme could leak the approximate time at which the descriptor
+       was uploaded, and the approximate RendPostPeriod. These are easily
+       guessed from the current time, and by checking when descriptors
+       arrive at the HSDirs. Tracking unique revision-counter values would
+       also reveal how many times a descriptor has been uploaded (without
+       decrypting "encrypted").
+
+       Regardless of the method used to generate the revision counter,
+       all that HSDirs need to do is verify that new descriptors for a key
+       have a higher counter than the current descriptor.
+
      "encrypted" NL encrypted-string
 
        [Exactly once.]
@@ -844,7 +938,7 @@ Status: Draft
        A signature of all previous fields, using the signing key in the
        hs-descriptor line. We use a separate key for signing, so that
        the hidden service host does not need to have its private blinded
-       key online.
+       keys online.
 
 
 2.5. Hidden service descriptors: encryption format [ENCRYPTED-DATA]
@@ -852,10 +946,15 @@ Status: Draft
    The encrypted part of the hidden service descriptor is encrypted and
    authenticated with symmetric keys generated as follows:
 
-       salt = 16 random bytes
+       salt = 16 random bytes, different for each post to each replica,
+              even if the content of the descriptor hasn't changed.
+              (This avoids leaking service stability, and linking replicas
+              via encrypted data comparison.)
 
-       secret_input = blinded_public_key | subcredential |
-             INT_4(revision_counter)
+       [ XX/teor - is the extra load on the HSDirs worth it? ]
+
+       secret_input = blinded_public_key(replica-keynum) |
+             subcredential | INT_4(revision_counter)
        keys = KDF(secret_input, salt, "hsdir-encrypted-data",
                   S_KEY_LEN + S_IV_LEN + MAC_KEY_LEN)
 
@@ -865,9 +964,12 @@ Status: Draft
 
    The encrypted data has the format:
 
-       SALT       (random bytes from above)       [16 bytes]
+       H(SALT)    H(random bytes from above)      [16 bytes]
        ENCRYPTED  The plaintext encrypted with S  [variable]
        MAC        MAC of both above fields        [32 bytes]
+
+   (We hash salt so that we don't leak the raw bytes returned by a PRNG
+   to the network. See [RANDOM-REFS].)
 
    The encryption format is ENCRYPTED =
                STREAM(SECRET_IV,SECRET_KEY) xor Plaintext
@@ -876,7 +978,8 @@ Status: Draft
    bytes with NUL bytes. The plaintext must not be longer than ???
    bytes.  [TODO: how much? Should this be a parameter?  What values in
    practice is needed to hide how many intro points we have, and how
-   many might be legacy ones?]
+   many might be legacy ones? Note that Single Onion Services add extend
+   intro points as well. ]
 
    The plaintext format is:
 
@@ -914,9 +1017,10 @@ Status: Draft
 
           Base-64 encoded introduction point authentication key that was
           used to establish introduction point circuit, cross-certifying
-          the blinded public key.  This uses the certificate format of
-          proposal 220 with type [09].  The signing-key extension is
-          mandatory here to tell you what the public key is.
+          the blinded public key for the replica.  This uses the
+          certificate format of proposal 220 with type [09].  The
+          signing-key extension is mandatory here to tell you what the
+          public key is.
 
         "enc-key" SP "ntor" SP key NL
 
@@ -1478,7 +1582,9 @@ Status: Draft
         Pubkey    [32 bytes]
         Signature [64 bytes]
 
-   Nonce is a random value. Pubkey is the public key that will be used
+   Nonce is a random value. (Noncen should be derived from hashed PRNG
+   output, so that we don't leak the raw bytes returned by a PRNG to the
+   network. See [RANDOM-REFS].) Pubkey is the public key that will be used
    to authenticate. [TODO: should this be an identifier for the public
    key instead?]  Signature is the signature, using Ed25519, of:
 
@@ -1521,7 +1627,9 @@ Status: Draft
    by the client. The client SHOULD choose a new rendezvous cookie for
    each new connection attempt. If the rendezvous cookie is already in
    use on an existing circuit, the rendezvous point should reject it and
-   destroy the circuit.
+   destroy the circuit. RENDEZVOUS_COOKIE should be derived using hashed
+   PRNG output, so that we don't leak the raw bytes returned by a PRNG
+   to the network. See [RANDOM-REFS].
 
    Upon receiving a ESTABLISH_RENDEZVOUS cell, the rendezvous point
    associates the cookie with the circuit on which it was sent. It
@@ -1638,6 +1746,9 @@ References:
         J. Bernstein, Niels Duif, Tanja Lange, Peter Schwabe, and
         Bo-Yin Yang. http://cr.yp.to/papers.html#ed25519
 
+[RANDOM-REFS]:
+        http://projectbullrun.org/dual-ec/ext-rand.html
+        https://lists.torproject.org/pipermail/tor-dev/2015-November/009954.html
 
 Appendix A. Signature scheme with key blinding [KEYBLIND]
 
@@ -1701,8 +1812,10 @@ Appendix A. Signature scheme with key blinding [KEYBLIND]
   possible alternatives. Also, see [KEYBLIND-PROOF] for a security
   proof of this scheme.
 
-  (To use this with Tor, set N = INT_8(period-number) | INT_8(Start of
-  period in seconds since epoch).)
+  (To use this with Tor, set N(replica-keynum) = "key-blind" |
+  INT_8(period-number) |  INT_8(Start of period in seconds since epoch) |
+  INT_1(replica-keynum), where replica-keynum is from 1 to
+  hsdir_num_replica_keys.)
 
 Appendix B. Selecting nodes [PICKNODES]
 
