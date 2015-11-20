@@ -174,13 +174,21 @@ Status: Draft
         The default PredictedPortsRelevanceTime setting creates additional,
         unnecessary connections.
 
-      RendPostPeriod 0 seconds
-        This option typically hides the startup time of a hidden service by
-        randomly posting over a 2 hour period. Since single onion services
-        value speed over anonymity, they can post descriptors straight away.
-        (Actually, 30 seconds after they bootstrap, for descriptor stability.)
+   High-churn / quick-failover RSOS using descriptor competition strategies
+   should consider setting the following option:
 
-   However, we do not recommend setting the following option to 1, unless bug
+      RendPostPeriod 600 seconds
+        Refresh onion service descriptors, choosing an interval between
+        0 and 2*RendPostPeriod. Tor also posts descriptors on bootstrap, and
+        when they change.
+        (Strictly, 30 seconds after they first change, for descriptor
+        stability.)
+
+        XX - Reduce the minimum RendPostPeriod for RSOS to 1 minute?
+        XX - Make the initial post 30 + rand(1*rendpostperiod) ?
+             (Avoid thundering herd, but don't hide startup time)
+
+   However, we do NOT recommend setting the following option to 1, unless bug
    #17359 is resolved so tor onion services can bootstrap without predicted
    circuits.
 
@@ -197,6 +205,9 @@ Status: Draft
    We recommend that no other services are run on a rendezvous single onion
    service tor instance. Since tor runs as a client (and not a relay) by
    default, rendezvous single onion service operators should set:
+
+      XX - George says we don't allow operators to run HS/Relay any more,
+           or that we warn them.
 
       SocksPort 0
         Disallow connections from client applications to the tor network
