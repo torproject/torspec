@@ -919,7 +919,12 @@ Status: Draft
    The encrypted part of the hidden service descriptor is encrypted and
    authenticated with symmetric keys generated as follows:
 
-       salt = 16 random bytes
+       salt = 16 random bytes, different for each post to each replica,
+              even if the content of the descriptor hasn't changed.
+              (This avoids leaking service stability, and linking replicas
+              via encrypted data comparison.)
+
+       [ XX/teor - is the extra load on the HSDirs worth it? ]
 
        secret_input = blinded_public_key | subcredential |
              INT_4(revision_counter)
