@@ -876,7 +876,8 @@ Status: Draft
    bytes with NUL bytes. The plaintext must not be longer than ???
    bytes.  [TODO: how much? Should this be a parameter?  What values in
    practice is needed to hide how many intro points we have, and how
-   many might be legacy ones?]
+   many might be legacy ones? Note that Single Onion Services add extend
+   intro points as well. ]
 
    The plaintext format is:
 
