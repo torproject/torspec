@@ -662,7 +662,7 @@ Status: Draft
    The time at which a key from the next interval becomes valid is
    determined by taking the first two bytes of
 
-     OFFSET = H(Key | INT_8(Next_Period_Num))
+     OFFSET = H("interval-offset" | Key | INT_8(Next_Period_Num))
 
    as a big-endian integer, dividing by 65536, and treating that as a
    fraction of the overlap interval.
@@ -717,7 +717,7 @@ Status: Draft
    Then, for each node listed in the current consensus with the HSDir3
    flag, we compute a directory index for that node as:
 
-           hsdir_index(node) = H(node_identity_digest |
+           hsdir_index(node) = H("node-idx" | node_identity_digest |
                                  shared_random |
                                  INT_8(period_num) )
 
@@ -1702,8 +1702,8 @@ Appendix A. Signature scheme with key blinding [KEYBLIND]
   possible alternatives. Also, see [KEYBLIND-PROOF] for a security
   proof of this scheme.
 
-  (To use this with Tor, set N = INT_8(period-number) | INT_8(Start of
-  period in seconds since epoch).)
+  (To use this with Tor, set N = "key-blind" | INT_8(period-number) |
+  INT_8(Start of period in seconds since epoch).)
 
 Appendix B. Selecting nodes [PICKNODES]
 
