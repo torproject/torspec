@@ -842,6 +842,60 @@ Status: Draft
        prevents an attacker from replacing a newer descriptor signed by
        a given key with a copy of an older version.)
 
+       The revision-counter should be updated with each upload, regardless
+       of whether the descriptor has changed. This avoids leaking whether
+       the descriptor has changed.
+
+       [ XX/teor - is the extra load on the HSDirs worth it? ]
+
+       Services should randomise the start and increment values of
+       revision-counter for each replica, to avoid leaking service
+       stability, and avoid linking descriptor replicas via
+       revision-counter values.
+
+       Say that our goal is for services to start the period at a
+       random value near zero, and end it at a random value that does
+       not exceed 2 ^ 32 (while the length of revision-counter isn't
+       specified, it's included in hashes as INT_4(revision-counter)). We'd
+       like the revision-counters of all services to increment at
+       approximately the same randomised rate, regardless of RendPostPeriod.
+
+       revision-counter could be initialised and incremented using:
+         two-periods-time = (2 * 24 * 60 * 60)
+         elapsed-ratio    = elapsed-since-last-post / two-periods-time
+         max-increment    = 2^32 * elapsed-ratio
+       where elapsed-since-last-post is the time elapsed since descriptors
+       were last uploaded for the current blinded key.
+
+       The first upload for a blinded key for the next period sets
+       elapsed-since-last-post equal to the time since the current period
+       started. Assuming the keys have just become valid, this is:
+         elapsed-since-period-start = key-validity-start - period-start
+       where key-validity-start is when the keys became valid, and
+       period-start is when the current period started.
+
+       Then, each initialisation and increment is:
+         revision-counter += random(1, max-increment)
+
+       (The random() function should be careful not to leak the raw bytes
+       returned by the PRNG to the network. See [RANDOM-REFS].)
+
+       This scheme increments revision-counter at a maximum rate of:
+         2 ^ 32 / (2 * 24 * 60 * 60) = 24855 per second
+       with an expected average value of 12428 per second. This appears
+       sufficient to blur the exact number of revisions.
+
+       This scheme could leak the approximate time at which the descriptor
+       was uploaded, and the approximate RendPostPeriod. These are easily
+       guessed from the current time, and by checking when descriptors
+       arrive at the HSDirs. Tracking unique revision-counter values would
+       also reveal how many times a descriptor has been uploaded (without
+       decrypting "encrypted").
+
+       Regardless of the method used to generate the revision counter,
+       all that HSDirs need to do is verify that new descriptors for a key
+       have a higher counter than the current descriptor.
+
      "encrypted" NL encrypted-string
 
        [Exactly once.]
