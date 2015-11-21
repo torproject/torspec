@@ -180,6 +180,7 @@ Proposals by number:
 257  Refactoring authorities and taking parts offline [DRAFT]
 258  Denial-of-service resistance for directory authorities [OPEN]
 259  New Guard Selection Behaviour [DRAFT]
+260  Rendezvous Single Onion Services [DRAFT]
 
 
 Proposals by status:
@@ -205,6 +206,7 @@ Proposals by status:
    255  Controller features to allow for load-balancing hidden services
    257  Refactoring authorities and taking parts offline
    259  New Guard Selection Behaviour
+   260  Rendezvous Single Onion Services
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  OPEN:
