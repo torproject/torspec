@@ -1025,7 +1025,7 @@
 
    The directory authorities include a new flag "HSDir" for routers that
    decided to provide storage for hidden service descriptors and that
-   have been running for at least 24 hours.
+   have been running for at least 96 hours.
 
 3.2. Accepting publish requests
 
