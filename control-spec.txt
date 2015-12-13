@@ -169,8 +169,9 @@
     ReplyText = XXXX
     StatusCode = 3DIGIT
 
-  Specific replies are mentioned below in section 3, and described more fully
-  in section 4.
+  Multiple lines in a single reply from Tor to the controller are guaranteed to
+  share the same status code. Specific replies are mentioned below in section 3,
+  and described more fully in section 4.
 
   [Compatibility note:  versions of Tor before 0.2.0.3-alpha sometimes
   generate AsyncReplies of the form "*(MidReplyLine / DataReplyLine)".
