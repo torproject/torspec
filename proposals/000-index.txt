@@ -183,6 +183,7 @@ Proposals by number:
 260  Rendezvous Single Onion Services [DRAFT]
 261  AEZ for relay cryptography [OPEN]
 262  Re-keying live circuits with new cryptographic material [OPEN]
+263  Request to change key exchange protocol for handshake [OPEN]
 
 
 Proposals by status:
@@ -238,6 +239,7 @@ Proposals by status:
    258  Denial-of-service resistance for directory authorities
    261  AEZ for relay cryptography
    262  Re-keying live circuits with new cryptographic material
+   263  Request to change key exchange protocol for handshake
  ACCEPTED:
    140  Provide diffs between consensuses
    172  GETINFO controller option for circuit information
