@@ -1,0 +1,130 @@
+Filename: 262-rekey-circuits.txt
+Title: Re-keying live circuits with new cryptographic material
+Author: Nick Mathewson
+Created: 28 Dec 2015
+Status: Open
+
+1. Summary and Motivation
+
+   Cryptographic primitives have an upper limit of how much data should
+   be encrypted with the same key.  But currently Tor circuits have no
+   upper limit of how much data they will deliver.
+
+   While the upper limits of our AES-CTR crypto is ridiculously high
+   (on the order of hundreds of exabytes), the AEZ crypto we're
+   considering suggests we should rekey after the equivalent in cells
+   after around 280 TB.  280 TB is still high, but not ridiculously
+   high.
+
+   So in this proposal I explain a general mechanism for rekeying a
+   circuit.  We shouldn't actually build this unless we settle on
+
+2. RELAY_REKEY cell operation
+
+   To rekey, the circuit initiator ("client") can send a new RELAY_REKEY cell
+   type:
+
+        struct relay_rekey {
+          u16 rekey_method IN [0, 1];
+          u8 rekey_data[];
+        }
+
+        const REKEY_METHOD_ACK = 0;
+        const REKEY_METHOD_SHAKE128_CLIENT = 1;
+
+   This cell means "I am changing the key." The new key material will be
+   derived from SHAKE128 of the aez_key concatenated with the rekey_data
+   field, to fill a new shake_output structure.  The client should set
+   rekey_data at random.
+
+   After sending one of these RELAY_REKEY cells, the client uses the new
+   aez_key to encrypt all of its data to this hop, but retains the old
+   aez_key for decrypting the data coming back from the relay.
+
+   When the relay receives a RELAY_REKEY cell, it sends a RELAY_REKEY
+   cell back towards the client, with empty rekey_data, and
+   relay_method==0, and then updates its own key material for all
+   additional data it sends and receives to the client.
+
+   When the client receives this reply, it can discard the old AEZ key, and
+   begin decrypting subsequent inbound cells with the new key.
+
+
+   So in summary: the client sends a series of cells encrypted with the
+   old key, and then sends a REKEY cell, followed by relay cells
+   encrypted with the new key:
+
+     OldKey[data data data ... data rekey] NewKey[data data data...]
+
+   And after the server receives the REKEY cell, it stops sending relay
+   cells encrypted with the old keys, sends its own REKEY cell with the
+   ACK method, and starts sending cells encrypted with the new key.
+
+       REKEY arrives somewhere in here
+                   I
+                   V
+     OldKey[data data data data rekey-ack] NewKey[data data data ...]
+
+2.1. Supporting other cryptography types
+
+   Each relay cipher must specify its own behavior in the presence of a
+   REKEY cell of each type that it supports.  In general, the behavior
+   of method 1 ("shake128-client") is "regenerate keys as if we were
+   calling the original KDF after a CREATE handshake, using SHAKE128 on
+   our current static key material and on a 32-byte random input."
+
+   The behavior of any unsupported REKEY method must be to close the
+   circuit with an error.
+
+   The AES-CTR relay cell crypto doesn't support rekeying. See 3.2 below
+   if you disagree.
+
+2.2. How often to re-key?
+
+   Clients should follow a deterministic algorithm in deciding when to
+   re-key, so as not to leak client differences.  This algorithm should
+   be type-specific.  For AEZ, I recommend that clients conservatively
+   rekey every 2**32 cells (about 2 TB).  And to make sure that this
+   code actually works, the schedule should be after 2**15 cells, and
+   then every 2**32 cells thereafter.
+
+   It may be beneficial to randomize these numbers.  If so, let's try
+   subtracting between 0 and 25% at random.
+
+2.3. How often to allow re-keying?
+
+   We could define a lower bound to prevent too-frequent rekeying.  I'm
+   not sure I see the point here; the process described above is not
+   that costly.
+
+3.  Alternative designs
+
+3.1. Should we add some public key cryptography here?
+
+   We could change the body of a REKEY cell and its ack to be more like
+   CREATE/CREATED.  Then we'd have to add a third step from the client
+   to the server to acknowledge receipt of the 'CREATED' cell and
+   changing of the key.
+
+   So, what would this added complexity and computational load buy us?
+   It would defend against the case where an adversary had compromised
+   the shared key material for a circuit, but was not able to compromise
+   the rekey process.  I'm not sure that this is reasonable; the
+   likeliest cases I can think of here seem to be "get compromised, stay
+   compromised" for a circuit.
+
+3.2. Hey, could we use this for forward secrecy with AES-CTR?
+
+   We could, but the best solution to AES-CTR's limitations right now is
+   to stop using our AES-CTR setup.  Anything that supports REKEY will
+   also presumably support AEZ or something better.
+
+3.3. We could upgrade ciphers with this!
+
+   Yes we could.  We could define this not only to change the key, but
+   to upgrade to a better ciphersuite.  For example, we could start by
+   negotiating AES-CTR, and then "secretly" upgrade to AEZ.  I'm not
+   sure that's worth the complexity, or that it would really be secret
+   in the presence of traffic analysis.
+
+

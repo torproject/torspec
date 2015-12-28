@@ -1,0 +1,282 @@
+Filename: 261-aez-crypto.txt
+Title: AEZ for relay cryptography
+Author: Nick Mathewson
+Created: 28 Oct 2015
+Status: Open
+
+0. History
+
+   I wrote the first draft of this around October.  This draft takes a
+   more concrete approach to the open questions from last time around.
+
+1. Summary and preliminaries
+
+   This proposal describes an improved algorithm for circuit
+   encryption, based on the wide-block SPRP AEZ. I also describe the
+   attendant bookkeeping, including CREATE cells, and several
+   variants of the proposal.
+
+   For more information about AEZ, see
+           http://web.cs.ucdavis.edu/~rogaway/aez/
+
+   For motivations, see proposal 202.
+
+2. Specifications
+
+2.1. New CREATE cell types.
+
+   We add a new CREATE cell type that behaves as an ntor cell but which
+   specifies that the circuit will be created to use this mode of
+   encryption.
+
+   [TODO: Can/should we make this unobservable?]
+
+   The ntor handshake is performed as usual, but a different PROTOID is
+   used:
+        "ntor-curve25519-sha256-aez-1"
+
+   To derive keys under this handshake, we use SHAKE256 to derive the
+   following output:
+
+     struct shake_output {
+         u8 aez_key[48];
+         u8 chain_key[32];
+         u8 chain_val_forward[16];
+         u8 chain_val_backward[16];
+     };
+
+   The first two two fields are constant for the lifetime of the
+   circuit.
+
+2.2. New relay cell payload
+
+   We specify the following relay cell payload format, to be used when
+   the exit node circuit hop was created with the CREATE format in 2.1
+   above:
+
+     struct relay_cell_payload {
+        u32 zero_1;
+        u16 zero_2;
+        u16 stream_id;
+        u16 length IN [0..498];
+        u8 command;
+        u8 data[498]; // payload_len - 11
+     };
+
+   Note that the payload length is unchanged.  The fields are now
+   rearranged to be aligned.  The 'recognized' and 'length' fields are
+   replaced with zero_1, zero_2, and the high 7 bits of length, for a
+   minimum of 55 bits of unambigious verification.  (Additional
+   verification can be done by checking the other fields for
+   correctness; AEZ users can exploit plaintext redundancy for
+   additional cryptographic checking.)
+
+   When encrypting a cell for a hop that was created using one of these
+   circuits, clients and relays encrypt them using the AEZ algorithm
+   with the following parameters:
+
+       Let Chain denote chain_val_forward if this is a forward cell
+          or chain_val_backward otherwise.
+
+       tau = 0
+
+       # We set tau=0 because want no per-hop ciphertext expansion.  Instead
+       # we use redundancy in the plaintext to authenticate the data.
+
+       Nonce =
+         struct {
+           u64 cell_number;
+           u8 is_forward;
+           u8 is_early;
+         }
+
+       # The cell number is the number of relay cells that have
+       # traveled in this direction on this circuit before this cell.
+       # ie, it's zero for the first cell, two for the second, etc.
+       #
+       # is_forward is 1 for outbound cells, 0 for inbound cells.
+       # is_early is 1 for cells packaged as RELAY_EARLY, 0 for
+       #   cells packaged as RELAY.
+       #
+       # Technically these two values would be more at home in AD
+       # than in Nonce; but AEZ doesn't actually distinguish N and AD
+       # internally.
+
+       Define CELL_CHAIN_BYTES = 32
+
+       AD = [ XOR(prev_plaintext[:CELL_CHAIN_BYTES],
+                  prev_ciphertext[:CELL_CHAIN_BYTES]),
+              Chain ]
+
+       # Using the previous cell's plaintext/ciphertext as additional data
+       # guarantees that any corrupt ciphertext received will corrupt the
+       # plaintext, which will corrupt all future plaintexts.
+
+       Set Chain = AES(chain_key, Chain) xor Chain.
+
+       # This 'chain' construction is meant to provide forward
+       # secrecy.  Each chain value is replaced after each cell with a
+       # (hopefully!) hard-to-reverse construction.
+
+   This instantiates a wide-block cipher, tweaked based on the cell
+   index and direction.  It authenticates part of the previous cell's
+   plaintext, thereby ensuring that if the previous cell was corrupted,
+   this cell will be unrecoverable.
+
+3. Design considerations
+
+3.1. Wide-block pros and cons?
+
+   See proposal 202, section 4.
+
+3.2. Given wide-block, why AEZ?
+
+   It's a reasonably fast probably secure wide-block cipher.  In
+   particular, it's performance-competitive with AES_CTR, and far better
+   than what we're doing now.  See performance appendix.
+
+   It seems secure-ish too.  Several cryptographers I know seem to
+   think it's likely secure enough, and almost surely at least as
+   good as AES.
+
+   [There are many other competing wide-block SPRP constructions if
+   you like.  Many require blocks be an integer number of blocks, or
+   aren't tweakable.  Some are slow.  Do you know a good one?]
+
+3.3. Why _not_ AEZ?
+
+   There are also some reasons to consider avoiding AEZ, even if we do
+   decide to use a wide-block cipher.
+
+   FIRST it is complicated to implement.  As the specification says,
+   "The easiness claim for AEZ is with respect to ease and versatility
+   of use, not implementation."
+
+   SECOND, it's still more complicated to implement well (fast,
+   side-channel-free) on systems without AES acceleration.  We'll need
+   to pull the round functions out of fast assembly AES, which is
+   everybody's favorite hobby.
+
+   THIRD, it's really horrible to try to do it in hardware.
+
+   FOURTH, it is comparatively new.  Although several cryptographers
+   like it, and it is closely related to a system with a security proof,
+   you never know.
+
+   FIFTH, something better may come along.
+
+
+4. Alternative designs
+
+4.1. Two keys.
+
+   We could have a separate AEZ key for forward and backward encryption.
+   This would use more space, however.
+
+4.2. Authenticating things differently
+
+   In computing the AD, we could replace xor with concat.
+
+   In computing the AD, we could replace CELL_CHAIN_BYTES with 16, or
+   509.
+
+   (Another thing we might dislike about the current proposal is
+   that it appears to requires us to remember 32 bytes of plaintext
+   until we get another cell.  But that part is fixable: note that
+   in the structure of AEZ, the AD is processed in the AEZ-hash()
+   function, and then no longer used.  We can compute the AEZ-hash()
+   to be used for the next cell after each cell is en/de crypted.)
+
+4.3. Other hashes.
+
+   We could update the ntor definition used in this to use a better hash
+   than SHA256 inside.
+
+4.4. Less predictable plaintext.
+
+   A positively silly option would be to reserve the last X bytes of
+   each relay cell's plaintext for random bytes, if they are not used
+   for payload.  This might help a little, in a really doofy way.
+
+
+A.1. Performance notes: memory requirements
+
+  Let's ignore Tor overhead here, but not openssl overhead.
+
+  IN THE CURRENT PROTOCOL, the total memory required at each relay is: 2
+  sha1 states, 2 aes states.
+
+  Each sha1 state uses 96 bytes.  Each aes state uses 244 bytes.  (Plus
+  32 bytes counter-mode overhead.)  This works out to 704 bytes at each
+  hop.
+
+  IN THE PROTOCOL ABOVE, using an optimized AEZ implementation, we'll
+  need 128 bytes for the expanded AEZ key schedule.  We'll need another
+  244 bytes for the AES key schedule for the chain key.  And there's 32
+  bytes of chaining values.  This gives us 404 bytes at each hop, for a
+  savings of 42%.
+
+  If we used separate AES and AEZ keys in each direction, we would be
+  looking at 776 bytes, for a space increase of 10%.
+
+A.2. Performance notes: CPU requirements on AESNI hosts
+
+  The cell_ops benchmark in bench.c purports to tell us how long it
+  takes to encrypt a tor cell.  But it wasn't really telling the truth,
+  since it only did one SHA1 operation every 2^16 cells, when
+  entries and exits really do one SHA1 operation every end-to-end cell.
+
+  I expanded it to consider the slow (SHA1) case as well.  I ran this on
+  my friendly OSX laptop (2.9 GHz Intel Core i5) with AESNI support:
+
+                  Inbound cells: 169.72 ns per cell.
+                 Outbound cells: 175.74 ns per cell.
+       Inbound cells, slow case: 934.42 ns per cell.
+      Outbound cells, slow case: 928.23 ns per cell.
+
+
+  Note that So for an n-hop circuit, each cell does the slow case and
+  (n-1) fast cases at the entry; the slow case at the exit, and the fast
+  case at each middle relay.
+
+  So for 3 hop circuits, the total current load on the network is
+  roughly 425 ns per hop, concentrated at the exit.
+
+  Then I started messing around with AEZ benchmarks, using the
+  aesni-optimized version of AEZ on the AEZ website.  (Further
+  optimizations are probably possible.)  For the AES256, I
+  used the usual aesni-based aes construction.
+
+  Assuming xor is free in comparison to other operations, and
+  CELL_CHAIN_BYTES=32, I get roughly 270 ns per cell for the entire
+  operation.
+
+  If we were to pick CELL_CHAIN_BYTES=509, we'd be looking at around 303
+  ns per cell.
+
+  If we were to pick CELL_CHAIN_BYTES=509 and replace XOR with CONCAT,
+  it would be around 355 ns per cell.
+
+  If we were to keep CELL_CHAIN_BYTES=32, and remove the
+  AES256-chaining, I see values around 260 ns per cell.
+
+  (This is all very spotty measurements, with some xors left off, and
+  not much effort done at optimization beyond what the default
+  optimized AEZ does today.)
+
+A.3. Performance notes: what if we don't have AESNI?
+
+  Here I'll test on a host with sse2 and ssse3, but no aesni instructions.
+  From Tor's benchmarks I see:
+
+               Inbound cells: 1218.96 ns per cell.
+              Outbound cells: 1230.12 ns per cell.
+    Inbound cells, slow case: 2099.97 ns per cell.
+   Outbound cells, slow case: 2107.45 ns per cell.
+
+  For a 3-hop circuit, that gives on average 1520 ns per cell.
+
+  [XXXX Do a real benchmark with a fast AEZ backend. First, write one.
+   Preliminary results are a bit disappointing, though, so I'll
+   need to invetigate alternatives as well.]
+

@@ -181,6 +181,8 @@ Proposals by number:
 258  Denial-of-service resistance for directory authorities [OPEN]
 259  New Guard Selection Behaviour [DRAFT]
 260  Rendezvous Single Onion Services [DRAFT]
+261  AEZ for relay cryptography [OPEN]
+262  Re-keying live circuits with new cryptographic material [OPEN]
 
 
 Proposals by status:
@@ -234,6 +236,8 @@ Proposals by status:
    246  Merging Hidden Service Directories and Introduction Points
    256  Key revocation for relays and authorities
    258  Denial-of-service resistance for directory authorities
+   261  AEZ for relay cryptography
+   262  Re-keying live circuits with new cryptographic material
  ACCEPTED:
    140  Provide diffs between consensuses
    172  GETINFO controller option for circuit information
