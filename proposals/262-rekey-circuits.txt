@@ -30,10 +30,10 @@ Status: Open
         }
 
         const REKEY_METHOD_ACK = 0;
-        const REKEY_METHOD_SHAKE128_CLIENT = 1;
+        const REKEY_METHOD_SHAKE256_CLIENT = 1;
 
    This cell means "I am changing the key." The new key material will be
-   derived from SHAKE128 of the aez_key concatenated with the rekey_data
+   derived from SHAKE256 of the aez_key concatenated with the rekey_data
    field, to fill a new shake_output structure.  The client should set
    rekey_data at random.
 
@@ -69,8 +69,8 @@ Status: Open
 
    Each relay cipher must specify its own behavior in the presence of a
    REKEY cell of each type that it supports.  In general, the behavior
-   of method 1 ("shake128-client") is "regenerate keys as if we were
-   calling the original KDF after a CREATE handshake, using SHAKE128 on
+   of method 1 ("shake256-client") is "regenerate keys as if we were
+   calling the original KDF after a CREATE handshake, using SHAKE256 on
    our current static key material and on a 32-byte random input."
 
    The behavior of any unsupported REKEY method must be to close the
