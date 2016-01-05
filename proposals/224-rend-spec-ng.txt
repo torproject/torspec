@@ -797,35 +797,36 @@ Status: Draft
    to generate such a value at least once per hsdir period. Here we
    describe how they publish these values; the procedure they use to
    generate them can change independently of the rest of this
-   specification. For one possible (somewhat broken) protocol, see
-   Appendix [SHAREDRANDOM].
+   specification. For more information see [SHAREDRANDOM-REFS].
 
-   We add a new line in votes and consensus documents:
+   According to proposal 250, we add two new lines in consensuses:
 
-       "hsdir-shared-random" PERIOD-START VALUE
-       PERIOD-START = YYYY-MM-DD HH:MM:SS
-       VALUE = A base-64 encoded 256-bit value.
+     "shared-rand-previous-value" SP NUM_REVEALS SP VALUE NL
+     "shared-rand-current-value" SP NUM_REVEALS SP VALUE NL
 
-   To decide which hsdir-shared-random line to include in a consensus
-   for a given PERIOD-START, we choose whichever line appears verbatim
-   in the most votes, so long as it is listed by at least three
-   authorities. Ties are broken in favor of the lower value. More than
-   one PERIOD-START is allowed per vote, and per consensus. The same
-   PERIOD-START must not appear twice in a vote or in a consensus.
+2.3.1. Client behavior in the absense of shared random values
 
-   [TODO: Need to define a more robust algorithm. Need to cover cases
-   where multiple cluster of authorities publish a different value,
-   etc.]
+   If the previous or current shared random value cannot be found in a
+   consensus, then Tor clients need to generate their own random value for use
+   when choosing HSDirs.
 
-   The hs-dir-shared-random lines appear, sorted by PERIOD-START, in the
-   consensus immediately after the "params" line.
+   To do so, clients use:
 
-   The authorities should publish the shared random value for the
-   current period, and, at a time at least three voting periods before
-   the overlap interval begins, the shared random value for the next
-   period.
+     SRV = HMAC("shared-random-disaster", TIME_PERIOD_NUM)
 
-[TODO: find out what weasel doesn't like here.]
+   as the SRV for time period TIME_PERIOD_NUM.
+
+2.3.2. Hidden services and changing shared random values
+
+   It's theoretically possible that the consensus shared random values will
+   change or disappear in the middle of a time period because of directory
+   authorities dropping offline or misbehaving.
+
+   To avoid client reachability issues in this rare event, hidden services
+   should use the new shared random values to find the new responsible HSDirs
+   and upload their descriptors there.
+
+   XXX How long should they upload descriptors there for?
 
 2.4. Hidden service descriptors: outer wrapper [DESC-OUTER]
 
@@ -1705,9 +1706,8 @@ References:
         https://lists.torproject.org/pipermail/tor-dev/2013-December/005943.html
 
 [SHAREDRANDOM-REFS]:
+        https://gitweb.torproject.org/torspec.git/tree/proposals/250-commit-reveal-consensus.txt
         https://trac.torproject.org/projects/tor/ticket/8244
-        https://lists.torproject.org/pipermail/tor-dev/2013-November/005847.html
-        https://lists.torproject.org/pipermail/tor-talk/2013-November/031230.html
 
 [SCALING-REFS]:
         https://lists.torproject.org/pipermail/tor-dev/2013-October/005556.html
