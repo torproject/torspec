@@ -1,0 +1,510 @@
+Filename: 264-subprotocol-versions.txt
+Title: Putting version numbers on the Tor subprotocols
+Author: Nick Mathewson
+Created: 6 Jan 2016
+Status: Open
+
+
+1. Introduction
+
+   At various points in Tor's history, we've needed to migrate from one
+   protocol to another.  In the past, we've mostly done this by allowing
+   relays to advertise support for various features.  We've done this in
+   an ad-hoc way, though. In some cases, we've done it entirely based on
+   the relays' advertised Tor version.
+
+   That's a pattern we shouldn't continue.  We'd like to support more
+   live Tor relay implementations, and that means that tying "features"
+   to "tor version" won't work going forwards.
+
+   This proposal describes and alternative method that we can use to
+   simplify the advertisement and discovery of features, and the
+   transition from one set of features to another.
+
+1.1. History: "Protocols" vs version-based gating.
+
+   For ages, we've specified a "protocols" line in relay descriptors,
+   with a list of supported versions for "relay" and "link" protocols.
+   But we've never actually looked at it, and instead we've relied on
+   tor version numbers to determine which features we could rely upon.
+   We haven't kept the relay and link protocols listed there up-to-date
+   either.
+
+   Clients have used version checks for three purposes historically:
+   checking relays for bugs, checking relays for features, and
+   implementing bug-workarounds on their own state files.
+
+   In this design, feature checks are now performed directly with
+   subprotocol versions. We only need to keep using Tor versions
+   specifically for bug workarounds.
+
+2. Design: Advertising protocols.
+
+   We revive the "Protocols" design above, in a new form.
+
+   "proto" Entries NL
+
+     Entries =
+     Entries = Entry
+     Entries = Entry SP Entries
+
+     Entry = Keyword "=" Values
+
+     Values = Value
+     Values = Value "," Values
+
+     Value = Int
+     Value = Int "-" Int
+
+     Int = NON_ZERO_DIGIT
+     Int = Int DIGIT
+
+
+   Each 'Entry' in the "proto" line indicates that the Tor relay
+   supports one or more versions of the protocol in question.  Entries
+   must be sorted by keyword.  Values must be numerically ascending
+   within each entry.  (This implies that there are no overlapping
+   ranges.)  Ranges must be represented as compactly as possible. Ints
+   must be no more than 2^32 - 1.
+
+   The semantics for each keyword must be defined in a Tor
+   specification.  Extension keywords are allowed if they begin with
+   "x-" or "X-".  Keywords are case-sensitive.
+
+   During voting, authorities copy these lines immediately below the "v"
+   lines. When a descriptor does not contain a "proto" entry, the
+   authorities should reconstruct it using the approach described below
+   in section A.1.  They are included in the consensus using the same
+   rules as currently used for "v" lines, if a sufficiently late
+   consensus method is in use.
+
+2.1. An alternative: Moving 'v' lines into microdescriptors.
+
+   [[[[[
+   Here's an alternative: we could put "v" and "proto" lines into
+   microdescriptors.
+
+   When building microdescriptors, authorities could copy all valid
+   "proto" entries verbatim if a sufficiently late consensus method is
+   in use.  When a descriptor does not contain a "proto" entry, the
+   authorities should reconstruct it using the approach described below
+   in section A.1.
+
+   Tor clients that want to use "v" lines should prefer those in
+   microdescriptors if present, and ignore those in the consensus.
+
+   (Existing maintined client versions can be adapted to never look at
+   "v" lines at all; the only versions that they still check for are
+   ones not allowed on the network.  The "v" line can be dropped
+   from the consensus entirely when current clients have upgraded.)
+   ]]]]]
+
+   [I am rejecting this alternative for now, since proto lines should
+   compress very well, given that the proto line is completely
+   inferrable from the v line.  Removing all the v lines from the
+   current consensus would save only 1.7% after gzip compression.]
+
+3. Using "protos" and "v" lines
+
+   Whenever possible, clients and relays should use the list of
+   advertised protocols instead of version numbers.  Version numbers
+   should only be used when implementing bug-workarounds for specific
+   Tor versions.
+
+   Every new feature in tor-spec.txt, dir-spec.txt, and rend-spec.txt
+   should be gated on a particular protocol version.
+
+4. Required protocols
+
+   The consensus may contain three lines: RequiredRelayProtocols,
+   RecommendedClientProtocols, and RequiredClientProtocols.  Each has
+   the same format as the "protos" line.  To vote on these entries, a
+   protocol/version combination is included only if it is listed by a
+   majority of the voters.
+
+   When a relay lacks a protocol listed in RequiredRelayProtocols, it
+   must not attempt to join the network.
+
+   When a client lacks a protocol listed in RecommendedClientProtocols,
+   it should warn the user that the client is obsolete.
+
+   When a client lacks a protocol listed in RequiredClientProtocols, it
+   must not use the corresponding feature.  If the corresponding feature
+   is required to operate a Tor client, the client must must log an
+   error message and shut down without connecting to the network, even
+   if the cached consensus is out-of-date.  This implements a "safe
+   forward shutdown" mechanism for zombie clients.
+
+   The above features should be backported to 0.2.4 and later.
+
+5. Current protocols
+
+   (See "6. Maintaining the protocol list" below for information about
+   how I got these, and why version 0.2.4.19 comes up so often.)
+
+5.1. "Link"
+
+   The "link" protocols are those used by clients and relays to initiate
+   and receive OR connections and to handle cells on OR connections.
+   The "link" protocol versions correspond 1:1 to those versions.
+
+   Two Tor instances can make a connection to each other only if they
+   have at least one link protocol in common.
+
+   The current "link" versions are: "1" through "4"; see tor-spec.txt
+   for more information.  All current Tor versions support "1-3";
+   version from 0.2.4.11-alpha and on support "1-4".  Eventually we
+   will drop "1" and "2".
+
+5.2. "LinkAuth"
+
+   LinkAuth protocols correspond to varieties of Authenticate cells used
+   for the v3+ link protocools.
+
+   The currrent version is "1".
+
+5.3. "Relay"
+
+   The "relay" protocols are those used to handle CREATE cells, and
+   those that that handle the various RELAY cell types received after a
+   CREATE cell.  (Except, relay cells used to manage introduction and
+   rendezvous points are managed with the "HSMid" protocols.)
+
+      "1" -- supports the TAP key exchange, with all features in Tor
+         0.2.3.  Support for CREATE and CREATED and CREATE_FAST and
+         CREATED_FAST and EXTEND and EXTENDED.
+
+      "2" -- supports the ntor key exchange, and all features in Tor
+         0.2.4.19.  Includes support for CREATE2 and CREATED2 and
+         EXTEND2 and EXTENDED2.
+
+5.3. "HSMid"
+
+   The "HSMid" protocols are those that handle introduction points and
+   rendezvous points.
+
+      "1" -- supports all features in Tor 0.2.4.19
+
+5.4. "DirCache"
+
+   The "DirCache" protocols are the set of documents available for
+   download from a directory cache via BEGIN_DIR, and the set of URLs
+   available to fetch them.  (This excludes URLs for hidden service
+   objects.)
+
+      "1" -- supports all features in Tor 0.2.4.19.
+
+5.5. "HSDir"
+
+   The HSDir protocols are the set of hidden service document types
+   that can be uploaded to, understood by, and downloaded from a tor
+   relay, and the set of URLs available to fetch them.
+
+      "1" -- supports all features in Tor 0.2.4.19.
+
+5.6. "Desc"
+
+   Describes features present or absent in descriptors.
+
+   Most features in descriptors don't require a "Desc" update -- only
+   those that need to someday be required.  For example, someday clients
+   will need to understand ed25519 identities.
+
+      "1" -- supports all features in Tor 0.2.4.19.
+
+      "2" -- cross-signing with onion-keys, signing with ed25519
+             identities.
+
+5.7. "Microdesc"
+
+   Describes features present or absent in microdescriptors.
+
+   Most features in descriptors don't require a "MircoDesc" update --
+   only those that need to someday be required.
+   These correspond more or less with consensus methods.
+
+      "1" -- consensus methods 9 through 20.
+
+      "2" -- consensus method 21 (adds ed25519 keys to microdescs).
+
+5.8. "Cons"
+
+   Describes features present or absent in consensus documents.
+
+   Most features in consensus documents don't require a "Cons" update --
+   only those that need to someday be required.
+
+   These correspond more or less with consensus methods.
+
+      "1" -- consensus methods 9 through 20.
+
+      "2" -- consensus method 21 (adds ed25519 keys to microdescs).
+
+
+6. Maintaining the protocol lists
+
+   What makes a good fit for a "protocol" type?  Generally, it's a set
+   of communications functionality that tends to upgrade in tandem, and
+   in isolation from other parts of the Tor protocols.  It tends to be
+   functionality where it doesn't make sense to implement only part of
+   it -- though omitting the whole thing might make sense.
+
+   (Looking through our suite of protocols, you might make a case for
+   splitting DirCache into sub-protocols.)
+
+   We shouldn't add protocols for features where others can remain
+   oblivious to their presence or absence.  For example, if some
+   directory caches start supporting a new header, and clients can
+   safely send that header without knowing whether the directory cache
+   will understand it, then a new protocol version is not required.
+
+   Because all relays currently on the network are 0.2.4.19 or later, we
+   can require 0.2.4.19, and use 0.2.4.19 as the minimal version so we
+   we don't need to do code archeology to determine which number
+
+   Adding new protocol types is pretty cheap, given compression.
+
+A.1.  Inferring missing protos lines.
+
+   The directory authorities no longer allow versions of Tor before
+   0.2.4.8-alpha.  But right now, there is no version of Tor in the
+   consensus before 0.2.4.19.  Therefore, we should disallow versions of
+   Tor earlier than 0.2.4.19, so that we can have the protocol list for
+   all current Tor versions include:
+
+      DirCache=1 HSDir=1 HSMid=1 Link=1-4 LinkAuth=1 Relay=1-2
+
+   For Desc, Tor versions before 0.2.7.stable should be taken to have
+   Desc=1 and versions 0.2.7.stable or later should have Desc=1-2.
+
+   For Microdesc and Cons, Tor versions before 0.2.7.stable should be
+   taken to support version 1; 0.2.7.stable and later should have
+   1-2.
+
+A.2. Initial required protocols
+
+   For clients we will Recommend and Require:
+
+       DirCache=1 HSDir=1 Desc=1 Cons=ANYOF(9-20) Microdesc=ANYOF(9-20)
+       HSMid=1 Link=4 LinkAuth=1 Relay=2
+
+   For relays we will Require:
+
+       DirCache=1 HSDir=1 Desc=1 Cons=ANYOF(9-20) Microdesc=ANYOF(9-20)
+       HSMid=1 Link=3-4 LinkAuth=1 Relay=1-2
+
+A.3. Example integration with other open proposals
+
+   In this appendix, I try to show that this proposal is viable by
+   showing how it can integrate with other open proposals to avoid
+   version-gating.  I'm looking at open/draft/accepted proposals only.
+
+    140  Provide diffs between consensuses
+
+         This proposal doesn't affect interoperability, though we could
+         add a DirCache protocol version for it if we think we might
+         want to require it someday.
+
+    164  Reporting the status of server votes
+
+         Interoperability not affected; no new protocol.
+
+    165  Easy migration for voting authority sets
+
+         Authority-only; no new protocol.
+
+    168  Reduce default circuit window
+
+         Interoperability slightly affected; could be a new Relay
+         protocol.
+
+    172  GETINFO controller option for circuit information
+    173  GETINFO Option Expansion
+
+         Client/Relay interop not affected; no new protocol.
+
+    177  Abstaining from votes on individual flags
+
+         Authority-only; no new protocol.
+
+    182  Credit Bucket
+
+         No new protocol.
+
+    188  Bridge Guards and other anti-enumeration defenses
+
+         No new protocol.
+
+    189  AUTHORIZE and AUTHORIZED cells
+
+         This would be a new protocol, either a Link protocol or a new
+         LinkAuthz protocol.
+
+    191  Bridge Detection Resistance against MITM-capable Adversaries
+
+         No new protocol.
+
+    192  Automatically retrieve and store information about bridges
+
+         No new protocol.
+
+    195  TLS certificate normalization for Tor 0.2.4.x
+
+         Interop not affected; no new protocol.
+
+    201  Make bridges report statistics on daily v3 network status
+         requests
+
+         No new protocol.
+
+    202  Two improved relay encryption protocols for Tor cells
+
+         This would be a new Relay protocol.
+
+    203  Avoiding censorship by impersonating an HTTPS server
+
+         Bridge/PT only; no new protocol.
+
+    209  Tuning the Parameters for the Path Bias Defense
+
+         Client behavior only; no new protocol.
+
+    210  Faster Headless Consensus Bootstrapping
+
+         Client behavior only; no new protocol.
+
+    212  Increase Acceptable Consensus Age
+
+         Possibly add a new DirCache protocol version to describe the
+         "will hold older descriptors" property.
+
+    219  Support for full DNS and DNSSEC resolution in Tor
+
+         New relay protocol, or new protocol class (DNS=2?)
+
+    220  Migrate server identity keys to Ed25519
+
+         Once link authentication is supported, that's a new LinkAuth
+         protocol version.
+
+         No new protocol version is required for circuit extension,
+         since it's a backward-compatible change.
+
+    224  Next-Generation Hidden Services in Tor
+
+         Adds new HSDir and HSMid protocols.
+
+    226 "Scalability and Stability Improvements to BridgeDB: Switching
+         to a Distributed Database System and RDBMS"
+
+         No new protocol.
+
+    229  Further SOCKS5 extensions
+
+         Client-only; no new protocol.
+
+    233  Making Tor2Web mode faster
+
+         No new protocol.
+
+    234  Adding remittance field to directory specification
+
+         Could be a new protocol; or not.
+
+    237  All relays are directory servers
+
+         No new protocol.
+
+    239  Consensus Hash Chaining
+
+         No new protocol.
+
+    242  Better performance and usability for the MyFamily option
+
+         New Desc protocol.
+
+    244  Use RFC5705 Key Exporting in our AUTHENTICATE calls
+
+         Part of prop220.  Also adds another LinkAuth protocol version.
+
+    245  Deprecating and removing the TAP circuit extension protocol
+
+         Removes Linkauth protocol 1.
+
+         Removes a Desc protocol.
+
+    246  Merging Hidden Service Directories and Introduction Points
+
+         Possibly adds a new HSMid protocol.
+
+    247  Defending Against Guard Discovery Attacks using Vanguards
+
+         No new protocol.
+
+    248  Remove all RSA identity keys
+
+         Adds a new Desc protocol version and a new Cons protocol
+         version; eventually removes a version of each.
+
+    249  Allow CREATE cells with >505 bytes of handshake data
+
+         Adds a new Link protocol version for CREATE2V.
+
+         Adds a new Relay protocol version for new EXTEND2 semantics.
+
+    250  Random Number Generation  During Tor Voting
+
+         No new protocol.
+
+    251  Padding for netflow record resolution reduction
+
+         No new protocol.
+
+    252  Single Onion Services
+
+         No new protocol.
+
+    253  Out of Band Circuit HMACs
+
+         New Relay protocol.
+
+    254  Padding Negotiation
+
+         New Link protocol, new Relay protocol.
+
+    255  Controller features to allow for load-balancing hidden services
+
+         No new protocol.
+
+    256  Key revocation for relays and authorities
+
+         New Desc protocol.
+
+    257  Refactoring authorities and taking parts offline
+
+         No new protocol.
+
+    258  Denial-of-service resistance for directory authorities
+
+         No new protocol.
+
+    259  New Guard Selection Behaviour
+
+         No new protocol
+
+    260  Rendezvous Single Onion Services
+
+         No new protocol
+
+    261  AEZ for relay cryptography
+
+         New Relay protocol version.
+
+    262  Re-keying live circuits with new cryptographic material
+
+         New Relay protocol version
+
+    263  Request to change key exchange protocol for handshake
+
+         New Relay protocol version.
+

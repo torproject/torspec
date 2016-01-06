@@ -184,6 +184,7 @@ Proposals by number:
 261  AEZ for relay cryptography [OPEN]
 262  Re-keying live circuits with new cryptographic material [OPEN]
 263  Request to change key exchange protocol for handshake [OPEN]
+264  Putting version numbers on the Tor subprotocols [OPEN]
 
 
 Proposals by status:
@@ -240,6 +241,7 @@ Proposals by status:
    261  AEZ for relay cryptography
    262  Re-keying live circuits with new cryptographic material
    263  Request to change key exchange protocol for handshake
+   264  Putting version numbers on the Tor subprotocols
  ACCEPTED:
    140  Provide diffs between consensuses
    172  GETINFO controller option for circuit information
