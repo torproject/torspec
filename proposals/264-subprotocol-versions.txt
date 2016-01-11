@@ -260,7 +260,8 @@ Status: Open
 
    Because all relays currently on the network are 0.2.4.19 or later, we
    can require 0.2.4.19, and use 0.2.4.19 as the minimal version so we
-   we don't need to do code archeology to determine which number
+   we don't need to do code archeology to determine how many
+   no-longer-relevant versions of each protocol once existed.
 
    Adding new protocol types is pretty cheap, given compression.
 
