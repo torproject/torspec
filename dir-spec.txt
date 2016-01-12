@@ -253,6 +253,21 @@
     "Once or more": These items MUST occur at least once in any instance
       of the document type, and MAY occur more.
 
+   For forward compatibility, each item MUST allow extra arguments at the
+   end of the line unless otherwise noted.  So if an item's description below
+   is given as:
+       "thing" int int int NL
+   then implementations SHOULD accept this string as well:
+       "thing 5 9 11 13 16 12" NL
+   but not this string:
+       "thing 5" NL
+   and not this string:
+       "thing 5 10 thing" NL
+   .
+
+   Whenever an item DOES NOT allow extra arguments, we will tag it with
+   "no extra arguments".
+
 1.3. Signing documents
 
    Every signable document below is signed in a similar manner, using a
@@ -382,6 +397,7 @@
            "-----END ED25519 CERT-----" NL
 
         [At most once, in second position in document.]
+        [No extra arguments]
 
         The certificate is a base64-encoded Ed25519 certificate (see
         cert-spec.txt) terminating =s removed.  When this element is
@@ -459,6 +475,7 @@
     "onion-key" NL a public key in PEM format
 
        [Exactly once]
+       [No extra arguments]
 
        This key is used to encrypt CREATE cells for this OR.  The key MUST be
        accepted for at least 1 week after any new key is published in a
@@ -471,6 +488,8 @@
     "onion-key-crosscert" NL a RSA signature in PEM format.
 
        [At most once, required when identity-25519 is present]
+       [No extra arguments]
+
 
        This element contains an RSA signature, generated using the
        onion-key, of the following:
@@ -505,6 +524,7 @@
            "-----END ED25519 CERT-----" NL
 
        [At most once, required when identity-25519 is present]
+       [No extra arguments]
 
        A signature created with the ntor-onion-key, using the
        certificate format documented in cert-spec.txt, with type
@@ -523,6 +543,7 @@
     "signing-key" NL a public key in PEM format
 
        [Exactly once]
+       [No extra arguments]
 
        The OR's long-term RSA identity key.  It MUST be 1024 bits.
 
@@ -571,6 +592,7 @@
     "router-signature" NL Signature NL
 
        [At end, exactly once]
+       [No extra arguments]
 
        The "SIGNATURE" object contains a signature of the PKCS1-padded
        hash of the entire server descriptor, taken from the beginning of the
@@ -628,6 +650,7 @@
    "caches-extra-info" NL
 
        [At most once.]
+       [No extra arguments]
 
        Present only if this router is a directory cache that provides
        extra-info documents.
@@ -670,6 +693,7 @@
    "allow-single-hop-exits" NL
 
        [At most once.]
+       [No extra arguments]
 
        Present only if the router allows single-hop circuits to make exit
        connections.  Most Tor relays do not support this: this is
@@ -1097,6 +1121,7 @@
 
     "router-signature" NL Signature NL
         [At end, exactly once.]
+        [No extra arguments]
 
         A document signature as documented in section 1.3, using the
         initial item "extra-info" and the final item "router-signature",
@@ -1178,6 +1203,7 @@
     "dir-identity-key" NL a public key in PEM format
 
         [Exactly once.]
+        [No extra arguments]
 
         The long-term authority identity key for this authority.  This key
         SHOULD be at least 2048 bits long; it MUST NOT be shorter than
@@ -1199,6 +1225,7 @@
     "dir-signing-key" NL a key in PEM format
 
         [Exactly once.]
+        [No extra arguments]
 
         The directory server's public signing key.  This key MUST be at
         least 1024 bits, and MAY be longer.
@@ -1206,6 +1233,7 @@
     "dir-key-crosscert" NL CrossSignature NL
 
         [Exactly once.]
+        [No extra arguments]
 
         CrossSignature is a signature, made using the certificate's signing
         key, of the digest of the PKCS1-padded hash of the certificate's
@@ -1220,6 +1248,7 @@
     "dir-key-certification" NL Signature NL
 
         [At end, exactly once.]
+        [No extra arguments]
 
         A document signature as documented in section 1.3, using the
         initial item "dir-key-certificate-version" and the final item
@@ -1304,6 +1333,7 @@
      "onion-key" NL a public key in PEM format
 
         [Exactly once, at start]
+        [No extra arguments]
 
         The "onion-key" element as specified in section 2.1.1.
 
@@ -1479,6 +1509,7 @@
     "consensus-method" SP Integer NL
 
         [At most once for consensuses; does not occur in votes.]
+        [No extra arguments]
 
         See section 3.8.1 for details.
 
@@ -1942,6 +1973,7 @@
    consensus method 9 and above with the following:
 
     "directory-footer" NL
+    [No extra arguments]
 
    It contains two subsections, a bandwidths-weights line and a
    directory-signature. (Prior to conensus method 9, footers only contained
