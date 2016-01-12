@@ -223,6 +223,7 @@
      "rendezvous-service-descriptor" SP descriptor-id NL
 
        [At start, exactly once]
+       [No extra arguments]
 
        Indicates the beginning of the descriptor. "descriptor-id" is a
        periodically changing identifier of 160 bits formatted as 32 base32
@@ -267,7 +268,7 @@
        "descriptor-cookie" is an optional secret password of 128 bits that
        is shared between the hidden service provider and its clients. If the
        descriptor-cookie is left out, the input to the hash function is 128
-       bits shorter.
+       bits shorter.  [No extra arguments]
 
        "replica" denotes the number of the replica. A service publishes
        multiple descriptors with different descriptor IDs in order to
@@ -276,6 +277,7 @@
      "version" SP version-number NL
 
        [Exactly once]
+       [No extra arguments]
 
        The version number of this descriptor's format. Version numbers are a
        positive integer.
@@ -283,6 +285,7 @@
      "permanent-key" NL a public key in PEM format
 
        [Exactly once]
+       [No extra arguments]
 
        The public key of the hidden service which is required to verify the
        "descriptor-id" and the "signature".
@@ -290,6 +293,7 @@
      "secret-id-part" SP secret-id-part NL
 
        [Exactly once]
+       [No extra arguments]
 
        The result of the following operation as explained above, formatted as
        32 base32 chars. Using this secret id part, everyone can verify that
@@ -307,6 +311,7 @@
      "protocol-versions" SP version-string NL
 
        [Exactly once]
+       [No extra arguments]
 
        A comma-separated list of recognized and permitted version numbers
        for use in INTRODUCE cells; these versions are described in section
@@ -315,6 +320,7 @@
      "introduction-points" NL encrypted-string
 
        [At most once]
+       [No extra arguments]
 
        A list of introduction points. If the optional "descriptor-cookie" is
        used, this list is encrypted with AES in CTR mode with a random
@@ -332,6 +338,7 @@
          "introduction-point" SP identifier NL
 
            [At start, exactly once]
+           [No extra arguments]
 
            The identifier of this introduction point: the base32 encoded
            hash of this introduction point's identity key.
@@ -339,12 +346,14 @@
          "ip-address" SP ip4 NL
 
            [Exactly once]
+           [No extra arguments]
 
            The IP address of this introduction point.
 
          "onion-port" SP port NL
 
            [Exactly once]
+           [No extra arguments]
 
            The TCP port on which the introduction point is listening for
            incoming onion requests.
@@ -352,6 +361,7 @@
          "onion-key" NL a public key in PEM format
 
            [Exactly once]
+           [No extra arguments]
 
            The public key that can be used to encrypt messages to this
            introduction point.
@@ -359,6 +369,7 @@
          "service-key" NL a public key in PEM format
 
            [Exactly once]
+           [No extra arguments]
 
            The public key that can be used to encrypt messages to the hidden
            service.
@@ -383,6 +394,7 @@
      "signature" NL signature-string
 
        [At end, exactly once]
+       [No extra arguments]
 
        A signature of all fields above with the private key of the hidden
        service.
@@ -994,6 +1006,7 @@
    and stores the following data:
 
      "client-key" NL a public key in PEM format
+     [No extra arguments]
 
 2.4. Client configuration
 
