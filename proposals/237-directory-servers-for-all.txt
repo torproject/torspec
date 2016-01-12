@@ -49,6 +49,9 @@ Design:
   this end, we will introduce a new server descriptor line.
 
   	"tunnelled-dir-server" NL
+        [At most once]
+        [No extra arguments]
+
 
       The presence of this line indicates that the relay accepts
   tunnelled directory requests. For a relay that implements this
