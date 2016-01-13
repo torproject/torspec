@@ -559,7 +559,8 @@ see tor-design.pdf.
         2: RSA1024 Identity certificate
         3: RSA1024 AUTHENTICATE cell link certificate
 
-   The certificate format for the above certificate types is X509.
+   The certificate format for the above certificate types is DER encoded
+   X509.
 
    A CERTS cell may have no more than one certificate of each CertType.
 
