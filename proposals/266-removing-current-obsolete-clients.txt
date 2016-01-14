@@ -1,0 +1,204 @@
+Filename: 266-removing-current-obsolete-clients.txt
+Title: Removing current obsolete clients from the Tor network
+Author: Nick Mathewson
+Created: 14 Jan 2016
+Status: Draft
+
+
+1. Introduction
+
+   Frequently, we find that very old versions of Tor should no longer be
+   supported on the network.  To remove relays is easy enough: we
+   simply update the directory authorities to stop listing relays that
+   advertise versions that are too old.
+
+   But to disable clients is harder.
+
+   In another proposal I describe a system for letting future clients go
+   gracefully obsolete.  This proposal explains how we can safely
+   disable the obsolete clients we have today (and all other client
+   versions of Tor to date, assuming that they will someday become
+   obsolete).
+
+1.1. Why disable clients?
+
+   * Security.  Anybody who hasn't updated their Tor client in 5
+     years is probably vulnerable to who-knows-what attacks.  They
+     aren't likely to get much anonymity either.
+
+   * Withstand zombie installations. Some Tors out there were once
+     configured to start-on-boot systems that are now unmaintained.
+     (See 1.4 below.)  They put needless load on the network, and help
+     nobody.
+
+   * Be able to remove backward-compatibility code.  Currently, Tor
+     supports some truly ancient protocols in order to avoid breaking
+     ancient versions or Tor.  This code needs to be maintained and
+     tested. Some of it depends on undocumented or deprecated or
+     non-portable OpenSSL features, and makes it hard to produce a
+     conforming Tor server implementation.
+
+   * Make it easier to write a conforming Tor relay.  If a Tor relay
+     needs to support every Tor client back through the beginning of
+     time, that makes it harder to develop and test compatible
+     implementations.
+
+1.2. Is this dangerous?
+
+   I don't think so.  This proposal describes a way to make older
+   clients gracefully disconnect from the network only when a majority
+   of authorities agree that they should.  A majority of authorities
+   already have the ability to inflict arbitrary degrees of sabotage on
+   the consensus document.
+
+1.3. History
+
+   The earliest versions of Tor checked the recommended-versions field
+   in the directory to see whether they should keep running.  If they
+   saw that their version wasn't recommended, they'd shut down.  There
+   was an "IgnoreVersion" option that let you keep running anyway.
+
+   Later, around 2004, the rule changed to "shut down if the version is
+   _obsolete_", where obsolete was defined as "not recommended, and
+   older than a version that is recommended."
+
+   In 0.1.1.7-alpha, we made obsolete versions only produce a warning,
+   and removed IgnoreVersion.  (See 3ac34ae3293ceb0f2b8c49.)
+
+   We have still disabled old tor versions.  With Tor 0.2.0.5-alpha,
+   we disabled Tor versions before 0.1.1.6-alpha by having the v1
+   authorities begin publishing empty directories only.
+
+   In version 0.2.5.2-alpha, we completely removed support for the v2
+   directory protocol used before Tor 0.2.0; there are no longer any v2
+   authorities on the network.
+
+   Tor versions before 0.2.1 will currently not progress past fetching
+   an initial directory, because they believe in a number of directory
+   authority identity keys that no longer sign the directory.
+
+   Tor versions before 0.2.4 are (lightly) throttled in multihop
+   circuit creation, because we prioritize ntor CREATE cells over
+   TAP ones when under load.
+
+1.4. The big problem: slow zombies and fast zombies
+
+   It would be easy enough to 'disable' old clients by simply removing
+   server support for the obsolete protocols that they use.  But there's
+   a problem with that approach: what will the clients do when they fail
+   to make connections, or to extend circuits, or whatever else they are
+   no longer able to do?
+
+     * Ideally, I'd like such clients to stop functioning _quietly_.  If
+       they stop contacting the network, that would be best.
+
+     * Next best would be if these clients contacted the network only
+       occasionally and at different times.  I'll call these clients
+       "slow zombies".
+
+     * Worse would be if the clients contact the network frequently,
+       over and over.  I'll call these clients "fast zombies".  They
+       would be at their worst when they focus on authorities, or when
+       they act in synchrony to all strike at once.
+
+   One goal of this proposal is to ensure that future clients to not
+   become zombies at all; and that ancient clients become slow zombies
+   at worst.
+
+
+2. Some ideas that don't work.
+
+2.1. Dropping connections based on link protocols.
+
+   Tor versions before before 0.2.3.6-alpha use a renegotiation-based
+   handshake instead of our current handshake.  We could detect these
+   handshakes and close the connection at the relay side if the client
+   attempts to renegotiate.
+
+   I've tested these changes on versions maint-0.2.0 through
+   maint-0.2.2.  They result in zombies with the following behavior:
+
+      The client contact each authority it knows about, attempting to
+      make a one-hop directory connection.  It fails, detects a failure,
+      then reconnects more and more slowly ... but one hour later, it
+      resets its connection schedule and starts again.
+
+   In the steady state this appears to result in about two connections
+   per client per authority per hour.  That is probably too many.
+
+   (Most authorities would be affected: of the authorities that existed
+   in 0.2.2, gabelmoo has moved and turtles has shut down.  The
+   authorities Faravahar and longclaw are new. The authorities moria1,
+   tor26, dizum, dannenberg, urras, maatuska and maatuska would all get
+   hit here.)
+
+   (We could simply remove the renegotiation-detection code entirely,
+   and reply to all connections with an immediate VERSIONS cell.  The
+   behavior would probably be the same, though.)
+
+   If we throttled connections rather than closing them, we'd only get
+   one connnection per authority per hour, but authorities would have to
+   keep open a potentially huge number of sockets.
+
+2.2. Blocking circuit creation under certain circumstances
+
+   In tor 0.2.5.1-alpha, we began ignoring the UseNTorHandshake option,
+   and always preferring the ntor handshake where available.
+
+   Unfortunately, we can't simply drop all TAP handshakes, since clients
+   and relays can still use them in the hidden service protocol.  But
+   we could detect these versions by:
+
+        Looking for use of a TAP handshake from an IP not associated
+        with with any known relay, or on a connection where the client
+        did not authenticate.  (This could be from a bridge, but clients
+        don't build circuits that go to an IntroPoint or RendPoint
+        directly after a bridge.)
+
+   This would still result in clients not having directories, however,
+   and retrying once an hours.
+
+3. Ideas that might work
+
+3.1. Move all authorities to new ports
+
+   We could have each authority known to older clients start listening
+   for connections at a new port P. We'd forward the old port to the new
+   port.  Once sufficiently many clients were using the new ports, we
+   could disable the forwarding.
+
+   This would result in the old clients turning into zombies as above,
+   but they would only be scrabbling at nonexistent ports, causing less
+   load on the authorities.
+
+   [This proposal would probably be easiest to implement.]
+
+3.2. Start disabling old link protocols on relays
+
+   We could have new relays start dropping support for the old link
+   protocols, while maintaining support on the authorities and older
+   relays.
+
+   The result here would be a degradation of older client performance
+   over time.  They'd still behave zombieishly if the authorities
+   dropped support, however.
+
+3.3. Changing the consensus format.
+
+   We could allow 'f' (short for "flag") as a synonym for 's' in
+   consensus documents.  Later, if we want to disable all Tor versions
+   before today, we can change the consensus algorithm so that the
+   consensus (or perhaps only the microdesc consensus) is spelled with
+   'f' lines instead of 'f' lines.  This will create a consensus which
+   older clients and relays parse as having all nodes down, which will
+   make them not connect to the network at all.
+
+   We could similarly replace "r" with "n", or replace Running with
+   Online, or so on.
+
+   In doing this, we could also rename fresh-until and valid-until, so
+   that new clients would have the real expiration date, and old clients
+   would see "this consensus never expires".  This would prevent them
+   from downloading new consensuses.
+
+   [This proposal would result in the quietest shutdown.]

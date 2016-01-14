@@ -186,6 +186,7 @@ Proposals by number:
 263  Request to change key exchange protocol for handshake v1.1 [OPEN]
 264  Putting version numbers on the Tor subprotocols [OPEN]
 265  Load Balancing with Overhead Parameters [DRAFT]
+266  Removing current obsolete clients from the Tor network [DRAFT]
 
 
 Proposals by status:
@@ -213,6 +214,7 @@ Proposals by status:
    259  New Guard Selection Behaviour
    260  Rendezvous Single Onion Services
    265  Load Balancing with Overhead Parameters
+   266  Removing current obsolete clients from the Tor network
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  OPEN:
