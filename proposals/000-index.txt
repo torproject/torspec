@@ -183,8 +183,9 @@ Proposals by number:
 260  Rendezvous Single Onion Services [DRAFT]
 261  AEZ for relay cryptography [OPEN]
 262  Re-keying live circuits with new cryptographic material [OPEN]
-263  Request to change key exchange protocol for handshake [OPEN]
+263  Request to change key exchange protocol for handshake v1.1 [OPEN]
 264  Putting version numbers on the Tor subprotocols [OPEN]
+265  Load Balancing with Overhead Parameters [DRAFT]
 
 
 Proposals by status:
@@ -211,6 +212,7 @@ Proposals by status:
    257  Refactoring authorities and taking parts offline
    259  New Guard Selection Behaviour
    260  Rendezvous Single Onion Services
+   265  Load Balancing with Overhead Parameters
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  OPEN:
@@ -240,7 +242,7 @@ Proposals by status:
    258  Denial-of-service resistance for directory authorities
    261  AEZ for relay cryptography
    262  Re-keying live circuits with new cryptographic material
-   263  Request to change key exchange protocol for handshake
+   263  Request to change key exchange protocol for handshake v1.1
    264  Putting version numbers on the Tor subprotocols
  ACCEPTED:
    140  Provide diffs between consensuses

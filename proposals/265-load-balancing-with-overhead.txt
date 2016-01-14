@@ -1,0 +1,320 @@
+Filename: 265-load-balancing-with-overhead.txt
+Title: Load Balancing with Overhead Parameters
+Authors: Mike Perry
+Created: 01 January 2016
+Status: Draft
+
+
+0. Motivation
+
+In order to properly load balance in the presence of padding and
+non-negligible amounts of directory and hidden service traffic, the load
+balancing equations in Section 3.8.3 of dir-spec.txt are in need of some
+modifications.
+
+In addition to supporting the idea of overhead, the load balancing
+equations can also be simplified by treating Guard+Exit nodes as Exit
+nodes in all cases. This causes the 9 sub-cases of the current load
+balancing equations to consolidate into a single solution, which also
+will greatly simplify the consensus process, and eliminate edge cases
+such as #16255[1].
+
+
+1. Overview
+
+For padding overhead due to Proposals 251 and 254, and changes to hidden
+service path selection in Proposal 247, it will be useful to be able to
+specify a pair of parameters that represents the additional traffic
+present on Guard and Middle nodes due to these changes.
+
+The current load balancing equations unfortunately make this excessively
+complicated. With overhead factors included, each of the 9 subcases goes
+from being a short solution to over a page of calculations for each
+subcase.
+
+Moreover, out of 8751 hourly consensus documents produced in 2015[2],
+only 78 of them had a non-zero weight for using Guard+Exit nodes in the
+Guard position (weight Wgd), and most of those were well under 1%. The
+highest weight for using Guard+Exits in the Guard position recorded in
+2015 was 2.62% (on December 10th, 2015). This means clients that chose a
+Guard node during that particular hour used only 2.62% of Guard+Exit
+flagged nodes' bandwidth when performing a bandwidth-weighted Guard
+selection. All clients that chose a Guard node during any other hour did
+not consider Guard+Exit nodes at all as potential candidates for their
+Guards.
+
+This indicates that we can greatly simplify these load balancing
+equations with little to no change in diversity to the network.
+
+
+2. Simplified Load Balancing Equations
+
+Recall that the point of the load balancing equations in section 3.8.3
+of dir-spec.txt is to ensure that an equal amount of client traffic is
+distributed between Guards, Middles, Exits, and Guard+Exits, where each
+flag type can occupy one or more positions in a path. This allocation is
+accomplished by solving a system of equations for weights for flag
+position selection to ensure equal allocation of client traffic for each
+position in a circuit.
+
+If we ignore overhead for the moment and treat Guard+Exit nodes as Exit
+nodes, then this allows the simplified system of equations to become:
+
+  Wgg*G == M + Wme*E + Wmg*G    # Guard position == middle position
+  Wgg*G == Wee*E                # Guard position == equals exit position
+  Wmg*G + Wgg*G == G            # Guard allocation weights sum to 1
+  Wme*E + Wee*E == E            # Exit allocation weights sum to 1
+
+This system has four equations and four unknowns, and by transitivity we
+ensure that allocated capacity for guard, middle, and exit positions are
+all equal. Unlike the equations in 3.8.3 of dir-spec.txt, there are no
+special cases to the solutions of these equations because there is no
+shortage of constraints and no decision points for allocation based on
+scarcity. Thus, there is only one solution. Using SymPy's symbolic
+equation solver (see attached script) we obtain:
+
+       E + G + M       E + G + M       2*E - G - M       2*G - E - M
+  Wee: ---------, Wgg: ---------, Wme: -----------, Wmg: ------------
+          3*E             3*G              3*E               3*G
+
+For the rest of the flags weights, we will do the following:
+
+  Dual-flagged (Guard+Exit) nodes should be treated as Exits:
+     Wgd = 0, Wmd = Wme, Wed = Wee
+
+  Directory requests use middle weights:
+     Wbd=Wmd, Wbg=Wmg, Wbe=Wme, Wbm=Wmm
+
+  Handle bridges and strange exit policies:
+     Wgm=Wgg, Wem=Wee, Weg=Wed
+
+2.1. Checking for underflow and overflow
+
+In the old load balancing equations, we required a case-by-case proof to
+guard against overflow and underflow, and to decide what to do in the
+event of various overflow and underflow conditions[3]. Even still, the
+system proved fragile to changes, such as the implementation of Guard
+uptime fractions[1].
+
+Here, with the simplified equations, we can plainly see that the only
+time that a negative weight can arise is in Wme and Wmg, when 2*E < G+M
+or when 2*G < E+M. In other words, only when Exits or Guards are scarce.
+
+Similarly, the only time that a weight exceeding 1.0 can arise is in Wee
+and Wgg, which also happens when 2*E < G+M or 2*G < E+M. This means that
+parameters will always overflow in pairs (Wee and Wme, and/or Wgg and
+Wmg).
+
+In both these cases, simply clipping the parameters at 1 and 0 provides
+as close of a balancing condition as is possible, given the scarcity.
+
+
+3. Load balancing with Overhead Parameters
+
+Intuitively, overhead due to padding and path selection changes can be
+represented as missing capacity in the relevant position. This means
+that in the presence of a Guard overhead fraction of G_o and a Middle
+overhead fraction of M_o, the total fraction of actual client traffic
+carried in those positions is (1-G_o) and (1-M_o), respectively.
+
+Then, to achieve a balanced allocation of traffic, we consider only the
+actual client capacity carried in each position:
+
+  # Guard position minus overhead matches middle position minus overhead:
+  (1-G_o)*(Wgg*G) == (1-M_o)*(M + Wme*E + Wmg*G)
+  # Guard position minus overhead matches exit position:
+  (1-G_o)*(Wgg*G) == 1*(Wee*E)
+  # Guard weights still sum to 1:
+  Wmg*G + Wgg*G == G
+  # Exit weights still sum to 1:
+  Wme*E + Wee*E == E
+
+Solving this system with SymPy unfortunately yields some unintuitively
+simplified results. For each weight, we first show the SymPy solution,
+and then factor that solution into a form analogous to Section 2:
+
+         -(G_o - 1)*(M_o - 1)*(E + G + M)
+ Wee: ---------------------------------------
+      E*(G_o + M_o - (G_o - 1)*(M_o - 1) - 2)
+
+
+         (1 - G_o)*(1 - M_o)*(E + G + M)
+ Wee: ---------------------------------------
+      E*(2 - G_o - M_o + (1 - G_o)*(1 - M_o))
+
+
+
+               (M_o - 1)*(E + G + M)
+ Wgg: ---------------------------------------
+      G*(G_o + M_o - (G_o - 1)*(M_o - 1) - 2)
+
+               (1 - M_o)*(E + G + M)
+ Wgg: ---------------------------------------
+      G*(2 - G_o - M_o + (1 - G_o)*(1- M_o))
+
+
+
+      -E*(M_o - 1) + G*(G_o - 1)*(-M_o + 2) - M*(M_o - 1)
+ Wmg: ---------------------------------------------------
+           G*(G_o + M_o - (G_o - 1)*(M_o - 1) - 2)
+
+      (2 - M_o)*G*(1 - G_o) - M*(1 - M_o) - E*(1 - M_o)
+ Wmg: ---------------------------------------------------
+           G*(2 - G_o - M_o + (1 - G_o )*(1 - M_o))
+
+
+
+      E*(G_o + M_o - 2) + G*(G_o - 1)*(M_o - 1) + M*(G_o - 1)*(M_o - 1)
+ Wme: -----------------------------------------------------------------
+                   E*(G_o + M_o - (G_o - 1)*(M_o - 1) - 2)
+
+      (2 - G_o - M_o)*E - G*(1 - G_o)*(1 - M_o) - M*(1 - G_o)*(1 - M_o)
+ Wme: -----------------------------------------------------------------
+                   E*(2 - G_o - M_o + (1 - G_o)*(1 - M_o))
+
+
+A simple spot check with G_o = M_o = 0 shows us that with zero overhead,
+these solutions become identical to the solutions in Section 2 of this
+proposal.
+
+The final condition that we need to ensure is that these weight values
+never become negative or greater than 1.0[3].
+
+
+3.1. Ensuring against underflow and overflow
+
+Note that if M_o = G_o = 0, then the solutions and the overflow
+conditions are the same as in Section 2.
+
+Unfortunately, SimPy is unable to solve multivariate inequalities, which
+prevents us from directly deriving overflow conditions for each variable
+independently (at least easily and without mistakes). Wolfram Alpha is
+able to derive closed form solutions to some degree for this, but they
+are more complicated than checking the weights for underflow and
+overflow directly.
+
+However, for all overflow and underflow cases, simply warning in the
+event of overflow or underflow in the weight variable solutions above is
+equivalent anyway. Optimal load balancing given this scarcity should
+still result if we clip the resulting solutions to [0, 1.0].
+
+It will be wise in the implementation to test the overflow conditions
+with M_o = G_o = 0, and with their actual values. This will allow us to
+know if the overflow is a result of inherent unbalancing, or due to
+input overhead values that are too large (and need to be reduced by, for
+example, reducing padding).
+
+
+4. Consensus integration
+
+4.1. Making use of the Overhead Factors
+
+In order to keep the consensus process simple on the Directory
+Authorities, the overhead parameters represent the combined overhead
+from many factors.
+
+The G_o variable is meant to account for sum of directory overhead,
+netflow padding overhead, future two-hop padding overhead, and future
+hidden service overhead (for cases where Guard->Middle->Exit circuits
+are not used).
+
+The M_o variable is meant to account for multi-hop padding overhead,
+hidden service overhead, as well as an overhead for any future two-hop
+directory connections (so that we can consolidate Guards and Directory
+guard functionality into a single Guard node).
+
+There is no need for an E_o variable, because even if there were
+Exit-specific overhead, it could be represented by an equivalent
+reductions in both G_o and M_o instead.
+
+Since all relevant padding and directory overhead information is
+included in the extra-info documents for each relay, the M_o and G_o
+variables could be computed automatically from these extra-info
+documents during the consensus process. However, it is probably wiser to
+keep humans in the loop and set them manually as consensus parameters
+instead, especially since we have not previously had to deal with
+serious adversarial consequences from malicious extra-info reporting.
+
+For clarity, though, it may be a good idea to separate all of the
+components of M_o and G_o into separate consensus parameters, and
+combine them (via addition) in the final equations. That way it will be
+easier to pinpoint the source of any potential overflow issues. This
+separation will also enable us to potentially govern padding's
+contribution to the overhead via a single tunable value.
+
+4.2 Integration with Guardfraction
+
+The GuardFraction changes in Proposal 236 and #16255 should continue to
+work with these new equations, so long as the total T, G, and M values
+are counted after the GuardFraction multiplier has been applied.
+
+4.3. Guard flag assignment
+
+Ideally, the Guard flag assignment process would also not count
+Exit-flagged nodes when determining the Guard flag uptime and bandwidth
+cutoffs, since we will not be using Guard+Exit flagged nodes as Guard
+nodes at all when this change is applied. This will result in more
+accurate thresholds for Guard node status, as well as better control
+over the true total amount of Guard bandwidth in the consensus.
+
+
+
+1. https://trac.torproject.org/projects/tor/ticket/16255
+2. https://collector.torproject.org/archive/relay-descriptors/consensuses/
+3. http://tor-dev.torproject.narkive.com/17H9FewJ/correctness-proof-for-new-bandwidth-weights-bug-1952
+
+
+Appendix A: SymPy Script for Balancing Equation Solutions
+#!/usr/bin/python
+from sympy.solvers import solve
+from sympy import simplify, Symbol, init_printing, pprint
+
+# Sympy variable declarations
+(G,M,E,D) = (Symbol('G'),Symbol('M'),Symbol('E'),Symbol('D'))
+(Wgd,Wmd,Wed,Wme,Wmg,Wgg,Wee) = (Symbol('Wgd'),Symbol('Wmd'),Symbol('Wed'),
+                                 Symbol('Wme'),Symbol('Wmg'),Symbol('Wgg'),
+                                 Symbol('Wee'))
+(G_o, M_o) = (Symbol('G_o'),Symbol('M_o'))
+
+print "Current Load Balancing Equation Solutions, Case 1:"
+pprint(solve(
+      [Wgg*G + Wgd*D - (M + Wmd*D + Wme*E + Wmg*G),
+       Wgg*G + Wgd*D - (Wee*E + Wed*D),
+       Wed*D + Wmd*D + Wgd*D - D,
+       Wmg*G + Wgg*G - G,
+       Wme*E + Wee*E - E,
+       Wmg - Wmd,
+       3*Wed - 1],
+       Wgd, Wmd, Wed, Wme, Wmg, Wgg, Wee))
+
+print
+print "Case 1 with guard and middle overhead: "
+pprint(solve(
+        [(1-G_o)*(Wgg*G + Wgd*D) - (1-M_o)*(M + Wmd*D + Wme*E + Wmg*G),
+         (1-G_o)*(Wgg*G + Wgd*D) - (Wee*E + Wed*D),
+         Wed*D + Wmd*D + Wgd*D - D,
+         Wmg*G + Wgg*G - G,
+         Wme*E + Wee*E - E,
+         Wmg - Wmd,
+         3*Wed - 1],
+         Wgd, Wmd, Wed, Wme, Wmg, Wgg, Wee))
+
+print "\n\n"
+print "Elimination of combined Guard+Exit flags (no overhead): "
+pprint(solve(
+      [(Wgg*G) - (M + Wme*E + Wmg*G),
+       (Wgg*G) - 1*(Wee*E),
+       Wmg*G + Wgg*G - G,
+       Wme*E + Wee*E - E],
+       Wme, Wmg, Wgg, Wee))
+
+print
+print "Elimination of combined Guard+Exit flags (Guard+middle overhead): "
+combined = solve(
+      [(1-G_o)*(Wgg*G) - (1-M_o)*(M + Wme*E + Wmg*G),
+       (1-G_o)*(Wgg*G) - 1*(Wee*E),
+       Wmg*G + Wgg*G - G,
+       Wme*E + Wee*E - E],
+       Wme, Wmg, Wgg, Wee)
+pprint(combined)
+
