@@ -180,13 +180,12 @@ proposal.
 The final condition that we need to ensure is that these weight values
 never become negative or greater than 1.0[3].
 
-
 3.1. Ensuring against underflow and overflow
 
 Note that if M_o = G_o = 0, then the solutions and the overflow
 conditions are the same as in Section 2.
 
-Unfortunately, SimPy is unable to solve multivariate inequalities, which
+Unfortunately, SymPy is unable to solve multivariate inequalities, which
 prevents us from directly deriving overflow conditions for each variable
 independently (at least easily and without mistakes). Wolfram Alpha is
 able to derive closed form solutions to some degree for this, but they
@@ -242,13 +241,28 @@ easier to pinpoint the source of any potential overflow issues. This
 separation will also enable us to potentially govern padding's
 contribution to the overhead via a single tunable value.
 
-4.2 Integration with Guardfraction
+4.2. Accounting for hidden service overhead with Prop 247
+
+XXX: Hidden service path selection and 247 complicates this. With 247, we
+want paths only of G M M, where the Ms exclude Guard-flaged nodes. This means
+that M_o needs to add the total hidden service *network bytecount* overhead
+(2X the hidden service end-to-end traffic bytecount). We also need to
+*subtract* 4*Wmg*hs_e2e_bytecount from the G_o overhead, to account for not using
+Guard-flagged nodes for the four M's in full prop-247 G M M M M G circuits.
+
+4.3. Accounting for RSOS overhead
+
+XXX: We also need to separately account for RSOS (and maybe SOS?) path usage
+in M_o. This will require separate acocunting for these service types in
+extra-info descriptors.
+
+4.4 Integration with Guardfraction
 
 The GuardFraction changes in Proposal 236 and #16255 should continue to
 work with these new equations, so long as the total T, G, and M values
 are counted after the GuardFraction multiplier has been applied.
 
-4.3. Guard flag assignment
+4.5. Guard flag assignment
 
 Ideally, the Guard flag assignment process would also not count
 Exit-flagged nodes when determining the Guard flag uptime and bandwidth
@@ -257,6 +271,9 @@ nodes at all when this change is applied. This will result in more
 accurate thresholds for Guard node status, as well as better control
 over the true total amount of Guard bandwidth in the consensus.
 
+4.6. Cannibalization
+
+XXX: It sucks and complicates everything. kill it, except for hsdirs.
 
 
 1. https://trac.torproject.org/projects/tor/ticket/16255
