@@ -166,7 +166,7 @@ Proposals by number:
 243  Give out HSDir flag only to relays with Stable flag [CLOSED]
 244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [ACCEPTED]
 245  Deprecating and removing the TAP circuit extension protocol [DRAFT]
-246  Merging Hidden Service Directories and Introduction Points [OPEN]
+246  Merging Hidden Service Directories and Introduction Points [NEEDS-RESEARCH]
 247  Defending Against Guard Discovery Attacks using Vanguards [DRAFT]
 248  Remove all RSA identity keys [DRAFT]
 249  Allow CREATE cells with >505 bytes of handshake data [DRAFT]
@@ -217,6 +217,8 @@ Proposals by status:
    266  Removing current obsolete clients from the Tor network
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
+ NEEDS-RESEARCH:
+   246  Merging Hidden Service Directories and Introduction Points
  OPEN:
    164  Reporting the status of server votes
    165  Easy migration for voting authority sets
@@ -239,7 +241,6 @@ Proposals by status:
    236  The move to a single guard node
    237  All relays are directory servers [for 0.2.7.x]
    242  Better performance and usability for the MyFamily option
-   246  Merging Hidden Service Directories and Introduction Points
    256  Key revocation for relays and authorities
    258  Denial-of-service resistance for directory authorities
    261  AEZ for relay cryptography

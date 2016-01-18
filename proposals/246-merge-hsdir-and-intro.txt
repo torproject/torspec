@@ -2,7 +2,12 @@ Filename: 246-merge-hsdir-and-intro.txt
 Title: Merging Hidden Service Directories and Introduction Points
 Author: John Brooks, George Kadianakis
 Created: 2015-07-12
-Status: Open
+Status: Needs-Research
+
+Change history:
+
+   18-Jan-2016  Changed status to "Needs-Research" after discussion in email
+                thread [1].
 
 1. Overview and Motivation
 
@@ -294,3 +299,6 @@ Status: Open
    [XXX: 224 makes them consensus parameters, which we can keep, but they
    can still only be changed on a network-wide basis. -special]
 
+References:
+
+[1] : https://lists.torproject.org/pipermail/tor-dev/2016-January/010203.html
