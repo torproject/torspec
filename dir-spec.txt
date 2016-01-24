@@ -2941,15 +2941,22 @@
    Each client maintains a list of directory authorities.  Insofar as
    possible, clients SHOULD all use the same list.
 
+  [Newer versions of Tor (0.2.8.1-alpha and later):
+   Each client also maintains a list of default fallback directory mirrors
+   (fallbacks). Each released version of Tor MAY have a different list,
+   depending on the mirrors that satisfy the fallback directory criteria at
+   release time.]
+
    Clients try to have a live consensus network-status document at all times.
    A network-status document is "live" if the time in its valid-until field
    has not passed.
 
    When a client has no consensus network-status document, it downloads it
-   from a randomly chosen authority.  In all other cases, the client
-   downloads from caches randomly chosen from among those believed to be V3
-   directory servers.  (This information comes from the network-status
-   documents; see 6 below.)
+   from a randomly chosen fallback directory mirror or authority. Clients
+   prefer fallbacks to authorities, trying them earlier and more frequently.
+   In all other cases, the client downloads from caches randomly chosen from
+   among those believed to be V3 directory servers.  (This information comes
+   from the network-status documents; see 6 below.)
 
    After receiving any response client MUST discard any network-status
    documents that it did not request.
@@ -2977,8 +2984,9 @@
 
    (Note: clients can and should pick caches based on the network-status
    information they have: once they have first fetched network-status info
-   from an authority, they should not need to go to the authority directly
-   again.)
+   from an authority or fallback, they should not need to go to the authority
+   directly again, and should only choose the fallback at random, based on its
+   consensus weight in the current consensus.)
 
    To avoid swarming the caches whenever a consensus expires, the
    clients download new consensuses at a randomly chosen time after the
