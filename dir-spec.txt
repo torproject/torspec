@@ -2996,8 +2996,8 @@
    consensus is no longer fresh, and 7/8 of the time remaining after
    that before the consensus is invalid.)
 
-   [For example, if a cache has a consensus that became valid at 1:00,
-    and is fresh until 2:00, and expires at 4:00, that cache will fetch
+   [For example, if a client has a consensus that became valid at 1:00,
+    and is fresh until 2:00, and expires at 4:00, that client will fetch
     a new consensus at a random time between 2:45 and 3:50, since 3/4
     of the one-hour interval is 45 minutes, and 7/8 of the remaining 75
     minutes is 65 minutes.]
