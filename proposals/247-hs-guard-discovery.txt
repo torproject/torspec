@@ -103,6 +103,25 @@ Status: Draft
   Each node's rotation time is tracked independently, to avoid disclosing
   the rotation times of the primary and second-level guards.
 
+  XXX: IP and RP actually need to be separate 4th hops. On the server side,
+  IP should be separate to better unlink IP from the 3rd layer guards,
+  and on the client side, the RP needs to come from the full network to
+  avoid cross-visit linkability. So it's seven proxies all teh time...
+
+  XXX: What about hsdir fetch? to avoid targeting and visit linkability,
+  it needs an emphemeral hop too.. Unless we believe that linkability is low?
+  It is lower than IP linkability, since the hsdescs can be cached for a bit.
+  But if we are worried about visit linkability, then client should also add
+  an extra ephemeral hop during IP visits, making that circuit 8 hops long...
+
+  XXX: Emphemeral hops for service side before RP?
+
+  XXX: Really crazy idea: We can provide multiple path security levels.
+  We could have full 4 hops, or combine Layer2+Layer3, or combine Layer1+Layer2
+  and Layer3+Layer4 for lower-security HS circs..
+
+  XXX: update the load balancing proposal with the outcome of this :/
+
   XXX how should proposal 241 ("Resisting guard-turnover attacks") be
       applied here?
 
@@ -504,6 +523,14 @@ Status: Draft
   be used for the second and third-level nodes at all, and to allow the
   primary guard to be chosen as a rend point.
 
+  XXX: Dgoulet suggested using arbitrary subsets here rather than the
+  no Guard-flag restriction, esp since Layer2 inference is still a
+  possibility.
+
+  XXX: If a Guard-flagged node is chosen for the alls IP or RP, raise
+  protocolerror. Refuse connection. Or allow our guard/other nodes in
+  IP/RP..
+
   Additionally, in order to further limit the exposure of secondary guards
   to sybil attacks, the bin position of the third-level guards should be
   stable over long periods of time. When choosing third-level guards, these
@@ -517,8 +544,8 @@ Status: Draft
 4.4. Denial of service
 
   Since it will be fairly trivial for the adversary to enumerate the
-  current set of rend nodes for a hidden service, denial of service
-  becomes a serious risk for Vanguard users.
+  current set of third-layer guards for a hidden service, denial of
+  service becomes a serious risk for Vanguard users.
 
   For this reason, it is important to support a large number of
   third-level guards, to increase the amount of resources required to
@@ -531,6 +558,10 @@ Status: Draft
   service retry the rend connection multiple times. Unfortunately, it is
   unwise to simply replace unresponsive third-level guards that fail to
   complete circuits, as this will accelerate the Sybil attack.
+
+4.5. Path Bias
+
+XXX: Re-use Prop#259 here.
 
 
 5. Performance considerations
