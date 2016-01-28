@@ -1,0 +1,291 @@
+                         Tor Padding Specification
+
+                                Mike Perry
+
+Note: This is an attempt to specify Tor as currently implemented.  Future
+versions of Tor will implement improved algorithms.
+
+This document tries to cover how Tor chooses to use cover traffic to obscure
+various traffic patterns from external and internal observers. Other
+implementations MAY take other approaches, but implementors should be aware of
+the anonymity and load-balancing implications of their choices.
+
+                          THIS SPEC ISN'T DONE YET.
+
+      The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+      NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+      "OPTIONAL" in this document are to be interpreted as described in
+      RFC 2119.
+
+
+1. Overview
+
+  Tor supports two classes of cover traffic: connection-level padding, and
+  circuit-level padding.
+
+  Connection-level padding uses the CELL_PADDING cell command for cover
+  traffic, where as circuit-level padding uses the RELAY_COMMAND_DROP relay
+  command. CELL_PADDING is single-hop only and can be differentiated from
+  normal traffic by Tor relays ("internal" observers), but not by entities
+  monitoring Tor OR connections ("external" observers).
+
+  RELAY_COMMAND_DROP is multi-hop, and is not visible to intermediate Tor
+  relays, because the relay command field is covered by circuit layer
+  encryption. Moreover, Tor's 'recognized' field allows RELAY_COMMAND_DROP
+  padding to be sent to any intermediate node in a circuit (as per Section
+  6.1 of tor-spec.txt).
+
+  Currently, only single-hop CELL_PADDING is used by Tor. It is described in
+  Section 2. At a later date, further sections will be added to this document
+  to describe various uses of multi-hop circuit-level padding.
+
+
+2. Connection-level padding
+
+2.1. Background
+
+  Tor clients and relays make use of CELL_PADDING to reduce the resolution of
+  connection-level metadata retention by ISPs and surveillance infrastructure.
+
+  Such metadata retention is implemented by Internet routers in the form of
+  Netflow, jFlow, Netstream, or IPFIX records.  These records are emitted by
+  gateway routers in a raw form and then exported (often over plaintext) to a
+  "collector" that either records them verbatim, or reduces their granularity
+  further[1].
+
+  Netflow records and the associated data collection and retention tools are
+  very configurable, and have many modes of operation, especially when
+  configured to handle high throughput. However, at ISP scale, per-flow records
+  are very likely to be employed, since they are the default, and also provide
+  very high resolution in terms of endpoint activity, second only to full packet
+  and/or header capture.
+
+  Per-flow records record the endpoint connection 5-tuple, as well as the
+  total number of bytes sent and received by that 5-tuple during a particular
+  time period. They can store additional fields as well, but it is primarily
+  timing and bytecount information that concern us.
+
+  When configured to provide per-flow data, routers emit these raw flow
+  records periodically for all active connections passing through them
+  based on two parameters: the "active flow timeout" and the "inactive
+  flow timeout".
+
+  The "active flow timeout" causes the router to emit a new record
+  periodically for every active TCP session that continuously sends data. The
+  default active flow timeout for most routers is 30 minutes, meaning that a
+  new record is created for every TCP session at least every 30 minutes, no
+  matter what. This value can be configured from 1 minute to 60 minutes on
+  major routers.
+
+  The "inactive flow timeout" is used by routers to create a new record if a
+  TCP session is inactive for some number of seconds. It allows routers to
+  avoid the need to track a large number of idle connections in memory, and
+  instead emit a separate record only when there is activity. This value
+  ranges from 10 seconds to 600 seconds on common routers. It appears as
+  though no routers support a value lower than 10 seconds.
+
+  For reference, here are default values and ranges (in parenthesis when
+  known) for common routers, along with citations to their manuals.
+
+  Some routers speak other collection protocols than Netflow, and in the
+  case of Juniper, use different timeouts for these protocols. Where this
+  is known to happen, it has been noted.
+
+                            Inactive Timeout              Active Timeout
+    Cisco IOS[3]              15s (10-600s)               30min (1-60min)
+    Cisco Catalyst[4]         5min                        32min
+    Juniper (jFlow)[5]        15s (10-600s)               30min (1-60min)
+    Juniper (Netflow)[6,7]    60s (10-600s)               30min (1-30min)
+    H3C (Netstream)[8]        60s (60-600s)               30min (1-60min)
+    Fortinet[9]               15s                         30min
+    MicroTik[10]              15s                         30min
+    nProbe[14]                30s                         120s
+    Alcatel-Lucent[2]         15s (10-600s)               30min (1-600min)
+
+  The combination of the active and inactive netflow record timeouts allow us
+  to devise a low-cost padding defense that causes what would otherwise be
+  split records to "collapse" at the router even before they are exported to
+  the collector for storage. So long as a connection transmits data before the
+  "inactive flow timeout" expires, then the router will continue to count the
+  total bytes on that flow before finally emitting a record at the "active
+  flow timeout".
+
+  This means that for a minimal amount of padding that prevents the "inactive
+  flow timeout" from expiring, it is possible to reduce the resolution of raw
+  per-flow netflow data to the total amount of bytes send and received in a 30
+  minute window. This is a vast reduction in resolution for HTTP, IRC, XMPP,
+  SSH, and other intermittent interactive traffic, especially when all
+  user traffic in that time period is multiplexed over a single connection
+  (as it is with Tor).
+
+2.2. Implementation
+
+  Tor clients currently maintain one TLS connection to their Guard node to
+  carry actual application traffic, and make up to 3 additional connections to
+  other nodes to retrieve directory information.
+
+  We pad only the client's connection to the Guard node, and not any other
+  connection. We treat Bridge node connections to the Tor network as client
+  connections, and pad them, but otherwise not pad between normal relays.
+
+  Both clients and Guards will maintain a timer for all application (ie:
+  non-directory) TLS connections. Every time a non-padding packet is sent or
+  received by either end, that endpoint will sample a timeout value from
+  between 1.5 seconds and 9.5 seconds using the max(X,X) distribution
+  described in Section 2.3. The time range is subject to consensus
+  parameters as specified in Section 2.6.
+
+  If the connection becomes active for any reason before this timer
+  expires, the timer is reset to a new random value between 1.5 and 9.5
+  seconds. If the connection remains inactive until the timer expires, a
+  single CELL_PADDING cell will be sent on that connection.
+
+  In this way, the connection will only be padded in the event that it is
+  idle, and will always transmit a packet before the minimum 10 second inactive
+  timeout.
+
+2.3. Padding Cell Timeout Distribution Statistics
+
+  It turns out that because the padding is bidirectional, and because both
+  endpoints are maintaining timers, this creates the situation where the time
+  before sending a padding packet in either direction is actually
+  min(client_timeout, server_timeout).
+
+  If client_timeout and server_timeout are uniformly sampled, then the
+  distribution of min(client_timeout,server_timeout) is no longer uniform, and
+  the resulting average timeout (Exp[min(X,X)]) is much lower than the
+  midpoint of the timeout range.
+
+  To compensate for this, instead of sampling each endpoint timeout uniformly,
+  we instead sample it from max(X,X), where X is uniformly distributed.
+
+  If X is a random variable uniform from 0..R-1 (where R=high-low), then the
+  random variable Y = max(X,X) has Prob(Y == i) = (2.0*i + 1)/(R*R).
+
+  Then, when both sides apply timeouts sampled from Y, the resulting
+  bidirectional padding packet rate is now a third random variable:
+  Z = min(Y,Y).
+
+  The distribution of Z is slightly bell-shaped, but mostly flat around the
+  mean. It also turns out that Exp[Z] ~= Exp[X]. Here's a table of average
+  values for each random variable:
+
+     R       Exp[X]    Exp[Z]    Exp[min(X,X)]   Exp[Y=max(X,X)]
+     2000     999.5    1066        666.2           1332.8
+     3000    1499.5    1599.5      999.5           1999.5
+     5000    2499.5    2666       1666.2           3332.8
+     6000    2999.5    3199.5     1999.5           3999.5
+     7000    3499.5    3732.8     2332.8           4666.2
+     8000    3999.5    4266.2     2666.2           5332.8
+     10000   4999.5    5328       3332.8           6666.2
+     15000   7499.5    7995       4999.5           9999.5
+     20000   9900.5    10661      6666.2           13332.8
+
+  In this way, we maintain the property that the midpoint of the timeout range
+  is the expected mean time before a padding packet is sent in either
+  direction.
+
+2.4. Maximum overhead bounds
+
+  With the default parameters and the above distribution, we expect a
+  padded connection to send one padding cell every 5.5 seconds. This
+  averages to 103 bytes per second full duplex (~52 bytes/sec in each
+  direction), assuming a 512 byte cell and 55 bytes of TLS+TCP+IP headers.
+  For a client connection that remains otherwise idle for its expected
+  ~50 minute lifespan (governed by the circuit available timeout plus a
+  small additional connection timeout), this is about 154.5KB of overhead
+  in each direction (309KB total).
+
+  With 2.5M completely idle clients connected simultaneously, 52 bytes per
+  second amounts to 130MB/second in each direction network-wide, which is
+  roughly the current amount of Tor directory traffic[11]. Of course, our
+  2.5M daily users will neither be connected simultaneously, nor entirely
+  idle, so we expect the actual overhead to be much lower than this.
+
+2.5. Reducing or Disabling Padding via Negotiation
+
+  To allow mobile clients to either disable or reduce their padding overhead,
+  the CELL_PADDING_NEGOTIATE cell (tor-spec.txt section 7.2) may be sent from
+  clients to relays. This cell is used to instruct relays to cease sending
+  padding.
+
+  If the client has opted to use reduced padding, it continues to send
+  padding cells sampled from the range [9000,14000] milliseconds (subject to
+  consensus parameter alteration as per Section 2.6), still using the
+  Y=max(X,X) distribution. Since the padding is now unidirectional, the
+  expected frequency of padding cells is now governed by the Y distribution
+  above as opposed to Z. For a range of 5000ms, we can see that we expect to
+  send a padding packet every 9000+3332.8 = 12332.8ms.  We also half the
+  circuit available timeout from ~50min down to ~25min, which causes the
+  client's OR connections to be closed shortly there after when it is idle,
+  thus reducing overhead.
+
+  These two changes cause the padding overhead to go from 309KB per one-time-use
+  Tor connection down to 69KB per one-time-use Tor connection. For continual
+  usage, the maximum overhead goes from 103 bytes/sec down to 46 bytes/sec.
+
+  If a client opts to completely disable padding, it sends a
+  CELL_PADDING_NEGOTIATE to instruct the relay not to pad, and then does not
+  send any further padding itself.
+
+2.6. Consensus Parameters Governing Behavior
+
+  Connection-level padding is controlled by the following consensus parameters:
+
+    * nf_ito_low
+      - The low end of the range to send padding when inactive, in ms.
+      - Default: 1500
+
+    * nf_ito_high
+      - The high end of the range to send padding, in ms.
+      - Default: 9500
+      - If nf_ito_low == nf_ito_high == 0, padding will be disabled.
+
+    * nf_ito_low_reduced
+      - For reduced padding clients: the low end of the range to send padding
+        when inactive, in ms.
+      - Default: 9000
+
+    * nf_ito_high_reduced
+      - For reduced padding clients: the high end of the range to send padding,
+        in ms.
+      - Default: 14000
+
+    * nf_conntimeout_clients
+      - The number of seconds to keep circuits opened and available for
+        clients to use. Note that the actual client timeout is randomized
+        uniformly from this value to twice this value. This governs client
+        OR conn lifespan. Reduced padding clients use half the consensus
+        value.
+      - Default: 1800
+
+    * nf_pad_before_usage
+      - If set to 1, OR connections are padded before the client uses them
+        for any application traffic. If 0, OR connections are not padded
+        until application data begins.
+      - Default: 1
+
+    * nf_pad_relays
+      - If set to 1, we also pad inactive relay-to-relay connections
+      - Default: 0
+
+    * nf_conntimeout_relays
+      - The number of seconds that idle relay-to-relay connections are kept
+        open.
+      - Default: 3600
+
+
+1. https://en.wikipedia.org/wiki/NetFlow
+2. http://infodoc.alcatel-lucent.com/html/0_add-h-f/93-0073-10-01/7750_SR_OS_Router_Configuration_Guide/Cflowd-CLI.html
+3. http://www.cisco.com/en/US/docs/ios/12_3t/netflow/command/reference/nfl_a1gt_ps5207_TSD_Products_Command_Reference_Chapter.html#wp1185203
+4. http://www.cisco.com/c/en/us/support/docs/switches/catalyst-6500-series-switches/70974-netflow-catalyst6500.html#opconf
+5. https://www.juniper.net/techpubs/software/erx/junose60/swconfig-routing-vol1/html/ip-jflow-stats-config4.html#560916
+6. http://www.jnpr.net/techpubs/en_US/junos15.1/topics/reference/configuration-statement/flow-active-timeout-edit-forwarding-options-po.html
+7. http://www.jnpr.net/techpubs/en_US/junos15.1/topics/reference/configuration-statement/flow-active-timeout-edit-forwarding-options-po.html
+8. http://www.h3c.com/portal/Technical_Support___Documents/Technical_Documents/Switches/H3C_S9500_Series_Switches/Command/Command/H3C_S9500_CM-Release1648%5Bv1.24%5D-System_Volume/200901/624854_1285_0.htm#_Toc217704193
+9. http://docs-legacy.fortinet.com/fgt/handbook/cli52_html/FortiOS%205.2%20CLI/config_system.23.046.html
+10. http://wiki.mikrotik.com/wiki/Manual:IP/Traffic_Flow
+11. https://metrics.torproject.org/dirbytes.html
+12. http://freehaven.net/anonbib/cache/murdoch-pet2007.pdf
+13. https://gitweb.torproject.org/torspec.git/tree/proposals/188-bridge-guards.txt
+14. http://www.ntop.org/wp-content/uploads/2013/03/nProbe_UserGuide.pdf
