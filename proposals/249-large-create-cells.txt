@@ -37,7 +37,7 @@ Status: Draft
      };
 
      struct created2v_cell_body {
-        /* Handshake replay length */
+        /* Handshake reply length */
         u16 hlen;
         /* Handshake reply data */
         u8 hdata[hlen];
@@ -84,8 +84,10 @@ Status: Draft
 
    Note that this change leaks the size of the handshake being used to
    intermediate relays.  We should analyze this and see whether it matters.
-   Clients MAY send RELAY_DROP cells during circuit construction in order to
-   hide the true size of their handshakes.
+   Clients and relays MAY send RELAY_DROP cells during circuit
+   construction in order to hide the true size of their handshakes
+   (but they can't send these drop cells inside a train of EXTEND2 or
+   EXTENDED2 cells for a given handshake).
 
 5. Example
 
