@@ -35,7 +35,6 @@ Supersedes: 225
             4.1.2. Validating commitments and reveals [VALIDATEVALUES]
             4.1.4. Encoding commit/reveal values in votes [COMMITVOTE]
             4.1.5. Shared Random Value [SRVOTE]
-            4.1.6. Including the ed25519 identity key in votes [SRKEY]
          4.2. Encoding Shared Random Values in the consensus [SRCONSENSUS]
          4.3. Persistent state format [STATEFORMAT]
       5. Security Analysis
@@ -264,10 +263,6 @@ Supersedes: 225
    authoritative commits they have received from each authority. Only one commit
    per authority must be considered trusted and active at a given time.
 
-   An authority that just received a commitment from another authority's vote
-   MUST wait till the next voting round to include that commitment value in its
-   own votes.
-
 3.2 Reveal Phase
 
    The reveal phase lasts from 12:00UTC to 00:00UTC.
@@ -322,24 +317,19 @@ Supersedes: 225
 
       HASHED_REVEALS = H(ID_a | R_a | ID_b | R_b | ..)
 
-      SRV = HMAC(HASHED_REVEALS,
-                "shared-random" | INT_8(reveal_num) | INT_8(version) |
-                previous_SRV)
+      SRV = SHA3-256("shared-random" | INT_8(REVEAL_NUM) | INT_8(VERSION) |
+                     HASHED_REVEALS | PREVIOUS_SRV)
 
    where the ID_a value is the identity key fingerprint of authority 'a' and R_a
    is the corresponding reveal value of that authority for the current period.
 
-   Also, "reveal_num" is the number of revealed values in this construction,
-   "version" is the protocol version number and "previous_SRV" is the previous
-   shared random value if any.
+   Also, REVEAL_NUM is the number of revealed values in this construction,
+   VERSION is the protocol version number and PREVIOUS_SRV is the previous
+   shared random value. If no previous shared random value is known, then
+   PREVIOUS_SRV is set to 32 NUL (\x00) bytes.
 
-   To maintain consistent ordering, ID_a | R_a pairs are ordered based on the
-   base64 encoded SR key of the authority in ascending order.
-
-   For protocol version 1, H is SHA256 and HMAC is HMAC-SHA256.
-
-   XXX We need to make sure that all dirauths know the previous_SRV here.
-       Otherwise, they might partition accidentally when calculating the SRV.
+   To maintain consistent ordering in HASHED_REVEALS, all the ID_a | R_a pairs
+   are ordered based on the R_a value in ascending order.
 
 3.4. Bootstrapping Procedure
 
@@ -393,15 +383,20 @@ Supersedes: 225
 
    The value REVEAL is computed as follows:
 
-      REVEAL = base32-encode( TIMESTAMP || H(RN) )
+      REVEAL = base64-encode( TIMESTAMP || H(RN) )
 
-      where RN is the sha256 hashed value of a 256-bit random value. We hash
-      the random value to avoid exposing raw bytes from our PRNG to the network
-      (see [RANDOM-REFS]).
+      where RN is the SHA3 hashed value of a 256-bit random value. We hash the
+      random value to avoid exposing raw bytes from our PRNG to the network (see
+      [RANDOM-REFS]).
+
+      TIMESTAMP is an 8-bytes network-endian time_t value. Authorities SHOULD
+      set TIMESTAMP to the valid-after time of the vote document they first plan
+      to publish their commit into (so usually at 00:00UTC, except if they start
+      up in a later commit round).
 
    The value COMMIT is computed as follows:
 
-      COMMIT = base32-encode( H(H(RN)) || TIMESTAMP )
+      COMMIT = base64-encode( TIMESTAMP || H(H(RN)) )
 
       where RN is the random value from REVEAL.
 
@@ -425,14 +420,14 @@ Supersedes: 225
    seen from the other authorities. To do so, it includes the following in its
    votes:
 
-      "shared-rand-commit" SP IDENTITY SP ALGNAME SP COMMIT [SP REVEAL] NL
+      "shared-rand-commit" SP ALGNAME SP IDENTITY SP COMMIT [SP REVEAL] NL
 
-   where IDENTITY is the authority's ed25519 identity key [SRKEY] and COMMIT is
-   the encoded commit [COMMITREVEAL].  Authorities during the reveal phase can
-   also optionally include an encoded reveal value REVEAL.  There MUST be only
-   one line per authority else the vote is considered invalid. Finally, the
-   ALGNAME is the hash algorithm that should be used to compute COMMIT and
-   REVEAL which is "sha256" for version 1.
+   where IDENTITY is the authority's SHA1 identity fingerprint and COMMIT is the
+   encoded commit [COMMITREVEAL].  Authorities during the reveal phase can also
+   optionally include an encoded reveal value REVEAL.  There MUST be only one
+   line per authority else the vote is considered invalid. Finally, the ALGNAME
+   is the hash algorithm that should be used to compute COMMIT and REVEAL which
+   is "sha3-256" for version 1.
 
 4.1.5. Shared Random Value [SRVOTE]
 
@@ -448,28 +443,6 @@ Supersedes: 225
 
   To maintain consistent ordering, the shared random values of the previous
   period should be listed before the values of the current period.
-
-4.1.6. Including the ed25519 identity key in votes [SRKEY]
-
-  We don't want to use the legacy RSA keys as part of the shared randomness
-  protocol since they are going to be deprecated soon.
-
-  For this reason we want each dirauth to include its ed25519 identity key in
-  its votes. To do so we include the following block in vote documents as part
-  of the dir-source block:
-
-    "signing-ed25519" NL "-----BEGIN ED25519 CERT-----" NL certificate
-           "-----END ED25519 CERT-----" NL
-
-        [At most once]
-
-        The certificate is a base64-encoded Ed25519 certificate (see
-        cert-spec.txt) terminating =s removed.
-
-        The certificate has CERT_TYPE of [04] and it certifies the ed25519
-        master signing key under the ed25519 master key. The certificate also
-        includes the ed25519 master key in it certifying it under the RSA master
-        key (since it's included in a vote which is signed by the RSA key).
 
 4.2. Encoding Shared Random Values in the consensus [SRCONSENSUS]
 
@@ -505,7 +478,7 @@ Supersedes: 225
    The following details the commitment and reveal section. They are encoded
    the same as in the vote. This makes it easier for implementation purposes.
 
-     "Commit" SP identity SP algname SP commit [SP reveal] NL
+     "Commit" SP algname SP identity SP commit [SP reveal] NL
 
         [Exactly once per authority]
 
