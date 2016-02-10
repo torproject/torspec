@@ -1,8 +1,8 @@
 Filename: 263-ntru-for-pq-handshake.txt
-Title: Request to change key exchange protocol for handshake v1.1
+Title: Request to change key exchange protocol for handshake v1.2
 Author: John SCHANCK, William WHYTE and Zhenfei ZHANG
 Created: 29 Aug 2015
-Updated: 9 Jan 2016
+Updated: 4 Feb 2016
 Status: Open
 
 1. Introduction
@@ -20,11 +20,8 @@ Status: Open
     0X0101  ntor+qsh    --  refers to this modular design; no specific Key
                             Encapsulation Mechanism (KEM) is assigned.
 
-    0X0101  ntor+ntru   --  the quantum safe KEM is based on NTRUEncrypt, with
-                            parameter ntrueess443ep1
-
     0X0102  ntor+ntru   --  the quantum safe KEM is based on NTRUEncrypt, with
-                            parameter ntrueess743ep1
+                            parameter ntrueess443ep2
 
     0X0103  ntor+rlwe   --  the quantum safe KEM is based on ring learning with
                             error encryption scheme; parameter not specified
@@ -97,9 +94,9 @@ Status: Open
       2)  The proposed key exchange method provides one-way authentication: The
       server is authenticated, while the client remains anonymous.
 
-      3)  The protocol is almost backward compatible with its previous
-      version: ntor. By omitting a single field, one obtains the exact ntor
-      protocol. That is, the protocol is at least as secure as ntor.
+      3)  The protocol is at least as secure as ntor. In the case where the
+      quantum-safe encryption algorithm fails, the protocol is indentical to
+      ntor protocol.
 
     2.1.2 General idea:
 
@@ -123,16 +120,14 @@ Status: Open
       quantum-safe encryption algorithm, and use NTRUEncrypt as our example;
       **new approach**
 
-      3)  HMAC-based Extract-and-Expand Key Derivation Function - KDF-RFC5869;
-      ##existing approach: See 5.2.2 tor-spec.txt##
-      Note: a new hash function, SHA3 as in FIPS 202, will be used, rather than
-      SHA256 as in ntor.
+      3)  SHA3-256 hash function (see FIPS 202), and SHAKE256 KDF;
+      ##previous approach: HMAC-based Extract-and-Expand KDF-RFC5869##
 
   2.2 The protocol
 
     2.2.1 Initialization
 
-      H(x,t) as HMAC_SHA3 with message x and key t.
+      H(x,t) as SHA3-256 with message x and key t.
       H_LENGTH      = 32
       ID_LENGTH     = 20
       G_LENGTH      = 32
@@ -148,9 +143,9 @@ Status: Open
       t_verify      = PROTOID | ":verify"
 
       These three variables define three different cryptographic hash functions:
-      hash1         = HMAC(*, t_mac);
-      hash2         = HMAC(*, t_key);
-      hash3         = HMAC(*, t_verify);
+      hash1         = H(*, t_mac);
+      hash2         = H(*, t_key);
+      hash3         = H(*, t_verify);
 
       MULT(A,b)     = the multiplication of the curve25519 point 'A' by the
                       scalar 'b'.
@@ -194,7 +189,7 @@ Status: Open
 *       PAR_SEC     P                       [H_LENGTH    bytes]
 
       and computes:
-*       C           = ENCRYPT( P | B, QSPK);
+*       C           = ENCRYPT( P | B | Y, QSPK);
 
       Then it uses its ntor private key 'b' to compute an ECC secret
         E           = EXP(X,y) | EXP(X,b) | B | X | Y
@@ -212,11 +207,15 @@ Status: Open
 
 ================================================================================
       The server's handshake reply is:
-        SERVER_PK       Y                       [G_LENGTH     bytes]
         AUTH            H(auth_input, t_mac)    [H_LENGTH     bytes]
 *       QSCIPHER        C                       [QSPK_LENGTH  bytes]
+
+      Note: in previous ntor protocol the server also needs to send
+#pre    SERVER_PK       Y                       [G_LENGTH     bytes]
+      This value is now encrypted in C, so the server does not need to send Y.
+
 ================================================================================
-      The client then checks Y is in G^*, and computes
+      The client decrypts C, then checks Y is in G^*, and computes
 
         E               = EXP(Y,x) | EXP(B,x) | B | X | Y
 *       P'              = DECRYPT(C, QSSK)
@@ -234,23 +233,24 @@ Status: Open
       The client verifies that AUTH == H(auth_input, t_mac).
 
       Both parties now have a shared value for KEY_SEED. This value will be used
-      during Key Derivation Function - KDF-RFC5869 (see 5.2.2 tor-spec.txt)
+      during Key Derivation Function.
 
   2.3 Instantiation with NTRUEncrypt
 
-    The example uses the NTRU parameter set NTRU_EESS443EP1. This has keys
+    The example uses the NTRU parameter set NTRU_EESS443EP2. This has keys
     and ciphertexts of length 610 bytes. This parameter set delivers 128 bits
-    classical security and quantum security. For 256 bits classical and quantum
-    security, use NTRU_EESS743EP1.
+    classical security and quantum security. This parameter set uses product
+    form NTRU polynomials. For 256 bits classical and quantum security, use
+    NTRU_EESS743EP2.
 
     We adjust the following parameters:
 
     handshake type:
-    0X0101  ntor+ntru       the quantum safe KEM is based on NTRUEncrypt, with
-                            parameter ntrueess443ep1
-    PROTOID       = "ntor-curve25519-sha3-1-ntrueess443ep1"
-    QSPK_LENGTH   = 610     length of NTRU_EESS439EP1 public key
-    QSC_LENGTH    = 610     length of NTRU_EESS439EP1 cipher
+    0X0102  ntor+ntru       the quantum safe KEM is based on NTRUEncrypt, with
+                            parameter ntrueess443ep2
+    PROTOID       = "ntor-curve25519-sha3-1-ntrueess443ep2"
+    QSPK_LENGTH   = 610     length of NTRU_EESS443EP2 public key
+    QSC_LENGTH    = 610     length of NTRU_EESS443EP2 cipher
 
     NTRUEncrypt can be adopted in our framework without further modification.
 
@@ -271,7 +271,7 @@ Status: Open
   3.3 Cryptographic hash function
     The default hash function HMAC_SHA256 from Tor suffices to provide
     desired security for the present day. However, to be more future proof, we
-    propose to use HMAC_SHA3 when Tor starts to migrate to SHA3.
+    propose to use SHA3 when Tor starts to migrate to SHA3.
 
   3.4 Key Encapsulation Mechanism
     The KEM in our protocol can be proved to be KEM-CCA-2 secure.
@@ -290,20 +290,23 @@ Status: Open
 
 4. Candidate quantum-safe encryption algorithms
 
-  We do not propose any quantum-safe encryption algorithms in this proposal.
-  This document focuses on the hybrid design. The implementer should modularize
-  the protocol with appropriate interfaces that allow any quantum-safe
-  encryption algorithm to be used in this setting.
+  Two candidate quantum-safe encryption algorithms are under consideration.
 
-  Candidate quantum-safe encryption algorithms will be included in another
-  proposal. This document will refer to the proposal when both proposals are
-  mature.
+  NTRUEncrypt, with parameter set ntrueess443ep2 provides 128 bits classcial and
+  quantum security. The parameter sets is available for use now.
 
+  LWE-based key exchange, based on Peikert's idea [Pei14]. Parameter sets
+  suitable for this framework (the newerhop vairant) is still under development.
 
 5. Bibliography
 
-[DK05] Y. Dodis, J. Katz, "Chosen-Ciphertext Security of Mulitple Encryption",
+[DK05]  Y. Dodis, J. Katz, "Chosen-Ciphertext Security of Mulitple Encryption",
     Theory of Cryptography Conference, 2005.
     http://link.springer.com/chapter/10.1007%2F978-3-540-30576-7_11
     (conference version) or http://cs.nyu.edu/~dodis/ps/2enc.pdf (preprint)
+
+[Pei14] C. Peikert, "Lattice Cryptography for the Internet", PQCrypto 2014.
+
+
+
 
