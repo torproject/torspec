@@ -17,7 +17,7 @@ Status: Open
    live Tor relay implementations, and that means that tying "features"
    to "tor version" won't work going forwards.
 
-   This proposal describes and alternative method that we can use to
+   This proposal describes an alternative method that we can use to
    simplify the advertisement and discovery of features, and the
    transition from one set of features to another.
 
@@ -93,7 +93,7 @@ Status: Open
    Tor clients that want to use "v" lines should prefer those in
    microdescriptors if present, and ignore those in the consensus.
 
-   (Existing maintined client versions can be adapted to never look at
+   (Existing maintained client versions can be adapted to never look at
    "v" lines at all; the only versions that they still check for are
    ones not allowed on the network.  The "v" line can be dropped
    from the consensus entirely when current clients have upgraded.)
@@ -161,12 +161,12 @@ Status: Open
    LinkAuth protocols correspond to varieties of Authenticate cells used
    for the v3+ link protocools.
 
-   The currrent version is "1".
+   The current version is "1".
 
 5.3. "Relay"
 
    The "relay" protocols are those used to handle CREATE cells, and
-   those that that handle the various RELAY cell types received after a
+   those that handle the various RELAY cell types received after a
    CREATE cell.  (Except, relay cells used to manage introduction and
    rendezvous points are managed with the "HSMid" protocols.)
 
@@ -219,7 +219,7 @@ Status: Open
 
    Describes features present or absent in microdescriptors.
 
-   Most features in descriptors don't require a "MircoDesc" update --
+   Most features in descriptors don't require a "MicroDesc" update --
    only those that need to someday be required.
    These correspond more or less with consensus methods.
 
