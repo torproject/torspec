@@ -101,7 +101,7 @@ is the minimal amount of data required to process the INTRODUCE2 cell
 on another machine.
 
 Before proposal 224 is implemented, this could consist of the
-INTRODUCE2 cell payload, the key to decrypt the cell with if the cell
+INTRODUCE2 cell payload, the key to decrypt the cell if the cell
 is not already decrypted (which may be preferable, for performance
 reasons), and data necessary for other machines to recognize what to do
 with the cell.
@@ -136,7 +136,7 @@ INTRODUCE2 cell arrives at the node which published the descriptor, it
 does not immediately try to perform the rendezvous, but instead outputs
 this to the controller. Through an out-of-band process this message is
 relayed to a controller of another node of Bob's, and this transmits
-the "PERFORM-RENDEZVOUS" command to that node. This node finally
+the "PERFORM-RENDEZVOUS" command to that node. This node
 performs the rendezvous, and will continue to serve data to Alice,
 whose client will now not have to talk to the introduction point
 anymore.
@@ -155,3 +155,4 @@ and to leave the actual load-balancing algorithm to the implementor of
 the controller. The developer of the tor implementation should not
 have to choose between a round-robin algorithm and something that could
 pull CPU load averages from a centralized monitoring system.
+
