@@ -200,7 +200,7 @@ Status: Draft
           And turning off hidden service server preemptive circuits, which is
           currently unimplemented (#17360)
 
-5.1.3 Recommended Additional Options: Security
+5.1.4 Recommended Additional Options: Security
 
    We recommend that no other services are run on a rendezvous single onion
    service tor instance. Since tor runs as a client (and not a relay) by
@@ -275,7 +275,7 @@ Status: Draft
    extend. This is useful for the transition period where not all clients
    support single onion services.
 
-6.5. Proposal 255 ("Hidden Service Load Balancing")
+6.6. Proposal 255 ("Hidden Service Load Balancing")
 
    This proposal is compatible with proposal 255. The onion service will
    perform the rendezvous protocol in the same manner as any other onion
@@ -316,7 +316,7 @@ Status: Draft
    been performed. In addition, a potential drawback is overloading a busy
    single onion service.
 
-6.4 Predicted circuits
+7.4 Predicted circuits
 
    We should look whether we can optimize further the predicted circuits that
    Tor makes as an onion service for this mode.
@@ -458,3 +458,4 @@ splitting described in section 8. Here are some initial ideas.
    This option is disabled in Tor Browser by default. Perhaps some users would
    be more comfortable enabling submission over an onion service, due to the
    additional security benefits.
+
