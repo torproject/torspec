@@ -101,7 +101,7 @@ Status: Draft
        would be at their worst when they focus on authorities, or when
        they act in synchrony to all strike at once.
 
-   One goal of this proposal is to ensure that future clients to not
+   One goal of this proposal is to ensure that future clients do not
    become zombies at all; and that ancient clients become slow zombies
    at worst.
 
@@ -130,7 +130,7 @@ Status: Draft
    in 0.2.2, gabelmoo has moved and turtles has shut down.  The
    authorities Faravahar and longclaw are new. The authorities moria1,
    tor26, dizum, dannenberg, urras, maatuska and maatuska would all get
-   hit here.)
+   hit here.) [two maatuskas? -RD]
 
    (We could simply remove the renegotiation-detection code entirely,
    and reply to all connections with an immediate VERSIONS cell.  The
@@ -150,13 +150,13 @@ Status: Draft
    we could detect these versions by:
 
         Looking for use of a TAP handshake from an IP not associated
-        with with any known relay, or on a connection where the client
+        with any known relay, or on a connection where the client
         did not authenticate.  (This could be from a bridge, but clients
         don't build circuits that go to an IntroPoint or RendPoint
         directly after a bridge.)
 
    This would still result in clients not having directories, however,
-   and retrying once an hours.
+   and retrying once an hour.
 
 3. Ideas that might work
 
@@ -189,7 +189,7 @@ Status: Draft
    consensus documents.  Later, if we want to disable all Tor versions
    before today, we can change the consensus algorithm so that the
    consensus (or perhaps only the microdesc consensus) is spelled with
-   'f' lines instead of 'f' lines.  This will create a consensus which
+   'f' lines instead of 's' lines.  This will create a consensus which
    older clients and relays parse as having all nodes down, which will
    make them not connect to the network at all.
 
@@ -202,3 +202,4 @@ Status: Draft
    from downloading new consensuses.
 
    [This proposal would result in the quietest shutdown.]
+
