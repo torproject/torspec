@@ -331,6 +331,9 @@ Supersedes: 225
    To maintain consistent ordering in HASHED_REVEALS, all the ID_a | R_a pairs
    are ordered based on the R_a value in ascending order.
 
+   Because the number of reveals (REVEAL_NUM) is using a 1 byte value, it
+   imposes a hard limit of 255 authorities participating in the protocol.
+
 3.4. Bootstrapping Procedure
 
    As described in [CONS], two shared random values are required for the HSDir
