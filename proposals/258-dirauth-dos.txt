@@ -2,7 +2,7 @@ Filename: 258-dirauth-dos.txt
 Title: Denial-of-service resistance for directory authorities
 Author: Andrea Shepard
 Created: 2015-10-27
-Status: Open
+Status: Accepted
 
 1. Problem statement
 

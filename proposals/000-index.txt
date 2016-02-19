@@ -177,8 +177,8 @@ Proposals by number:
 254  Padding Negotiation [DRAFT]
 255  Controller features to allow for load-balancing hidden services [DRAFT]
 256  Key revocation for relays and authorities [OPEN]
-257  Refactoring authorities and taking parts offline [DRAFT]
-258  Denial-of-service resistance for directory authorities [OPEN]
+257  Refactoring authorities and taking parts offline [META]
+258  Denial-of-service resistance for directory authorities [ACCEPTED]
 259  New Guard Selection Behaviour [DRAFT]
 260  Rendezvous Single Onion Services [DRAFT]
 261  AEZ for relay cryptography [OPEN]
@@ -210,7 +210,6 @@ Proposals by status:
    253  Out of Band Circuit HMACs
    254  Padding Negotiation
    255  Controller features to allow for load-balancing hidden services
-   257  Refactoring authorities and taking parts offline
    259  New Guard Selection Behaviour
    260  Rendezvous Single Onion Services
    265  Load Balancing with Overhead Parameters
@@ -242,7 +241,6 @@ Proposals by status:
    237  All relays are directory servers [for 0.2.7.x]
    242  Better performance and usability for the MyFamily option
    256  Key revocation for relays and authorities
-   258  Denial-of-service resistance for directory authorities
    261  AEZ for relay cryptography
    262  Re-keying live circuits with new cryptographic material
    263  Request to change key exchange protocol for handshake v1.1
@@ -254,11 +252,13 @@ Proposals by status:
    188  Bridge Guards and other anti-enumeration defenses
    220  Migrate server identity keys to Ed25519 [for 0.2.x.x]
    244  Use RFC5705 Key Exporting in our AUTHENTICATE calls
+   258  Denial-of-service resistance for directory authorities
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process
    098  Proposals that should be written
    099  Miscellaneous proposals
+   257  Refactoring authorities and taking parts offline
  FINISHED:
    121  Hidden Service Authentication [in 0.2.1.x]
    151  Improving Tor Path Selection

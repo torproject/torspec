@@ -2,7 +2,14 @@ Filename: 257-hiding-authorities.txt
 Title: Refactoring authorities and taking parts offline
 Authors: Nick Mathewson, Andrea Shepard
 Created: 2015-10-27
-Status: Draft
+Status: Meta
+
+0. Meta status
+
+   This proposal is 'accepted' as an outline for future proposals, though
+   it doesn't actually specify itself in enough detail to be implemented as
+   it stands.
+
 
 1. Introduction
 
