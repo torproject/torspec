@@ -177,13 +177,13 @@ Proposals by number:
 254  Padding Negotiation [DRAFT]
 255  Controller features to allow for load-balancing hidden services [DRAFT]
 256  Key revocation for relays and authorities [OPEN]
-257  Refactoring authorities and taking parts offline [META]
+257  Refactoring authorities and making them more isolated from the net [META]
 258  Denial-of-service resistance for directory authorities [ACCEPTED]
 259  New Guard Selection Behaviour [DRAFT]
 260  Rendezvous Single Onion Services [DRAFT]
 261  AEZ for relay cryptography [OPEN]
 262  Re-keying live circuits with new cryptographic material [OPEN]
-263  Request to change key exchange protocol for handshake v1.1 [OPEN]
+263  Request to change key exchange protocol for handshake v1.2 [OPEN]
 264  Putting version numbers on the Tor subprotocols [OPEN]
 265  Load Balancing with Overhead Parameters [DRAFT]
 266  Removing current obsolete clients from the Tor network [DRAFT]
@@ -243,7 +243,7 @@ Proposals by status:
    256  Key revocation for relays and authorities
    261  AEZ for relay cryptography
    262  Re-keying live circuits with new cryptographic material
-   263  Request to change key exchange protocol for handshake v1.1
+   263  Request to change key exchange protocol for handshake v1.2
    264  Putting version numbers on the Tor subprotocols
  ACCEPTED:
    140  Provide diffs between consensuses
@@ -258,7 +258,7 @@ Proposals by status:
    001  The Tor Proposal Process
    098  Proposals that should be written
    099  Miscellaneous proposals
-   257  Refactoring authorities and taking parts offline
+   257  Refactoring authorities and making them more isolated from the net
  FINISHED:
    121  Hidden Service Authentication [in 0.2.1.x]
    151  Improving Tor Path Selection

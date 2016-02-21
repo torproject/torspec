@@ -1,5 +1,5 @@
 Filename: 257-hiding-authorities.txt
-Title: Refactoring authorities and taking parts offline
+Title: Refactoring authorities and making them more isolated from the net
 Authors: Nick Mathewson, Andrea Shepard
 Created: 2015-10-27
 Status: Meta
