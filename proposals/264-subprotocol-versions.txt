@@ -125,17 +125,22 @@ Status: Open
    When a relay lacks a protocol listed in RequiredRelayProtocols, it
    must not attempt to join the network.
 
+   When a relay lacks a protocol listed in RecommendedRelayProtocols, it
+   should warn its operator that the relay is obsolete..
+
    When a client lacks a protocol listed in RecommendedClientProtocols,
    it should warn the user that the client is obsolete.
 
    When a client lacks a protocol listed in RequiredClientProtocols, it
-   must not use the corresponding feature.  If the corresponding feature
-   is required to operate a Tor client, the client must must log an
-   error message and shut down without connecting to the network, even
-   if the cached consensus is out-of-date.  This implements a "safe
+   must not connect to the network.  This implements a "safe
    forward shutdown" mechanism for zombie clients.
 
+   If a client or relay has a cached consensus telling it that a given
+   protocol is required, and it does not implement that protocol, it
+   SHOULD NOT try to fetch a newer consensus.
+
    The above features should be backported to 0.2.4 and later.
+
 
 5. Current protocols
 
@@ -286,12 +291,12 @@ A.2. Initial required protocols
 
    For clients we will Recommend and Require:
 
-       DirCache=1 HSDir=1 Desc=1 Cons=ANYOF(9-20) Microdesc=ANYOF(9-20)
+       DirCache=1 HSDir=1 Desc=1 Cons=9-20 Microdesc=9-20
        HSMid=1 Link=4 LinkAuth=1 Relay=2
 
    For relays we will Require:
 
-       DirCache=1 HSDir=1 Desc=1 Cons=ANYOF(9-20) Microdesc=ANYOF(9-20)
+       DirCache=1 HSDir=1 Desc=1 Cons=9-20 Microdesc=9-20
        HSMid=1 Link=3-4 LinkAuth=1 Relay=1-2
 
 A.3. Example integration with other open proposals
