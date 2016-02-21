@@ -185,7 +185,7 @@ Proposals by number:
 262  Re-keying live circuits with new cryptographic material [OPEN]
 263  Request to change key exchange protocol for handshake v1.2 [OPEN]
 264  Putting version numbers on the Tor subprotocols [OPEN]
-265  Load Balancing with Overhead Parameters [DRAFT]
+265  Load Balancing with Overhead Parameters [ACCEPTED]
 266  Removing current obsolete clients from the Tor network [DRAFT]
 
 
@@ -212,7 +212,6 @@ Proposals by status:
    255  Controller features to allow for load-balancing hidden services
    259  New Guard Selection Behaviour
    260  Rendezvous Single Onion Services
-   265  Load Balancing with Overhead Parameters
    266  Removing current obsolete clients from the Tor network
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
@@ -253,6 +252,7 @@ Proposals by status:
    220  Migrate server identity keys to Ed25519 [for 0.2.x.x]
    244  Use RFC5705 Key Exporting in our AUTHENTICATE calls
    258  Denial-of-service resistance for directory authorities
+   265  Load Balancing with Overhead Parameters [for 0.2.9.x]
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process

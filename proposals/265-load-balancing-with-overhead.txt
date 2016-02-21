@@ -2,7 +2,8 @@ Filename: 265-load-balancing-with-overhead.txt
 Title: Load Balancing with Overhead Parameters
 Authors: Mike Perry
 Created: 01 January 2016
-Status: Draft
+Status: Accepted
+Target: 0.2.9.x
 
 
 0. Motivation
