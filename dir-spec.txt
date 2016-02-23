@@ -1895,6 +1895,8 @@
           "HSDir" if the router is considered a v2 hidden service directory.
           "Named" if the router's identity-nickname mapping is canonical,
              and this authority binds names.
+          "NoEdConsensus" if any Ed25519 key in the router's descriptor or
+             microdesriptor does not reflect authority consensus.
           "Stable" if the router is suitable for long-lived circuits.
           "Running" if the router is currently usable.
           "Unnamed" if another router has bound the name used by this
@@ -2156,6 +2158,9 @@
    authority believes that it's been up for at least 96 hours (or the current
    value of MinUptimeHidServDirectoryV2).
 
+   "NoEdConsensus" -- authorities should not vote on this flag; it is
+   produced as part of the consensus for consensus method 22 or later.
+
    Directory server administrators may label some relays or IPs as
    blacklisted, and elect not to include them in their network-status lists.
 
@@ -2295,10 +2300,13 @@
           (Consensus method earlier than 21)
 
         * is included according to the rules in section 3.8.0.1 and
-          3.8.0.2 below. (Consensus method 21 or later)
+          3.8.0.2 below. (Consensus method 22 or later)
 
-        * For any given RSA or Ed25519 identity, we include at most
+        * For any given RSA identity digest, we include at most
           one router status entry.
+
+        * For any given Ed25519 identity, we include at most one router
+          status entry.
 
         * A router entry has a flag set if that is included by more than half
           of the authorities who care about that flag.
@@ -2379,6 +2387,10 @@
         * If consensus method 18 or later is used, authorities include
           "id" lines in microdescriptors.
 
+        * If consensus method 22 or later is used, and the votes do not
+          produce a majority consensus about Ed25519 key (see 3.8.0.1 below), the
+          consensus must include a NoEdConsensus flag on the "s" line.
+
      The signatures at the end of a consensus document are sorted in
      ascending order by identity digest.
 
@@ -2387,24 +2399,35 @@
 
 3.8.0.1. Deciding which Ids to include.
 
-  For each <id-Ed, id-RSA> that is listed by more than half of the total
-    authorities (not just total votes), include it.  (No other <id-Ed, id-RSA'>
-    can have as many votes.)
+  This sorting algorithm is used for consensus-method 22 and later.
+
+  First, consider each listing by tuple of <Ed,Rsa> identities, where 'Ed'
+    may be "None" if the voter included "id ed25519 none" to indicate that
+    the authority knows what ed25519 identities are, and thinks that the RSA
+    key doesn't have one.
+
+  For each such <Ed, RSA> tuple that is listed by more than half of the
+    total authorities (not just total votes), include it.  (It is not
+    possible for any other <id-Ed, id-RSA'> to have as many votes.)  If more
+    than half of the authorities list a single <Ed,Rsa> pair of this type, we
+    consider that Ed key to be "consensus"; see description of the
+    NoEdConsensus flag.
 
   Log any other id-RSA values corresponding to an id-Ed we included, and any
     other id-Ed values corresponding to an id-RSA we included.
 
   For each <id-RSA> that is not yet included, if it is listed by more than
     half of the total authorities, and we do not already have it listed with
-    some <id-Ed>, include it without an id-Ed.
+    some <id-Ed>, include it, but do not consider its Ed identity canonical.
 
 3.8.0.2 Deciding which descriptors to include
 
    Deciding which descriptors to include.
 
    A tuple belongs to an <id-RSA, id-Ed> identity if it is a new tuple that
-   matches both ID parts, or if it is an old tuple that matches the RSA part.
-   A tuple belongs to an <id-RSA> identity if its RSA identity matches.
+   matches both ID parts, or if it is an old tuple (one with no Ed opinion)
+   that matches the RSA part.  A tuple belongs to an <id-RSA> identity if its
+   RSA identity matches.
 
    A tuple matches another tuple if all the fields that are present in both
    tuples are the same.
@@ -2413,7 +2436,6 @@
    identity.  Group them into sets of matching tuples.  Include the tuple
    that matches the largest set, breaking ties in favor of the most recently
    published, and then in favor of the smaller server descriptor digest.
-
 
 3.8.1. Forward compatibility
 
@@ -2444,8 +2466,8 @@
      "18" -- Adds 'id' to microdescriptors.
      "19" -- Adds "package" lines to consensuses
      "20" -- Adds GuardFraction information to microdescriptors.
-     "21" -- Adds Ed25519 keys to microdescriptors and to voting
-            algorithm.
+     "21" -- Adds Ed25519 keys to microdescriptors.
+     "22" -- Instantiates Ed25519 voting algorithm correctly.
 
    Before generating a consensus, an authority must decide which consensus
    method to use.  To do this, it looks for the highest version number
@@ -2463,6 +2485,10 @@
    those implementations to compromise their anonymity.  This is a means for
    making changes in the contents of consensus; not for making
    backward-incompatible changes in their format.)
+
+The following methods have incorrect implementations; authorities SHOULD
+   NOT advertise support for them:
+     "21" -- Did not correctly enable support for ed25519 key collation.
 
 3.8.2. Encoding port lists
 
