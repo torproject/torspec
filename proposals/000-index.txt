@@ -187,6 +187,7 @@ Proposals by number:
 264  Putting version numbers on the Tor subprotocols [OPEN]
 265  Load Balancing with Overhead Parameters [ACCEPTED]
 266  Removing current obsolete clients from the Tor network [DRAFT]
+267  Tor Consensus Transparency [DRAFT]
 
 
 Proposals by status:
@@ -213,6 +214,7 @@ Proposals by status:
    259  New Guard Selection Behaviour
    260  Rendezvous Single Onion Services
    266  Removing current obsolete clients from the Tor network
+   267  Tor Consensus Transparency
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  NEEDS-RESEARCH:

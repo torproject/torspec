@@ -1,0 +1,363 @@
+Filename: 267-tor-consensus-transparency.txt
+Title: Tor Consensus Transparency
+Author: Linus Nordberg
+Created: 2014-06-28
+Status: Draft
+
+0. Introduction
+
+   This document describes how to provide and use public, append-only,
+   verifiable logs containing Tor consensus and vote status documents,
+   much like what Certificate Transparency [CT] does for TLS
+   certificates, making it possible for log monitors to detect false
+   consensuses and votes.
+
+   Tor clients and relays can refuse using a consensus not present in
+   a set of logs of their choosing, as well as provide possible
+   evidence of misissuance by submitting such a consensus to any
+   number of logs.
+
+1. Overview
+
+   Tor status documents, consensuses as well as votes, are stored in
+   one or more public, append-only, externally verifiable log using a
+   history tree like the one described in [CrosbyWallach].
+
+   Consensus-users, i.e. Tor clients and relays, expect to receive one
+   or more "proof of inclusions" with new consensus documents. A proof
+   of inclusion is a hash sum representing the tree head of a log,
+   signed by the logs private key, and an audit path listing the nodes
+   in the tree needed to recreate the tree head. Consensus-users are
+   configured to use one or more logs by listing a log address and a
+   public key for each log. This is enough for verifying that a given
+   consensus document is present in a given log.
+
+   Submission of status documents to a log can be done by anyone with
+   an internet connection (and the Tor network, in case of logs only
+   on a .onion address). The submitter gets a signed tree head and a
+   proof of inclusion in return. Directory authorities are expected to
+   submit to one or more logs and include the proofs when serving
+   consensus documents. Directory caches and consensus-users receiving
+   a consensus not including a proof of inclusion may submit the
+   document and use the proof they receive in return.
+
+   Auditing log behaviour and monitoring the contents of logs is
+   performed in cooperation between the Tor network and external
+   services. Relays act as log auditors with help from Tor clients
+   gossiping about what they see. Directory authorities are good
+   candidates for monitoring log content since they know what votes
+   they have sent and received as well as what consensus documents
+   they have issued. Anybody can run both an auditor and a monitor
+   though, which is an important property of the proposed system.
+
+2. Motivation
+
+   Popping a handful of boxes (currently five) or factoring the same
+   number of RSA keys should not be ruled out as a possible attack
+   against a subset of Tor users. An attacker controlling a majority
+   of the directory authorities signing keys can, using
+   man-in-the-middle or man-on-the-side attacks, serve consensus
+   documents listing relays under their control. If mounted on a small
+   subset of Tor users on the internet, the chance of detection is
+   probably low. Implementation of this proposal increases the cost
+   for such an attack by raising the chances of it being detected.
+
+   Note that while the proposed solution gives each individual some
+   degree of protection against using a false consensus this is not
+   the primary goal but more of a nice side effect. The primary goal
+   is to detect correctly signed consensus documents which differ from
+   the consensus of the directory authoritites. This raises the risk
+   of exposure of an attacker capable of producing a consensus and
+   feed it to users.
+
+   The complexity of the proposed solution is motivated by the fact
+   that the log key is not just another key on top of the directory
+   authority keys since the log doesn't have to be trusted. Another
+   value is the decentralisation given -- anybody can run their own
+   log and use it. Anybody can audit all existing logs and verify
+   their correct behaviour. This empowers people outside the group of
+   Tor directory authority operators and the people who trust them for
+   one reason or the other.
+
+3. Design
+
+   Communication with logs is done over HTTP using TLS or Tor onion
+   services for transport, similar to what is defined in
+   [rfc6962-bis-12]. Parameters for POSTs and all responses are
+   encoded as name/value pairs in JSON objects [RFC4627].
+
+   Summary of proposed changes to Tor:
+
+   - Configuration is added for listing known logs and for describing
+     policy for using them.
+
+   - Directory authorities start submitting newly created consensuses
+     to at least one public log.
+
+   - Tor clients and relays receiving a consensus not accompanied by a
+     proof of inclusion start submitting that consensus to at least
+     one public log.
+
+   - Consensus-users start rejecting consensuses accompanied by an
+     invalid proof of inclusion.
+
+   - A new cell type LOG_STH is defined, for clients and relays to
+     exchange information about seen tree heads and their validity.
+
+   - Consensus-users send seen tree heads to relays acting as log
+     auditors.
+
+   - Relays acting as log auditors validate tree heads (section 3.2.2)
+     received from consensus-users and send results back.
+
+   - Consensus-users start rejecting consensuses for which valid
+     proofs of inclusion can not be obtained.
+
+   Definitions:
+
+   - Log id: The SHA-256 hash of the log's public key, to be treated
+     as an opaque byte string identifying the log.
+
+3.1. Consensus submission
+
+   Logs accept consensus submissions from anyone as long as the
+   consensus is signed by a majority of the Tor directory authorities
+   of the Tor network that it's logging.
+
+   Consensus documents are POST:ed to a well-known URL as defined in
+   section 5.2.
+
+   The output is what we call a proof of inclusion.
+
+3.2. Verification
+
+3.2.1. Log entry membership verification
+
+   Calculate a tree head from the hash of the received consensus and
+   the audit path in the accompanying proof. Verify that the
+   calculated tree head is identical to the tree head in the
+   proof. This can easily be done by consensus-users for each received
+   consensus.
+
+   We now know that the consensus is part of a tree which the log
+   claims to be The Tree. Whether this tree is the same tree that
+   everybody else see is unknown at this point.
+
+3.2.2. Log consistency verification
+
+   Ask the log for a consistency proof between the tree head to verify
+   and a previously known good tree head from the pool. Section 5.3
+   specifies how to fetch a consistency proof.
+
+   [[TBD require auditors to fetch and store the tree head for the
+   empty tree as part of bootstrapping, in order to avoid the case
+   where there's no older tree to verify against?]]
+
+   [[TODO description of verification of consistency goes here]]
+
+   Relays acting as auditors cache results to minimise calculations
+   and communication with log servers.
+
+   [[TBD have clients verify consistency as well? NOTE: we still want
+   relays to see tree heads in order to catch a lying log (the
+   split-view attack)]]
+
+   We now know that the verified tree is a superset of a known good
+   tree.
+
+3.3. Log auditing
+
+   A log auditor verifies two things:
+
+   - A logs append-only property, i.e. that no entries once accepted
+   by a log are ever altered or removed.
+
+   - That a log presents the same view to all of its users [[TODO
+   describe the Tor networks role in auditing more than what's found
+   in section 3.2.2]]
+
+   A log auditor typically doesn't care about the contents of the log
+   entries, other than calculating their hash sums for auditing
+   purposes.
+
+   Tor relays should act as log auditors.
+
+3.4. Log monitoring
+
+   A log monitor downloads and investigates each entry in a log
+   searching for anomalies according to its monitoring policy.
+
+   This document doesn't define monitoring policies but does outline a
+   few strategies for monitoring in section [[TBD]].
+
+   Note that there can be more than one valid consensus documents for
+   a given point in time. One reason for this is that the number of
+   signatures can differ due to consensus voting timing
+   details. [[TODO Are there more reasons?]]
+
+   [[TODO expand on monitoring strategies -- even if this is not part
+   of the proposed extensions to the Tor network it's good for
+   understanding. a) dirauths can verify consensus documents byte for
+   byte; b) anyone can look for diffs larger than D per time T, where
+   "diffs" certainly can be smarter than a plain text diff]]
+
+3.5. Consensus-user behaviour
+
+   [[TODO move most of this to section 5]]
+
+   Keep an on-disk cache of consensus documents. Mark them as being in
+   one of three states:
+
+   LOG_STATE_UNKNOWN -- don't know whether it's present in enough logs
+                        or not
+   LOG_STATE_LOGGED -- have seen good proof(s) of inclusion
+   LOG_STATE_LOGGED_GOOD -- confident about the tree head representing
+                            a good tree
+
+   Newly arrived consensus documents start in UNKNOWN or LOGGED
+   depending on whether they are accompanied by enough proofs or
+   not. There are two possible state transitions:
+
+   - UNKNOWN --> LOGGED: When enough correctly verifying proofs of
+     inclusion (section 3.2.1) have been seen. The number of good
+     proofs required is a policy setting in the configuration of the
+     consensus-user.
+
+   - LOGGED --> LOGGED_GOOD: When the tree head in enough of the
+     inclusion proofs have been verified (section 3.2.2) or enough
+     LOG_STH cells vouching for the same tree heads have been
+     seen. The number of verifications required is a policy setting in
+     the configuration of the consensus-user.
+
+   Consensuses in state UNKNOWN are not used but are instead submitted
+   to one or more logs. If the submission succeeds, this will take the
+   consensus to state LOGGED.
+
+   Consensuses in state LOGGED are used despite not being fully
+   verified with regard to logging. LOG_STH cells containing
+   tree heads from received proofs are being sent to relays for
+   verification. Clients send to all relays that they have a circuit
+   to, i.e. their guard relay(s). Relays send to three random relays
+   that they have a circuit to.
+
+3.6. Relay behaviour when acting as an auditor
+
+   In order to verify the append-only property of a log, relays acting
+   as log auditors verify the consistency of tree heads received in
+   LOG_STH cells. An auditor keeps a copy of 2+N known good tree heads
+   in a pool stored on persistent media [[TBD where N is either a
+   fixed number in the range 32-128 or is a function of the log
+   size]]. Two of them are the oldest and newest tree heads seen,
+   respectively. The rest, N, are randomly chosen from the tree heads
+   seen.
+
+   [[TODO describe or refer to an algorithm for "randomly chosen",
+   hopefully not subjective to flushing attacks (or other attacks)]].
+
+3.7. Notable differences from Certificate Transparency
+
+   - The data logged is "strictly time-stamped", i.e. ordered.
+
+   - Much shorter lifetime of logged data -- a day rather than a
+     year. Is the effects of this difference of importance only for
+     "one-shot attacks"?
+
+   - Directory authorities have consensus about what they're
+     signing -- there are no "web sites knowing better".
+
+   - Submitters are not in the same hurry as CA:s and can wait minutes
+     rather than seconds for a proof of inclusion.
+
+4. Security implications
+
+  TODO
+
+5. Specification
+
+5.0. Data structures
+
+   Data structures are defined as described in [RFC5246] section 4,
+   i.e. TLS 1.2 presentation language. While it is tempting to try to
+   avoid yet another format, the cost of redefining the data
+   structures in [rfc6962-bis-12] outweighs this consideration. The
+   burden of redefining, reimplementing and testing is extra true for
+   those structures which need precise definitions because they are to
+   be signed.
+
+5.1. Signed Tree Head (STH)
+
+   An STH is a TransItem structure of type "signed_tree_head" as
+   defined in [rfc6962-bis-12] section 5.8.
+
+5.2. Submitting a consensus document to a log
+
+   POST https://<log server>/tct/v1/add-consensus
+
+   Input:
+
+     consensus: A consensus status document as defined in [dir-spec]
+       section 3.4.1 [[TBD gziped and base64 encoded to save 50%?]]
+
+   Output:
+
+     sth: A signed tree head as defined in section 5.1 refering to a
+     tree in which the submitted document is included.
+
+     inclusion: An inclusion proof as specified for the "inclusion"
+     output in [rfc6962-bis-12] section 6.5.
+
+5.3. Getting a consistency proof from a log
+
+   GET https://<log server>/tct/v1/get-sth-consistency
+
+   Input and output as specified in [rfc6962-bis-12] section 6.4.
+
+5.x. LOG_STH cells
+
+   A LOG_STH cell is a variable-length cell with the following
+   fields:
+
+     TBDname [TBD octets]
+     TBDname [TBD octets]
+     TBDname [TBD octets]
+
+6. Compatibility
+
+   TBD
+
+7. Implementation
+
+   TBD
+
+8. Performance and scalability notes
+
+   TBD
+
+A. Open issues / TODOs
+
+   - TODO: Add SCTs from CT, at least as a practical "cookie" (i.e. no
+     need to send them around or include them anywhere). Logs should
+     be given more time for distributing than we're willing to wait on
+     an HTTP response for.
+
+   - TODO: explain why no hash function and signing algorithm agility,
+     [[rfc6962-bis-12] section 10
+
+   - TODO: add a blurb about the values of publishing logs as onion
+     services
+
+   - TODO: discuss compromise of log keys
+
+B. Acknowledgements
+
+   This proposal leans heavily on [rfc6962-bis-12]. Some definitions
+   are copied verbatim from that document. Valuable feedback has been
+   received from Ben Laurie, Karsten Loesing and Ximin Luo.
+
+C. References
+
+   [CrosbyWallach] http://static.usenix.org/event/sec09/tech/full_papers/crosby.pdf
+   [dir-spec] https://gitweb.torproject.org/torspec.git/blob/HEAD:/dir-spec.txt
+   [RFC4627] https://tools.ietf.org/html/rfc4627
+   [rfc6962-bis-12] https://datatracker.ietf.org/doc/draft-ietf-trans-rfc6962-bis/12
+   [CT] https://https://www.certificate-transparency.org/
