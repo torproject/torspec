@@ -1664,6 +1664,51 @@
         enough votes were counted for the consensus for an authoritative
         opinion to have been formed about their status.
 
+    "shared-rand-participate" NL
+
+        [At most once for votes; does not occur in consensuses.]
+
+        Denotes that the directory authority supports and can participate in the
+        shared random protocol.
+
+    "shared-rand-commit" SP AlgName SP Identity SP Commit [SP Reveal] NL
+
+        [Any number for votes; does not occur in consensuses.]
+
+        AlgName ::= 1*(ALPHA / DIGIT / "_" / "-")
+        Identity ::= 40 * HEXDIG
+        Commit ::= Base64-encoded-data
+        Reveal ::= Base64-encoded-data
+
+        A commit of a directory authority for the shared randomness protocol,
+        containing the commitment value and potentially also the reveal
+        value. AlgName is the hash algorithm that is used and Identity is the
+        authority's SHA1 identity fingerprint. Commit is the encoded commitment
+        value in base64. Reveal is optional and if it's set, it contains the
+        reveal value in base64.
+
+    "shared-rand-previous-value" SP NumReveals SP Value NL
+
+        [At most once.]
+
+        NumReveals ::= An integer greater or equal to 0.
+        Value ::= Base64-encoded-data
+
+        The previous shared random value. Value is the actual shared random
+        value encoded in base64. NumReveals is the number of commits used to
+        generate this SRV.
+
+    "shared-rand-current-value" SP NumReveals SP Value NL
+
+        [At most once.]
+
+        NumReveals ::= An integer greater or equal to 0.
+        Value ::= Base64-encoded-data
+
+        The current shared random value. Value is the actual shared random value
+        encoded in base64. NumReveals is the number of commits used to generate
+        this SRV.
+
     "params" SP [Parameters] NL
 
         [At most once]
@@ -1794,6 +1839,12 @@
         inside RELAY_EARLY cells.
         Min: 0. Max: 1. Default: 0.
         First-appeared: 0.2.3.11-alpha
+
+        "AuthDirNumSRVAgreements" -- Minimum number of agreeing directory
+        authority votes required for a fresh shared random value to be written
+        in the consensus (this rule only applies on the first commit round of
+        the shared randomness protocol).
+        Min: 1. Max: INT32_MAX. Default: 2/3 of the total number of dirauth.
 
    The authority section of a vote contains the following items, followed
    in turn by the authority's current key certificate:
@@ -2405,6 +2456,9 @@
           3.8.0.1 below), the consensus must include a NoEdConsensus flag on
           the "s" line for every relay whose listed Ed key does not reflect
           consensus.
+
+        * If consensus method 23 or later is used, authorities include
+          shared randomness protocol data on their votes and consensus.
 
      The signatures at the end of a consensus document are sorted in
      ascending order by identity digest.
