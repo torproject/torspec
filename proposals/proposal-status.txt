@@ -375,16 +375,6 @@ again to remind me!
      Needs revisions while we still remember what those revisions are.
      (9/2015)
 
-241  Resisting guard-turnover attacks [DRAFT]
-
-     I wrote this one with good ideas from Aaron Johnson and Rob
-     Jansen.  It describes a way to respond to an important class of
-     attacks where an adversary kills off a targeted user's guards until
-     the user has chosen a guard the attacker controls.  (See the
-     "Sniper Attack") paper.  The defense is tricky, and if not done
-     right, might lead clients to kick themselves off the network out of
-     paranoia. So, this proposal could use more analysis.  (2/2015)
-
 242  Better performance and usability for the MyFamily option [OPEN]
 
      Describes a mechanism for using a new ed25519 signature type to

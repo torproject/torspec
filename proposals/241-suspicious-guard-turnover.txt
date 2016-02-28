@@ -2,7 +2,12 @@ Filename: 241-suspicious-guard-turnover.txt
 Title: Resisting guard-turnover attacks
 Author: Aaron Johnson, Nick Mathewson
 Created: 2015-01-27
-Status: Draft
+Status: Rejected
+
+
+This proposal was made obsolete by the introduction of Proposal #259.
+Some of the ideas here have be incorporated into Proposal #259.
+
 
 1. Introduction
 
