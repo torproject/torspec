@@ -942,10 +942,13 @@ Status: Draft
    The encrypted part of the hidden service descriptor is encrypted and
    authenticated with symmetric keys generated as follows:
 
-       salt = 16 random bytes, different for each post to each replica,
+       SALT = 16 bytes from H(random), different for each post to each replica,
               even if the content of the descriptor hasn't changed.
               (This avoids leaking service stability, and linking replicas
               via encrypted data comparison.)
+
+       (We hash salt so that we don't leak the raw bytes returned by a PRNG
+       to the network. See [RANDOM-REFS].)
 
        [ XX/teor - is the extra load on the HSDirs worth it? ]
 
@@ -960,12 +963,9 @@ Status: Draft
 
    The encrypted data has the format:
 
-       H(SALT)    H(random bytes from above)      [16 bytes]
+       SALT       hashed random bytes from above  [16 bytes]
        ENCRYPTED  The plaintext encrypted with S  [variable]
        MAC        MAC of both above fields        [32 bytes]
-
-   (We hash salt so that we don't leak the raw bytes returned by a PRNG
-   to the network. See [RANDOM-REFS].)
 
    The encryption format is ENCRYPTED =
                STREAM(SECRET_IV,SECRET_KEY) xor Plaintext
@@ -1040,6 +1040,8 @@ Status: Draft
 
         [TODO: I'd like to have a cross-certification here too.]
 
+   To remain compatible with future revisions to the descriptor format,
+   clients should ignore unrecognized lines in the descriptor.
    Other encryption and authentication key formats are allowed; clients
    should ignore ones they do not recognize.
 
