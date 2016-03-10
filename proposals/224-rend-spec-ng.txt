@@ -839,22 +839,18 @@ Status: Draft
    The format for a hidden service descriptor is as follows, using the
    meta-format from dir-spec.txt.
 
-     "hs-descriptor" SP "3" certificate NL
+     "hs-descriptor" SP version-number SP certificate NL
 
        [At start, exactly once.]
+
+       The version-number contains a positive integer indicating the version
+       of the descriptor. Current version is "3".
 
        The 'certificate' field contains a certificate in the format from
        proposal 220, with the short-term ed25519 descriptor-signing key
        for the replica, signed by the blinded public key for the replica.
        It must contain a ed25519-signing-key extension containing the
        blinded public key for the replica.
-
-     "time-period" SP YYYY-MM-DD HH:MM:SS NUM NL
-
-       [Exactly once.]
-
-       The time period for which this descriptor is relevant, including
-       its starting time and its period number.
 
      "revision-counter" SP Integer NL
 
@@ -987,10 +983,10 @@ Status: Draft
 
       [Exactly once]
 
-      A space-separated list of integers denoting CREATE2 cell format
-      numbers that the server recognizes. Must include at least TAP and
-      ntor as described in tor-spec.txt. See tor-spec section 5.1 for a
-      list of recognized handshake types.
+      A space-separated list of integers denoting CREATE2 cell format numbers
+      that the server recognizes. Must include at least ntor as described in
+      tor-spec.txt. See tor-spec section 5.1 for a list of recognized
+      handshake types.
 
      "authentication-required" SP types NL
 
@@ -1011,7 +1007,7 @@ Status: Draft
           The link-specifiers is a base64 encoding of a link specifier
           block in the format described in BUILDING-BLOCKS.
 
-        "auth-key" SP "ed25519" certificate NL
+        "auth-key" SP "ed25519" SP certificate NL
 
           [Exactly once per introduction point]
 
