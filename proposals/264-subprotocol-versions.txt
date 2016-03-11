@@ -273,7 +273,7 @@ Status: Open
 A.1.  Inferring missing protos lines.
 
    The directory authorities no longer allow versions of Tor before
-   0.2.4.8-alpha.  But right now, there is no version of Tor in the
+   0.2.4.18-rc.  But right now, there is no version of Tor in the
    consensus before 0.2.4.19.  Therefore, we should disallow versions of
    Tor earlier than 0.2.4.19, so that we can have the protocol list for
    all current Tor versions include:
