@@ -1401,6 +1401,10 @@
         The node's master Ed25519 identity key, base64 encoded,
         without trailing =s.
 
+        All implementations MUST ignore this key for any microdescriptor
+        whose corresponding entry in the consensus includes the
+        'NoEdConsensus' flag.
+
         (Only included when generating microdescriptors for
         consensus-method 21 or later.)
 
@@ -2388,8 +2392,10 @@
           "id" lines in microdescriptors.
 
         * If consensus method 22 or later is used, and the votes do not
-          produce a majority consensus about Ed25519 key (see 3.8.0.1 below), the
-          consensus must include a NoEdConsensus flag on the "s" line.
+          produce a majority consensus about a relay's Ed25519 key (see
+          3.8.0.1 below), the consensus must include a NoEdConsensus flag on
+          the "s" line for every relay whose listed Ed key does not reflect
+          consensus.
 
      The signatures at the end of a consensus document are sorted in
      ascending order by identity digest.
