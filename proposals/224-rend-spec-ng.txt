@@ -137,11 +137,11 @@ Status: Draft
 
       * Instantiate PK with Curve25519.
 
-      * Instantiate H with SHA256. [TODO: really?]
+      * Instantiate H with SHA3-256.
 
-      * Instantiate MAC with HMAC using H.
+      * Instantiate MAC(key=k, message=m) with H(k || m).
 
-      * Instantiate KDF with HKDF using H.
+      * Instantiate KDF with HKDF using SHAKE-256.
 
    For legacy purposes, we specify compatibility with older versions of
    the Tor introduction point and rendezvous point protocols. These used
@@ -431,31 +431,12 @@ Status: Draft
 
 1.5. In more detail: Scaling to multiple hosts
 
-   [THIS SECTION IS UNFINISHED]
-
-   In order to allow multiple hosts to provide a single hidden service,
-   I'm considering two options.
-
-      * We can have each server build an introduction circuit to each
-        introduction point, and have the introduction points responsible
-        for round-robining between these circuits. One service host is
-        responsible for picking the introduction points and publishing
-        the descriptors.
-
-      * We can have servers choose their introduction points
-        independently, and build circuits to them. One service host is
-        responsible for combining these introduction points into a
-        single descriptor.
-
-   If we want to avoid having a single "master" host without which the
-   whole service goes down (the "one service host" in the description
-   above), we need a way to fail over from one host to another. We also
-   need a way to coordinate between the hosts. This is as yet
-   undesigned. Maybe it should use a hidden service?
-
-   See [SCALING-REFS] for discussion on this topic.
-
-   [TODO: Finalize this design.]
+   This design is compatible with our current approaches for scaling hidden
+   services. Specifically, hidden service operators can use onionbalance to
+   achieve high availability between multiple nodes on the HSDir
+   layer. Furthermore, operators can use proposal 255 to load balance their
+   hidden services on the introduction layer. See [SCALING-REFS] for further
+   discussions on this topic and alternative designs.
 
 1.6. In more detail: Backward compatibility with older hidden service
       protocols
@@ -839,12 +820,16 @@ Status: Draft
    The format for a hidden service descriptor is as follows, using the
    meta-format from dir-spec.txt.
 
-     "hs-descriptor" SP version-number SP certificate NL
+     "hs-descriptor" SP version-number NL
 
        [At start, exactly once.]
 
        The version-number contains a positive integer indicating the version
        of the descriptor. Current version is "3".
+
+    "descriptor-signing-key-cert" SP certificate NL
+
+       [Exactly once.]
 
        The 'certificate' field contains a certificate in the format from
        proposal 220, with the short-term ed25519 descriptor-signing key
@@ -1089,7 +1074,7 @@ Status: Draft
 
        [00, 01] -- Reserved for legacy introduction cells; see
                    [LEGACY_EST_INTRO below]
-       [02] -- Ed25519; HMAC-SHA256.
+       [02] -- Ed25519; SHA3-256.
        [FF] -- Reserved for maintenance messages on existing
                circuits; see MAINT_INTRO below.
 
@@ -1155,22 +1140,14 @@ Status: Draft
 
    The KEY field is a ASN1-encoded RSA public key.
 
-   The HANDSHAKE_AUTH field contains the SHA1 digest of (KH |
-   "INTRODUCE").
+   The HANDSHAKE_AUTH field contains the SHA1 digest of (KH | "INTRODUCE").
 
    The SIG field contains an RSA signature, using PKCS1 padding, of all
    earlier fields.
 
-   Note that since the relay payload itself may be no more than 498
-   bytes long, the KEY_LEN field can never have a first byte other
-   than [00] or [01]. These values are used to distinguish legacy
-   ESTABLISH_INTRO cells from newer ones.
-
-   Older versions of Tor always use a 1024-bit RSA key for these
-   introduction authentication keys.
-
-   Newer hidden services MAY use RSA keys up 1904 bits. Any more than
-   that will not fit in a RELAY cell payload.
+   Older versions of Tor always use a 1024-bit RSA key for these introduction
+   authentication keys. Newer hidden services MAY use RSA keys up 1904
+   bits. Any more than that will not fit in a RELAY cell payload.
 
 3.1.3. Managing introduction circuits [MAINT_INTRO]
 
@@ -1242,12 +1219,16 @@ Status: Draft
 
 3.1.4. Acknowledging establishment of introduction point [INTRO_ESTABLISHED]
 
-   After setting up an introduction circuit, the introduction point
-   reports its status back to the hidden service host with an empty
-   INTRO_ESTABLISHED cell.
+   After setting up an introduction circuit, the introduction point reports its
+   status back to the hidden service host with an INTRO_ESTABLISHED cell.
 
-    [TODO: make this cell type extensible. It should be able to include
-    data if that turns out to be needed.]
+   The INTRO_ESTABLISHED cell has the following contents:
+
+     N_EXTENSIONS [1 byte]
+     N_EXTENSIONS times:
+       EXT_FIELD_TYPE [1 byte]
+       EXT_FIELD_LEN  [1 byte]
+       EXT_FIELD      [EXT_FIELD_LEN bytes]
 
 3.2. Sending an INTRODUCE1 cell to the introduction point. [SEND_INTRO1]
 
@@ -1400,10 +1381,9 @@ Status: Draft
    doesn't recognize; instead, it should use them verbatim in its EXTEND
    request to the rendezvous point.
 
-   The ONION_KEY_TYPE field is one of:
+   The ONION_KEY_TYPE field is:
 
-      [01] TAP-RSA-1024:  ONION_KEY is 128 bytes long.
-      [02] NTOR:          ONION_KEY is 32 bytes long.
+      [01] NTOR:          ONION_KEY is 32 bytes long.
 
    The ONION_KEY field describes the onion key that must be used when
    extending to the rendezvous point. It must be of a type listed as
@@ -1450,14 +1430,13 @@ Status: Draft
    Notation here is as in section 5.1.4 of tor-spec.txt, which defines
    the ntor handshake.
 
-   The PROTOID for this variant is
-   "hidden-service-ntor-curve25519-sha256-1".  Define the tweak value
-   t_hsenc, and the tag value m_hsexpand as:
+   The PROTOID for this variant is "tor-hs-ntor-curve25519-sha3-256-1".
+   We also use the following tweak values:
 
       t_hsenc    = PROTOID | ":hs_key_extract"
       m_hsexpand = PROTOID | ":hs_key_expand"
 
-   To make an INTRODUCE cell, the client must know a public encryption
+   To make an INTRODUCE1 cell, the client must know a public encryption
    key B for the hidden service on this introduction circuit. The client
    generates a single-use keypair:
              x,X = KEYGEN()
@@ -1560,7 +1539,7 @@ Status: Draft
 3.4.1. Password-based authentication.
 
    To authenticate with a password, the user must include an extension
-   field in the encrypted part of the INTRODUCE cell with an
+   field in the encrypted part of the INTRODUCE1 cell with an
    EXT_FIELD_TYPE type of [01] and the contents:
 
      Username [00] Password.
@@ -1573,7 +1552,7 @@ Status: Draft
 3.4.2. Ed25519-based authentication.
 
    To authenticate with an Ed25519 private key, the user must include an
-   extension field in the encrypted part of the INTRODUCE cell with an
+   extension field in the encrypted part of the INTRODUCE1 cell with an
    EXT_FIELD_TYPE type of [02] and the contents:
 
         Nonce     [16 bytes]
