@@ -116,17 +116,18 @@ Status: Open
 
 4. Required protocols
 
-   The consensus may contain three lines: RequiredRelayProtocols,
-   RecommendedClientProtocols, and RequiredClientProtocols.  Each has
-   the same format as the "protos" line.  To vote on these entries, a
-   protocol/version combination is included only if it is listed by a
-   majority of the voters.
+   The consensus may contain four lines: RecommendedRelayProtocols,
+   RequiredRelayProtocols, RecommendedClientProtocols, and
+   RequiredClientProtocols.  Each has the same format as the "protos" line.
+   To vote on these entries, a protocol/version combination is included only
+   if it is listed by a majority of the voters.
+
+
+   When a relay lacks a protocol listed in RecommendeddRelayProtocols, it
+   should warn its operator that the relay is obsolete.
 
    When a relay lacks a protocol listed in RequiredRelayProtocols, it
    must not attempt to join the network.
-
-   When a relay lacks a protocol listed in RecommendedRelayProtocols, it
-   should warn its operator that the relay is obsolete..
 
    When a client lacks a protocol listed in RecommendedClientProtocols,
    it should warn the user that the client is obsolete.
@@ -139,7 +140,14 @@ Status: Open
    protocol is required, and it does not implement that protocol, it
    SHOULD NOT try to fetch a newer consensus.
 
-   The above features should be backported to 0.2.4 and later.
+   The above features should be backported to 0.2.4 and later, or all the
+   versions we expect to continue supporting.
+
+
+   These lines should be voted on, and should require a supermajority of
+   authorities (2/3) to make a protocol required.  The required protocols
+   should not be torrc-configurable, but rather should be hardwired in the
+   Tor code.
 
 
 5. Current protocols

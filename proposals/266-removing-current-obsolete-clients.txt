@@ -203,3 +203,59 @@ Status: Draft
 
    [This proposal would result in the quietest shutdown.]
 
+A. How to "pull the switch."
+
+   This is an example timeline of how we could implement 3.3 above,
+   along with proposal 264.
+
+     TIME 0:
+        Implement the client/relay side of proposal 264, backported
+        to every currently existant Tor version that we still
+        support.
+
+        At the same time, add support for the new consensus type to
+        all the same Tor versions.
+
+        Don't disable anything yet.
+
+     TIME 1....N:
+        Encourage all distributions shipping packages for those old
+        tor versions to upgrade to ones released at Time 0 or later.
+
+        Keep informed of the upgrade status of the clients and
+        relays on the Tor network.
+
+
+     LATER:
+        At some point after nearly all clients and relays hav
+        upgraded to the versions released at Time 0 or later, we
+        could make the switchover to publishing the new consensus
+        type.
+
+
+B. Next steps.
+
+   We should verify what happens when currently extant client
+   versions get an empty consensus.  This will determine whether
+   3.3 will not work.  Will they try to fetch a new one from the
+   authorities at the end of the validity period.
+
+   Another option is from Roger: we could add a flag meaning "ignore
+   this consensus; it is a poison consensus to kill old Tor
+   versions."  And maybe we could have it signed only by keys that
+   the current clients won't accept.  And we could serve it to old
+   clients rather than serving them the real consensus.  And we
+   could give it a really high expiration time.  New clients
+   wouldn't believe it.  We'd need to flesh this out.
+
+   Another option is also from Roger:  Tell new clients about new
+   locations to fetch directories from.  Keep the old locations working
+   for as long as we want to support them.  We'd need to flesh this
+   out too.
+
+   The timeline above requires us to keep informed of the status of
+   the different clients and relays attempting to connect to the tor
+   network.  We should make sure we'll actually able to do so.
+
+   http://meetbot.debian.net/tor-dev/2016/tor-dev.2016-02-12-15.01.log.html
+   has a more full discussion of the above ideas.
