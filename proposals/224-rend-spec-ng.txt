@@ -1144,7 +1144,7 @@ Status: Draft
 
    In this older protocol, an ESTABLISH_INTRO cell contains:
 
-        KEY_LEN     [2 bytes]
+        KEY_LEN        [2 bytes]
         KEY            [KEY_LEN bytes]
         HANDSHAKE_AUTH [20 bytes]
         SIG            [variable, up to end of relay payload]
@@ -1649,10 +1649,39 @@ Status: Draft
    client containing the contents of the RENDEZVOUS1 cell.
 
    Upon receiving the RENDEZVOUS2 cell, the client verifies that the
-   HANDSHAKE_INFO correctly completes a handshake, and uses the
-   handshake output to derive shared keys for use on the circuit.
+   HANDSHAKE_INFO correctly completes a handshake. Now both parties use the
+   handshake output to derive shared keys for use on the circuit as specified
+   in the section below:
 
-   [TODO: How do we derive shared keys exactly? How do we use NTOR_KEY_SEED?]
+4.2.1. Key expansion
+
+   The hidden service and its client need to derive crypto keys from the
+   NTOR_KEY_SEED part of the handshake output. To do so, they use the key
+   expansion construction specified in prop216:
+
+       K = K_1 | K_2 | K_3 | ...
+
+       Where K_1     = MAC(NTOR_KEY_SEED, m_hsexpand | INT8(1))
+         and K_(i+1) = MAC(NTOR_KEY_SEED, K_i | m_hsexpand | INT8(i))
+         and INT8(i) is a octet with the value "i".
+
+
+   The key material is then used to generate KH, Df, Db, Kf, and Kb as in the
+   KDF-TOR key derivation approach documented in tor-spec.txt:
+
+   The first HASH_LEN bytes of K form KH; the next HASH_LEN form the forward
+   digest Df; the next HASH_LEN 41-60 form the backward digest Db; the next
+   KEY_LEN 61-76 form Kf, and the final KEY_LEN form Kb.  Excess bytes from K
+   are discarded.
+
+   Subsequently, the rendezvous point passes relay cells, unchanged, from each
+   of the two circuits to the other.  When Alice's OP sends RELAY cells along
+   the circuit, it authenticates with Df, and encrypts them with the Kf, then
+   with all of the keys for the ORs in Alice's side of the circuit; and when
+   Alice's OP receives RELAY cells from the circuit, it decrypts them with the
+   keys for the ORs in Alice's side of the circuit, then decrypts them with Kb,
+   and checks integrity with Db.  Bob's OP does the same, with Kf and Kb
+   interchanged.
 
    [TODO: Should we encrypt HANDSHAKE_INFO as we did INTRODUCE2
    contents? It's not necessary, but it could be wise. Similarly, we
