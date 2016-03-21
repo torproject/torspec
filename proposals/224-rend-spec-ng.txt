@@ -741,7 +741,8 @@ Status: Draft
      the fact that nodes from other replicas are nearby to a HSDir.
      But this is preferable to having fewer HSDirs for a service.
      I think the probability of a collision is approximately:
-     1 / (n_hsidrs / (hsdir_n_replicas * hsdir_spread_store)) = 6 / n_hsidrs ]
+     1 / (n_hsdirs / (hsdir_n_replicas * hsdir_spread_store)) = 6 / n_hsdirs,
+     where n_hsdirs is the total number of HSDirs in the hash ring. ]
 
    When choosing an HSDir to download from, clients choose randomly from
    among the first hsdir_spread_fetch nodes after the indices.  (Note
