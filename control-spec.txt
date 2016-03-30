@@ -2383,6 +2383,17 @@
        {This event could affect the controller's idea of server status.  The
        controller should warn the admin and suggest reasonable steps to take.}
 
+     HIBERNATION_STATUS
+     "STATUS=" "AWAKE" | "SOFT" | "HARD"
+       Our bandwidth based accounting status has changed, and we are now
+       relaying traffic/rejecting new connections/hibernating.
+
+       {This event could affect the controller's idea of server status.  The
+       controller MAY inform the admin, though presumably the accounting was
+       explicitly enabled for a reason.}
+
+       [This event was added in tor 0.2.9.0-alpha.]
+
 4.1.11. Our set of guard nodes has changed
 
   Syntax:
