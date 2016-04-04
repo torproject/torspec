@@ -1088,11 +1088,6 @@ Status: Draft
        [00, 01] -- Reserved for legacy introduction cells; see
                    [LEGACY_EST_INTRO below]
        [02] -- Ed25519; SHA3-256.
-       [FF] -- Reserved for maintenance messages on existing
-               circuits; see MAINT_INTRO below.
-
-               [TODO: Should this just be a new relay cell type?
-                Matthew and George think so.]
 
    The AUTH_KEY_LEN field determines the length of the AUTH_KEY
    field. The AUTH_KEY field contains the public introduction point
@@ -1162,71 +1157,6 @@ Status: Draft
    Older versions of Tor always use a 1024-bit RSA key for these introduction
    authentication keys. Newer hidden services MAY use RSA keys up 1904
    bits. Any more than that will not fit in a RELAY cell payload.
-
-3.1.3. Managing introduction circuits [MAINT_INTRO]
-
-   If the first byte of an ESTABLISH_INTRO cell is [FF], the cell's body
-   contains an administrative command for the circuit. The format of
-   such a command is:
-
-     Any number of times:
-       SUBCOMMAND_TYPE [2 bytes]
-       SUBCOMMAND_LEN  [2 bytes]
-       SUBCOMMAND      [COMMAND_LEN bytes]
-
-   Recognized SUBCOMMAND_TYPE values are:
-
-       [00 01] -- update encryption keys
-
-   [TODO: Matthew says, "This can be used to fork an intro point to
-    balance traffic over multiple hidden service servers while
-    maintaining the criteria for a valid ESTABLISH_INTRO
-    cell. -MF". Investigate.]
-
-   Unrecognized SUBCOMMAND_TYPE values should be ignored.
-
-3.1.3.1. Updating encryption keys (subcommand 0001) [UPDATE-KEYS-SUBCMD]
-
-   Hidden service hosts send this subcommand to set their initial
-   encryption keys or update the configured public encryption keys
-   associated with this circuit. This message must be sent after
-   establishing an introduction point, before the circuit can be
-   advertised.  These keys are given in the form:
-
-      NUMKEYS         [1 byte]
-      NUMKEYS times:
-        KEYTYPE         [1 byte]
-        KEY             [depends on KEYTYPE]
-      COUNTER         [4 bytes]
-      SIGLEN          [1 byte]
-      SIGNATURE       [SIGLEN bytes.]
-
-   The COUNTER field is a monotonically increasing value across a given
-   introduction point authentication key.
-
-   The SIGNATURE must be generated with the introduction point
-   authentication key, and must cover the entire subcommand body,
-   prefixed with the string "Tor hidden service introduction encryption
-   keys v1".
-
-   [TODO: Nothing is done here to prove ownership of the encryption
-   keys. Does that matter?]
-
-   [TODO: The point here is to allow encryption keys to change while
-   maintaining an introduction point and not forcing a client to
-   download a new descriptor. I'm not sure if that's worth it. It makes
-   clients who have seen a key before distinguishable from ones who have
-   not.]
-
-   [Matthew says: "Repeat-client over long periods of time will always
-   be distinguishable. It may be better to simply expire intro points
-   than try to preserve forward-secrecy, though". Must find out what he
-   meant.]
-
-   Setting the encryption keys for a given circuit replaces the previous
-   keys for that circuit. Clients who attempt to connect using the old
-   key receive an INTRO_ACK cell with error code [00 02] as described in
-   section [INTRO_ACK] below.
 
 3.1.4. Acknowledging establishment of introduction point [INTRO_ESTABLISHED]
 
@@ -1301,6 +1231,7 @@ Status: Draft
 3.2.2. INTRODUCE_ACK cell format. [INTRO_ACK]
 
    An INTRODUCE_ACK cell has the following fields:
+
      STATUS       [2 bytes]
      N_EXTENSIONS [1 bytes]
      N_EXTENSIONS times:
@@ -1313,14 +1244,6 @@ Status: Draft
      [00 01] -- Failure: service ID not recognzied
      [00 02] -- Failure: key ID not recognized
      [00 03] -- Bad message format
-
-   Recognized extension field types:
-     [00 01] -- signed set of encryption keys
-
-   The extension field type 0001 is a signed set of encryption keys; its
-   body matches the body of the key update command in
-   [UPDATE-KEYS-CMD]. Whenever sending status [00 02], the introduction
-   point MUST send this extension field.
 
 3.2.3. Legacy formats [LEGACY-INTRODUCE1]
 
