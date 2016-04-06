@@ -877,7 +877,7 @@
    A service provider generates symmetric "descriptor cookies" for his
    clients and distributes them outside of Tor. The suggested key size is
    128 bits, so that descriptor cookies can be encoded in 22 base64 chars
-   (which can hold up to 22 * 5 = 132 bits, leaving 4 bits to encode the
+   (which can hold up to 22 * 6 = 132 bits, leaving 4 bits to encode the
    authorization type (here: "0") and allow a client to distinguish this
    authorization protocol from others like the one proposed below).
    Typically, the contact information for a hidden service using this
