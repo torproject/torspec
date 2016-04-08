@@ -1151,7 +1151,8 @@ Status: Draft
 
    The KEY_LEN variable determines the length of the KEY field.
 
-   The KEY field is a ASN1-encoded RSA public key.
+   The KEY field is the ASN1-encoded legacy RSA public key that was also
+   included in the hidden service descriptor.
 
    The HANDSHAKE_AUTH field contains the SHA1 digest of (KH | "INTRODUCE").
 
@@ -1323,24 +1324,24 @@ Status: Draft
 
 3.2.3. Legacy formats [LEGACY-INTRODUCE1]
 
-   When the ESTABLISH_INTRO cell format of [LEGACY_EST_INTRO] is used,
-   INTRODUCE1 cells are of the form:
+   If a hidden service has listed a legacy introduction point in its
+   descriptor, INTRODUCE1 cells should be of the form:
 
-     AUTH_KEYID_HASH  [20 bytes]
-     ENC_KEYID        [8 bytes]
+     LEGACY_KEYID_HASH    [20 bytes]
+     ENC_KEYID            [8 bytes]
+     N_EXTENSIONS         [1 byte]
+     N_EXTENSIONS times:
+       EXT_FIELD_TYPE     [1 byte]
+       EXT_FIELD_LEN      [1 byte]
+       EXT_FIELD          [EXT_FIELD_LEN bytes]
+     ENCRYPTED            [Up to end of relay payload]
 
-       EXT_FIELD_TYPE [1 byte]
-       EXT_FIELD_LEN  [1 byte]
-       EXT_FIELD      [EXT_FIELD_LEN bytes]
+   Here, LEGACY_KEYID_HASH is the hash of the introduction point legacy
+   encryption key that was included in the hidden service descriptor.
 
-     ENCRYPTED        [Up to end of relay payload]
-
-   Here, AUTH_KEYID_HASH is the hash of the introduction point
-   authentication key used to establish the introduction.
-
-   Because of limitations in older versions of Tor, the relay payload
-   size for these INTRODUCE1 cells must always be at least 246 bytes, or
-   they will be rejected as invalid.
+   Because of limitations in older versions of Tor, the relay payload size for
+   these INTRODUCE1 cells must always be at least 246 bytes, or they will be
+   rejected as invalid. [TODO: Do we need to pad with something?]
 
 3.3. Processing an INTRODUCE2 cell at the hidden service. [PROCESS_INTRO2]
 
