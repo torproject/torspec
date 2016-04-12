@@ -851,15 +851,9 @@ Status: Draft
    The encrypted part of the hidden service descriptor is encrypted and
    authenticated with symmetric keys generated as follows:
 
-       SALT = 16 bytes from H(random), different for each post to each replica,
-              even if the content of the descriptor hasn't changed.
-              (This avoids leaking service stability, and linking replicas
-              via encrypted data comparison.)
-
-       (We hash salt so that we don't leak the raw bytes returned by a PRNG
-       to the network. See [RANDOM-REFS].)
-
-       [ XX/teor - is the extra load on the HSDirs worth it? ]
+       SALT = 16 bytes from H(random), changes each time we rebuld the
+              descriptor even if the content of the descriptor hasn't changed.
+              (So that we don't leak whether the intro point list etc. changed)
 
        secret_input = blinded_public_key | subcredential | INT_4(revision_counter)
        keys = KDF(secret_input, salt, "hsdir-encrypted-data",
