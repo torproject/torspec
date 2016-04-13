@@ -125,8 +125,7 @@ Status: Draft
       * A cryptographic message authentication code MAC(key,msg) that
         produces outputs of length MAC_LEN bytes.
 
-      * A key derivation function KDF(key data, salt, personalization,
-        n) that outputs n bytes.
+      * A key derivation function KDF(message, n) that outputs n bytes.
 
    As a first pass, I suggest:
 
@@ -141,7 +140,7 @@ Status: Draft
 
       * Instantiate MAC(key=k, message=m) with H(k || m).
 
-      * Instantiate KDF with HKDF using SHAKE-256.
+      * Instantiate KDF with SHAKE-256.
 
    For legacy purposes, we specify compatibility with older versions of
    the Tor introduction point and rendezvous point protocols. These used
@@ -952,7 +951,7 @@ Status: Draft
 
        secret_input = blinded_public_key(replica-keynum) |
              subcredential | INT_4(revision_counter)
-       keys = KDF(secret_input, salt, "hsdir-encrypted-data",
+       keys = KDF(secret_input | salt | "hsdir-encrypted-data",
                   S_KEY_LEN + S_IV_LEN + MAC_KEY_LEN)
 
        SECRET_KEY = first S_KEY_LEN bytes of keys
@@ -1381,7 +1380,7 @@ Status: Draft
    and computes:
              secret_hs_input = EXP(B,x) | AUTH_KEYID | X | B | PROTOID
              info = m_hsexpand | subcredential
-             hs_keys = HKDF(secret_hs_input, t_hsenc, info, S_KEY_LEN+MAC_LEN)
+             hs_keys = KDF(secret_hs_input | t_hsenc | info, S_KEY_LEN+MAC_LEN)
              ENC_KEY = hs_keys[0:S_KEY_LEN]
              MAC_KEY = hs_keys[S_KEY_LEN:S_KEY_LEN+MAC_KEY_LEN]
 
@@ -1438,7 +1437,7 @@ Status: Draft
 
       secret_hs_input = EXP(X,b) | AUTH_KEYID | X | B | PROTOID
       info = m_hsexpand | subcredential
-      hs_keys = HKDF(secret_hs_input, t_hsenc, info, S_KEY_LEN+MAC_LEN)
+      hs_keys = KDF(secret_hs_input | t_hsenc | info, S_KEY_LEN+MAC_LEN)
       HS_DEC_KEY = hs_keys[0:S_KEY_LEN]
       HS_MAC_KEY = hs_keys[S_KEY_LEN:S_KEY_LEN+MAC_KEY_LEN]
 
@@ -1580,23 +1579,15 @@ Status: Draft
 4.2.1. Key expansion
 
    The hidden service and its client need to derive crypto keys from the
-   NTOR_KEY_SEED part of the handshake output. To do so, they use the key
-   expansion construction specified in prop216:
+   NTOR_KEY_SEED part of the handshake output. To do so, they use the KDF
+   construction as follows:
 
-       K = K_1 | K_2 | K_3 | ...
-
-       Where K_1     = MAC(NTOR_KEY_SEED, m_hsexpand | INT8(1))
-         and K_(i+1) = MAC(NTOR_KEY_SEED, K_i | m_hsexpand | INT8(i))
-         and INT8(i) is a octet with the value "i".
-
-
-   The key material is then used to generate KH, Df, Db, Kf, and Kb as in the
-   KDF-TOR key derivation approach documented in tor-spec.txt:
+       K = KDF(NTOR_KEY_SEED | m_hsexpand,    HASH_LEN * 3 + S_KEY_LEN * 2)
 
    The first HASH_LEN bytes of K form KH; the next HASH_LEN form the forward
-   digest Df; the next HASH_LEN 41-60 form the backward digest Db; the next
-   KEY_LEN 61-76 form Kf, and the final KEY_LEN form Kb.  Excess bytes from K
-   are discarded.
+   digest Df; the next HASH_LEN bytes form the backward digest Db; the next
+   S_KEY_LEN bytes form Kf, and the final S_KEY_LEN bytes form Kb.  Excess
+   bytes from K are discarded.
 
    Subsequently, the rendezvous point passes relay cells, unchanged, from each
    of the two circuits to the other.  When Alice's OP sends RELAY cells along
