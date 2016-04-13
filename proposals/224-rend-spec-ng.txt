@@ -609,18 +609,25 @@ Status: Draft
 
    The length of a "time period" is controlled by the consensus
    parameter 'hsdir-interval', and is a number of minutes between 30 and
-   14400 (10 days). The default time period length is 1500 (one day plus
-   one hour).
+   14400 (10 days). The default time period length is 1440 (one day).
 
-   Time periods start with the Unix epoch (Jan 1, 1970), and are
-   computed by taking the number of whole minutes since the epoch and
-   dividing by the time period. So if the current time is 2013-11-12
-   13:44:32 UTC, making the seconds since the epoch 1384281872, the
-   number of minutes since the epoch is 23071364.  If the current time
-   period length is 1500 (the default), then the current time period
-   number is 15380. It began 15380*1500*60 seconds after the epoch at
-   2013-11-11 20:00:00 UTC, and will end at (15380+1)*1500*60 seconds
-   after the epoch at 2013-11-12 21:00:00 UTC.
+   Time periods start at the Unix epoch (Jan 1, 1970), and are computed by
+   taking the number of minutes since the epoch and dividing by the time
+   period. However, we want our time periods to start at 12:00UTC every day, so
+   we subtract a "rotation time offset" of 12*60 minutes from the number of
+   minutes since the epoch, before dividing by the time period (effectively
+   making "our" epoch start at Jan 1, 1970 12:00UTC).
+
+   Example: If the current time is 2016-04-13 11:15:01 UTC, making the seconds
+   since the epoch 1460546101, and the number of minutes since the epoch
+   24342435.  We then subtract the "rotation time offset" of 12*60 minutes from
+   the minutes since the epoch, to get 24341715. If the current time period
+   length is 1440 minutes, by doing the division we see that we are currently
+   in time period number 16903.
+
+   Specifically, time period #16903 began 16903*1440*60 + (12*60*60) seconds
+   after the epoch at 2016-04-12 12:00 UTC, and ended at (16904+1)*1500*60 +
+   (12*60*60) seconds after the epoch at 2016-04-13 12:00 UTC.
 
 2.2.2. Overlapping time periods to avoid thundering herds [TIME-OVERLAP]
 
