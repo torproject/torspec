@@ -97,6 +97,11 @@ Status: Draft
 
    This specification uses the following cryptographic building blocks:
 
+      * A pseudorandom number generator backed by a strong entropy source.
+        The output of the PRNG should always be hashed before being posted on
+        the network to avoid leaking raw PRNG bytes to the network
+        (see [PRNG-REFS]).
+
       * A stream cipher STREAM(iv, k) where iv is a nonce of length
         S_IV_LEN bytes and k is a key of length S_KEY_LEN bytes.
 
@@ -1487,9 +1492,7 @@ Status: Draft
         Pubkey    [32 bytes]
         Signature [64 bytes]
 
-   Nonce is a random value. (Noncen should be derived from hashed PRNG
-   output, so that we don't leak the raw bytes returned by a PRNG to the
-   network. See [RANDOM-REFS].) Pubkey is the public key that will be used
+   Nonce is a random value. Pubkey is the public key that will be used
    to authenticate. [TODO: should this be an identifier for the public
    key instead?]  Signature is the signature, using Ed25519, of:
 
@@ -1532,9 +1535,7 @@ Status: Draft
    by the client. The client SHOULD choose a new rendezvous cookie for
    each new connection attempt. If the rendezvous cookie is already in
    use on an existing circuit, the rendezvous point should reject it and
-   destroy the circuit. RENDEZVOUS_COOKIE should be derived using hashed
-   PRNG output, so that we don't leak the raw bytes returned by a PRNG
-   to the network. See [RANDOM-REFS].
+   destroy the circuit.
 
    Upon receiving a ESTABLISH_RENDEZVOUS cell, the rendezvous point
    associates the cookie with the circuit on which it was sent. It
@@ -1673,7 +1674,7 @@ References:
         J. Bernstein, Niels Duif, Tanja Lange, Peter Schwabe, and
         Bo-Yin Yang. http://cr.yp.to/papers.html#ed25519
 
-[RANDOM-REFS]:
+[PRNG-REFS]:
         http://projectbullrun.org/dual-ec/ext-rand.html
         https://lists.torproject.org/pipermail/tor-dev/2015-November/009954.html
 
