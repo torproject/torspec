@@ -639,38 +639,47 @@ Status: Draft
    the public key and the period.
 
    The time at which a key might first become valid is determined by the
-   consensus parameter "hsdir-overlap-begins", which is an integer in
-   range [1,100] with default value 80. This parameter denotes a
-   percentage of the interval for which no overlap occurs.  So for the
-   default interval (1500 minutes) and default overlap-begins value
-   (80%), new keys do not become valid for the first 1200 minutes of the
-   interval.
-
-   The new shared random value must be published *before* the start of
-   the next overlap interval by at least enough time to ensure that
-   clients all get it. [TODO: how much earlier?]
+   consensus parameter "hsdir-overlap-begins", which is an integer in range
+   [1,100] with default value 75. This parameter denotes a percentage of the
+   interval for which no overlap occurs.  So for the default interval (24
+   hours) and default overlap-begins value (75%), new keys do not become valid
+   for the first 18 hours of the interval. Instead, keys become valid at a
+   random point in the last 6 hours of the 24 hours interval.
 
    The time at which a key from the next interval becomes valid is
    determined by taking the first two bytes of
 
-     OFFSET = H("interval-offset" | Key | INT_8(Next_Period_Num))
+     OFFSET = H("interval-offset" | KEY | INT_8(NEXT_PERIOD_NUM))
 
    as a big-endian integer, dividing by 65536, and treating that as a
    fraction of the overlap interval.
 
-   For example, if the period is 1500 minutes long, and overlap interval
-   is 300 minutes long, and OFFSET begins with [90 50], then the next
-   key becomes valid at 1200 + 300 * (0x9050 / 65536) minutes, or
-   approximately 22 hours and 49 minutes after the beginning of the
+   For example, if the period is 1440 minutes long, and overlap interval
+   is 360 minutes long, and OFFSET begins with [90 50], then the next
+   key becomes valid at 1080 + 360 * (0x9050 / 65536) minutes, or
+   approximately 21 hours and 38 minutes after the beginning of the
    period.
 
-   Hidden service directories should accept descriptors at least [TODO:
-   how much?] minutes before they would become valid, and retain them
-   for at least [TODO: how much?] minutes after the end of the period.
+   The new shared random value MUST be published *before* the overlap interval
+   starts so that hidden services have access to the new shared random values
+   in time and can calculate the upcoming set of responsible HSDirs. In our
+   system, new shared random values get published at 00:00UTC every day, whereas
+   the overlap period starts at 06:00 and finishes at 12:00UTC.
 
-   When a client is looking for a service, it must calculate its key
-   both for the current and for the subsequent period, to decide whether
-   the next period's key is valid yet.
+   Here is an illustration of the system:
+
+      +------------------------------------------------------------------+
+      |                                                                  |
+      | 00:00      12:00       00:00       12:00       00:00       12:00 |
+      | SRV#1      TP#1        SRV#2       TP#2        SRV#3       TP#3  |
+      |                                                                  |
+      |   $         |-----------$-----======|-----------$-----======|    |
+      |                            overlap12               overlap23     |
+      |                                                                  |
+      +------------------------------------------------------------------+
+
+                                      Legend:    [TP#1 = Time Period #1]
+                                                 [SRV#1 = Shared Random Value #1]
 
 2.2.3. Where to publish a service descriptor
 
@@ -737,14 +746,14 @@ Status: Draft
    Again, nodes from lower-numbered replicas are disregarded when
    choosing the spread for a replica.
 
-   An HSDir should reject a descriptor if that HSDir is not one of the
-   first hsdir_spread_accept HSDirs for that node. Since HSDirs can't
-   derive other replicas of a service, hsdir_spread_accept must be at
-   least hsdir_n_replicas * hsdir_spread_store.
+   HSDirs MUST retain hidden service descriptors for 33 hours before expiring
+   them. That's 24 hours for the time period duration, plus 6 hours for the
+   maximum overlap period span, plus 3 hours for the maximum acceptable client
+   clock skew.
 
-   [TODO: Incorporate the findings from proposal 143 here. But watch
-   out: proposal 143 did not analyze how much the set of nodes changes
-   over time, or how much client and host knowledge might diverge.]
+   Hidden services should keep their old introduction circuits open for at
+   least 3 hours after the descriptor expiration, so that clients with skewed
+   clocks can still visit them through outdated descriptors.
 
 2.2.4. URLs for anonymous uploading and downloading
 
