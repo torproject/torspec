@@ -1721,8 +1721,9 @@
         "UseOptimisticData" -- If set to zero, clients by default
         shouldn't try to send optimistic data to servers until they have
         received a RELAY_CONNECTED cell.
-        Min: 0, Max: 1, Default: 0
+        Min: 0, Max: 1, Default: 1
         First-appeared: 0.2.3.3-alpha
+        Default was 0 before: 0.2.9.1-alpha
 
         "maxunmeasuredbw" -- Used by authorities during voting with
         method 17 or later. The maximum value to give for any Bandwidth=
