@@ -773,6 +773,8 @@
       0 or 1, depending on whether we've found our ORPort reachable.
     "status/reachability-succeeded/dir"
       0 or 1, depending on whether we've found our DirPort reachable.
+      1 if there is no DirPort, and therefore no need for a reachability
+      check.
     "status/reachability-succeeded"
       "OR=" ("0"/"1") SP "DIR=" ("0"/"1")
       Combines status/reachability-succeeded/*; controllers MUST ignore
