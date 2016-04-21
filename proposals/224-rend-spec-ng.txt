@@ -666,21 +666,6 @@ Status: Draft
    system, new shared random values get published at 00:00UTC every day,
    whereas the overlap period starts at 06:00 and finishes at 12:00UTC.
 
-   Here is an illustration of the system:
-
-      +------------------------------------------------------------------+
-      |                                                                  |
-      | 00:00      12:00       00:00       12:00       00:00       12:00 |
-      | SRV#1      TP#1        SRV#2       TP#2        SRV#3       TP#3  |
-      |                                                                  |
-      |   $         |-----------$-----======|-----------$-----======|    |
-      |                            overlap12               overlap23     |
-      |                                                                  |
-      +------------------------------------------------------------------+
-
-                                      Legend:    [TP#1 = Time Period #1]
-                                                 [SRV#1 = Shared Random Value #1]
-
 2.2.3. Where to publish a service descriptor
 
    The following consensus parameters control where a hidden service
@@ -757,7 +742,55 @@ Status: Draft
    least 3 hours after the descriptor expiration, so that clients with skewed
    clocks can still visit them through outdated descriptors.
 
-2.2.4. URLs for anonymous uploading and downloading
+2.2.4. Using time periods and SRVs to fetch/upload HS descriptors
+
+   Hidden services and clients need to make correct use of time periods and
+   shared random values (SRVs) to successfuly fetch and upload descriptors.
+
+   As [PUB-SHAREDRANDOM] specifies, consensuses contain two shared random
+   values (the current one and the previous one). Hidden services and clients
+   are asked to match these shared random values with descriptor time periods
+   and use the right SRV when fetching/uploading descriptors. This section
+   attempts to precisely specify how this works.
+
+   Let's start with an illustration of the system:
+
+      +------------------------------------------------------------------+
+      |                                                                  |
+      | 00:00      12:00       00:00       12:00       00:00       12:00 |
+      | SRV#1      TP#1        SRV#2       TP#2        SRV#3       TP#3  |
+      |                                                                  |
+      |   $         |-----------$-----======|-----------$-----======|    |
+      |                            overlap12               overlap23     |
+      |                                                                  |
+      +------------------------------------------------------------------+
+
+                                      Legend:    [TP#1 = Time Period #1]
+                                                 [SRV#1 = Shared Random Value #1]
+
+   First of all, during overlap periods, hidden services always use the
+   _current_ SRV for publishing overlap descriptors. Clients MUST ignore the
+   overlap period and instead always fetch the current descriptor as described
+   below.
+
+   The rest of the time, hidden services and clients need to choose the right SRV
+   to use based on the current time period to upload/fetch the current descriptor.
+
+   Looking at the diagram above, SRV#1 gets published 12 hours before TP#1
+   starts and TP#1 lasts 24 hours. By defining the lifetime of SRV#1 to be 36
+   hours, we can pair SRV#1 with TP#1.
+
+   Hence, when clients and hidden services first see an SRV for the first time,
+   they calculate its expiry date (using a 36 hour lifetime) and use that SRV
+   for uploading/fetching descriptors till it expires. When that SRV expires,
+   they switch to the next SRV in the consensus.
+
+   During overlap periods, hidden services upload both normal descriptors and
+   overlap descriptors as described above.
+
+   For more examples and discussion on this technique, please see [SRV-TP-REFS].
+
+2.2.5. URLs for anonymous uploading and downloading
 
    Hidden service descriptors conforming to this specification are
    uploaded with an HTTP POST request to the URL
@@ -1606,6 +1639,9 @@ References:
 [PRNG-REFS]:
         http://projectbullrun.org/dual-ec/ext-rand.html
         https://lists.torproject.org/pipermail/tor-dev/2015-November/009954.html
+
+[SRV-TP-REFS]:
+        https://lists.torproject.org/pipermail/tor-dev/2016-April/010759.html
 
 Appendix A. Signature scheme with key blinding [KEYBLIND]
 
