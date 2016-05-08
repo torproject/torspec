@@ -73,9 +73,9 @@ Depends: prop#220 prop#249 prop#264
 
   Let `EXP(a, b) == X25519(., b, a)` with `g == 9`. Let X25519_KEYGEN() do
   the appropriate manipulations when generating the secret key (clearing the
-  low bits, twidding the high bits).
-
-  [XXX match RFC7748 notation more. --isis]
+  low bits, twidding the high bits).  Additionally, EXP() MUST include the
+  check for all-zero output due to the input point being of small
+  order (cf. RFC7748 §6).
 
   Let `X25519_KEYID(B) == B` where B is a valid X25519 public key.
 
