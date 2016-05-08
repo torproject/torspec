@@ -46,7 +46,7 @@ Depends: prop#220 prop#249 prop#264
   - A NewHope key exchange.
 
   The shared keys derived from these two handshakes are then concatenated and
-  used as input to the SHAKE-256 extendable output function (XOF), as decribed
+  used as input to the SHAKE-256 extendable output function (XOF), as described
   in FIPS-PUB-202 [2], in order to produce a shared key of the desired length.
   The testvectors in §C assume that this key has a length of 32 bytes, but the
   use of a XOF allows arbitrary lengths to easily support future updates of
@@ -84,7 +84,7 @@ Depends: prop#220 prop#249 prop#264
   for Curve25519 points.
 
   Let `ID` be a router's identity key taken from the router microdescriptor.
-  In the case for relays possessing Ed25519 identity keys (c.f. Tor proposal
+  In the case for relays possessing Ed25519 identity keys (cf. Tor proposal
   #220), this is a 32-byte string representing the public Ed25519 identity key.
   For backwards and forwards compatibility with routers which do not possess
   Ed25519 identity keys, this is a 32-byte string created via the output of
@@ -180,7 +180,7 @@ Depends: prop#220 prop#249 prop#264
   assumed to imply the responder also lacks support for fragmented EXTEND2
   cells.  Alternatively, for initiators with a sufficiently late consensus
   method, the initiator MUST check that "proto" line in the responder's
-  descriptor (c.f. Tor proposal #264) advertises support for the "Relay"
+  descriptor (cf. Tor proposal #264) advertises support for the "Relay"
   subprotocol version 3 (see §5).
 
 
@@ -352,14 +352,14 @@ Depends: prop#220 prop#249 prop#264
   Because our proposal requires both the client and server to send more than
   the 505 bytes possible within a CREATE2 cell's HDATA section, it depends
   upon the implementation of a mechanism for allowing larger CREATE cells
-  (c.f. Tor proposal #249).
+  (cf. Tor proposal #249).
 
   We reserve the following handshake type for use in CREATE2V/CREATED2V and
   EXTEND2V/EXTENDED2V cells:
 
     0x0003            [NEWHOPE + X25519 HYBRID HANDSHAKE]
 
-  We introduce a new sub-protocol number, "Relay=3", (c.f. Tor proposal #264
+  We introduce a new sub-protocol number, "Relay=3", (cf. Tor proposal #264
   §5.3) to signify support this handshake, and hence for the CREATE2V and
   fragmented EXTEND2 cells which it requires.
 
@@ -564,10 +564,10 @@ Depends: prop#220 prop#249 prop#264
   not need any timing-attack protection.
 
 
-  poly_getnoise() first generates 4096 Bytes of uniformly random data. This can
+  poly_getnoise() first generates 4096 bytes of uniformly random data. This can
   be done by reading these bytes from the system's RNG; efficient
   implementations will typically only read a 32-byte seed from the system's RNG
-  and expand it through some fast PRNG (for example, ChaCha20 or AES-256 in CTR
+  and expand it through some fast PRG (for example, ChaCha20 or AES-256 in CTR
   mode). The output of the PRG is considered an array of 2048 16-bit integers
   r[0],...,r[2047]. The coefficients of the output polynomial are computed as
   HW(r[0])-HW(r[1]), HW(r[2])-HW(r[3]),...,HW(r[2046])-HW(r[2047]), where HW
@@ -579,7 +579,7 @@ Depends: prop#220 prop#249 prop#264
 
 
   poly_ntt(poly f): For a mathematical description of poly_ntt see the [0]; a
-  pseudocode description of a very naive inplace transformation of an input
+  pseudocode description of a very naive in-place transformation of an input
   polynomial f = f[0] + f[1]*X + f[2]*X^2 + ... + f[1023]*X^1023 is the
   following code (all arithmetic on coefficients performed modulo q):
 
