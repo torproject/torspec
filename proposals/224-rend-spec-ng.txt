@@ -1643,6 +1643,9 @@ References:
 [SRV-TP-REFS]:
         https://lists.torproject.org/pipermail/tor-dev/2016-April/010759.html
 
+[VANITY-REFS]:
+        https://github.com/Yawning/horse25519
+
 Appendix A. Signature scheme with key blinding [KEYBLIND]
 
   As described in [IMD:DIST] and [SUBCRED] above, we require a "key
@@ -1740,10 +1743,13 @@ Appendix C. Recommendations for searching for vanity .onions [VANITY]
 
         While pk does not satisfy X:
 
-            Add the number 1 to sk
-            Add the scalar B to pk
+            Add the number 8 to sk
+            Add the scalar 8*B to pk
 
         Return sk, pk.
+
+  We add 8 and 8*B, rather than 1 and B, so that sk is always a valid
+  Curve25519 private key, with the lowest 3 bits equal to 0.
 
   This algorithm is safe [source: djb, personal communication] [TODO:
   Make sure I understood correctly!] so long as only the final (sk,pk)
@@ -1752,6 +1758,9 @@ Appendix C. Recommendations for searching for vanity .onions [VANITY]
   To parallelize this algorithm, start with an independent (sk,pk) pair
   generated for each independent thread, and let each search proceed
   independently.
+
+  See [VANITY-REFS] for a reference implementation of this vanity .onion
+  search scheme.
 
 Appendix D. Numeric values reserved in this document
 
