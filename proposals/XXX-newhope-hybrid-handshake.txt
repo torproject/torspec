@@ -218,14 +218,6 @@ Depends: prop#220 prop#249 prop#264
     if AUTH == H(auth_input, T_MAC)
        return NTOR_KEY
 
-  Both parties check that none of the EXP() operations produced the point at
-  infinity. [NOTE: This is an adequate replacement for checking Y for group
-  membership, if the group is Curve25519.]
-
-  [XXX: This doesn't sound exactly right. You need the scalar tweaking of
-  X25519 for this to work and also, the point at infinity is obviously an
-  element of the group --isis, peter]
-
   Both parties now have a shared value for NTOR_KEY.  They expand this into
   the keys needed for the Tor relay protocol.
 
