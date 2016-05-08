@@ -118,7 +118,7 @@ Status: Draft
 
       * A public key agreement system "PK", providing
         PK_KEYGEN()->seckey, pubkey; PK_VALID(pubkey) -> {"OK", "BAD"};
-        and PK_HANDHAKE(seckey, pubkey)->output; where secret keys are
+        and PK_HANDSHAKE(seckey, pubkey)->output; where secret keys are
         of length PK_SECKEY_LEN bytes, public keys are of length
         PK_PUBKEY_LEN bytes, and the handshake produces outputs of
         length PK_OUTPUT_LEN bytes.
