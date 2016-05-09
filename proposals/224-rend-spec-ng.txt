@@ -684,10 +684,6 @@ Status: Draft
         hsdir_spread_store = an integer in range [1,128]
                              with default value 3.
 
-        hsdir_spread_accept = an integer in range [1,128]
-                             with default value 12.
-[XXX I think I obsoleted this spread_accept notion? -RD]
-
    To determine where a given hidden service descriptor will be stored
    in a given period, after the blinded public key for that period is
    derived, the uploading or downloading party calculate
@@ -1220,7 +1216,7 @@ Status: Draft
 
    Recognized status values are:
      [00 00] -- Success: cell relayed to hidden service host.
-     [00 01] -- Failure: service ID not recognzied
+     [00 01] -- Failure: service ID not recognized
      [00 02] -- Failure: key ID not recognized
      [00 03] -- Bad message format
 
