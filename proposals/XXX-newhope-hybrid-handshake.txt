@@ -358,7 +358,7 @@ Depends: prop#220 prop#249 prop#264
   There are no additional entries or changes required within either router
   descriptors or microdescriptors to support this handshake method, due to the
   NewHope keys being ephemeral and derived on-the-fly, and due to the NTor X25519
-  public keys already being in included within the "ntor-onion-key" entry.
+  public keys already being included within the "ntor-onion-key" entry.
 
   Add a "UseNewHopeKEX" configuration option and a corresponding consensus
   parameter to control whether clients prefer using this NewHope hybrid
@@ -594,7 +594,7 @@ Depends: prop#220 prop#249 prop#264
 
 
   poly_invntt(poly f): For a mathematical description of poly_invntt see the
-  [0]; a pseudocode description of a very naive inplace transformation of an
+  [0]; a pseudocode description of a very naive in-place transformation of an
   input polynomial f = f[0] + f[1]*X + f[2]*X^2 + ... + f[1023]*X^1023 is the
   following code (all arithmetic on coefficients performed modulo q):
 
@@ -702,8 +702,9 @@ Depends: prop#220 prop#249 prop#264
         r  = 1
       return (v0-v3,v1-v3,v2-v3,k+2*v3)
 
-  In this description, round() returns the closest integer and abs() returns the
-  absolute value.
+  In this description, round(x) is defined as ⌊x + 0.5⌋, where ⌊x⌋ rounds to
+  the largest integer that does not exceed x; abs() returns the absolute
+  value.
   Note that all computations involved in helprec operate on secret data and must
   be protected against timing attacks.
 
