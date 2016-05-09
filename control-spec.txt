@@ -1331,7 +1331,8 @@
   The syntax is:
     "ADD_ONION" SP KeyType ":" KeyBlob
             [SP "Flags=" Flag *("," Flag)]
-            1*(SP "Port=" VirtPort ["," Target]) CRLF
+            1*(SP "Port=" VirtPort ["," Target])
+            *(SP "ClientAuth=" ClientName [":" ClientBlob]) CRLF
 
     KeyType =
      "NEW"     / ; The server should generate a key of algorithm KeyBlob
@@ -1348,8 +1349,10 @@
     Flag =
      "DiscardPK" / ; The server should not include the newly generated
                      private key as part of the response.
-     "Detach"      ; Do not associate the newly created Onion Service
+     "Detach"    / ; Do not associate the newly created Onion Service
                      to the current control connection.
+     "BasicAuth"   ; Client authorization is required using the "basic"
+                     method.
 
     VirtPort = The virtual TCP Port for the Onion Service (As in the
                HiddenServicePort "VIRTPORT" argument).
@@ -1357,9 +1360,16 @@
     Target = The (optional) target for the given VirtPort (As in the
              optional HiddenServicePort "TARGET" argument).
 
+    ClientName = An identifier 1 to 16 characters long, using only
+                 characters in A-Za-z0-9+-_ (no spaces).
+
+    ClientBlob = Authorization data for the client, in an opaque format
+                 specific to the authorization method.
+
   The server reply format is:
     "250-ServiceID=" ServiceID CRLF
     ["250-PrivateKey=" KeyType ":" KeyBlob CRLF]
+    *("250-ClientAuth=" ClientName ":" ClientBlob CRLF)
     "250 OK" CRLF
 
     ServiceID = The Onion Service address without the trailing ".onion"
@@ -1376,6 +1386,13 @@
   not specified. (Note that if "DiscardPK" flag is specified, there is no
   way to recreate the generated keypair and the corresponding Onion
   Service at a later date).
+
+  If client authorization is enabled using the "BasicAuth" flag, the
+  service will not be accessible to clients without valid authorization
+  data (configured with the "HidServAuth" option).  The list of authorized
+  clients is specified with one or more "ClientAuth" parameters.  If
+  "ClientBlob" is not specified for a client, a new credential will be
+  randomly generated and returned.
 
   Once created the new Onion Service will remain active until either the
   Onion Service is removed via "DEL_ONION", the server terminates, or the
@@ -1405,7 +1422,14 @@
      S: 250-PrivateKey=RSA1024:[Blob Redacted]
      S: 250 OK
 
+     C: ADD_ONION NEW:BEST Flags=DiscardPK,BasicAuth Port=22
+        ClientAuth=alice:[Blob Redacted] ClientAuth=bob
+     S: 250-ServiceID=testonion1234567
+     S: 250-ClientAuth=bob:[Blob Redacted]
+     S: 250 OK
+
   [ADD_ONION was added in Tor 0.2.7.1-alpha.]
+  [ClientAuth was added in Tor 0.x.x.x.]
 
 3.28. DEL_ONION
 
