@@ -80,8 +80,8 @@ Status: Draft
      1. A sequence of two-digit hexadecimal values in square brackets,
         as in [AB AD 1D EA].
 
-     2. A string of characters enclosed in quotes, as in "Hello". These
-        characters in these string are encoded in their ascii
+     2. A string of characters enclosed in quotes, as in "Hello". The
+        characters in these strings are encoded in their ascii
         representations; strings are NOT nul-terminated unless
         explicitly described as NUL terminated.
 
@@ -118,7 +118,7 @@ Status: Draft
 
       * A public key agreement system "PK", providing
         PK_KEYGEN()->seckey, pubkey; PK_VALID(pubkey) -> {"OK", "BAD"};
-        and PK_HANDHAKE(seckey, pubkey)->output; where secret keys are
+        and PK_HANDSHAKE(seckey, pubkey)->output; where secret keys are
         of length PK_SECKEY_LEN bytes, public keys are of length
         PK_PUBKEY_LEN bytes, and the handshake produces outputs of
         length PK_OUTPUT_LEN bytes.
@@ -409,8 +409,8 @@ Status: Draft
    collaboratively generated random value. (See section 2.3 for a
    description of how to incorporate this value into the voting
    practice; generating the value is described in other proposals,
-   including [TODO: add a reference])  That value, combined with hidden service
-   directories' public identity keys, determines each HSDirs' position
+   including [SHAREDRANDOM-REFS].) That value, combined with hidden service
+   directories' public identity keys, determines each HSDir's position
    in the hash ring for descriptors made in that period.
 
    Each hidden service's descriptors are placed into the ring in
@@ -476,7 +476,7 @@ Status: Draft
 
    To avoid replays of an introduction request by an introduction point,
    a hidden service host must never accept the same request
-   twice. Earlier versions of the hidden service design used a
+   twice. Earlier versions of the hidden service design used an
    authenticated timestamp here, but including a view of the current
    time can create a problematic fingerprint. (See proposal 222 for more
    discussion.)
@@ -497,7 +497,7 @@ Status: Draft
         address according to [NAMING].
 
       Blinded signing key -- A keypair derived from the identity key,
-        used to sign descriptor signing keys. Changes periodically for
+        used to sign descriptor signing keys. It changes periodically for
         each service. Clients who know a 'credential' consisting of the
         service's public identity key and an optional secret can derive
         the public blinded identity key for a service.  This key is used
@@ -809,7 +809,7 @@ Status: Draft
 2.3. Publishing shared random values [PUB-SHAREDRANDOM]
 
    Our design for limiting the predictability of HSDir upload locations
-   relies on a shared random value that isn't predictable in advance or
+   relies on a shared random value (SRV) that isn't predictable in advance or
    too influenceable by an attacker. The authorities must run a protocol
    to generate such a value at least once per hsdir period. Here we
    describe how they publish these values; the procedure they use to
@@ -926,7 +926,7 @@ Status: Draft
    Before encryption, the plaintext must be padded to a multiple of ???
    bytes with NUL bytes. The plaintext must not be longer than ???
    bytes.  [TODO: how much? Should this be a parameter?  What values in
-   practice is needed to hide how many intro points we have, and how
+   practice are needed to hide how many intro points we have, and how
    many might be legacy ones? Note that Single Onion Services add extend
    intro points as well. ]
 
@@ -1005,7 +1005,7 @@ Status: Draft
    First, a hidden service host builds an anonymous circuit to a Tor
    node and registers that circuit as an introduction point.
 
-        [Between these steps, the hidden service publishes its
+        [After 'First' and before 'Second', the hidden service publishes its
         introduction points and associated keys, and the client fetches
         them as described in section [HSDIR] above.]
 
@@ -1021,7 +1021,7 @@ Status: Draft
 3.1.1. Extensible ESTABLISH_INTRO protocol. [EST_INTRO]
 
    When a hidden service is establishing a new introduction point, it
-   sends a ESTABLISH_INTRO cell with the following contents:
+   sends an ESTABLISH_INTRO cell with the following contents:
 
      AUTH_KEY_TYPE    [1 byte]
      AUTH_KEY_LEN     [1 byte]
@@ -1036,7 +1036,7 @@ Status: Draft
      SIG              [SIGLEN bytes]
 
    The AUTH_KEY_TYPE field indicates the type of the introduction point
-   authentication key and the type of the MAC to use in for
+   authentication key and the type of the MAC to use in
    HANDSHAKE_AUTH. Recognized types are:
 
        [00, 01] -- Reserved for legacy introduction cells; see
@@ -1499,7 +1499,7 @@ Status: Draft
    use on an existing circuit, the rendezvous point should reject it and
    destroy the circuit.
 
-   Upon receiving a ESTABLISH_RENDEZVOUS cell, the rendezvous point
+   Upon receiving an ESTABLISH_RENDEZVOUS cell, the rendezvous point
    associates the cookie with the circuit on which it was sent. It
    replies to the client with an empty RENDEZVOUS_ESTABLISHED cell to
    indicate success.  [TODO: make this extensible]
@@ -1767,3 +1767,4 @@ Appendix E. Reserved numbers
            public key. (Section 2.5)
 
   [XXXX list more]
+
