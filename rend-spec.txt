@@ -730,6 +730,11 @@
    (If the RP does not recognize the RC, it discards the cell and
    tears down the circuit.)
 
+   Rendezvous points running Tor version 0.2.9.1-alpha and later are
+   willing to pass on RENDEZVOUS2 cells so long as they contain at least
+   the 20 bytes of cookie. Prior to 0.2.9.1-alpha, the RP refused the
+   cell if it had a payload length different from 20+128+20.
+
    When Alice's OP receives a RELAY_COMMAND_RENDEZVOUS2 cell on a circuit which
    has sent a RELAY_COMMAND_ESTABLISH_RENDEZVOUS cell but which has not yet
    received a reply, it uses g^y and H(g^xy) to complete the handshake as in
