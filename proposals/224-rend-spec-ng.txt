@@ -626,9 +626,17 @@ Table of contents:
    leaving the hidden service's private key offline.
 
    The subcredential for a period is derived as:
-       H("subcredential" |
-         credential |
-         blinded-public-key).
+
+       subcredential = H("subcredential" | credential | blinded-public-key).
+
+   In the above formula, credential corresponds to:
+
+       credential = H(public-identity-key | authorization-key)
+
+   where public-identity-key is the public identity master key of the hidden
+   service, and authorization-key is an optional secret used for client
+   authorization. If no client authorization is specified, authorization-key is
+   left blank.
 
 2.2. Locating, uploading, and downloading hidden service descriptors
        [HASHRING]
@@ -949,7 +957,7 @@ Table of contents:
               descriptor even if the content of the descriptor hasn't changed.
               (So that we don't leak whether the intro point list etc. changed)
 
-       secret_input = blinded_public_key | subcredential | INT_4(revision_counter)
+       secret_input = blinded_public_key | subcredential | INT_8(revision_counter)
        keys = KDF(secret_input, salt, "hsdir-encrypted-data",
                   S_KEY_LEN + S_IV_LEN + MAC_KEY_LEN)
 
@@ -964,14 +972,10 @@ Table of contents:
        MAC        MAC of both above fields        [32 bytes]
 
    The encryption format is ENCRYPTED =
-               STREAM(SECRET_IV,SECRET_KEY) xor Plaintext
+               STREAM(SECRET_IV,SECRET_KEY) XOR Plaintext
 
-   Before encryption, the plaintext must be padded to a multiple of ???
-   bytes with NUL bytes. The plaintext must not be longer than ???
-   bytes.  [TODO: how much? Should this be a parameter?  What values in
-   practice are needed to hide how many intro points we have, and how
-   many might be legacy ones? Note that Single Onion Services add extend
-   intro points as well. ]
+   Before encryption, the plaintext must be padded to a multiple of 4096 bytes
+   with NUL bytes.
 
    The plaintext format is:
 
@@ -1007,7 +1011,7 @@ Table of contents:
 
           [Exactly once per introduction point]
 
-          Base-64 encoded introduction point authentication key that was
+          Base64 encoded introduction point authentication key that was
           used to establish introduction point circuit, cross-certifying
           the blinded public key.  This uses the certificate format of
           proposal 220 with type [09].  The signing-key extension is
@@ -1460,7 +1464,7 @@ Table of contents:
 
    Hidden services may restrict access only to authorized users.  One
    mechanism to do so is the credential mechanism, where only users who
-   know the credential for a hidden service may connect at all. For more
+   know the credentialo for a hidden service may connect at all. For more
    fine-grained conntrol, a hidden service can be configured with
    password-based or public-key-based authentication.
 
