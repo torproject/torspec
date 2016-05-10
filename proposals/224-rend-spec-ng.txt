@@ -4,6 +4,60 @@ Author: Nick Mathewson
 Created: 2013-11-29
 Status: Draft
 
+Table of contents:
+
+	0. Hidden services: overview and preliminaries.
+    	0.1. Improvements over previous versions.
+    	0.2. Notation and vocabulary
+    	0.3. Cryptographic building blocks
+    	0.4. Protocol building blocks [BUILDING-BLOCKS]
+    	0.5. Assigned relay cell types
+    	0.5. Acknowledgments
+	1. Protocol overview
+    	1.1. View from 10,000 feet
+    	1.2. In more detail: naming hidden services [NAMING]
+    	1.3. In more detail: Access control [IMD:AC]
+    	1.4. In more detail: Distributing hidden service descriptors. [IMD:DIST]
+    	1.5. In more detail: Scaling to multiple hosts
+    	1.6. In more detail: Backward compatibility with older hidden service
+    	1.7. In more detail: Keeping crypto keys offline
+    	1.8. In more detail: Encryption Keys And Replay Resistance
+    	1.9. In more detail: A menagerie of keys
+	2. Generating and publishing hidden service descriptors [HSDIR]
+    	2.1. Deriving blinded keys and subcredentials [SUBCRED]
+    	2.2. Locating, uploading, and downloading hidden service descriptors
+        	2.2.1. Dividing time into periods [TIME-PERIODS]
+        	2.2.2. Overlapping time periods to avoid thundering herds [TIME-OVERLAP]
+        	2.2.3. Where to publish a service descriptor
+        	2.2.4. Using time periods and SRVs to fetch/upload HS descriptors
+        	2.2.5. URLs for anonymous uploading and downloading
+    	2.3. Publishing shared random values [PUB-SHAREDRANDOM]
+        	2.3.1. Client behavior in the absense of shared random values
+        	2.3.2. Hidden services and changing shared random values
+        	2.4. Hidden service descriptors: outer wrapper [DESC-OUTER]
+    	2.5. Hidden service descriptors: encryption format [ENCRYPTED-DATA]
+	3. The introduction protocol
+    	3.1. Registering an introduction point [REG_INTRO_POINT]
+        	3.1.1. Extensible ESTABLISH_INTRO protocol. [EST_INTRO]
+        	3.1.2. Registering an introduction point on a legacy Tor node [LEGACY_EST_INTRO]
+        	3.1.3. Acknowledging establishment of introduction point [INTRO_ESTABLISHED]
+    	3.2. Sending an INTRODUCE1 cell to the introduction point. [SEND_INTRO1]
+        	3.2.1. INTRODUCE1 cell format [FMT_INTRO1]
+        	3.2.2. Legacy formats [LEGACY-INTRODUCE1]
+        	3.2.3. INTRODUCE_ACK cell format. [INTRO_ACK]
+    	3.3. Processing an INTRODUCE2 cell at the hidden service. [PROCESS_INTRO2]
+        	3.3.1. Introduction handshake encryption requirements [INTRO-HANDSHAKE-REQS]
+        	3.3.2. Example encryption handshake: ntor with extra data [NTOR-WITH-EXTRA-DATA]
+    	3.4. Authentication during the introduction phase. [INTRO-AUTH]
+        	3.4.1. Password-based authentication.
+        	3.4.2. Ed25519-based authentication.
+	4. The rendezvous protocol
+    	4.1. Establishing a rendezvous point [EST_REND_POINT]
+    	4.2. Joining to a rendezvous point [JOIN_REND]
+        	4.2.1. Key expansion
+    	4.3. Using legacy hosts as rendezvous points
+	5. Encrypting data between client and host
+	6. Open Questions:
 
 -1. Draft notes
 
