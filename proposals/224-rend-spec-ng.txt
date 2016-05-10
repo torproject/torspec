@@ -1067,7 +1067,7 @@ Table of contents:
    sends an ESTABLISH_INTRO cell with the following contents:
 
      AUTH_KEY_TYPE    [1 byte]
-     AUTH_KEY_LEN     [1 byte]
+     AUTH_KEY_LEN     [2 bytes]
      AUTH_KEY         [AUTH_KEY_LEN bytes]
      N_EXTENSIONS     [1 byte]
      N_EXTENSIONS times:
@@ -1075,8 +1075,8 @@ Table of contents:
         EXT_FIELD_LEN  [1 byte]
         EXT_FIELD      [EXT_FIELD_LEN bytes]
      HANDSHAKE_AUTH   [MAC_LEN bytes]
-     SIGLEN           [1 byte]
-     SIG              [SIGLEN bytes]
+     SIG_LEN          [2 bytes]
+     SIG              [SIG_LEN bytes]
 
    The AUTH_KEY_TYPE field indicates the type of the introduction point
    authentication key and the type of the MAC to use in
@@ -1100,7 +1100,7 @@ Table of contents:
    section 5.2, "Setting circuit keys". It prevents replays of
    ESTABLISH_INTRO cells.
 
-   SIGLEN is the length of the signature.
+   SIG_LEN is the length of the signature.
 
    SIG is a signature, using AUTH_KEY, of all contents of the cell, up
    to but not including SIG. These contents are prefixed with the string
@@ -1122,15 +1122,6 @@ Table of contents:
 
    Otherwise, the node must associate the key with the circuit, for use
    later in INTRODUCE1 cells.
-
-   [TODO: The above will work fine with what we do today, but it will do
-   quite badly if we ever freak out and want to go back to RSA2048 or
-   bigger.  Do we care?]
-   [Do we lose much by making AUTH_KEY_LEN and SIGLEN 2 bytes each? Or,
-    even crazier, do we lose much by making those two variable sizes,
-    defined by whichever value of AUTH_KEY_TYPE you pick? I guess we
-    don't know how big it is if we don't recognize the key type, but we
-    are already planning to refuse the intro request then. -RD]
 
 3.1.2. Registering an introduction point on a legacy Tor node [LEGACY_EST_INTRO]
 
@@ -1203,7 +1194,7 @@ Table of contents:
 
      LEGACY_KEY_ID   [20 bytes]
      AUTH_KEY_TYPE   [1 byte]
-     AUTH_KEY_LEN    [1 byte]
+     AUTH_KEY_LEN    [2 bytes]
      AUTH_KEY        [AUTH_KEY_LEN bytes]
      N_EXTENSIONS    [1 byte]
      N_EXTENSIONS times:
@@ -1294,7 +1285,7 @@ Table of contents:
           EXT_FIELD_LEN                          [1 byte]
           EXT_FIELD                              [EXT_FIELD_LEN bytes]
       ONION_KEY_TYPE                             [1 bytes]
-      ONION_KEY_LEN                              [1 bytes]
+      ONION_KEY_LEN                              [2 bytes]
       ONION_KEY                                  [ONION_KEY_LEN bytes]
       NSPEC      (Number of link specifiers)     [1 byte]
       NSPEC times:
