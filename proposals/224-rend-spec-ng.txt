@@ -27,8 +27,8 @@ Table of contents:
         2.1. Deriving blinded keys and subcredentials [SUBCRED]
         2.2. Locating, uploading, and downloading hidden service descriptors
             2.2.1. Dividing time into periods [TIME-PERIODS]
-            2.2.2. Overlapping time periods to avoid thundering herds [TIME-OVERLAP]
-            2.2.3. Where to publish a service descriptor
+            2.2.2. When to publish a hidden service descriptor [WHEN-HSDESC]
+            2.2.3. Where to publish a hidden service descriptor [WHERE-HSDESC]
             2.2.4. Using time periods and SRVs to fetch/upload HS descriptors
             2.2.5. URLs for anonymous uploading and downloading
         2.3. Publishing shared random values [PUB-SHAREDRANDOM]
@@ -688,44 +688,50 @@ Table of contents:
    after the epoch at 2016-04-12 12:00 UTC, and ended at (16904+1)*1500*60 +
    (12*60*60) seconds after the epoch at 2016-04-13 12:00 UTC.
 
-2.2.2. Overlapping time periods to avoid thundering herds [TIME-OVERLAP]
+2.2.2. When to publish a hidden service descriptor [WHEN-HSDESC]
 
-   If every hidden service host were to generate a new set of keys and
-   upload a new descriptor at exactly the start of each time period, the
-   directories would be overwhelmed by every host uploading at the same
-   time. Instead, each public key becomes valid at its new location at a
-   deterministic time somewhat _before_ the period begins, depending on
-   the public key and the period.
+   Hidden services periodically publish their descriptor to the responsible HSDirs.
+   The set of responsible HSDirs is determined as specified in [WHERE-HSDESC].
 
-   The time at which a key might first become valid is determined by the
-   consensus parameter "hsdir-overlap-begins", which is an integer in range
-   [1,100] with default value 75. This parameter denotes a percentage of the
-   interval for which no overlap occurs.  So for the default interval (24
-   hours) and default overlap-begins value (75%), new keys do not become valid
-   for the first 18 hours of the interval. Instead, keys become valid at a
-   random point in the last 6 hours of the 24 hours interval.
+   Specifically, everytime a hidden service publishes its descriptor, it also
+   sets up a timer for a random time between 60 minutes and 120 minutes in the
+   future. When the timer triggers, the hidden service needs to publish its
+   descriptor again to the responsible HSDirs for that time period.
+   [TODO: Control republish period using a consensus parameter?]
 
-   The time at which a key from the next interval becomes valid is
-   determined by taking the first two bytes of
+2.2.2.1. Overlapping descriptors
 
-     OFFSET = H("interval-offset" | KEY | INT_8(NEXT_PERIOD_NUM))
+   Hidden services need to upload their descriptors to the HSDirs _before_ the
+   beginning of each time period, so that they are readily available for
+   clients to fetch them. However, if every hidden service were to upload a new
+   descriptor at exactly the start of each time period, directories would get
+   overwhelmed by every host uploading at the same time.
 
-   as a big-endian integer, dividing by 65536, and treating that as a
-   fraction of the overlap interval.
+   To avoid this thundering herd problem, hidden services upload descriptors
+   for the upcoming time period at a random time _before_ the time period starts.
 
-   For example, if the period is 1440 minutes long, and overlap interval
-   is 360 minutes long, and OFFSET begins with [90 50], then the next
-   key becomes valid at 1080 + 360 * (0x9050 / 65536) minutes, or
-   approximately 21 hours and 38 minutes after the beginning of the
-   period.
+   For the above "descriptor overlap" system to work, fresh shared random
+   values must be available multiple hours *before* the time period changes, so
+   that hidden services have enough time to publish their overlap descriptors
+   to the future set of responsible HSDirs. In the current system, fresh shared
+   random values get published at 00:00UTC every day, whereas the time period
+   changes at 12:00UTC, giving 12 hours for hidden services to fetch new
+   consensuses and upload overlap descriptors.
 
-   New shared random values MUST be published *before* the overlap interval
-   starts so that hidden services have access to the new shared random values
-   in time and can calculate the upcoming set of responsible HSDirs. In our
-   system, new shared random values get published at 00:00UTC every day,
-   whereas the overlap period starts at 06:00 and finishes at 12:00UTC.
+   Specifically, when a hidden service fetches a consensus with "valid-after"
+   between 00:00UTC and 12:00UTC, it goes into "descriptor overlap"
+   mode. During "descriptor overlap" mode, the hidden service uploads its
+   descriptor to the HSDirs of the current time period (using the previous SRV
+   from the consensus) _and_ it also uploads its descriptors for the upcoming
+   time period (using the current SRV from the consensus).
 
-2.2.3. Where to publish a service descriptor
+   The above mechanism ensures that when the time period starts at 12:00UTC,
+   the hidden service will already have uploaded its descriptors to the
+   responsible HSDirs for that time period.
+
+   [TODO: What to do when we run multiple hidden services in a single host?]
+
+2.2.3. Where to publish a hidden service descriptor [WHERE-HSDESC]
 
    The following consensus parameters control where a hidden service
    descriptor is stored;
@@ -784,11 +790,6 @@ Table of contents:
    Again, nodes from lower-numbered replicas are disregarded when
    choosing the spread for a replica.
 
-   Hidden services MUST periodically re-publish their descriptor to the
-   responsible HSDirs. Specifically, hidden services re-publish their
-   descriptors every 1 hour (also controlled via the 'hs_rend_post_period'
-   consensus parameter).
-
    HSDirs MUST retain hidden service descriptors for 33 hours before expiring
    them. That's 24 hours for the time period duration, plus 6 hours for the
    maximum overlap period span, plus 3 hours for the maximum acceptable client
@@ -816,35 +817,29 @@ Table of contents:
       | 00:00      12:00       00:00       12:00       00:00       12:00 |
       | SRV#1      TP#1        SRV#2       TP#2        SRV#3       TP#3  |
       |                                                                  |
-      |   $         |-----------$-----======|-----------$-----======|    |
-      |                            overlap12               overlap23     |
+      |  $==========|-----------$===========|-----------$===========|    |
+      |                                                                  |
       |                                                                  |
       +------------------------------------------------------------------+
 
-                                      Legend:    [TP#1 = Time Period #1]
-                                                 [SRV#1 = Shared Random Value #1]
-
-   First of all, during overlap periods, hidden services always use the
-   _current_ SRV for publishing overlap descriptors. Clients MUST ignore the
-   overlap period and instead always fetch the current descriptor as described
-   below.
-
-   The rest of the time, hidden services and clients need to choose the right SRV
-   to use based on the current time period to upload/fetch the current descriptor.
+                                      Legend: [TP#1 = Time Period #1]
+                                              [SRV#1 = Shared Random Value #1]
+                                              ["=" denotes descriptor overlap period]
 
    Looking at the diagram above, SRV#1 gets published 12 hours before TP#1
    starts and TP#1 lasts 24 hours. By defining the lifetime of SRV#1 to be 36
    hours, we can pair SRV#1 with TP#1.
 
-   Hence, when clients and hidden services first see an SRV for the first time,
-   they calculate its expiry date (using a 36 hour lifetime) and use that SRV
-   for uploading/fetching descriptors till it expires. When that SRV expires,
-   they switch to the next SRV in the consensus.
+   Hence, when clients and hidden services see an SRV for the first time, they
+   calculate its expiry date (using a 36 hour lifetime) and use that SRV for
+   uploading/fetching descriptors until it expires. When that SRV expires, they
+   switch to the next SRV in the consensus.
 
-   During overlap periods, hidden services upload both normal descriptors and
-   overlap descriptors as described above.
+   Hidden services in "descriptor overlap" mode _always_ use the current SRV
+   for publishing overlap descriptors. Clients on the other hand ignore the
+   overlap period and always fetch the descriptor of the current time period.
 
-   For more examples and discussion on this technique, please see [SRV-TP-REFS].
+   For examples and discussion on this technique, please see [SRV-TP-REFS].
 
 2.2.5. URLs for anonymous uploading and downloading
 
