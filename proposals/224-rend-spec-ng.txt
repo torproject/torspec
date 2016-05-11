@@ -30,7 +30,8 @@ Table of contents:
             2.2.2. When to publish a hidden service descriptor [WHEN-HSDESC]
             2.2.3. Where to publish a hidden service descriptor [WHERE-HSDESC]
             2.2.4. Using time periods and SRVs to fetch/upload HS descriptors
-            2.2.5. URLs for anonymous uploading and downloading
+            2.2.5. Expiring hidden service descriptors [EXPIRE-DESC]
+            2.2.6. URLs for anonymous uploading and downloading
         2.3. Publishing shared random values [PUB-SHAREDRANDOM]
             2.3.1. Client behavior in the absense of shared random values
             2.3.2. Hidden services and changing shared random values
@@ -790,15 +791,6 @@ Table of contents:
    Again, nodes from lower-numbered replicas are disregarded when
    choosing the spread for a replica.
 
-   HSDirs MUST retain hidden service descriptors for 33 hours before expiring
-   them. That's 24 hours for the time period duration, plus 6 hours for the
-   maximum overlap period span, plus 3 hours for the maximum acceptable client
-   clock skew.
-
-   Hidden services should keep their old introduction circuits open for at
-   least 3 hours after the descriptor expiration, so that clients with skewed
-   clocks can still visit them through outdated descriptors.
-
 2.2.4. Using time periods and SRVs to fetch/upload HS descriptors
 
    Hidden services and clients need to make correct use of time periods and
@@ -841,7 +833,18 @@ Table of contents:
 
    For examples and discussion on this technique, please see [SRV-TP-REFS].
 
-2.2.5. URLs for anonymous uploading and downloading
+2.2.5. Expiring hidden service descriptors [EXPIRE-DESC]
+
+   Hidden services set their descriptor's "descriptor-lifetime" field to 180
+   minutes (3 hours). Hidden services ensure that their descriptor will remain
+   valid in the HSDir caches, by republishing their descriptors periodically as
+   specified in [WHEN-HSDESC].
+
+   Hidden services MUST also keep their introduction circuits alive for as long
+   as descriptors including those intro points are valid (even if that's after
+   the time period has changed).
+
+2.2.6. URLs for anonymous uploading and downloading
 
    Hidden service descriptors conforming to this specification are
    uploaded with an HTTP POST request to the URL
@@ -903,6 +906,15 @@ Table of contents:
 
        The version-number contains a positive integer indicating the version
        of the descriptor. Current version is "3".
+
+     "descriptor-lifetime" SP LifetimeMinutes NL
+
+       [Exactly once]
+
+       The lifetime of a descriptor in minutes. An HSDir SHOULD expire the
+       hidden service descriptor at least LifetimeMinutes after it was uploaded.
+
+       The LifetimeMinutes field can take values between 30 and 3000 (50 hours).
 
     "descriptor-signing-key-cert" NL certificate NL
 
