@@ -833,6 +833,11 @@
       where the first integer is the number of bytes written, and the second
       is the number of requests answered.
 
+      [This feature was added in Tor 0.2.2.1-alpha, and removed in
+       Tor 0.2.9.1-alpha. Even when it existed, it only provided
+       useful output when the Tor client was built with either the
+       INSTRUMENT_DOWNLOADS or RUNNING_DOXYGEN compile-time options.]
+
     "bw-event-cache"
       A space-separated summary of recent BW events in chronological order
       from oldest to newest.  Each event is represented by a comma-separated
