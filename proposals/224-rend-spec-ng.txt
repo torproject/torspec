@@ -6,58 +6,58 @@ Status: Draft
 
 Table of contents:
 
-	0. Hidden services: overview and preliminaries.
-    	0.1. Improvements over previous versions.
-    	0.2. Notation and vocabulary
-    	0.3. Cryptographic building blocks
-    	0.4. Protocol building blocks [BUILDING-BLOCKS]
-    	0.5. Assigned relay cell types
-    	0.5. Acknowledgments
-	1. Protocol overview
-    	1.1. View from 10,000 feet
-    	1.2. In more detail: naming hidden services [NAMING]
-    	1.3. In more detail: Access control [IMD:AC]
-    	1.4. In more detail: Distributing hidden service descriptors. [IMD:DIST]
-    	1.5. In more detail: Scaling to multiple hosts
-    	1.6. In more detail: Backward compatibility with older hidden service
-    	1.7. In more detail: Keeping crypto keys offline
-    	1.8. In more detail: Encryption Keys And Replay Resistance
-    	1.9. In more detail: A menagerie of keys
-	2. Generating and publishing hidden service descriptors [HSDIR]
-    	2.1. Deriving blinded keys and subcredentials [SUBCRED]
-    	2.2. Locating, uploading, and downloading hidden service descriptors
-        	2.2.1. Dividing time into periods [TIME-PERIODS]
-        	2.2.2. Overlapping time periods to avoid thundering herds [TIME-OVERLAP]
-        	2.2.3. Where to publish a service descriptor
-        	2.2.4. Using time periods and SRVs to fetch/upload HS descriptors
-        	2.2.5. URLs for anonymous uploading and downloading
-    	2.3. Publishing shared random values [PUB-SHAREDRANDOM]
-        	2.3.1. Client behavior in the absense of shared random values
-        	2.3.2. Hidden services and changing shared random values
-        	2.4. Hidden service descriptors: outer wrapper [DESC-OUTER]
-    	2.5. Hidden service descriptors: encryption format [ENCRYPTED-DATA]
-	3. The introduction protocol
-    	3.1. Registering an introduction point [REG_INTRO_POINT]
-        	3.1.1. Extensible ESTABLISH_INTRO protocol. [EST_INTRO]
-        	3.1.2. Registering an introduction point on a legacy Tor node [LEGACY_EST_INTRO]
-        	3.1.3. Acknowledging establishment of introduction point [INTRO_ESTABLISHED]
-    	3.2. Sending an INTRODUCE1 cell to the introduction point. [SEND_INTRO1]
-        	3.2.1. INTRODUCE1 cell format [FMT_INTRO1]
-        	3.2.2. Legacy formats [LEGACY-INTRODUCE1]
-        	3.2.3. INTRODUCE_ACK cell format. [INTRO_ACK]
-    	3.3. Processing an INTRODUCE2 cell at the hidden service. [PROCESS_INTRO2]
-        	3.3.1. Introduction handshake encryption requirements [INTRO-HANDSHAKE-REQS]
-        	3.3.2. Example encryption handshake: ntor with extra data [NTOR-WITH-EXTRA-DATA]
-    	3.4. Authentication during the introduction phase. [INTRO-AUTH]
-        	3.4.1. Password-based authentication.
-        	3.4.2. Ed25519-based authentication.
-	4. The rendezvous protocol
-    	4.1. Establishing a rendezvous point [EST_REND_POINT]
-    	4.2. Joining to a rendezvous point [JOIN_REND]
-        	4.2.1. Key expansion
-    	4.3. Using legacy hosts as rendezvous points
-	5. Encrypting data between client and host
-	6. Open Questions:
+    0. Hidden services: overview and preliminaries.
+        0.1. Improvements over previous versions.
+        0.2. Notation and vocabulary
+        0.3. Cryptographic building blocks
+        0.4. Protocol building blocks [BUILDING-BLOCKS]
+        0.5. Assigned relay cell types
+        0.5. Acknowledgments
+    1. Protocol overview
+        1.1. View from 10,000 feet
+        1.2. In more detail: naming hidden services [NAMING]
+        1.3. In more detail: Access control [IMD:AC]
+        1.4. In more detail: Distributing hidden service descriptors. [IMD:DIST]
+        1.5. In more detail: Scaling to multiple hosts
+        1.6. In more detail: Backward compatibility with older hidden service
+        1.7. In more detail: Keeping crypto keys offline
+        1.8. In more detail: Encryption Keys And Replay Resistance
+        1.9. In more detail: A menagerie of keys
+    2. Generating and publishing hidden service descriptors [HSDIR]
+        2.1. Deriving blinded keys and subcredentials [SUBCRED]
+        2.2. Locating, uploading, and downloading hidden service descriptors
+            2.2.1. Dividing time into periods [TIME-PERIODS]
+            2.2.2. Overlapping time periods to avoid thundering herds [TIME-OVERLAP]
+            2.2.3. Where to publish a service descriptor
+            2.2.4. Using time periods and SRVs to fetch/upload HS descriptors
+            2.2.5. URLs for anonymous uploading and downloading
+        2.3. Publishing shared random values [PUB-SHAREDRANDOM]
+            2.3.1. Client behavior in the absense of shared random values
+            2.3.2. Hidden services and changing shared random values
+            2.4. Hidden service descriptors: outer wrapper [DESC-OUTER]
+        2.5. Hidden service descriptors: encryption format [ENCRYPTED-DATA]
+    3. The introduction protocol
+        3.1. Registering an introduction point [REG_INTRO_POINT]
+            3.1.1. Extensible ESTABLISH_INTRO protocol. [EST_INTRO]
+            3.1.2. Registering an introduction point on a legacy Tor node [LEGACY_EST_INTRO]
+            3.1.3. Acknowledging establishment of introduction point [INTRO_ESTABLISHED]
+        3.2. Sending an INTRODUCE1 cell to the introduction point. [SEND_INTRO1]
+            3.2.1. INTRODUCE1 cell format [FMT_INTRO1]
+            3.2.2. Legacy formats [LEGACY-INTRODUCE1]
+            3.2.3. INTRODUCE_ACK cell format. [INTRO_ACK]
+        3.3. Processing an INTRODUCE2 cell at the hidden service. [PROCESS_INTRO2]
+            3.3.1. Introduction handshake encryption requirements [INTRO-HANDSHAKE-REQS]
+            3.3.2. Example encryption handshake: ntor with extra data [NTOR-WITH-EXTRA-DATA]
+        3.4. Authentication during the introduction phase. [INTRO-AUTH]
+            3.4.1. Password-based authentication.
+            3.4.2. Ed25519-based authentication.
+    4. The rendezvous protocol
+        4.1. Establishing a rendezvous point [EST_REND_POINT]
+        4.2. Joining to a rendezvous point [JOIN_REND]
+            4.2.1. Key expansion
+        4.3. Using legacy hosts as rendezvous points
+    5. Encrypting data between client and host
+    6. Open Questions:
 
 -1. Draft notes
 
@@ -1018,20 +1018,20 @@ Table of contents:
           is included in the mandatory signing-key extension.  The certificate
           type must be [09].
 
-        "enc-key" SP "ntor" SP enc-public-key NL
+        Encryption key is specified as follow:
 
-          [Exactly one enc-key per introduction point]
+        [Exactly once enc-key per introduction point]
 
-          The enc-public-key is a base64 encoded curve25519 public key used to
-          encrypt the introduction request to service.
+           "enc-key" SP "ntor" SP key NL
 
-        "enc-key" SP "legacy" NL key NL
+             The key is a base64 encoded curve25519 public key used to encrypt
+             the introduction request to service.
 
-          [Exactly one enc-key per introduction point]
+           "enc-key" SP "legacy" NL key NL
 
-          Base64 encoded RSA key, wrapped in "----BEGIN RSA PUBLIC
-          KEY-----" armor, for use with a legacy introduction point as
-          described in [LEGACY_EST_INTRO] and [LEGACY-INTRODUCE1] below.
+             Base64 encoded RSA key, wrapped in "----BEGIN RSA PUBLIC
+             KEY-----" armor, for use with a legacy introduction point as
+             described in [LEGACY_EST_INTRO] and [LEGACY-INTRODUCE1] below.
 
         "enc-key-certification" NL certificate NL
 
@@ -1041,11 +1041,11 @@ Table of contents:
           The format of this certificate depends on the type of enc-key.
 
           For "ntor" keys, certificate is a proposal 220 certificate in
-          "-----BEGIN ED25519 CERT-----" armor, cross-certifying the descriptor
-          signing key with the ed25519 equivalent of the curve25519 public key
-          from "enc-key" derived using the process in proposal 228 appendix A.
-          The certificate type must be [10], and the signing-key extension is
-          mandatory.
+          "-----BEGIN ED25519 CERT-----" armor, cross-certifying the
+          descriptor signing key with the ed25519 equivalent of the curve25519
+          public key from "enc-key" derived using the process in proposal 228
+          appendix A. The certificate type must be [10], and the signing-key
+          extension is mandatory.
 
           For "legacy" keys, certificate is an RSA signature wrapped in
           "-----BEGIN SIGNATURE-----" of the digest:
@@ -1201,9 +1201,13 @@ Table of contents:
    the client, either informing it that its request has been delivered,
    or that its request will not succeed.
 
+   [TODO: specify what tor should do when receiving a malformed cell. Drop it?
+          Kill circuit? This goes for all possible cells.]
+
 3.2.1. INTRODUCE1 cell format [FMT_INTRO1]
 
-   An INTRODUCE1 cell has the following contents:
+   When a client is connecting to an introduction point, INTRODUCE1 cells
+   should be of the form:
 
      LEGACY_KEY_ID   [20 bytes]
      AUTH_KEY_TYPE   [1 byte]
@@ -1220,7 +1224,7 @@ Table of contents:
    INTRODUCE1 cells. In new style INTRODUCE1 cells, LEGACY_KEY_ID is 20 zero
    bytes. Upon receiving an INTRODUCE1 cell, the introduction point checks the
    LEGACY_KEY_ID field. If LEGACY_KEY_ID is non-zero, the INTRODUCE1 cell
-   should be handled as specified in rend-spec.txt.
+   should be handled as specified in [LEGACY-INTRODUCE1].
 
    AUTH_KEY_TYPE is defined as in [EST_INTRO]. Currently, the only value of
    AUTH_KEY_TYPE for this cell is an Ed25519 public key [02].
@@ -1233,10 +1237,9 @@ Table of contents:
 
 3.2.2. Legacy formats [LEGACY-INTRODUCE1]
 
-   When a client is using a legacy introduction point, INTRODUCE1 cells should
-   be of the form:
+   For legacy introduction points, INTRODUCE1 cells should be of the form:
 
-     LEGACY_KEYID_HASH    [20 bytes]
+     LEGACY_KEY_ID        [20 bytes]
      N_EXTENSIONS         [1 byte]
      N_EXTENSIONS times:
        EXT_FIELD_TYPE     [1 byte]
@@ -1244,7 +1247,7 @@ Table of contents:
        EXT_FIELD          [EXT_FIELD_LEN bytes]
      ENCRYPTED            [Up to end of relay payload]
 
-   Here, LEGACY_KEYID_HASH is the hash of the introduction point legacy
+   Here, LEGACY_KEY_ID is the hash of the introduction point legacy
    encryption key that was included in the hidden service descriptor.
 
    Because of limitations in older versions of Tor, the relay payload size for
@@ -1271,7 +1274,7 @@ Table of contents:
 3.3. Processing an INTRODUCE2 cell at the hidden service. [PROCESS_INTRO2]
 
    Upon receiving an INTRODUCE2 cell, the hidden service host checks whether
-   the AUTH_KEY or LEGACY_KEYID_HASH field matches the keys for this
+   the AUTH_KEY or LEGACY_KEY_ID field matches the keys for this
    introduction circuit.
 
    The service host then checks whether it has received a cell with
@@ -1473,7 +1476,7 @@ Table of contents:
 
    Hidden services may restrict access only to authorized users.  One
    mechanism to do so is the credential mechanism, where only users who
-   know the credentialo for a hidden service may connect at all. For more
+   know the credential for a hidden service may connect at all. For more
    fine-grained conntrol, a hidden service can be configured with
    password-based or public-key-based authentication.
 
