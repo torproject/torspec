@@ -423,14 +423,15 @@ Supersedes: 225
    seen from the other authorities. To do so, it includes the following in its
    votes:
 
-      "shared-rand-commit" SP ALGNAME SP IDENTITY SP COMMIT [SP REVEAL] NL
+      "shared-rand-commit" SP VERSION SP ALGNAME SP IDENTITY SP COMMIT [SP REVEAL] NL
 
-   where IDENTITY is the authority's SHA1 identity fingerprint and COMMIT is the
-   encoded commit [COMMITREVEAL].  Authorities during the reveal phase can also
-   optionally include an encoded reveal value REVEAL.  There MUST be only one
-   line per authority else the vote is considered invalid. Finally, the ALGNAME
-   is the hash algorithm that should be used to compute COMMIT and REVEAL which
-   is "sha3-256" for version 1.
+   where VERSION is the version of the protocol the commit was created with.
+   IDENTITY is the authority's SHA1 identity fingerprint and COMMIT is the
+   encoded commit [COMMITREVEAL].  Authorities during the reveal phase can
+   also optionally include an encoded reveal value REVEAL.  There MUST be only
+   one line per authority else the vote is considered invalid. Finally, the
+   ALGNAME is the hash algorithm that should be used to compute COMMIT and
+   REVEAL which is "sha3-256" for version 1.
 
 4.1.5. Shared Random Value [SRVOTE]
 
@@ -481,7 +482,7 @@ Supersedes: 225
    The following details the commitment and reveal section. They are encoded
    the same as in the vote. This makes it easier for implementation purposes.
 
-     "Commit" SP algname SP identity SP commit [SP reveal] NL
+     "Commit" SP version SP algname SP identity SP commit [SP reveal] NL
 
         [Exactly once per authority]
 
