@@ -1429,7 +1429,7 @@
      S: 250 OK
 
   [ADD_ONION was added in Tor 0.2.7.1-alpha.]
-  [ClientAuth was added in Tor 0.x.x.x.]
+  [ClientAuth was added in Tor 0.2.9.1-alpha.]
 
 3.28. DEL_ONION
 
