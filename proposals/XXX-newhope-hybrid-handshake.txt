@@ -1,5 +1,5 @@
 Filename: XXX-newhope-hybrid-handshake.txt
-Title: Post-Quantum Secure Hybrid Handshake Based on NewHope
+Title: RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope
 Author: Isis Lovecruft, Peter Schwabe
 Created: 16 Apr 2016
 Updated: 4 May 2016
@@ -7,6 +7,9 @@ Status: Draft
 Depends: prop#220 prop#249 prop#264
 
 §0. Introduction
+
+  RebelAlliance is a post-quantum secure hybrid handshake, comprised of an
+  alliance between the X25519 and NewHope key exchanges.
 
   NewHope is a post-quantum-secure lattice-based key-exchange protocol based
   on the ring-learning-with-errors (Ring-LWE) problem.  We propose a hybrid
