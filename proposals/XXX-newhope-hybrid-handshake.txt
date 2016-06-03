@@ -138,7 +138,7 @@ Depends: prop#220 prop#249 prop#264
  |                                                                                      |
  | NTOR_KEY    := NTOR_SHAREDA(x, X, Y, Z, ID, AUTH)                                    |
  | NEWHOPE_KEY := NEWHOPE_SHAREDA(M, a)                                                 |
- | sk := SHAKE-256(NTOR_KEY, NEWHOPE_KEY)                                               |
+ | sk := SHAKE-256(NTOR_KEY || NEWHOPE_KEY)                                             |
  |                                                                                      |
  ========================================================================================
 
