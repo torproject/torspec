@@ -1671,10 +1671,11 @@
         Denotes that the directory authority supports and can participate in the
         shared random protocol.
 
-    "shared-rand-commit" SP AlgName SP Identity SP Commit [SP Reveal] NL
+    "shared-rand-commit" SP Version SP AlgName SP Identity SP Commit [SP Reveal] NL
 
         [Any number for votes; does not occur in consensuses.]
 
+        Version ::= An integer greater or equal to 0.
         AlgName ::= 1*(ALPHA / DIGIT / "_" / "-")
         Identity ::= 40 * HEXDIG
         Commit ::= Base64-encoded-data
@@ -1685,10 +1686,11 @@
         reveal value. See sections [COMMITREVEAL] and [VALIDATEVALUES] of
         proposal 250 on how to generate and validate these values.
 
-        AlgName is the hash algorithm that is used (e.g. "sha3-256") and
-        Identity is the authority's SHA1 v3 identity fingerprint. Commit is the
-        encoded commitment value in base64. Reveal is optional and if it's set,
-        it contains the reveal value in base64.
+        Version is the current shared randomness protocol version. AlgName is
+        the hash algorithm that is used (e.g. "sha3-256") and Identity is the
+        authority's SHA1 v3 identity fingerprint. Commit is the encoded
+        commitment value in base64. Reveal is optional and if it's set, it
+        contains the reveal value in base64.
 
         If a vote contains multiple commits from the same authority, the
         receiver MUST only consider the first commit listed.
