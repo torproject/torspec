@@ -1680,12 +1680,18 @@
         Commit ::= Base64-encoded-data
         Reveal ::= Base64-encoded-data
 
-        A commit of a directory authority for the shared randomness protocol,
-        containing the commitment value and potentially also the reveal
-        value. AlgName is the hash algorithm that is used and Identity is the
-        authority's SHA1 identity fingerprint. Commit is the encoded commitment
-        value in base64. Reveal is optional and if it's set, it contains the
-        reveal value in base64.
+        Denotes a directory authority commit for the shared randomness
+        protocol, containing the commitment value and potentially also the
+        reveal value. See sections [COMMITREVEAL] and [VALIDATEVALUES] of
+        proposal 250 on how to generate and validate these values.
+
+        AlgName is the hash algorithm that is used (e.g. "sha3-256") and
+        Identity is the authority's SHA1 v3 identity fingerprint. Commit is the
+        encoded commitment value in base64. Reveal is optional and if it's set,
+        it contains the reveal value in base64.
+
+        If a vote contains multiple commits from the same authority, the
+        receiver MUST only consider the first commit listed.
 
     "shared-rand-previous-value" SP NumReveals SP Value NL
 
@@ -1694,9 +1700,17 @@
         NumReveals ::= An integer greater or equal to 0.
         Value ::= Base64-encoded-data
 
-        The previous shared random value. Value is the actual shared random
-        value encoded in base64. NumReveals is the number of commits used to
-        generate this SRV.
+        The shared random value that was generated during the second-to-last
+        shared randomness protocol run. For example, if this document was
+        created on the 5th of November, this field carries the shared random
+        value generated during the protocol run of the 3rd of November.
+
+        See section [SRCALC] of proposal 250 for instructions on how to compute
+        this value, and see section [CONS] for why we include old shared random
+        values in votes and consensus.
+
+        Value is the actual shared random value encoded in base64. NumReveals
+        is the number of commits used to generate this SRV.
 
     "shared-rand-current-value" SP NumReveals SP Value NL
 
@@ -1705,9 +1719,16 @@
         NumReveals ::= An integer greater or equal to 0.
         Value ::= Base64-encoded-data
 
-        The current shared random value. Value is the actual shared random value
-        encoded in base64. NumReveals is the number of commits used to generate
-        this SRV.
+        The shared random value that was generated during the latest shared
+        randomness protocol run. For example, if this document was created on
+        the 5th of November, this field carries the shared random value
+        generated during the protocol run of the 4th of November
+
+        See section [SRCALC] of proposal 250 for instructions on how to compute
+        this value given the active commits.
+
+        Value is the actual shared random value encoded in base64. NumReveals
+        is the number of commits used to generate this SRV.
 
     "params" SP [Parameters] NL
 
