@@ -737,18 +737,13 @@ Table of contents:
    The following consensus parameters control where a hidden service
    descriptor is stored;
 
-        hsdir_n_replicas = an integer in range [1,16]
-                             with default value 2.
-
-        hsdir_spread_fetch = an integer in range [1,128]
-                             with default value 3.
-
-        hsdir_spread_store = an integer in range [1,128]
-                             with default value 3.
+        hsdir_n_replicas = an integer in range [1,16] with default value 2.
+        hsdir_spread_fetch = an integer in range [1,128] with default value 3.
+        hsdir_spread_store = an integer in range [1,128] with default value 3.
 
    To determine where a given hidden service descriptor will be stored
    in a given period, after the blinded public key for that period is
-   derived, the uploading or downloading party calculate
+   derived, the uploading or downloading party calculates:
 
         for replicanum in 1...hsdir_n_replicas:
             hs_index(replicanum) = H("store-at-idx" |
@@ -756,8 +751,9 @@ Table of contents:
                                  INT_8(replicanum) |
                                  INT_8(period_num) )
 
-   where blinded_public_key is specified in section KEYBLIND, and period_num is
-   defined in section [TIME-PERIODS].
+   where blinded_public_key is specified in section [KEYBLIND], and period_num
+   is calculated using the current consensus "valid-after" as specified in
+   section [TIME-PERIODS].
 
    Then, for each node listed in the current consensus with the HSDirV3 flag,
    we compute a directory index for that node as:
@@ -776,13 +772,6 @@ Table of contents:
    nodes have already been selected for a lower-numbered replica of the
    service, any nodes already chosen are disregarded (i.e. skipped over)
    when choosing a replica's hsdir_spread_store nodes.
-
-   [ XX/teor - because the positions don't match the key, this might leak
-     the fact that nodes from other replicas are nearby to a HSDir.
-     But this is preferable to having fewer HSDirs for a service.
-     I think the probability of a collision is approximately:
-     1 / (n_hsdirs / (hsdir_n_replicas * hsdir_spread_store)) = 6 / n_hsdirs,
-     where n_hsdirs is the total number of HSDirs in the hash ring. ]
 
    When choosing an HSDir to download from, clients choose randomly from
    among the first hsdir_spread_fetch nodes after the indices.  (Note
