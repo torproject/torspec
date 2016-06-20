@@ -73,7 +73,7 @@ Supersedes: 225
    However, directory authority operators feel unsafe running a third-party
    script that opens TCP ports and accepts connections from the Internet.
    Hence, this proposal aims to embed the commit-and-reveal idea in the Tor
-   voting process which should makes it smoother to deploy and maintain.
+   voting process which should make it smoother to deploy and maintain.
 
    Another idea proposed specifically for Tor is Nick Hopper's "A threshold
    signature-based proposal for a shared RNG" which was never turned into an
