@@ -584,7 +584,7 @@
        "router-sig-ed25519" string, prefixed with the string "Tor
        router descriptor signature v1".  Its format is:
 
-       The signature is encoded in Base64 with terminating =s remove.
+       The signature is encoded in Base64 with terminating =s removed.
 
        The signing key in the identity-ed25519 certificate MUST
        be the one used to sign the document.
