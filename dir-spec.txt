@@ -573,12 +573,10 @@
 
     "router-sig-ed25519" SP Signature NL
 
-       [At most once]
+       [At most once, required when identity-ed25519 is present]
 
-       When an identity-ed25519 element is present, there must also
-       be a "router-sig-ed25519" element.  It MUST be the
-       next-to-last element in the descriptor, appearing immediately
-       before the RSA signature. It MUST contain an ed25519
+       It MUST be the next-to-last element in the descriptor, appearing
+       immediately before the RSA signature. It MUST contain an Ed25519
        signature of a SHA256 digest of the entire document, from the
        first character up to and including the first space after the
        "router-sig-ed25519" string, prefixed with the string "Tor
