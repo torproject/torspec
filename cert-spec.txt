@@ -55,7 +55,7 @@
          ExtLength [2 bytes]
          ExtType   [1 byte]
          ExtFlags  [1 byte]
-         ExtData   [Length bytes]
+         ExtData   [ExtLength bytes]
 
    The meaning of the ExtData field in an extension is type-dependent.
 
