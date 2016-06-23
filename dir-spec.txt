@@ -494,10 +494,12 @@
        This element contains an RSA signature, generated using the
        onion-key, of the following:
 
-          A SHA1 hash of the identity key  [20 bytes]
-          The Ed25519 identity key [32 bytes]
+          A SHA1 hash of the RSA identity key,
+            i.e. RSA key from "signing-key" (see below) [20 bytes]
+          The Ed25519 identity key,
+            i.e. Ed25519 key from "master-key-ed25519" [32 bytes]
 
-       If there is no ed25519 identity key, or if in some future version
+       If there is no Ed25519 identity key, or if in some future version
        there is no RSA identity key, the corresponding field must be
        zero-filled.
 
