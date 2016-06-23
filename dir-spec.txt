@@ -400,8 +400,8 @@
         [No extra arguments]
 
         The certificate is a base64-encoded Ed25519 certificate (see
-        cert-spec.txt) terminating =s removed.  When this element is
-        present, it MUST appear as the first or second element in
+        cert-spec.txt) with terminating =s removed.  When this element
+        is present, it MUST appear as the first or second element in
         the router descriptor.
 
         The certificate has CERT_TYPE of [04].  It must include a
