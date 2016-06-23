@@ -516,7 +516,7 @@
 
        A curve25519 public key used for the ntor circuit extended
        handshake.  It's the standard encoding of the OR's curve25519
-       public key, encoded in base 64.  The trailing = sign may be
+       public key, encoded in base 64.  The trailing '=' sign MAY be
        omitted from the base64 encoding.  The key MUST be accepted
        for at least 1 week after any new key is published in a
        subsequent descriptor.
