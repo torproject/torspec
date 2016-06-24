@@ -1004,7 +1004,7 @@ Table of contents:
           The link-specifiers is a base64 encoding of a link specifier
           block in the format described in BUILDING-BLOCKS.
 
-        "auth-key" SP "ed25519" NL certificate NL
+        "auth-key" NL certificate NL
 
           [Exactly once per introduction point]
 
