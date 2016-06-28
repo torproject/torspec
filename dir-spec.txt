@@ -722,6 +722,14 @@
        Tor MAY accept a limited number of addresses or ports. As of Tor 0.2.3.x
        only the first address and the first port are used.
 
+   "tunnelled-dir-server" NL
+
+       [At most once.]
+       [No extra arguments]
+
+       Present if the router accepts "tunneled" directory requests using a
+       BEGIN_DIR cell over the router's OR port.
+
 2.1.2. Extra-info document format
 
    Extra-info documents consist of the following items:
