@@ -573,7 +573,8 @@
 
     "router-sig-ed25519" SP Signature NL
 
-       [At most once, required when identity-ed25519 is present]
+       [At most once.]
+       [Required when identity-ed25519 is present; forbidden otherwise.]
 
        It MUST be the next-to-last element in the descriptor, appearing
        immediately before the RSA signature. It MUST contain an Ed25519
