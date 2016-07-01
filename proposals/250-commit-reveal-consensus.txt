@@ -317,7 +317,7 @@ Supersedes: 225
 
       HASHED_REVEALS = H(ID_a | R_a | ID_b | R_b | ..)
 
-      SRV = SHA3-256("shared-random" | INT_1(REVEAL_NUM) | INT_1(VERSION) |
+      SRV = SHA3-256("shared-random" | INT_8(REVEAL_NUM) | INT_4(VERSION) |
                      HASHED_REVEALS | PREVIOUS_SRV)
 
    where the ID_a value is the identity key fingerprint of authority 'a' and R_a
@@ -330,9 +330,6 @@ Supersedes: 225
 
    To maintain consistent ordering in HASHED_REVEALS, all the ID_a | R_a pairs
    are ordered based on the R_a value in ascending order.
-
-   Because the number of reveals (REVEAL_NUM) is using a 1 byte value, it
-   imposes a hard limit of 255 authorities participating in the protocol.
 
 3.4. Bootstrapping Procedure
 
