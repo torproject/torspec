@@ -161,7 +161,7 @@ Proposals by number:
 238  Better hidden service stats from Tor relays [CLOSED]
 239  Consensus Hash Chaining [DRAFT]
 240  Early signing key revocation for directory authorities [DRAFT]
-241  Resisting guard-turnover attacks [DRAFT]
+241  Resisting guard-turnover attacks [REJECTED]
 242  Better performance and usability for the MyFamily option [OPEN]
 243  Give out HSDir flag only to relays with Stable flag [CLOSED]
 244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [ACCEPTED]
@@ -200,7 +200,6 @@ Proposals by status:
    231  Migrating authority RSA1024 identity keys [for 0.2.?]
    239  Consensus Hash Chaining
    240  Early signing key revocation for directory authorities
-   241  Resisting guard-turnover attacks
    245  Deprecating and removing the TAP circuit extension protocol
    247  Defending Against Guard Discovery Attacks using Vanguards
    248  Remove all RSA identity keys
@@ -365,6 +364,7 @@ Proposals by status:
    147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.4.x]
    175  Automatically promoting Tor clients to nodes
    197  Message-based Inter-Controller IPC Channel
+   241  Resisting guard-turnover attacks
  OBSOLETE:
    127  Relaying dirport requests to Tor download site / website
    131  Help users to verify they are using Tor
