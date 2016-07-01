@@ -2,7 +2,7 @@ Filename: 250-commit-reveal-consensus.txt
 Title: Random Number Generation  During Tor Voting
 Authors: David Goulet, George Kadianakis
 Created: 2015-08-03
-Status: Draft
+Status: Closed
 Supersedes: 225
 
 

@@ -170,7 +170,7 @@ Proposals by number:
 247  Defending Against Guard Discovery Attacks using Vanguards [DRAFT]
 248  Remove all RSA identity keys [DRAFT]
 249  Allow CREATE cells with >505 bytes of handshake data [DRAFT]
-250  Random Number Generation  During Tor Voting [DRAFT]
+250  Random Number Generation  During Tor Voting [CLOSED]
 251  Padding for netflow record resolution reduction [DRAFT]
 252  Single Onion Services [DRAFT]
 253  Out of Band Circuit HMACs [DRAFT]
@@ -204,7 +204,6 @@ Proposals by status:
    247  Defending Against Guard Discovery Attacks using Vanguards
    248  Remove all RSA identity keys
    249  Allow CREATE cells with >505 bytes of handshake data
-   250  Random Number Generation  During Tor Voting
    251  Padding for netflow record resolution reduction
    252  Single Onion Services
    253  Out of Band Circuit HMACs
@@ -333,6 +332,7 @@ Proposals by status:
    228  Cross-certifying identity keys with onion keys
    238  Better hidden service stats from Tor relays
    243  Give out HSDir flag only to relays with Stable flag
+   250  Random Number Generation  During Tor Voting
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration
