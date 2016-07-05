@@ -522,8 +522,9 @@
       ExitPolicyRejectPrivate is 1.
 
     "exit-policy/reject-private/relay" -- The relay-specific exit policy
-      lines that Tor will *prepend* to the ExitPolicy config option when
-      ExitPolicyRejectPrivate is 1. These lines are based on the public
+      lines that Tor will *prepend* to the ExitPolicy config option based
+      on the current values of ExitPolicyRejectPrivate and
+      ExitPolicyRejectLocalInterfaces. These lines are based on the public
       addresses configured in the torrc and present on the relay's
       interfaces.
 
