@@ -1,0 +1,507 @@
+Filename: 268-guard-selection.txt
+Title: New Guard Selection Behaviour
+Author: Isis Lovecruft, George Kadianakis, [Ola Bini]
+Created: 2015-10-28
+Status: Draft
+
+  (Editorial note: this was origianlly written as a revision of
+  proposal 259, but it diverges so substantially that it seemed
+  better to assign it a new number for reference, so that we
+  aren't always talking about "The old 259" and "the new 259". -NM)
+
+§1. Overview
+
+  Tor uses entry guards to prevent an attacker who controls some
+  fraction of the network from observing a fraction of every user's
+  traffic. If users chose their entries and exits uniformly at
+  random from the list of servers every time they build a circuit,
+  then an adversary who had (k/N) of the network would deanonymize
+  F=(k/N)^2 of all circuits... and after a given user had built C
+  circuits, the attacker would see them at least once with
+  probability 1-(1-F)^C.  With large C, the attacker would get a
+  sample of every user's traffic with probability 1.
+
+  To prevent this from happening, Tor clients choose a small number of
+  guard nodes (currently 3).  These guard nodes are the only nodes
+  that the client will connect to directly.  If they are not
+  compromised, the user's paths are not compromised.
+
+  But attacks remain.  Consider an attacker who can run a firewall
+  between a target user and the Tor network, and make
+  many of the guards they don't control appear to be unreachable.
+  Or consider an attacker who can identify a user's guards, and mount
+  denial-of-service attacks on them until the user picks a guard
+  that the attacker controls.
+
+  In the presence of these attacks, we can't continue to connect to
+  the Tor network unconditionally.  Doing so would eventually result
+  in the user choosing a hostile node as their guard, and losing
+  anonymity.
+
+  This proposal outlines a new entry guard selection algorithm, which
+  addresses the following concerns:
+
+    - Heuristics and algorithms for determining how and which guard(s)
+      is(/are) chosen should be kept as simple and easy to understand
+      as possible.
+
+    - Clients in censored regions or who are behind a fascist firewall
+      who connect to the Tor network should not experience any
+      significant disadvantage in terms of reachability or usability.
+
+    - Tor should make a best attempt at discovering the most
+      appropriate behaviour, with as little user input and
+      configuration as possible.
+
+
+§2. Design
+
+  Alice, an OP attempting to connect to the Tor network, should
+  undertake the following steps to determine information about the
+  local network and to select (some) appropriate entry guards.  In the
+  following scenario, it is assumed that Alice has already obtained a
+  recent, valid, and verifiable consensus document.
+
+  The algorithm is divided into four components such that the full
+  algorithm is implemented by first invoking START, then repeatedly
+  calling NEXT while adviced it SHOULD_CONTINUE and finally calling
+  END. For an example usage see §A. Appendix.
+
+  Several components of NEXT can be invoked asynchronously. SHOULD_CONTINUE
+  is used for the algorithm to be able to tell the caller whether we
+  consider the work done or not - this can be used to retry primary
+  guards when we finally are able to connect to a guard after a long
+  network outage, for example.
+
+  This algorithm keeps track of the unreachability status for guards
+  in state global to the system, so that repeated runs will not have
+  to rediscover unreachability over and over again. However, this
+  state does not need to be persisted permanently - it is purely an
+  optimization.
+
+  The algorithm expects several arguments to guide its behavior. These
+  will be defined in §2.1.
+
+  The goal of this algorithm is to strongly prefer connecting to the
+  same guards we have connected to before, while also trying to detect
+  conditions such as a network outage. The way it does this is by keeping
+  track of how many guards we have exposed ourselves to, and if we have
+  connected to too many we will fall back to only retrying the ones we have
+  already tried. The algorithm also decides on sample set that should
+  be persisted - in order to minimize the risk of an attacker forcing
+  enumeration of the whole network by triggering rebuilding of
+  circuits.
+
+
+§2.1. Definitions
+
+  Bad guard: a guard is considered bad if it conforms with the function IS_BAD
+  (see §G. Appendix for details).
+
+  Dead guard: a guard is considered dead if it conforms with the function
+  IS_DEAD (see §H. Appendix for details).
+
+  Obsolete guard: a guard is considered obsolete if it conforms with the
+  function IS_OBSOLETE (see §I. Appendix for details).
+
+  Live entry guard: a guard is considered live if it conforms with the function
+  IS_LIVE (see §D. Appendix for details).
+
+§2.1. The START algorithm
+
+  In order to start choosing an entry guard, use the START
+  algorithm. This takes four arguments that can be used to fine tune
+  the workings:
+
+  USED_GUARDS
+      This is a list that contains all the guards that have been used
+      before by this client. We will prioritize using guards from this
+      list in order to minimize our exposure. The list is expected to
+      be sorted based on priority, where the first entry will have the
+      highest priority.
+
+  SAMPLED_GUARDS
+      This is a set that contains all guards that should be considered
+      for connection. This set should be persisted between runs. It
+      should be filled by using NEXT_BY_BANDWIDTH with GUARDS as an
+      argument if it's empty, or if it contains less than SAMPLE_SET_THRESHOLD
+      guards after winnowing out older guards.
+
+  N_PRIMARY_GUARDS
+      The number of guards we should consider our primary
+      guards. These guards will be retried more frequently and will
+      take precedence in most situations. By default the primary
+      guards will be the first N_PRIMARY_GUARDS guards from USED_GUARDS.
+      When the algorith is used in constrained mode (have bridges or entry
+      nodes in the configuration file), this value should be 1 otherwise the
+      proposed value is 3.
+
+  DIR
+      If this argument is set, we should only consider guards that can
+      be directory guards. If not set, we will consider all guards.
+
+  The primary work of START is to initialize the state machine depicted
+  in §2.2. The initial state of the machine is defined by:
+
+  GUARDS
+      This is a set of all guards from the consensus. It will primarily be used
+      to fill in SAMPLED_GUARDS
+
+  FILTERED_SAMPLED
+      This is a set that contains all guards that we are willing to connect to.
+      It will be obtained from calling FILTER_SET with SAMPLED_GUARDS as
+      argument.
+
+  REMAINING_GUARDS
+      This is a running set of the guards we have not yet tried to connect to.
+      It should be initialized to be FILTERED_SAMPLED without USED_GUARDS.
+
+  STATE
+      A variable that keeps track of which state in the state
+      machine we are currently in. It should be initialized to
+      STATE_PRIMARY_GUARDS.
+
+  PRIMARY_GUARDS
+      This list keeps track of our primary guards. These are guards
+      that we will prioritize when trying to connect, and will also
+      retry more often in case of failure with other guards.
+      It should be initialized by calling algorithm
+      NEXT_PRIMARY_GUARD repeatedly until PRIMARY_GUARDS contains
+      N_PRIMARY_GUARDS elements.
+
+
+§2.2. The NEXT algorithm
+
+  The NEXT algorithm is composed of several different possibly flows. The
+  first one is a simple state machine that can transfer between two
+  different states. Every time NEXT is invoked, it will resume at the
+  state where it left off previously. In the course of selecting an
+  entry guard, a new consensus can arrive. When that happens we need
+  to update the data structures used, but nothing else should change.
+
+  Before jumping in to the state machine, we should first check if it
+  was at least PRIMARY_GUARDS_RETRY_INTERVAL minutes since we tried
+  any of the PRIMARY_GUARDS. If this is the case, and we are not in
+  STATE_PRIMARY_GUARDS, we should save the previous state and set the
+  state to STATE_PRIMARY_GUARDS.
+
+
+§2.2.1. The STATE_PRIMARY_GUARDS state
+
+  Return each entry in PRIMARY_GUARDS in turn. For each entry, if the
+  guard should be retried and considered suitable use it. A guard is
+  considered to eligible to retry if is marked for retry or is live
+  and id not bad. Also, a guard is considered to be suitable if is
+  live and, if is a directory it should not be a cache.
+
+  If all entries have been tried transition to STATE_TRY_REMAINING.
+
+§2.2.2. The STATE_TRY_REMAINING state
+
+  Return each entry in USED_GUARDS that is not in PRIMARY_GUARDS in
+  turn.For each entry, if a guard is found return it.
+
+  Return each entry from REMAINING_GUARDS in turn.
+  For each entry, if the guard should be retried and considered
+  suitable use it and mark it as unreachable. A guard is
+  considered to eligible to retry if is marked for retry or is live
+  and id not bad. Also, a guard is considered to be suitable if is
+  live and, if is a directory it should not be a cache.
+
+  If no entries remain in REMAINING_GUARDS, transition to
+  STATE_PRIMARY_GUARDS.
+
+
+§2.2.3. ON_NEW_CONSENSUS
+
+  First, ensure that all guard profiles are updated with information
+  about whether they were in the newest consensus or not.
+
+  Update the bad status for all guards in USED_GUARDS and SAMPLED_GUARDS.
+  Remove all dead guards from USED_GUARDS and SAMPLED_GUARDS.
+  Remove all obsolete guards from USED_GUARDS and SAMPLED_GUARDS.
+
+§2.3. The SHOULD_CONTINUE algorithm
+
+  This algorithm takes as an argument a boolean indicating whether the
+  circuit was successfully built or not.
+
+  After the caller have tried to build a circuit with a returned
+  guard, they should invoke SHOULD_CONTINUE to understand if the
+  algorithm is finished or not. SHOULD_CONTINUE will always return
+  true if the circuit failed. If the circuit succeeded,
+  SHOULD_CONTINUE will always return false, unless the guard that
+  succeeded was the first guard to succeed after
+  INTERNET_LIKELY_DOWN_INTERVAL minutes - in that case it will set the
+  state to STATE_PRIMARY_GUARDS and return true.
+
+
+§2.4. The END algorithm
+
+  The goal of this algorithm is simply to make sure that we keep track
+  of successful connections made. This algorithm should be invoked
+  with the guard that was used to correctly set up a circuit.
+
+  Once invoked, this algorithm will mark the guard as used, and make
+  sure it is in USED_GUARDS, by adding it at the end if it was not there.
+
+
+§2.5. Helper algorithms
+
+  These algorithms are used in the above algorithms, but have been
+  separated out here in order to make the flow clearer.
+
+  NEXT_PRIMARY_GUARD
+      - Return the first entry from USED_GUARDS that is not in
+        PRIMARY_GUARDS and that is in the most recent consensus.
+      - If USED_GUARDS is empty, use NEXT_BY_BANDWIDTH with
+        REMAINING_GUARDS as the argument.
+
+  NEXT_BY_BANDWIDTH
+      - Takes G as an argument, which should be a set of guards to
+        choose from.
+      - Return a randomly select element from G, weighted by bandwidth.
+
+  FILTER_SET
+      - Takes G as an argument, which should be a set of guards to filter.
+      - Filter out guards in G that don't comply with IS_LIVE (see
+        §D. Appendix for details).
+      - If the filtered set is smaller than MINIMUM_FILTERED_SAMPLE_SIZE and G
+        is smaller than MAXIMUM_SAMPLE_SIZE_THRESHOLD, expand G and try to
+        filter out again. G is expanded by adding one new guard at a time using
+        NEXT_BY_BANDWIDTH with GUARDS as an argument.
+      - If G is not smaller than MAXIMUM_SAMPLE_SIZE_THRESHOLD, G should not be
+        expanded. Abort execution of this function by returning null and report
+	      an error to the user.
+
+
+§3. Consensus Parameters, & Configurable Variables
+
+  This proposal introduces several new parameters that ideally should
+  be set in the consensus but that should also be possible to
+  set or override in the client configuration file. Some of these have
+  proposed values, but for others more simulation and trial needs to
+  happen.
+
+  PRIMARY_GUARDS_RETRY_INTERVAL
+      In order to make it more likely we connect to a primary guard,
+      we would like to retry the primary guards more often than other
+      types of guards. This parameter controls how many minutes should
+      pass before we consider retrying primary guards again. The
+      proposed value is 3.
+
+  SAMPLE_SET_THRESHOLD
+      In order to allow us to recognize completely unreachable network,
+      we would like to avoid connecting to too many guards before switching
+      modes. We also want to avoid exposing ourselves to too many nodes in a
+      potentially hostile situation. This parameter, expressed as a
+      fraction, determines the number of guards we should keep as the
+      sampled set of the only guards we will consider connecting
+      to. It will be used as a fraction for the sampled set.
+      If we assume there are 1900 guards, a setting of 0.02
+      means we will have a sample set of 38 guards.
+      This limits our total exposure. Proposed value is 0.02.
+
+  MINIMUM_FILTERED_SAMPLE_SIZE
+      The minimum size of the sampled set after filtering out nodes based on
+      client configuration (FILTERED_SAMPLED). Proposed value is ???.
+
+  MAXIMUM_SAMPLE_SIZE_THRESHOLD
+      In order to guarantee a minimum size of guards after filtering,
+      we expand SAMPLED_GUARDS until a limit.  This fraction of GUARDS will be
+      used as an upper bound when expanding SAMPLED_GUARDS.
+      Proposed value is 0.03.
+
+  INTERNET_LIKELY_DOWN_INTERVAL
+      The number of minutes since we started trying to find an entry
+      guard before we should consider the network down and consider
+      retrying primary guards before using a functioning guard
+      found. Proposed value 5.
+
+§4.  Security properties and behavior under various conditions
+
+  Under normal conditions, this algorithm will allow us to quickly
+  connect and use guards we have used before with high likelihood of
+  working. Assuming the first primary guard is reachable and in the
+  consensus, this algorithm will deterministically always return that
+  guard.
+
+  Under dystopic conditions (when a firewall is in place that blocks
+  all ports except for potentially port 80 and 443), this algorithm
+  will try to connect to 2% of all guards before switching modes to try
+  dystopic guards. Currently, that means trying to connect to circa 40
+  guards before getting a successful connection. If we assume a
+  connection try will take maximum 10 seconds, that means it will take
+  up to 6 minutes to get a working connection.
+
+  When the network is completely down, we will try to connect to 2% of
+  all guards plus 2% of all dystopic guards before realizing we are
+  down. This means circa 50 guards tried assuming there are 1900 guards
+  in the network.
+
+  In terms of exposure, we will connect to a maximum of 2% of all
+  guards plus 2% of all dystopic guards, or 3% of all guards,
+  whichever is lower. If N is the number of guards, and k is the
+  number of guards an attacker controls, that means an attacker would
+  have a probability of 1-(1-(k/N)^2)^(N * 0.03) to have one of their
+  guards selected before we fall back. In real terms, this means an
+  attacker would need to control over 10% of all guards in order to
+  have a larger than 50% chance of controlling a guard for any given client.
+
+  In addition, since the sampled set changes slowly (the suggestion
+  here is that guards in it expire every month) it is not possible for
+  an attacker to force a connection to an entry guard that isn't
+  already in the users sampled set.
+
+
+§A. Appendix: An example usage
+
+  In order to clarify how this algorithm is supposed to be used, this
+  pseudo code illustrates the building of a circuit:
+
+    ESTABLISH_CIRCUIT:
+
+      if chosen_entry_node = NULL
+        if context = NULL
+          context = ALGO_CHOOSE_ENTRY_GUARD_START(used_guards,
+                                    sampled_guards=[],
+                                    options,
+                                    n_primary_guards=3,
+                                    dir=false,
+                                    guards_in_consensus)
+
+        chosen_entry_node = ALGO_CHOOSE_ENTRY_GUARD_NEXT(context)
+        if not IS_SUITABLE(chosen_entry_node)
+          try another entry guard
+
+      circuit = composeCircuit(chosen_entry_node)
+      return circuit
+
+    ON_FIRST_HOP_CALLBACK(channel):
+
+      if !SHOULD_CONTINUE:
+            ALGO_CHOOSE_ENTRY_GUARD_END(entryGuard)
+      else
+            chosen_entry_node = NULL
+
+
+§B. Appendix: Entry Points in Tor
+
+  In order to clarify how this algorithm is supposed to be integrated with
+  Tor, here are some entry points to trigger actions mentioned in spec:
+
+    When establish_circuit:
+
+        If *chosen_entry_node* doesn't exist
+            If *context* exist, populate the first one as *context*
+            Otherwise, use ALGO_CHOOSE_ENTRY_GUARD_START to initalize a new *context*.
+
+            After this when we want to choose_good_entry_server, we will use
+            ALGO_CHOOSE_ENTRY_GUARD_NEXT to get a candidate.
+
+        Use chosen_entry_node to build_circuit and handle_first_hop,
+        return this circuit
+
+    When entry_guard_register_connect_status(should_continue):
+
+        if !should_continue:
+           Call ALGO_CHOOSE_ENTRY_GUARD_END(chosen_entry_node)
+        else:
+           Set chosen_entry_node to NULL
+
+    When new directory_info_has_arrived:
+
+        Do ON_NEW_CONSENSUS
+
+
+§C. Appendix: IS_SUITABLE helper function
+
+    A guard is suitable if it satisfies all of the folowing conditions:
+      - It's considered to be live, according to IS_LIVE.
+      - It's a directory cache if a directory guard is requested.
+      - It's not the chosen exit node.
+      - It's not in the family of the chosen exit node.
+
+    This conforms to the existing conditions in "populate_live_entry_guards()".
+
+
+§D. Appendix: IS_LIVE helper function
+
+    A guard is considered live if it satisfies all of the folowing conditions:
+      - It's not disabled because of path bias issues (path_bias_disabled).
+      - It was not observed to become unusable according to the directory or
+        the user configuration (bad_since).
+      - It's marked for retry (can_retry) or it's been unreachable for some
+        time (unreachable_since) but enough time has passed since we last tried
+        to connect to it (entry_is_time_to_retry).
+      - It's in our node list, meaninig it's present in the latest consensus.
+      - It has a usable descriptor (either a routerdescriptor or a
+        microdescriptor) unless a directory guard is requested.
+      - It's a general-purpose router unless UseBridges is configured.
+      - It's reachable by the configuration (fascist_firewall_allows_node).
+
+    This conforms to the existing conditions in "entry_is_live()".
+
+    A guard is observed to become unusable according to the directory or the
+    user configuration if it satisfies any of the following conditions:
+      - It's not in our node list, meaninig it's present in the latest consensus.
+      - It's not currently running (is_running).
+      - It's not a bridge and not a configured bridge
+        (node_is_a_configured_bridge) and UseBridges is True.
+      - It's not a possible guard and is not in EntryNodes and UseBridges is
+        False.
+      - It's in ExcludeNodes. Nevertheless this is ignored when
+    loading from config.
+      - It's not reachable by the configuration (fascist_firewall_allows_node).
+      - It's disabled because of path bias issues (path_bias_disabled).
+
+    This conforms to the existing conditions in "entry_guards_compute_status()".
+
+§E. Appendix: UseBridges and Bridges configurations
+
+  This is mutually exclusive with EntryNodes.
+
+  If options->UseBridges OR options->EntryNodes:
+    - guards = populate_live_entry_guards() - this is the "bridge flavour" of
+      IS_SUITABLE as mentioned before.
+    - return node_sl_choose_by_bandwidth(guards, WEIGHT_FOR_GUARD)
+  This is "choose a guard from S by bandwidth weight".
+
+  UseBridges and Bridges must be set together. Bridges go to bridge_list (via
+  bridge_add_from_config()), but how is it used?
+  learned_bridge_descriptor() adds the bridge to the global entry_guards if
+  UseBridges = True.
+
+  We either keep the existing global entry_guards OR incorporate bridges in the
+  proposal (remove non bridges from USED_GUARDS, and REMAINING_GUARDS = bridges?)
+
+  If UseBridges is set as true, we need to fill the SAMPLED_GUARDS
+  with bridges specified and learned from consensus.
+
+§F. Appendix: EntryNodes configuration
+
+  This is mutually exclusive with Bridges.
+
+  The global entry_guards will be updated with entries in EntryNodes
+  (see entry_guards_set_from_config()).
+
+  If EntryNodes is set, we need to fill the SAMPLED_GUARDS with
+  EntryNodes specified in options.
+
+§G. Appendix: IS_BAD helper function
+
+  A guard is considered bad if is not included in the newest
+  consensus.
+
+§H. Appendix: IS_DEAD helper function
+
+  A guard is considered dead if it's marked as bad for
+  ENTRY_GUARD_REMOVE_AFTER period (30 days) unless they have been disabled
+  because of path bias issues (path_bias_disabled).
+
+§I. Appendix: IS_OBSOLETE helper function
+
+  A guard is considered obsolete if it was chosen by an Tor
+  version we can't recognize or it was chosen more than GUARD_LIFETIME ago.
+
+-*- coding: utf-8 -*-
