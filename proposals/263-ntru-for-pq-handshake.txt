@@ -3,7 +3,10 @@ Title: Request to change key exchange protocol for handshake v1.2
 Author: John SCHANCK, William WHYTE and Zhenfei ZHANG
 Created: 29 Aug 2015
 Updated: 4 Feb 2016
-Status: Open
+Status: Obsolete
+
+This proposal was made obsolete by proposal #269.
+
 
 1. Introduction
 
