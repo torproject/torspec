@@ -1,0 +1,412 @@
+Filename: 269-hybrid-handshake.txt
+Title: Transitionally secure hybrid handshakes
+Author: John Schanck, William Whyte, Zhenfei Zhang,
+        Nick Mathewson, Isis Lovecruft, Peter Schwabe
+Created: 7 June 2016
+Updated: 22 July 2016
+Status: Draft
+
+
+1. Introduction
+
+  This document describes a generic method for integrating a post-quantum key
+  encapsulation mechanism (KEM) into an ntor-like handshake.  A full discussion
+  of the protocol and its proof of security may be found in [SWZ16].
+
+  1.1 Motivation: Transitional forward-secret key agreement
+
+    All currently deployed forward-secret key agreement protocols are
+    vulnerable to quantum cryptanalysis. The obvious countermeasure is to
+    switch to a key agreement mechanism that uses post-quantum primitives for
+    both authentication and confidentiality.
+
+    This option should be explored, but providing post-quantum router
+    authentication in Tor would require a new consensus method and new
+    microdescriptor elements. Since post-quantum public keys and signatures can
+    be quite large, this may be a very expensive modification.
+
+    In the near future it will suffice to use a "transitional" key agreement
+    protocol -- one that provides pre-quantum authentication and post-quantum
+    confidentiality. Such a protocol is secure in the transition between pre-
+    and post-quantum settings and provides forward secrecy against adversaries
+    who gain quantum computing capabilities after session negotiation.
+
+  1.2 Motivation: Fail-safe plug & play for post-quantum KEMs
+
+    We propose a modular design that allows any post-quantum KEM to be included
+    in the handshake. As there may be some uncertainty as to the security of
+    the currently available post-quantum KEMs, and their implementations, we
+    ensure that the scheme safely degrades to ntor in the event of a complete
+    break on the KEM.
+
+
+2. Proposal
+
+  2.1 Overview
+
+    We re-use the public key infrastructure currently used by ntor.  Each
+    server publishes a static Diffie-Hellman (DH) onion key. Each client is
+    assumed to have a certified copy of each server's public onion key and each
+    server's "identity digest". To establish a session key, we propose that the
+    client send two ephemeral public keys to the server. The first is an
+    ephemeral DH key, the second is an ephemeral public key for a post-quantum
+    KEM. The server responds with an ephemeral DH public key and an
+    encapsulation of a random secret under the client's ephemeral KEM key.  The
+    two parties then derive a shared secret from: 1) the static-ephemeral DH
+    share, 2) the ephemeral-ephemeral DH share, 3) the encapsulated secret, 4)
+    the transcript of their communication.
+
+  2.2 Notation
+
+    Public, non-secret, values are denoted in UPPER CASE.
+    Private, secret, values are denoted in lower case.
+    We use multiplicative notation for Diffie-Hellman operations.
+
+  2.3 Parameters
+
+    DH                           A Diffie-Hellman primitive
+    KEM                          A post-quantum key encapsulation mechanism
+    H                            A cryptographic hash function
+
+    LAMBDA            (bits)     Pre-quantum bit security parameter
+    MU                (bits)     2*LAMBDA
+    KEY_LEN           (bits)     Length of session key material to output
+
+    H_LEN             (bytes)    Length of output of H
+    ID_LEN            (bytes)    Length of server identity digest
+    DH_LEN            (bytes)    Length of DH public key
+    KEM_PK_LEN        (bytes)    Length of KEM public key
+    KEM_C_LEN         (bytes)    Length of KEM ciphertext
+
+    PROTOID           (string)   "hybrid-[DH]-[KEM]-[H]-[revision]"
+    T_KEY             (string)   PROTOID | ":key"
+    T_AUTH            (string)   PROTOID | ":auth"
+
+    Note: [DH], [KEM], and [H] are strings that uniquely identify
+          the primitive, e.g. "x25519"
+
+  2.4 Subroutines
+
+    HMAC(key, msg):
+      The pseudorandom function defined in [RFC2104] with H
+      as the underlying hash function.
+
+    EXTRACT(salt, secret):
+      A randomness extractor with output of length >= MU bits.
+
+      For most choices of H one should use the HMAC based
+      randomness extractor defined in [RFC5869]:
+        EXTRACT(salt, secret) := HMAC(salt, secret).
+
+      If MU = 256 and H is SHAKE-128 with MU bit output, or
+      if MU = 512 and H is SHAKE-256 with MU bit output, then
+      one may instead define:
+        EXTRACT(salt, secret) := H(salt | secret).
+
+    EXPAND(seed, context, len):
+      The HMAC based key expansion function defined in [RFC5869].
+      Outputs the first len bits of
+        K = K_1 | K_2 | K_3 | ...
+      where
+        K_0 = empty string (zero bits)
+        K_i = HMAC(seed, K_(i-1) | context | INT8(i)).
+
+      Alternatively, an eXtendable Output Function (XOF) may be used.
+      In which case,
+      EXPAND(seed, context, len) = XOF(seed | context, len)
+
+    DH_GEN() -> (x, X):
+      Diffie-Hellman keypair generation. Secret key x, public key X.
+
+    DH_MUL(P,x) -> xP:
+      Scalar multiplication in the DH group of the base point P by
+      the scalar x.
+
+    KEM_GEN() -> (sk, PK):
+      Key generation for KEM.
+
+    KEM_ENC(PK) -> (m, C):
+      Encapsulation, C, of a uniform random message m under public key PK.
+
+    KEM_DEC(C, sk):
+      Decapsulation of the ciphertext C with respect to the secret key sk.
+
+    KEYID(A) -> A or H(A):
+      For DH groups with long element presentations it may be desirable to
+      identify a key by its hash. For typical elliptic curve groups this should
+      be the identity map.
+
+  2.5 Handshake
+
+    To perform the handshake, the client needs to know the identity digest and
+    an onion key for the router. The onion key must be for the specified DH
+    scheme (e.g. x25519). Call the router's identity digest "ID" and its public
+    onion key "A". The following Client Init / Server Response / Client Finish
+    sequence defines the hybrid-DH-KEM protocol. See Fig. 1 for a schematic
+    depiction of the same operations.
+
+    - Client Init ------------------------------------------------------------
+
+    The client generates ephemeral key pairs
+      x, X            = DH_GEN()
+      esk, EPK        = KEM_GEN().
+
+    The client sends a CREATE cell with contents:
+      ID              [ID_LEN       bytes]
+      KEYID(A)        [H_LEN        bytes]
+      X               [DH_LEN       bytes]
+      EPK             [KEM_PK_LEN   bytes]
+
+    - Server Response --------------------------------------------------------
+
+    The server generates an ephemeral x25519 keypair, computes both DH
+    shares, and encrypts a secret under KEM:
+      y, Y            := DH_GEN()
+      s0              := H(DH_MUL(X,a))
+      s1              := DH_MUL(X,y)
+      s2, C           := KEM_ENC(EPK)
+
+    The server then derives the pre-master secret and authentication tag:
+      secret          := s0 | s1 | s2
+      SALT            := ID | A | X | Y | EPK | C
+      seed            := EXTRACT(SALT, secret)
+      AUTH            := EXPAND(seed, T_AUTH, MU)
+
+    The server sends a CREATED cell with contents:
+      Y               [DH_LEN     bytes]
+      C               [KEM_C_LEN  bytes]
+      AUTH            [CEIL(MU/8) bytes]
+
+    - Client Finish ----------------------------------------------------------
+
+    The client computes the three secret shares:
+      s0              := H(DH_MUL(A,x))
+      s1              := DH_MUL(Y,x)
+      s2              := KEM_DEC(C, esk)
+
+    The client then derives the pre-master secret:
+      secret          := s0 | s1 | s2
+      SALT            := ID | A | X | Y | EPK | C
+      seed            := EXTRACT(SALT, secret);
+
+    The client verifies that AUTH == EXPAND(seed, T_AUTH, MU).
+
+    If the authentication check passes the client expands the seed 
+
+    - Key derivation ---------------------------------------------------------
+
+    Both parties derive the shared key by expanding seed:
+
+      KEY             := EXPAND(seed, T_KEY, KEY_LEN)
+
+  .--------------------------------------------------------------------------.
+  | Fig. 1: The hybrid-DH-KEM handshake.                                     |
+  .--------------------------------------------------------------------------.
+  |                                                                          |
+  | Initiator                             Responder with identity key ID     |
+  | ---------                             --------- and onion key A          |
+  |                                                                          |
+  | x, X         := DH_GEN()                                                 |
+  | esk, EPK     := KEM_GEN()                                                |
+  | CREATE_DATA  := ID | A | X | EPK                                         |
+  |                                                                          |
+  |               --- CREATE_DATA --->                                       |
+  |                                                                          |
+  |                            y, Y         := DH_GEN()                      |
+  |                            s0           := H(DH_MUL(X,a))                |
+  |                            s1           := DH_MUL(X,y)                   |
+  |                            s2, C        := KEM_ENC(EPK)                  |
+  |                            secret       := s0 | s1 | s2                  |
+  |                            SALT         := ID | A | X | Y | EPK | C      |
+  |                            seed         := EXTRACT(SALT, secret)         |
+  |                            AUTH         := EXPAND(seed, T_AUTH, MU)      |
+  |                            KEY          := EXPAND(seed, T_KEY, KEY_LEN)  |
+  |                            CREATED_DATA := Y | C | AUTH                  |
+  |                                                                          |
+  |               <-- CREATED_DATA ---                                       |
+  |                                                                          |
+  | s0           := H(DH_MUL(A,x))                                           |
+  | s1           := DH_MUL(Y,x)                                              |
+  | s2           := KEM_DEC(C, esk)                                          |
+  | secret       := s0 | s1 | s2                                             |
+  | SALT         := ID | A | X | Y | EPK | C                                 |
+  | seed         := EXTRACT(SALT, secret)                                    |
+  |                                                                          |
+  | assert AUTH == EXPAND(seed, T_AUTH, MU)                                  |
+  | KEY := EXPAND(seed, T_KEY, KEY_LEN)                                      |
+  '--------------------------------------------------------------------------'
+
+
+3. Changes from ntor
+
+  The hybrid-null handshake differs from ntor in a few ways.
+
+  First there are some superficial differences.
+  The protocol IDs differ:
+    ntor                PROTOID         "ntor-curve25519-sha256-1",
+    hybrid-null         PROTOID         "hybrid-x25519-null-sha256-1",
+  and the context strings differ:
+    ntor                T_MAC           PROTOID | ":mac",
+    ntor                T_KEY           PROTOID | ":key_extract",
+    ntor                T_VERIFY        PROTOID | ":verify",
+    ntor                M_EXPAND        PROTOID | ":key_expand",
+    hybrid-null         T_KEY           PROTOID | ":key",
+    hybrid-null         T_AUTH          PROTOID | ":auth".
+
+  Then there are significant differences in how the authentication tag
+  (AUTH) and key (KEY) are derived. The following description uses the
+  HMAC based definitions of EXTRACT and EXPAND.
+
+  In ntor the server computes
+    secret_input        := EXP(X,y) | EXP(X,a) | ID | A | X | Y | PROTOID
+    seed                := HMAC(T_KEY, secret_input)
+    verify              := HMAC(T_VERIFY, seed)
+    auth_input          := verify | ID | A | Y | X | PROTOID | "Server"
+    AUTH                := HMAC(T_MAC, auth_input)
+    KEY                 := EXPAND(seed, M_EXPAND, KEY_LEN).
+
+  In hybrid-null the server computes
+    secret_input        := H(EXP(X,a)) | EXP(X,y)
+    SALT                := ID | A | X | Y
+    seed                := EXTRACT(SALT, secret_input)
+    AUTH                := EXPAND(seed, T_AUTH, MU)
+    KEY                 := EXPAND(seed, T_KEY, KEY_LEN).
+
+  First, note that hybrid-null hashes EXP(X,a). This is due to
+  the fact that weaker assumptions were used to prove the security
+  of hybrid-null than were used to prove the security of ntor. While
+  this may seem artificial we recommend keeping it.
+
+  Second, ntor uses fixed HMAC keys for all sessions. This is unlikely
+  to be a security issue, but it makes a stronger assumption on HMAC
+  than if the order of the arguments were reversed.
+
+  Third, hybrid-null forgoes the use of auth_input (to see what we mean,
+  compare hybrid-null to ntor with auth_input := seed). The use of
+  auth_input in ntor is designed to prevent a certain type of collision
+  attack (see [Zav12, SZW16]). However the auth_input countermeasure is
+  unnecessary if the authentication tag is of length 2*LAMBDA. A collision
+  attack on a random function of output length 2*LAMBDA has cost 2^LAMBDA.
+
+
+4. Instantiation with NTRUEncrypt
+
+  This example uses the NTRU parameter set EESS443EP2 [XXX cite] which is
+  estimated at the 128 bit security level for both pre- and post-quantum
+  settings.
+
+  EES443EP2 specifies three algorithms:
+    EES443EP2_GEN()          -> (sk, PK),
+    EES443EP2_ENCRYPT(m, PK) -> C,
+    EES443EP2_DECRYPT(C, sk) -> m.
+
+  The m parameter for EES443EP2_ENCRYPT can be at most 49 bytes.
+  We define EES443EP2_MAX_M_LEN := 49.
+
+  0x0102  hybrid-x25519-ees443ep2-shake128-1
+  --------------------
+    DH            := x25519
+    KEM           := EES443EP2
+    H             := SHAKE-128 with 256 bit output
+
+    LAMBDA        := 128
+    MU            := 256
+
+    H_LEN         := 32
+    ID_LEN        := 20
+    DH_LEN        := 32
+    KEM_PK_LEN    := 615
+    KEM_C_LEN     := 610
+    KEY_LEN       := XXX
+
+    PROTOID       := "hybrid-x25519-ees443ep2-shake128-1"
+    T_KEY         := "hybrid-x25519-ees443ep2-shake128-1:key"
+    T_AUTH        := "hybrid-x25519-ees443ep2-shake128-1:auth"
+
+    Subroutines
+    -----------
+      EXTRACT(salt, secret)      := SHAKE-128(salt | secret, MU)
+      EXPAND(seed, context, len) := SHAKE-128(seed | context, len)
+      KEM_GEN()                  := EES443EP2_GEN()
+      KEM_ENC(PK)                := (s, C)
+                                    where s = RANDOMBYTES(EES443EP2_MAX_M_LEN)
+                                      and C = EES443EP2_ENCRYPT(s, PK)
+      KEM_DEC(C, sk)             := EES443EP2_DECRYPT(C, sk)
+
+
+5. Instantiation with NewHope
+
+  [XXX write intro]
+
+  0x0103  hybrid-x25519-newhope-shake128-1
+  --------------------
+    DH            := x25519
+    KEM           := NEWHOPE
+    H             := SHAKE-128 with 256 bit output
+
+    LAMBDA        := 128
+    MU            := 256
+
+    H_LEN         := 32
+    ID_LEN        := 20
+    DH_LEN        := 32
+    KEM_PK_LEN    := 1824
+    KEM_C_LEN     := 2048
+    KEY_LEN       := XXX
+
+    PROTOID       := "hybrid-x25519-newhope-shake128-1"
+    T_KEY         := "hybrid-x25519-newhope-shake128-1:key"
+    T_AUTH        := "hybrid-x25519-newhope-shake128-1:auth"
+
+    Subroutines
+    -----------
+      EXTRACT(salt, secret)      := SHAKE-128(salt | secret, MU)
+      EXPAND(seed, context, len) -> SHAKE-128(seed | context, len)
+      KEM_GEN()                  -> (sk, PK)
+                                    where SEED   := RANDOMBYTES(MU)
+                                          (sk,B) := NEWHOPE_KEYGEN(A_SEED)
+                                          PK     := B | A_SEED
+      KEM_ENC(PK)                -> NEWHOPE_ENCAPS(PK)
+      KEM_DEC(C, sk)             -> NEWHOPE_DECAPS(C, sk)
+
+
+7. Versions
+
+  [XXX rewrite section w/ new versioning proposal]
+
+  Recognized handshake types are:
+    0x0000  TAP         --  the original Tor handshake;
+    0x0001  reserved
+    0x0002  ntor        --  the ntor-x25519-sha256 handshake;
+
+  Request for new handshake types:
+    0x010X  hybrid-XX   --  a hybrid of a x25519 handshake
+                            and a post-quantum key encapsulation mechanism
+
+  where
+    0x0101  hybrid-null      -- No post-quantum key encapsulation mechanism.
+
+    0x0102  hybrid-ees443ep2 -- Using NTRUEncrypt parameter set ntrueess443ep2
+
+    0x0103  hybrid-newhope   -- Using the New Hope R-LWE scheme
+
+        DEPENDENCY:
+          Proposal 249: Allow CREATE cells with >505 bytes of handshake data
+
+
+
+8. Bibliography
+
+[Zav12]   G.M. Zaverucha. Hybrid encryption in the multi-user setting.
+          Cryptology ePrint Archive, Report 2012/159, 2012.
+          http://eprint.iacr.org/2012/159.
+[SWZ16]   Schanck, J., Whyte, W., and Z. Zhang, "Circuit extension handshakes
+          for Tor achieving forward secrecy in a quantum world", PETS 2016,
+          DOI 10.1515/popets-2016-0037, June 2016.
+[RFC2104] Krawczyk, H., Bellare, M., and R. Canetti,
+          "HMAC: Keyed-Hashing for Message Authentication",
+          RFC 2104, DOI 10.17487/RFC2104, February 1997
+[RFC5869] Krawczyk, H. and P. Eronen,
+          "HMAC-based Extract-and-Expand Key Derivation Function (HKDF)",
+          RFC 5869, DOI 10.17487/RFC5869, May 2010
+

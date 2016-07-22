@@ -183,12 +183,13 @@ Proposals by number:
 260  Rendezvous Single Onion Services [DRAFT]
 261  AEZ for relay cryptography [OPEN]
 262  Re-keying live circuits with new cryptographic material [OPEN]
-263  Request to change key exchange protocol for handshake v1.2 [OPEN]
+263  Request to change key exchange protocol for handshake v1.2 [OBSOLETE]
 264  Putting version numbers on the Tor subprotocols [OPEN]
 265  Load Balancing with Overhead Parameters [ACCEPTED]
 266  Removing current obsolete clients from the Tor network [DRAFT]
 267  Tor Consensus Transparency [DRAFT]
 268  New Guard Selection Behaviour [DRAFT]
+269  Transitionally secure hybrid handshakes [DRAFT]
 
 
 Proposals by status:
@@ -215,6 +216,7 @@ Proposals by status:
    266  Removing current obsolete clients from the Tor network
    267  Tor Consensus Transparency
    268  New Guard Selection Behaviour
+   269  Transitionally secure hybrid handshakes
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  NEEDS-RESEARCH:
@@ -244,7 +246,6 @@ Proposals by status:
    256  Key revocation for relays and authorities
    261  AEZ for relay cryptography
    262  Re-keying live circuits with new cryptographic material
-   263  Request to change key exchange protocol for handshake v1.2
    264  Putting version numbers on the Tor subprotocols
  ACCEPTED:
    140  Provide diffs between consensuses
@@ -374,6 +375,7 @@ Proposals by status:
    141  Download server descriptors on demand
    144  Increase the diversity of circuits by detecting nodes belonging the same provider
    199  Integration of BridgeFinder and BridgeFinderHelper
+   263  Request to change key exchange protocol for handshake v1.2
  RESERVE:
    133  Incorporate Unreachable ORs into the Tor Network
    211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]
