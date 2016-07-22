@@ -437,3 +437,8 @@ again to remind me!
      various types of padding between clients and relays, for use in defending
      against both website traffic fingerprinting as well as hidden service
      circuit setup fingerprinting. (9/2015)
+
+269  Transitionally secure hybrid handshakes [DRAFT]
+
+     Describes a generalised protocol for composing X25519 key exchanges with
+     post-quantum ones.
