@@ -1,10 +1,10 @@
-Filename: XXX-newhope-hybrid-handshake.txt
+Filename: 270-newhope-hybrid-handshake.txt
 Title: RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope
 Author: Isis Lovecruft, Peter Schwabe
 Created: 16 Apr 2016
-Updated: 4 May 2016
+Updated: 22 Jul 2016
 Status: Draft
-Depends: prop#220 prop#249 prop#264
+Depends: prop#220 prop#249 prop#264 prop#270
 
 §0. Introduction
 

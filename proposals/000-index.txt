@@ -190,6 +190,7 @@ Proposals by number:
 267  Tor Consensus Transparency [DRAFT]
 268  New Guard Selection Behaviour [DRAFT]
 269  Transitionally secure hybrid handshakes [DRAFT]
+270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope [DRAFT]
 
 
 Proposals by status:
@@ -217,6 +218,7 @@ Proposals by status:
    267  Tor Consensus Transparency
    268  New Guard Selection Behaviour
    269  Transitionally secure hybrid handshakes
+   270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  NEEDS-RESEARCH:

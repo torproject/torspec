@@ -442,3 +442,9 @@ again to remind me!
 
      Describes a generalised protocol for composing X25519 key exchanges with
      post-quantum ones.
+
+270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope [DRAFT]
+
+     Describes a hybrid handshake based on the ntor handshake and the
+     NewHope post-quantum key exchange.  Currently needs revision to
+     specify how this proposal depends upon prop#269.
