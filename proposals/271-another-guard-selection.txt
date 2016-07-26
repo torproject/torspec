@@ -1,0 +1,717 @@
+Filename: 271-another-guard-selection.txt
+Title: Another algorithm for guard selection
+Author:  Isis Lovecruft, George Kadianakis, Ola Bini, Nick Mathewson
+Created: 2016-07-11
+Supersedes: 259, 268
+Status: Open
+
+0.0. Preliminaries
+
+   This proposal derives from proposals 259 and 268; it is meant to
+   supersede both.  It is in part a restatement of it, in part a
+   simplification, and in part a refactoring so that it does not
+   have the serialization problems noted by George Kadianakis.  It
+   makes other numerous small changes.  Isis, George, and Ola should
+   all get the credit for the well-considered ideas.
+
+   Whenever I say "Y is a subset of X" you can think in terms of
+   "Y-membership is a flag that can be set on members of X" or
+   "Y-membership is a predicate that can be evaluated on members of
+   X."
+
+   "More work is needed."  There's a to-do at the end of the
+   document.
+
+0.1. Notation: identifiers
+
+   We mention identifiers of these kinds:
+
+   [SECTIONS]
+
+   {INPUTS}, {PERSISTENT_DATA}, and {OPERATING_PARAMETERS}.
+
+   {non_persistent_data}
+
+   <states>.
+
+   Each named identifier receives a type where it is defined, and
+   is used by reference later on.
+
+   I'm using this convention to make it easier to tell for certain
+   whether every thingy we define is used, and vice versa.
+
+1. Introduction and motivation
+
+  Tor uses entry guards to prevent an attacker who controls some
+  fraction of the network from observing a fraction of every user's
+  traffic. If users chose their entries and exits uniformly at
+  random from the list of servers every time they build a circuit,
+  then an adversary who had (k/N) of the network would deanonymize
+  F=(k/N)^2 of all circuits... and after a given user had built C
+  circuits, the attacker would see them at least once with
+  probability 1-(1-F)^C.  With large C, the attacker would get a
+  sample of every user's traffic with probability 1.
+
+  To prevent this from happening, Tor clients choose a small number
+  of guard nodes (currently 3).  These guard nodes are the only
+  nodes that the client will connect to directly.  If they are not
+  compromised, the user's paths are not compromised.
+
+  But attacks remain.  Consider an attacker who can run a firewall
+  between a target user and the Tor network, and make many of the
+  guards they don't control appear to be unreachable.  Or consider
+  an attacker who can identify a user's guards, and mount
+  denial-of-service attacks on them until the user picks a guard
+  that the attacker controls.
+
+  In the presence of these attacks, we can't continue to connect to
+  the Tor network unconditionally.  Doing so would eventually result
+  in the user choosing a hostile node as their guard, and losing
+  anonymity.
+
+  This proposal outlines a new entry guard selection algorithm,
+  which tries to meet the following goals:
+
+    - Heuristics and algorithms for determining how and which guards
+      are chosen should be kept as simple and easy to understand as
+      possible.
+
+    - Clients in censored regions or who are behind a fascist
+      firewall who connect to the Tor network should not experience
+      any significant disadvantage in terms of reachability or
+      usability.
+
+    - Tor should make a best attempt at discovering the most
+      appropriate behaviour, with as little user input and
+      configuration as possible.
+
+    - Tor clients should discover usable guards without too much
+      delay.
+
+    - Tor clients should resist (to the extent possible) attacks
+      that try to force them onto compromised guards.
+
+
+2. State instances
+
+   In the algorithm below, we describe a set of persistent and
+   non-persistent state variables.  These variables should be
+   treated as an object, of which multiple instances can exist.
+
+   In particular, we specify the use of three particular instances:
+
+     A. UseBridges
+
+      If UseBridges is set, then we replace the {GUARDS} set in
+      [Sec:GUARDS] below with the list of list of configured
+      bridges.  We maintain a separate persistent instance of
+      {SAMPLED_GUARDS} and {CONFIRMED_GUARDS} and other derived
+      values for the UseBridges case.
+
+    B. EntryNodes / ExcludeNodes / Reachable*Addresses /
+        FascistFirewall / ClientUseIPv4=0
+
+      If one of the above options is set, and UseBridges is not,
+      then we compare the fraction of usable guards in the consensus
+      to the total number of guards in the consensus.
+
+      If this fraction is less than {MEANINGFUL_RESTRICTION_FRAC},
+      we use a separate instance of the state.
+
+      If this fraction is less than {EXTREME_RESTRICTION_FRAC}, we use a
+      separate instance of the state, and warn the user.
+
+      [TODO: should we have a different instance for each set of heavily
+      restricted options?]
+
+   C. Default
+
+      If neither of the above variant-state instances is used,
+      we use a default instance.
+
+3. The algorithm.
+
+3.0.  The guards listed in the current consensus. [Section:GUARDS]
+
+   By {set:GUARDS} we mean the set of all guards in the current
+   consensus that are usable for all circuits. (They must have the
+   flags: Stable, Fast, V2Dir, Guard.)
+
+      **Rationale**
+
+   We require all guards to have the flags that we potentially need
+   from any guard, so that all guards are usable for all circuits.
+
+3.1.  The Sampled Guard Set. [Section:SAMPLED]
+
+   We maintain a set, {set:SAMPLED_GUARDS}, that persists across
+   invocations of Tor. It is an unordered subset of the nodes that
+   we have seen listed as a guard in the consensus at some point.
+   For each such guard, we record persistently:
+
+      - {pvar:ADDED_ON_DATE}: The date on which it was added to
+        sampled_guards.
+
+        We base this value on RAND(now, {GUARD_LIFETIME}/10). See
+        Appendix [RANDOM] below.
+
+      - {pvar:ADDED_BY_VERSION}: The version of Tor that added it to
+        sampled_guards.
+
+      - {pvar:IS_LISTED}: Whether it was listed as a usable Guard in
+        the _most recent_ consensus we have seen.
+
+      - {pvar:FIRST_UNLISTED_AT}: If IS_LISTED is false, the publication date
+        of the earliest consensus in which this guard was listed such that we
+        have not seen it listed in any later consensus.  Otherwise "None."
+        We randomize this, based on
+          RAND(added_at_time, {REMOVE_UNLISTED_GUARDS_AFTER} / 5)
+
+   For each guard in {SAMPLED_GUARDS}, we also record this data,
+   non-persistently:
+
+      - {tvar:last_tried_connect}: A 'last tried to connect at'
+        time.  Default 'never'.
+
+      - {tvar:is_reachable}: an "is reachable" tristate, with
+        possible values { <state:yes>, <state:no>, <state:maybe> }.
+        Default '<maybe>.'
+
+               [Note: "yes" is not strictly necessary, but I'm
+                making it distinct from "maybe" anyway, to make our
+                logic clearer.  A guard is "maybe" reachable if it's
+                worth trying. A guard is "yes" reachable if we tried
+                it and succeeded.]
+
+      - {tvar:failing_since}: The first time when we failed to
+        connect to this guard. Defaults to "never".  Reset to
+        "never" when we successfully connect to this guard.
+
+      - {tvar:is_pending} A "pending" flag.  This indicates that we
+        are trying to build an exploratory circuit through the
+        guard, and we don't know whether it will succeed.
+
+   We require that {SAMPLED_GUARDS} contain at least
+   {MIN_SAMPLE_THRESHOLD} of the number of guards in the consensus
+   (if possible), but not more than {MAX_SAMPLE_THRESHOLD} of the
+   number of guards in the consensus.
+
+   To add a new guard to {SAMPLED_GUARDS}, pick an entry at random
+   from ({GUARDS} - {SAMPLED_GUARDS}), weighted by bandwidth.
+
+   We remove an entry from {SAMPLED_GUARDS} if:
+
+      * We have a live consensus, and {IS_LISTED} is false, and
+        {FIRST_UNLISTED_AT} is over {REMOVE_UNLISTED_GUARDS_AFTER}
+        days in the past.
+
+     OR
+
+      * We have a live consensus, and we cannot parse
+        {ADDED_BY_VERSION}.
+
+     OR
+
+      * We have a live consensus, and {ADDED_ON_DATE} is over
+        {GUARD_LIFETIME} ago, *and* {CONFIRMED_ON_DATE} is either
+        "never", or over {GUARD_CONFIRMED_MIN_LIFETIME} ago.
+
+   Note that {SAMPLED_GUARDS} does not depend on our configuration.
+   It is possible that we can't actually connect to any of these
+   guards.
+
+     **Rationale**
+
+   The {SAMPLED_GUARDS} set is meant to limit the total number of
+   guards that a client will connect to in a given period.  The
+   upper limit on its size prevents us from considering too many
+   guards.
+
+   The first expiration mechanism is there so that our
+   {SAMPLED_GUARDS} list does not accumulate so many dead
+   guards that we cannot add new ones.
+
+   The second expiration mechanism makes us rotate our guards slowly
+   over time.
+
+
+3.2. The Usable Sample [Section:FILTERED]
+
+   We maintain another set, {set:FILTERED_GUARDS}, that does not
+   persist. It is derived from:
+       - {SAMPLED_GUARDS}
+       - our current configuration,
+       - the path bias information.
+
+   A guard is a member of {set:FILTERED_GUARDS} if and only if all
+   of the following are true:
+
+       - It is a member of {SAMPLED_GUARDS}, with {IS_LISTED} set to
+         true.
+       - It is not disabled because of path bias issues.
+       - It is not disabled because of ReachableAddress police,
+         the ClientUseIPv4 setting, the ClientUseIPv6 setting,
+         the FascistFirewall setting, or some other
+         option that prevents using some addresses.
+       - It is not disabled because of ExcludeNodes.
+       - It is a bridge if UseBridges is true; or it is not a
+         bridge if UseBridges is false.
+
+   We have an additional subset, {set:USABLE_FILTERED_GUARDS}, which
+   is defined to be the subset of {FILTERED_GUARDS} where
+   {is_reachable} is <yes> or <maybe>.
+
+   We try to maintain a requirement that {USABLE_FILTERED_GUARDS}
+   contain at least {MIN_FILTERED_SAMPLE} elements:
+
+     Whenever we are going to sample from {USABLE_FILTERED_GUARDS},
+     and it contains fewer than {MIN_FILTERED_SAMPLE} elements, we
+     add new elements to {SAMPLED_GUARDS} until one of the following
+     is true:
+
+       * {USABLE_FILTERED_GUARDS} is large enough,
+     OR
+       * {SAMPLED_GUARDS} is at its maximum size.
+
+
+     ** Rationale **
+
+  These filters are applied _after_ sampling: if we applied them
+  before the sampling, then our sample would reflect the set of
+  filtering restrictions that we had in the past.
+
+3.3. The confirmed-guard list. [Section:CONFIRMED]
+
+  [formerly USED_GUARDS]
+
+  We maintain a persistent ordered list, {list:CONFIRMED_GUARDS}.
+  It contains guards that we have used before, in our preference
+  order of using them.  It is a subset of {SAMPLED_GUARDS}.  For
+  each guard in this list, we store persistently:
+
+      - {pvar:IDENTITY} Its fingerprint
+
+      - {pvar:CONFIRMED_ON_DATE} When we added this guard to
+        {CONFIRMED_GUARDS}.
+
+        Randomized as RAND(now, {GUARD_LIFETIME}/10).
+
+  We add new members to {CONFIRMED_GUARDS} when we mark a circuit
+  built through a guard as "for user traffic."
+
+  Whenever we remove a member from {SAMPLED_GUARDS}, we also remove
+  it from {CONFIRMED_GUARDS}.
+
+      [Note: You can also regard the {CONFIRMED_GUARDS} list as a
+      total ordering defined over a subset of {SAMPLED_GUARDS}.]
+
+  Definition: we call Guard A "higher priority" than another Guard B
+  if, when A and B are both reachable, we would rather use A.  We
+  define prioirty as follows:
+
+     * Every guard in {CONFIRMED_GUARDS} has a higher priority
+       than every guard not in {CONFIRMED_GUARDS}.
+
+     * Among guards in {CONFIRMED_GUARDS}, the one appearing earlier
+       on the {CONFIRMED_GUARDS} list has a higher priority.
+
+     * Among guards that do not appear in {CONFIRMED_GUARDS},
+       {is_pending}==true guards have higher priority.
+
+     * Among those, the guard with earlier {last_tried_connect} time
+       have higher priority.
+
+     * Finally, among guards that do not appear in
+       {CONFIRMED_GUARDS} with {is_pending==false}, all have equal
+       priority.
+
+   ** Rationale **
+
+  We add elements to this ordering when we have actually used them
+  for building a usable circuit.  We could mark them at some other
+  time (such as when we attempt to connect to them, or when we
+  actually connect to them), but this approach keeps us from
+  committing to a guard before we actually use it for sensitive
+  traffic.
+
+3.4. The Primary guards [Section:PRIMARY]
+
+  We keep a run-time non-persistent ordered list of
+  {list:PRIMARY_GUARDS}.  It is a subset of {FILTERED_GUARDS}.  It
+  contains {N_PRIMARY_GUARDS} elements.
+
+  To compute primary guards, take the ordered intersection of
+  {CONFIRMED_GUARDS} and {FILTERED_GUARDS}, and take the first
+  {N_PRIMARY_GUARDS} elements.  If there are fewer than
+  {N_PRIMARY_GUARDS} elements, add additional elements to
+  PRIMARY_GUARDS chosen _uniformly_ at random from
+  ({FILTERED_GUARDS} - {CONFIRMED_GUARDS}).
+
+  Note that {PRIMARY_GUARDS} do not have to be in
+  {USABLE_FILTERED_GUARDS}: they might be unreachable.
+
+    ** Rationale **
+
+  These guards are treated differently from other guards.  If one of
+  them is usable, then we use it right away. For other guards
+  {FILTERED_GUARDS}, if it's usable, then before using it we might
+  first double-check whether perhaps one of the primary guards is
+  usable after all.
+
+3.5. Retrying guards. [Section:RETRYING]
+
+  (We run this process as frequently as needed. It can be done once
+  a second, or just-in-time.)
+
+  If a primary sampled guard's {is_reachable} status is <no>, then
+  we decide whether to update its {is_reachable} status to <maybe>
+  based on its {last_tried_connect} time, its {failing_since} time,
+  and the {PRIMARY_GUARDS_RETRY_SCHED} schedule.
+
+  If a non-primary sampled guard's {is_reachable} status is <no>, then
+  we decide whether to update its {is_reachable} status to <maybe>
+  based on its {last_tried_connect} time, its {failing_since} time,
+  and the {GUARDS_RETRY_SCHED} schedule.
+
+    ** Rationale **
+
+  An observation that a guard has been 'unreachable' only lasts for
+  a given amount of time, since we can't infer that it's unreachable
+  now from the fact that it was unreachable a few minutes ago.
+
+3.6. Selecting guards for circuits. [Section:SELECTING]
+
+  Every origin circuit is now in one of these states:
+     <state:usable_on_completion>,
+     <state:usable_if_no_better_guard>,
+     <state:waiting_for_better_guard>, or
+     <state:complete>.
+
+  You may only attach streams to <complete> circuits.
+  (Additionally, you may only send RENDEZVOUS cells, ESTABLISH_INTRO
+  cells, and INTRODUCE cells on <complete> circuits.)
+
+  The per-circuit state machine is:
+
+      New circuits are <usable_on_completion> or
+      <usable_if_no_better_guard>.
+
+      A <usable_on_completion> circuit may become <complete>, or may
+      fail.
+
+      A <usable_if_no_better_guard> circuit may become
+      <usable_on_completion>; may become <waiting_for_better_guard>; or may
+      fail.
+
+      A <waiting_for_better_guard> circuit will become <complete>, or will
+      be closed, or will fail.
+
+      A <complete> circuit remains <complete> until it fails or is
+      closed.
+
+      Each of these transitions is described below.
+
+  We keep, as global transient state:
+
+    * {tvar:last_time_on_internet} -- the last time at which we
+      successfully used a circuit or connected to a guard.  At
+      startup we set this to "infinitely far in the past."
+
+  When we want to build a circuit, and we need to pick a guard:
+
+    * If any entry in PRIMARY_GUARDS has {is_reachable} status of
+      <maybe> or <yes>, return the first such guard. The circuit is
+      <usable_on_completion>.
+
+      [Note: We do not use {is_pending} on primary guards, since we
+      are willing to try to build multiple circuits through them
+      before we know for sure whether they work, and since we will
+      not use any non-primary guards until we are sure that the
+      primary guards are all down.  (XX is this good?)]
+
+    * Otherwise, if the ordered intersection of {CONFIRMED_GUARDS}
+      and {USABLE_FILTERED_GUARDS} is nonempty, return the first
+      entry in that intersection that has {is_pending} set to
+      false. Set its value of {is_pending} to true.  The circuit
+      is now <usable_if_no_better_guard>.  (If all entries have
+      {is_pending} true, pick the first one.)
+
+    * Otherwise, if there is no such entry, select a member at
+      random from {USABLE_FILTERED_GUARDS}. Set its {is_pending}
+      field to true.  The circuit is <usable_if_no_better_guard>.
+
+  We update the {last_tried_connect} time for the guard to 'now.'
+
+    ** Rationale **
+
+  We're getting to the core of the algorithm here.  Our main goals are to
+  make sure that
+    1. If it's possible to use a primary guard, we do.
+    2. We probably use the first primary guard.
+
+  So we only try non-primary guards if we're pretty sure that all
+  the primary guards are down, and we only try a given primary guard
+  if the earlier primary guards seem down.
+
+  When we _do_ try non-primary guards, however, we only build one
+  circuit through each, to give it a chance to succeed or fail.  If
+  ever such a circuit succeeds, we don't use it until we're pretty
+  sure that it's the best guard we're getting. (see below).
+
+         [XXX timeout.]
+
+3.7. When a circuit fails. [Section:ON_FAIL]
+
+   When a circuit fails in a way that makes us conclude that a guard
+   is not reachable, we take the following steps:
+
+      * We set the guard's {is_reachable} status to <no>.  If it had
+        {is_pending} set to true, we make it non-pending.
+
+      * We close the circuit, of course.  (This removes it from
+        consideration by the algorithm in [UPDATE_WAITING].)
+
+      * Update the list of waiting circuits.  (See [UPDATE_WAITING]
+        below.)
+
+   [Note: the existing Tor logic will cause us to create more
+   circuits in response to some of these steps; and also see
+   [ON_CONSENSUS].]
+
+    ** Rationale **
+
+   See [SELECTING] above for rationale.
+
+3.8. When a circuit succeeds [Section:ON_SUCCESS]
+
+   When a circuit succeeds in a way that makes us conclude that a
+   guard _was_ reachable, we take these steps:
+
+      * We set its {is_reachable} status to <yes>.
+      * We set its {failing_since} to "never".
+      * If the guard was {is_pending}, we clear the {is_pending} flag.
+      * If the guard was not a member of {CONFIRMED_GUARDS}, we add
+        it to the end of {CONFIRMED_GUARDS}.
+
+      * If this circuit was <usable_on_completion>, this circuit is
+        now <complete>. You may attach streams to this circuit,
+        and use it for hidden services.
+
+      * If this circuit was <usable_if_no_better_guard>, it is now
+        <waiting_for retry>.  You may not yet attach streams to it.
+        Then check whether the {last_time_on_internet} is more than
+        {INTERNET_LIKELY_DOWN_INTERVAL} seconds ago:
+
+           * If it is, then mark all {PRIMARY_GUARDS} as "maybe"
+             reachable.
+
+           * If it is not, update the list of waiting circuits. (See
+             [UPDATE_WAITING] below)
+
+   [Note: the existing Tor logic will cause us to create more
+   circuits in response to some of these steps; and see
+   [ON_CONSENSUS].]
+
+    ** Rationale **
+
+   See [SELECTING] above for rationale.
+
+3.9. Updating the list of waiting circuits [Section:UPDATE_WAITING]
+
+   We run this procedure whenever it's possible that a
+   <waiting_for_better_guard> circuit might be ready to be called
+   <complete>.
+
+   * If any circuit is <waiting_for_better_guard>, and every currently
+     {is_pending} circuit whose guard has higher priority has been
+     in state <usable_if_no_better_guard> for at least
+     {NONPRIMARY_GUARD_CONNECT_TIMEOUT} seconds, and all primary
+     guards have reachable status of <no>, then call that circuit
+     <complete>.
+
+   * If any circuit is <complete>, then do not use any
+     <waiting_for_better_guard> or <usable_if_no_better_guard> circuits
+     circuits whose guards have lower priority.  (Time them out
+     after a {NONPRIMARY_GUARD_IDLE_TIMEOUT} seconds.)
+
+      **Rationale**
+
+   If we open a connection to a guard, we might want to use it
+   immediately (if we're sure that it's the best we can do), or we
+   might want to wait a little while to see if some other circuit
+   which we like better will finish.
+
+
+   When we mark a circuit <complete>, we don't close the
+   lower-priority circuits immediately: we might decide to use
+   them after all if the <complete> circuit goes down before
+   {NONPRIMARY_GUARD_IDLE_TIMEOUT} seconds.
+
+
+3.10.  Whenever we get a new consensus. [Section:ON_CONSENSUS]
+
+   We update {GUARDS}.
+
+   For every guard in {SAMPLED_GUARDS}, we update {IS_LISTED} and
+   {FIRST_UNLISTED_AT}.
+
+   [**] We remove entries from {SAMPLED_GUARDS} if appropriate,
+   according to the sampled-guards expiration rules.  If they were
+   in {CONFIRMED_GUARDS}, we also remove them from
+   {CONFIRMED_GUARDS}.
+
+   We recompute {FILTERED_GUARDS}, and everything that derives from
+   it, including {USABLE_FILTERED_GUARDS}, and {PRIMARY_GUARDS}.
+
+   (Whenever one of the configuration options that affects the
+   filter is updated, we repeat the process above, starting at the
+   [**] line.)
+
+3.11. Deciding whether to generate a new circuit.
+  [Section:NEW_CIRCUIT_NEEDED]
+
+   In current Tor, we generate a new circuit when we don't have
+   enough circuits either built or in-progress to handle a given
+   stream, or an expected stream.
+
+   For the purpose of this rule, we say that <waiting_for_better_guard>
+   circuits are neither built nor in-progress; that <complete>
+   circuits are built; and that the other states are in-progress.
+
+A. Appendices
+
+A.1.  Parameters with suggested values. [Section:PARAM_VALS]
+
+   (All suggested values chosen arbitrarily)
+
+   {param:MIN_SAMPLE_THRESHOLD} -- 15
+
+   {param:MAX_SAMPLE_THRESHOLD} -- 50
+
+   {param:GUARD_LIFETIME} -- 120 days
+
+   {param:REMOVE_UNLISTED_GUARDS_AFTER} -- 20 days
+     [previously ENTRY_GUARD_REMOVE_AFTER]
+
+   {param:MIN_FILTERED_SAMPLE} -- 10
+
+   {param:N_PRIMARY_GUARDS} -- 3
+
+   {param:PRIMARY_GUARDS_RETRY_SCHED}
+      -- every 30 minutes for the first 6 hours.
+      -- every 2 hours for the next 3.75 days.
+      -- every 4 hours for the next 3 days.
+      -- every 9 hours thereafter.
+
+   {param:GUARDS_RETRY_SCHED} -- 1 hour
+      -- every hour for the first 6 hours.
+      -- every 4 hours for the next 3.75 days.
+      -- every 18 hours for the next 3 days.
+      -- every 36 hours thereafter.
+
+   {param:INTERNET_LIKELY_DOWN_INTERVAL} -- 10 minutes
+
+   {param:NONPRIMARY_GUARD_CONNECT_TIMEOUT} -- 15 seconds
+
+   {param:NONPRIMARY_GUARD_IDLE_TIMEOUT} -- 10 minutes
+
+   {param:MEANINGFUL_RESTRICTION_FRAC} -- .2
+
+   {param:EXTREME_RESTRICTION_FRAC} -- .01
+
+   {param:GUARD_CONFIRMED_MIN_LIFETIME} -- 60 days
+
+A.2. Random values [Section:RANDOM]
+
+   Frequently, we want to randomize the expiration time of something
+   so that it's not easy for an observer to match it to its start
+   time. We do this by randomizing its start date a little, so that
+   we only need to remember a fixed expiration interval.
+
+   By RAND(now, INTERVAL) we mean a time between now and INTERVAL in
+   the past, chosen uniformly at random.
+
+
+A.3. Why not a sliding scale of primaryness? [Section:CVP]
+
+   At one meeting, I floated the idea of having "primaryness" be a
+   continuous variable rather than a boolean.
+
+   I'm no longer sure this is a great idea, but I'll try to outline
+   how it might work.
+
+   To begin with: being "primary" gives it a few different traits:
+
+      1) We retry primary guards more frequently. [Section:RETRYING]
+
+      2) We don't even _try_ building circuits through
+         lower-priority guards until we're pretty sure that the
+         higher-priority primary guards are down. (With non-primary
+         guards, on the other hand, we launch exploratory circuits
+         which we plan not to use if higher-priority guards
+         succeed.) [Section:SELECTING]
+
+      3) We retry them all one more time if a circuit succeeds after
+         the net has been down for a while. [Section:ON_SUCCESS]
+
+   We could make each of the above traits continuous:
+
+      1) We could make the interval at which a guard is retried
+         depend continuously on its position in CONFIRMED_GUARDS.
+
+      2) We could change the number of guards we test in parallel
+         based on their position in CONFIRMED_GUARDS.
+
+      3) We could change the rule for how long the higher-priority
+         guards need to have been down before we call a
+         <usable_if_no_better_guard> circuit <complete> based on a
+         possible network-down condition.  For example, we could
+         retry the first guard if we tried it more than 10 seconds
+         ago, the second if we tried it more than 20 seconds ago,
+         etc.
+
+   I am pretty sure, however, that if these are worth doing, they
+   need more analysis!  Here's why:
+
+      * They all have the potential to leak more information about a
+        guard's exact position on the list.  Is that safe? Is there
+        any way to exploit that?  I don't think we know.
+
+      * They all seem like changes which it would be relatively
+        simple to make to the code after we implement the simpler
+        version of the algorithm described above.
+
+TODO. Still non-addressed issues [Section:TODO]
+
+   Formats to use when making information persistent
+
+   Migration from old data format to new.
+
+   Explain the overall flow of the circuit creation and guard
+   picking algorithms, if they are not clear.
+
+   Simulate to answer:  Will this work in a dystopic world?
+
+   Simulate actual behavior.
+
+   For all lifetimes: instead of storing the "this began at" time,
+   store the "remove this at" time, slightly randomized.
+
+   Clarify that when you get a <complete> circuit, you might need to
+   relaunch circuits through that same guard immediately, if they
+   are circuits that have to be independent.
+
+
+   Fix all items marked XX or TODO.
+
+   "Directory guards" -- do they matter?
+
+       Suggestion: require that all guards support downloads via BEGINDIR.
+       We don't need to worry about directory guards for relays, since we
+       aren't trying to prevent relay enumeration.
+
+   IP version preferenes via ClientPreferIPv6ORPort
+
+       Suggestion: Treat it as a preference when adding to
+       {CONFIRMED_GUARDS}, but not otherwise.
+

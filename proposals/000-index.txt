@@ -191,6 +191,7 @@ Proposals by number:
 268  New Guard Selection Behaviour [DRAFT]
 269  Transitionally secure hybrid handshakes [DRAFT]
 270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope [DRAFT]
+271  Another algorithm for guard selection [OPEN]
 
 
 Proposals by status:
@@ -249,6 +250,7 @@ Proposals by status:
    261  AEZ for relay cryptography
    262  Re-keying live circuits with new cryptographic material
    264  Putting version numbers on the Tor subprotocols
+   271  Another algorithm for guard selection
  ACCEPTED:
    140  Provide diffs between consensuses
    172  GETINFO controller option for circuit information
