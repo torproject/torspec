@@ -462,7 +462,8 @@ Status: Accepted
    with RSA key) contains the following data:
        ED25519_KEY                       [32 bytes]
        EXPIRATION_DATE                   [4 bytes]
-       SIGNATURE                         [128 bytes]
+       SIGLEN                            [1 byte]
+       SIGNATURE                         [SIGLEN bytes]
    Here, the Ed25519 identity key is signed with router's RSA
    identity key, to indicate that authenticating with a key
    certified by the Ed25519 key counts as certifying with RSA
