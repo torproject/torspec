@@ -835,12 +835,12 @@ Table of contents:
 
 2.2.6. URLs for anonymous uploading and downloading
 
-   Hidden service descriptors conforming to this specification are
-   uploaded with an HTTP POST request to the URL
-   /tor/rendezvous3/publish relative to the hidden service directory's
-   root, and downloaded with an HTTP GET request for the URL
-   /tor/rendezvous3/<z> where z is a base-64 encoding of the hidden
-   service's blinded public key.
+   Hidden service descriptors conforming to this specification are uploaded
+   with an HTTP POST request to the URL /tor/hs/<version>/publish relative to
+   the hidden service directory's root, and downloaded with an HTTP GET
+   request for the URL /tor/hs/<version>/<z> where <z> is a base64 encoding of
+   the hidden service's blinded public key and <version> is the protocol
+   version which is "3" in this case.
 
    These requests must be made anonymously, on circuits not used for
    anything else.
