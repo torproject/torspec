@@ -1036,17 +1036,16 @@ Table of contents:
           Cross-certification of the descriptor signing key by the enc-key.
           The format of this certificate depends on the type of enc-key.
 
-          For "ntor" keys, certificate is a proposal 220 certificate in
-          "-----BEGIN ED25519 CERT-----" armor, cross-certifying the
+          For "ntor" keys, certificate is a proposal 220 certificate wrapped
+          in "-----BEGIN ED25519 CERT-----" armor, cross-certifying the
           descriptor signing key with the ed25519 equivalent of the curve25519
           public key from "enc-key" derived using the process in proposal 228
           appendix A. The certificate type must be [10], and the signing-key
           extension is mandatory.
 
-          For "legacy" keys, certificate is an RSA signature wrapped in
-          "-----BEGIN SIGNATURE-----" of the digest:
-              H("legacy introduction point encryption key" | ED25519_KEY)
-          ED25519_KEY is the 32 byte descriptor signing public key.
+          For "legacy" keys, certificate is a proposal 220 certificate wrapped
+          in "-----BEGIN CROSSCERT-----" armor, cross-certifying the
+          descriptor signing key with the legacy RSA encryption key.
 
    To remain compatible with future revisions to the descriptor format,
    clients should ignore unrecognized lines in the descriptor.
