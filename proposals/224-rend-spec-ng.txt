@@ -941,9 +941,10 @@ Table of contents:
        [exactly once, at end.]
 
        A signature of all previous fields, using the signing key in the
-       descriptor-signing-key-cert line. We use a separate key for signing, so that
-       the hidden service host does not need to have its private blinded
-       key online.
+       descriptor-signing-key-cert line, prefixed by the string "Tor onion
+       service descriptor sig v3". We use a separate key for signing, so that
+       the hidden service host does not need to have its private blinded key
+       online.
 
 2.5. Hidden service descriptors: encryption format [ENCRYPTED-DATA]
 
