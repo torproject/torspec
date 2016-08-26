@@ -42,7 +42,7 @@ Status: Open
 
    We revive the "Protocols" design above, in a new form.
 
-   "proto" Entries NL
+   "proto" SP Entries NL
 
      Entries =
      Entries = Entry
@@ -62,9 +62,9 @@ Status: Open
 
    Each 'Entry' in the "proto" line indicates that the Tor relay
    supports one or more versions of the protocol in question.  Entries
-   must be sorted by keyword.  Values must be numerically ascending
-   within each entry.  (This implies that there are no overlapping
-   ranges.)  Ranges must be represented as compactly as possible. Ints
+   should be sorted by keyword.  Values should be numerically ascending
+   within each entry.  (This implies that there should be no overlapping
+   ranges.)  Ranges should be represented as compactly as possible. Ints
    must be no more than 2^32 - 1.
 
    The semantics for each keyword must be defined in a Tor
@@ -104,7 +104,7 @@ Status: Open
    inferrable from the v line.  Removing all the v lines from the
    current consensus would save only 1.7% after gzip compression.]
 
-3. Using "protos" and "v" lines
+3. Using "proto" and "v" lines
 
    Whenever possible, clients and relays should use the list of
    advertised protocols instead of version numbers.  Version numbers
@@ -116,23 +116,26 @@ Status: Open
 
 4. Required protocols
 
-   The consensus may contain four lines: RecommendedRelayProtocols,
-   RequiredRelayProtocols, RecommendedClientProtocols, and
-   RequiredClientProtocols.  Each has the same format as the "protos" line.
-   To vote on these entries, a protocol/version combination is included only
-   if it is listed by a majority of the voters.
+   The consensus may contain four lines:
+      "recommended-relay-protocols",
+      "required-relay-protocols",
+      "recommended-client-protocols", and
+      "required-client-protocols".
 
+   Each has the same format as the "proto" line.  To vote on these
+   entries, a protocol/version combination is included only if it is
+   listed by a majority of the voters.
 
-   When a relay lacks a protocol listed in RecommendeddRelayProtocols, it
+   When a relay lacks a protocol listed in recommended-relay-protocols, it
    should warn its operator that the relay is obsolete.
 
-   When a relay lacks a protocol listed in RequiredRelayProtocols, it
+   When a relay lacks a protocol listed in required-relay-protocols, it
    must not attempt to join the network.
 
-   When a client lacks a protocol listed in RecommendedClientProtocols,
+   When a client lacks a protocol listed in recommended-client-protocols,
    it should warn the user that the client is obsolete.
 
-   When a client lacks a protocol listed in RequiredClientProtocols, it
+   When a client lacks a protocol listed in required-client-protocols, it
    must not connect to the network.  This implements a "safe
    forward shutdown" mechanism for zombie clients.
 
@@ -140,11 +143,15 @@ Status: Open
    protocol is required, and it does not implement that protocol, it
    SHOULD NOT try to fetch a newer consensus.
 
-   The above features should be backported to 0.2.4 and later, or all the
-   versions we expect to continue supporting.
+   [[XXX I propose we remove this idea:
 
+    The above features should be backported to 0.2.4 and later, or all the
+    versions we expect to continue supporting.]]
 
-   These lines should be voted on, and should require a supermajority of
+   These lines should be voted on.  A majority of votes is sufficient to
+   make a protocol un-supported.
+
+   and should require a supermajority of
    authorities (2/3) to make a protocol required.  The required protocols
    should not be torrc-configurable, but rather should be hardwired in the
    Tor code.
@@ -278,7 +285,7 @@ Status: Open
 
    Adding new protocol types is pretty cheap, given compression.
 
-A.1.  Inferring missing protos lines.
+A.1.  Inferring missing proto lines.
 
    The directory authorities no longer allow versions of Tor before
    0.2.4.18-rc.  But right now, there is no version of Tor in the
@@ -297,15 +304,16 @@ A.1.  Inferring missing protos lines.
 
 A.2. Initial required protocols
 
-   For clients we will Recommend and Require:
+   For clients we will Recommend and Require these.  For relays, we will
+   Recommend these:
 
-       DirCache=1 HSDir=1 Desc=1 Cons=9-20 Microdesc=9-20
-       HSMid=1 Link=4 LinkAuth=1 Relay=2
+        Cons=1-2 Desc=1-2 DirCache=1 HSDir=1 HSMid=1 Link=4
+        LinkAuth=1 Microdesc=1-2 Relay=2
 
    For relays we will Require:
 
-       DirCache=1 HSDir=1 Desc=1 Cons=9-20 Microdesc=9-20
-       HSMid=1 Link=3-4 LinkAuth=1 Relay=1-2
+        Cons=1 Desc=1 DirCache=1 HSDir=1 HSMid=1 Link=3-4
+        LinkAuth=1 icrodesc=1 Relay=1-2
 
 A.3. Example integration with other open proposals
 
