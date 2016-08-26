@@ -396,9 +396,7 @@ Supersedes: 225
 
    The value COMMIT is computed as follows:
 
-      COMMIT = base64-encode( TIMESTAMP || H(H(RN)) )
-
-      where RN is the random value from REVEAL.
+      COMMIT = base64-encode( TIMESTAMP || H(REVEAL) )
 
 4.1.2. Validating commitments and reveals [VALIDATEVALUES]
 
