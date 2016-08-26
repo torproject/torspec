@@ -1,0 +1,59 @@
+Filename: 272-valid-and-running-by-default.txt
+Title: Listed routers should be Valid, Running, and treated as such
+Created: 26 Aug 2016
+Author: Nick Mathewson
+Status: Open
+
+1. Introduction and proposal.
+
+   This proposal describes a change in how clients understand consensus
+   flags, and how authorities vote on consensuses.
+
+1.1. Authority-side changes
+
+   Back in proposal 138, we made it so that non-Running routers were not
+   included in the consensus documents. We should do the same with the
+   Valid flag.  Specifically, after voting, if the authorities find that
+   a router would not receive the Valid flag, they should not include it
+   at all.
+
+   This will require the allocation of a new consensus method, since it
+   is a change in how consensuses are made from votes.
+
+   In the most recent consensus, it will affect exactly 1 router.
+
+1.2. Client-side changes
+
+   I propose that clients should consider every listed router to be
+   listed as Running and Valid if any consensus method above or higher
+   is in use.
+
+2. Benefits
+
+   Removing the notion of listed but invalid routers will remove an
+   opportunity for error, and let us remove some client side code.
+
+   More interestingly, the above changes would allow us to eventually
+   stop including the Running and Valid flags, thereby providing an
+   authority-side way to feature-gate clients off of the Tor network
+   without a fast-zombie problem. (See proposal 266 for discussion.)
+
+
+A. An additional possible change
+
+   Perhaps authorities might also treat BadExit like they treat the
+   absence of Valid and Running: as sufficient reason to not include a
+   router in the consensus.  Right now, there are only 4 listed BadExit
+   routers in the consensus, amounting to a small fraction of total
+   bandwidth.
+
+   Making this change would allow us to remove the client-side badexit
+   logic.
+
+
+B. Does this solve the zombie problem?
+
+   I tested it a little, and it does seem to be a way to make even the
+   most ancient consensus-understanding Tors stop fetching descriptors
+   and using the network. More testing needed though.
+

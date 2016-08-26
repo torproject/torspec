@@ -192,6 +192,7 @@ Proposals by number:
 269  Transitionally secure hybrid handshakes [DRAFT]
 270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope [DRAFT]
 271  Another algorithm for guard selection [OPEN]
+272  Listed routers should be Valid, Running, and treated as such [OPEN]
 
 
 Proposals by status:
@@ -251,6 +252,7 @@ Proposals by status:
    262  Re-keying live circuits with new cryptographic material
    264  Putting version numbers on the Tor subprotocols
    271  Another algorithm for guard selection
+   272  Listed routers should be Valid, Running, and treated as such
  ACCEPTED:
    140  Provide diffs between consensuses
    172  GETINFO controller option for circuit information
