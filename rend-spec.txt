@@ -747,7 +747,7 @@
    match the value in the RENDEZVOUS2 cell, the client must close the
    circuit.
 
-   Subsequently, the rendezvous point passes relay cells, unchanged, from
+   Subsequently, the rendezvous point passes RELAY cells, unchanged, from
    each of the two circuits to the other.  When Alice's OP sends RELAY cells
    along the circuit, it authenticates with Df, and encrypts them with the
    Kf, then with all of the keys for the ORs in Alice's side of the circuit;
