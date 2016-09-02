@@ -3,7 +3,7 @@ Title: Transitionally secure hybrid handshakes
 Author: John Schanck, William Whyte, Zhenfei Zhang,
         Nick Mathewson, Isis Lovecruft, Peter Schwabe
 Created: 7 June 2016
-Updated: 22 July 2016
+Updated: 2 Sept 2016
 Status: Draft
 
 
@@ -147,9 +147,9 @@ Status: Draft
 
     - Client Init ------------------------------------------------------------
 
-    The client generates ephemeral key pairs
+    The client generates ephemeral key pairs:
       x, X            = DH_GEN()
-      esk, EPK        = KEM_GEN().
+      esk, EPK        = KEM_GEN()
 
     The client sends a CREATE cell with contents:
       ID              [ID_LEN       bytes]
@@ -159,18 +159,23 @@ Status: Draft
 
     - Server Response --------------------------------------------------------
 
-    The server generates an ephemeral x25519 keypair, computes both DH
-    shares, and encrypts a secret under KEM:
+    The server generates an ephemeral DH keypair:
       y, Y            := DH_GEN()
+
+    The server computes the three secret shares:
       s0              := H(DH_MUL(X,a))
       s1              := DH_MUL(X,y)
       s2, C           := KEM_ENC(EPK)
 
-    The server then derives the pre-master secret and authentication tag:
+    The server extracts the seed:
+      SALT            := H(ID | A | X | EPK)
       secret          := s0 | s1 | s2
-      SALT            := ID | A | X | Y | EPK | C
       seed            := EXTRACT(SALT, secret)
-      AUTH            := EXPAND(seed, T_AUTH, MU)
+
+    The server derives the authentication tag:
+      verify          := EXPAND(seed, T_AUTH, MU)
+      TRANSCRIPT      := ID | A | X | EPK | Y | C
+      AUTH            := HMAC(verify, TRANSCRIPT)
 
     The server sends a CREATED cell with contents:
       Y               [DH_LEN     bytes]
@@ -184,20 +189,24 @@ Status: Draft
       s1              := DH_MUL(Y,x)
       s2              := KEM_DEC(C, esk)
 
-    The client then derives the pre-master secret:
+    The client then derives the seed:
+      SALT            := H(ID | A | X | EPK)
       secret          := s0 | s1 | s2
-      SALT            := ID | A | X | Y | EPK | C
       seed            := EXTRACT(SALT, secret);
 
-    The client verifies that AUTH == EXPAND(seed, T_AUTH, MU).
+    The client derives the authentication tag:
+      verify          := EXPAND(seed, T_AUTH, MU)
+      TRANSCRIPT      := ID | A | X | EPK | Y | C
+      AUTH            := HMAC(verify, TRANSCRIPT)
 
-    If the authentication check passes the client expands the seed 
+    The client verifies that AUTH matches the tag received from the server.
+
+    If the authentication check fails the client aborts the session.
 
     - Key derivation ---------------------------------------------------------
 
-    Both parties derive the shared key by expanding seed:
-
-      KEY             := EXPAND(seed, T_KEY, KEY_LEN)
+    Both parties derive the shared key from the seed:
+      key             := EXPAND(seed, T_KEY, KEY_LEN).
 
   .--------------------------------------------------------------------------.
   | Fig. 1: The hybrid-DH-KEM handshake.                                     |
@@ -216,11 +225,13 @@ Status: Draft
   |                            s0           := H(DH_MUL(X,a))                |
   |                            s1           := DH_MUL(X,y)                   |
   |                            s2, C        := KEM_ENC(EPK)                  |
+  |                            SALT         := H(ID | A | X | EPK)           |
   |                            secret       := s0 | s1 | s2                  |
-  |                            SALT         := ID | A | X | Y | EPK | C      |
   |                            seed         := EXTRACT(SALT, secret)         |
-  |                            AUTH         := EXPAND(seed, T_AUTH, MU)      |
-  |                            KEY          := EXPAND(seed, T_KEY, KEY_LEN)  |
+  |                            verify       := EXPAND(seed, T_AUTH, MU)      |
+  |                            TRANSCRIPT   := ID | A | X | Y | EPK | C      |
+  |                            AUTH         := HMAC(verify, TRANSCRIPT)      |
+  |                            key          := EXPAND(seed, T_KEY, KEY_LEN)  |
   |                            CREATED_DATA := Y | C | AUTH                  |
   |                                                                          |
   |               <-- CREATED_DATA ---                                       |
@@ -228,12 +239,14 @@ Status: Draft
   | s0           := H(DH_MUL(A,x))                                           |
   | s1           := DH_MUL(Y,x)                                              |
   | s2           := KEM_DEC(C, esk)                                          |
+  | SALT         := H(ID | A | X | EPK)                                      |
   | secret       := s0 | s1 | s2                                             |
-  | SALT         := ID | A | X | Y | EPK | C                                 |
   | seed         := EXTRACT(SALT, secret)                                    |
+  | verify       := EXPAND(seed, T_AUTH, MU)                                 |
+  | TRANSCRIPT   := ID | A | X | Y | EPK | C                                 |
   |                                                                          |
-  | assert AUTH == EXPAND(seed, T_AUTH, MU)                                  |
-  | KEY := EXPAND(seed, T_KEY, KEY_LEN)                                      |
+  | assert AUTH == HMAC(verify, TRANSCRIPT)                                  |
+  | key := EXPAND(seed, T_KEY, KEY_LEN)                                      |
   '--------------------------------------------------------------------------'
 
 
@@ -254,7 +267,7 @@ Status: Draft
     hybrid-null         T_AUTH          PROTOID | ":auth".
 
   Then there are significant differences in how the authentication tag
-  (AUTH) and key (KEY) are derived. The following description uses the
+  (AUTH) and key (key) are derived. The following description uses the
   HMAC based definitions of EXTRACT and EXPAND.
 
   In ntor the server computes
@@ -263,14 +276,16 @@ Status: Draft
     verify              := HMAC(T_VERIFY, seed)
     auth_input          := verify | ID | A | Y | X | PROTOID | "Server"
     AUTH                := HMAC(T_MAC, auth_input)
-    KEY                 := EXPAND(seed, M_EXPAND, KEY_LEN).
+    key                 := EXPAND(seed, M_EXPAND, KEY_LEN)
 
   In hybrid-null the server computes
+    SALT                := H(ID | A | X)
     secret_input        := H(EXP(X,a)) | EXP(X,y)
-    SALT                := ID | A | X | Y
     seed                := EXTRACT(SALT, secret_input)
-    AUTH                := EXPAND(seed, T_AUTH, MU)
-    KEY                 := EXPAND(seed, T_KEY, KEY_LEN).
+    verify              := EXPAND(seed, T_AUTH, MU)
+    TRANSCRIPT          := ID | A | X | Y
+    AUTH                := HMAC(verify, TRANSCRIPT)
+    key                 := EXPAND(seed, T_KEY, KEY_LEN)
 
   First, note that hybrid-null hashes EXP(X,a). This is due to
   the fact that weaker assumptions were used to prove the security
@@ -278,15 +293,11 @@ Status: Draft
   this may seem artificial we recommend keeping it.
 
   Second, ntor uses fixed HMAC keys for all sessions. This is unlikely
-  to be a security issue, but it makes a stronger assumption on HMAC
-  than if the order of the arguments were reversed.
+  to be a real-world security issue, but it requires stronger assumptions
+  about HMAC than if the order of the arguments were reversed.
 
-  Third, hybrid-null forgoes the use of auth_input (to see what we mean,
-  compare hybrid-null to ntor with auth_input := seed). The use of
-  auth_input in ntor is designed to prevent a certain type of collision
-  attack (see [Zav12, SZW16]). However the auth_input countermeasure is
-  unnecessary if the authentication tag is of length 2*LAMBDA. A collision
-  attack on a random function of output length 2*LAMBDA has cost 2^LAMBDA.
+  Finally, ntor uses a mixture of public and secret data in auth_input,
+  whereas the equivalent term in hybrid-null is the public transcript.
 
 
 4. Instantiation with NTRUEncrypt
@@ -325,6 +336,7 @@ Status: Draft
 
     Subroutines
     -----------
+      HMAC(key, message)         := SHAKE-128(key | message, MU)
       EXTRACT(salt, secret)      := SHAKE-128(salt | secret, MU)
       EXPAND(seed, context, len) := SHAKE-128(seed | context, len)
       KEM_GEN()                  := EES443EP2_GEN()
@@ -360,6 +372,7 @@ Status: Draft
 
     Subroutines
     -----------
+      HMAC(key, message)         := SHAKE-128(key | message, MU)
       EXTRACT(salt, secret)      := SHAKE-128(salt | secret, MU)
       EXPAND(seed, context, len) -> SHAKE-128(seed | context, len)
       KEM_GEN()                  -> (sk, PK)
@@ -397,9 +410,6 @@ Status: Draft
 
 8. Bibliography
 
-[Zav12]   G.M. Zaverucha. Hybrid encryption in the multi-user setting.
-          Cryptology ePrint Archive, Report 2012/159, 2012.
-          http://eprint.iacr.org/2012/159.
 [SWZ16]   Schanck, J., Whyte, W., and Z. Zhang, "Circuit extension handshakes
           for Tor achieving forward secrecy in a quantum world", PETS 2016,
           DOI 10.1515/popets-2016-0037, June 2016.
