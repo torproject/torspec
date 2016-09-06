@@ -2560,6 +2560,7 @@
      "20" -- Adds GuardFraction information to microdescriptors.
      "21" -- Adds Ed25519 keys to microdescriptors.
      "22" -- Instantiates Ed25519 voting algorithm correctly.
+     "23" -- Adds shared randomness protocol data.
 
    Before generating a consensus, an authority must decide which consensus
    method to use.  To do this, it looks for the highest version number
