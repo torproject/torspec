@@ -1044,9 +1044,10 @@ Table of contents:
           appendix A. The certificate type must be [10], and the signing-key
           extension is mandatory.
 
-          For "legacy" keys, certificate is a proposal 220 certificate wrapped
-          in "-----BEGIN CROSSCERT-----" armor, cross-certifying the
-          descriptor signing key with the legacy RSA encryption key.
+          For "legacy" keys, certificate is a proposal 220 RSA->Ed
+          cross-certificate wrapped in "-----BEGIN CROSSCERT-----" armor,
+          cross-certifying the descriptor signing key with the legacy RSA
+          encryption key.
 
    To remain compatible with future revisions to the descriptor format,
    clients should ignore unrecognized lines in the descriptor.
