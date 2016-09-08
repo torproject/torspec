@@ -1369,15 +1369,16 @@
 
      "p" SP ("accept" / "reject") SP PortList NL
 
-        [At most once]
+        [Exactly once.]
 
-        The exit-policy summary as specified in sections 3.4.1 and 3.8.2.  A
-        missing "p" line is equivalent to "p reject 1-65535".
+        The exit-policy summary as specified in sections 3.4.1 and 3.8.2.
 
         [With microdescriptors, clients don't learn exact exit policies:
         clients can only guess whether a relay accepts their request, try the
         BEGIN request, and might get end-reason-exit-policy if they guessed
         wrong, in which case they'll have to try elsewhere.]
+
+        [In consensus methods before 5, this line was omitted.]
 
      "p6" SP ("accept" / "reject") SP PortList NL
 
