@@ -198,14 +198,41 @@ Status: Open
          0.2.4.19.  Includes support for CREATE2 and CREATED2 and
          EXTEND2 and EXTENDED2.
 
-5.3. "HSMid"
+5.4. "HSIntro"
 
-   The "HSMid" protocols are those that handle introduction points and
-   rendezvous points.
+   The "HSIntro" protocol handles introduction points.
 
-      "1" -- supports all features in Tor 0.2.4.19
+      "0" -- supports all features in Tor 0.0.6. Deprecated in 0.2.2.1-alpha.
 
-5.4. "DirCache"
+      "1" -- supports picking rendezvous point by identity ID in Tor
+             0.2.0.7-alpha.
+
+      "2" -- supports specifying rendezvous point's address, port and onion
+             key in Tor 0.2.0.7-alpha.
+
+      "3" -- supports authentication as of proposal 121 in Tor
+             0.2.1.6-alpha.
+
+5.5. "HSRend"
+
+   The "HSRend" protocol handles rendezvous points.
+
+      "1" -- supports all features in Tor 0.0.6.
+
+      "2" -- supports RENDEZVOUS2 cells of arbitrary length as long as they
+             have 20 bytes of cookie in Tor 0.2.9.1-alpha.
+
+5.6. "HSDir"
+
+   The HSDir protocols are the set of hidden service document types
+   that can be uploaded to, understood by, and downloaded from a tor
+   relay, and the set of URLs available to fetch them.
+
+      "0" -- supports all features in Tor 0.0.6. Deprecated in 0.2.2.1-alpha.
+
+      "2" -- supports all features in Tor 0.2.0.10-alpha.
+
+5.7. "DirCache"
 
    The "DirCache" protocols are the set of documents available for
    download from a directory cache via BEGIN_DIR, and the set of URLs
@@ -214,15 +241,7 @@ Status: Open
 
       "1" -- supports all features in Tor 0.2.4.19.
 
-5.5. "HSDir"
-
-   The HSDir protocols are the set of hidden service document types
-   that can be uploaded to, understood by, and downloaded from a tor
-   relay, and the set of URLs available to fetch them.
-
-      "1" -- supports all features in Tor 0.2.4.19.
-
-5.6. "Desc"
+5.8. "Desc"
 
    Describes features present or absent in descriptors.
 
@@ -235,7 +254,7 @@ Status: Open
       "2" -- cross-signing with onion-keys, signing with ed25519
              identities.
 
-5.7. "Microdesc"
+5.9. "Microdesc"
 
    Describes features present or absent in microdescriptors.
 
@@ -247,7 +266,7 @@ Status: Open
 
       "2" -- consensus method 21 (adds ed25519 keys to microdescs).
 
-5.8. "Cons"
+5.10. "Cons"
 
    Describes features present or absent in consensus documents.
 
