@@ -182,8 +182,8 @@ see tor-design.pdf.
    Connections between two Tor relays, or between a client and a relay,
    use TLS/SSLv3 for link authentication and encryption.  All
    implementations MUST support the SSLv3 ciphersuite
-   "SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA", and SHOULD support the TLS
-   ciphersuite "TLS_DHE_RSA_WITH_AES_128_CBC_SHA" if it is available.
+   "TLS_DHE_RSA_WITH_AES_128_CBC_SHA" if it is available. They SHOULD
+   support better ciphersuites if available.
 
    There are three ways to perform TLS handshakes with a Tor server.  In
    the first way, "certificates-up-front", both the initiator and
