@@ -202,14 +202,6 @@ Status: Open
 
    The "HSIntro" protocol handles introduction points.
 
-      "0" -- supports all features in Tor 0.0.6. Deprecated in 0.2.2.1-alpha.
-
-      "1" -- supports picking rendezvous point by identity ID in Tor
-             0.2.0.7-alpha.
-
-      "2" -- supports specifying rendezvous point's address, port and onion
-             key in Tor 0.2.0.7-alpha.
-
       "3" -- supports authentication as of proposal 121 in Tor
              0.2.1.6-alpha.
 
@@ -227,8 +219,6 @@ Status: Open
    The HSDir protocols are the set of hidden service document types
    that can be uploaded to, understood by, and downloaded from a tor
    relay, and the set of URLs available to fetch them.
-
-      "0" -- supports all features in Tor 0.0.6. Deprecated in 0.2.2.1-alpha.
 
       "2" -- supports all features in Tor 0.2.0.10-alpha.
 
@@ -299,7 +289,7 @@ Status: Open
 
    Because all relays currently on the network are 0.2.4.19 or later, we
    can require 0.2.4.19, and use 0.2.4.19 as the minimal version so we
-   we don't need to do code archeology to determine how many
+   we don't need to do code archaeology to determine how many
    no-longer-relevant versions of each protocol once existed.
 
    Adding new protocol types is pretty cheap, given compression.
@@ -323,16 +313,18 @@ A.1.  Inferring missing proto lines.
 
 A.2. Initial required protocols
 
-   For clients we will Recommend and Require these.  For relays, we will
-   Recommend these:
+   For clients we will Recommend and Require these.
 
-        Cons=1-2 Desc=1-2 DirCache=1 HSDir=1 HSMid=1 Link=4
+        Cons=1-2 Desc=1-2 DirCache=1 HSDir=2 HSIntro=3 HSRend=1 Link=4
         LinkAuth=1 Microdesc=1-2 Relay=2
 
    For relays we will Require:
 
-        Cons=1 Desc=1 DirCache=1 HSDir=1 HSMid=1 Link=3-4
-        LinkAuth=1 icrodesc=1 Relay=1-2
+        Cons=1 Desc=1 DirCache=1 HSDir=2 HSIntro=3 HSRend=1 Link=3-4
+        LinkAuth=1 Microdesc=1 Relay=1-2
+
+   For relays, we will additionally Recommend all protocols which we
+   recommend for clients.
 
 A.3. Example integration with other open proposals
 
