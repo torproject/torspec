@@ -1821,8 +1821,8 @@ Appendix E. Reserved numbers
            public key. (Section 2.4)
       [09] intro point authentication key, cross-certifying the descriptor
            signing key. (Section 2.5)
-      [10] ed25519 key derived from the curve25519 intro point encryption key,
+      [0B] ed25519 key derived from the curve25519 intro point encryption key,
            cross-certifying the descriptor signing key. (Section 2.5)
 
-  [XXXX list more]
-
+      Note: The value "0A" is skipped because it's reserved for the onion key
+            cross-certifying ntor identity key from proposal 228.
