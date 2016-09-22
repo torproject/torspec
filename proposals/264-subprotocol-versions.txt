@@ -72,7 +72,8 @@ Status: Open
    "x-" or "X-".  Keywords are case-sensitive.
 
    During voting, authorities copy these lines immediately below the "v"
-   lines. When a descriptor does not contain a "proto" entry, the
+   lines, using "pr" as the keyword instead of "proto".
+   When a descriptor does not contain a "proto" entry, the
    authorities should reconstruct it using the approach described below
    in section A.1.  They are included in the consensus using the same
    rules as currently used for "v" lines, if a sufficiently late
@@ -104,7 +105,7 @@ Status: Open
    inferrable from the v line.  Removing all the v lines from the
    current consensus would save only 1.7% after gzip compression.]
 
-3. Using "proto" and "v" lines
+3. Using "proto"/"pr" and "v" lines
 
    Whenever possible, clients and relays should use the list of
    advertised protocols instead of version numbers.  Version numbers
