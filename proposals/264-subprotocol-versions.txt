@@ -2,7 +2,8 @@ Filename: 264-subprotocol-versions.txt
 Title: Putting version numbers on the Tor subprotocols
 Author: Nick Mathewson
 Created: 6 Jan 2016
-Status: Open
+Status: Finished
+Implemented-In: 0.2.9.4-alpha
 
 
 1. Introduction
