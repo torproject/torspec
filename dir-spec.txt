@@ -2635,9 +2635,9 @@ The following methods have incorrect implementations; authorities SHOULD
 
       Wgg*G + Wgd*D == M + Wmd*D + Wme*E + Wmg*G  (guard bw = middle bw)
       Wgg*G + Wgd*D == Wee*E + Wed*D              (guard bw = exit bw)
-      Wed*D + Wmd*D + Wgd*D == D                  (aka: Wed+Wmd+Wdg = 1)
-      Wmg*G + Wgg*G == G                          (aka: Wgg = 1-Wmg)
-      Wme*E + Wee*E == E                          (aka: Wee = 1-Wme)
+      Wed*D + Wmd*D + Wgd*D == D              (aka: Wed+Wmd+Wdg = weight_scale)
+      Wmg*G + Wgg*G == G                      (aka: Wgg = weight_scale-Wmg)
+      Wme*E + Wee*E == E                      (aka: Wee = weight_scale-Wme)
 
   We are short 2 constraints with the above set. The remaining constraints
   come from examining different cases of network load. The following
@@ -2684,8 +2684,8 @@ The following methods have incorrect implementations; authorities SHOULD
       In this case, if M <= T/3, we have enough bandwidth to try to achieve
       a balancing condition.
 
-      Add constraints Wgg = 1, Wmd == Wgd to maximize bandwidth in the guard
-      position while still allowing exits to be used as middle nodes:
+      Add constraints Wgg = weight_scale, Wmd == Wgd to maximize bandwidth in
+      the guard position while still allowing exits to be used as middle nodes:
 
         Wee = (weight_scale*(E - G + M))/E
         Wed = (weight_scale*(D - 2*E + 4*G - 2*M))/(3*D)
@@ -2696,8 +2696,8 @@ The following methods have incorrect implementations; authorities SHOULD
         Wgd = (weight_scale - Wed)/2
 
       If this system ends up with any values out of range (ie negative, or
-      above weight_scale), use the constraints Wgg == 1 and Wee == 1, since
-      both those positions are scarce:
+      above weight_scale), use the constraints Wgg == weight_scale and Wee ==
+      weight_scale, since both those positions are scarce:
 
          Wgg = weight_scale
          Wee = weight_scale
@@ -2736,7 +2736,7 @@ The following methods have incorrect implementations; authorities SHOULD
 
     Subcase b: (S+D) >= T/3
       if G=S:
-        Add constraints Wgg = 1, Wmd == Wed to maximize bandwidth
+        Add constraints Wgg = weight_scale, Wmd == Wed to maximize bandwidth
         in the guard position, while still allowing exits to be
         used as middle nodes:
           Wgg = weight_scale
@@ -2747,7 +2747,7 @@ The following methods have incorrect implementations; authorities SHOULD
           Wmd = (weight_scale - Wgd)/2
           Wed = (weight_scale - Wgd)/2
       if E=S:
-        Add constraints Wee == 1, Wmd == Wgd to maximize bandwidth
+        Add constraints Wee == weight_scale, Wmd == Wgd to maximize bandwidth
         in the exit position:
           Wee = weight_scale;
           Wed = (weight_scale*(D - 2*E + G + M))/(3*D);
