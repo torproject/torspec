@@ -1,0 +1,223 @@
+Filename: 273-exit-relay-pinning.txt
+Title: Exit relay pinning for web services
+Author: Philipp Winter, Tobias Pulls, Roya Ensafi, and Nick Feamster
+Created: 2016-09-22
+Status: Draft
+Target: n/a
+
+0. Overview
+
+   To mitigate the harm caused by malicious exit relays, this proposal
+   presents a novel scheme -- exit relay pinning -- to allow web sites
+   to express that Tor connections should preferably originate from a
+   set of predefined exit relays.  This proposal is currently in draft
+   state.  Any feedback is appreciated.
+
+1. Motivation
+
+   Malicious exit relays are increasingly becoming a problem.  We have
+   been witnessing numerous opportunistic attacks, but also highly
+   sophisticated, targeted attacks that are financially motivated.  So
+   far, we have been looking for malicious exit relays using active
+   probing and a number of heuristics, but since it is inexpensive to
+   keep setting up new exit relays, we are facing an uphill battle.
+
+   Similar to the now-obsolete concept of exit enclaves, this proposal
+   enables web services to express that Tor clients should prefer a
+   predefined set of exit relays when connecting to the service.  We
+   encourage sensitive sites to set up their own exit relays and have
+   Tor clients prefer these relays, thus greatly mitigating the risk of
+   man-in-the-middle attacks.
+
+2. Design
+
+2.1 Overview
+
+   A simple analogy helps in explaining the concept behind exit relay
+   pinning: HTTP Public Key Pinning (HPKP) allows web servers to express
+   that browsers should pin certificates for a given time interval.
+   Similarly, exit relay pinning (ERP) allows web servers to express
+   that Tor Browser should prefer a predefined set of exit relays.  This
+   makes it harder for malicious exit relays to be selected as last hop
+   for a given website.
+
+   Web servers advertise support for ERP in a new HTTP header that
+   points to an ERP policy.  This policy contains one or more exit
+   relays, and is signed by the respective relay's master identity key.
+   Once Tor Browser obtained a website's ERP policy, it will try to
+   select the site's preferred exit relays for subsequent connections.
+   The following subsections discuss this mechanism in greater detail.
+
+2.2 Exit relay pinning header
+
+   Web servers support ERP by advertising it in the "Tor-Exit-Pins" HTTP
+   header.  The header contains two directives, "url" and "max-age":
+
+     Tor-Exit-Pins: url="https://example.com/pins.txt"; max-age=2678400
+
+   The "url" directive points to the full policy, which MUST be HTTPS.
+   Tor Browser MUST NOT fetch the policy if it is not reachable over
+   HTTPS.  Also, Tor Browser MUST abort the ERP procedure if the HTTPS
+   certificate is not signed by a trusted authority.  The "max-age"
+   directive determines the time in seconds for how long Tor Browser
+   SHOULD cache the ERP policy.
+
+   After seeing a Tor-Exit-Pins header in an HTTP response, Tor Browser
+   MUST fetch and interpret the policy unless it already has it cached
+   and the cached policy has not yet expired.
+
+2.3 Exit relay pinning policy
+
+   An exit relay pinning policy MUST be formatted in JSON.  The root
+   element is called "erp-policy" and it points to a list of pinned exit
+   relays.  Each list element MUST contain two elements, "fingerprint"
+   and "signature".  The "fingerprint" element points to the
+   hex-encoded, uppercase, 40-digit fingerprint of an exit relay, e.g.,
+   9B94CD0B7B8057EAF21BA7F023B7A1C8CA9CE645.  The "signature" element
+   points to an Ed25519 signature, uppercase and hex-encoded.  The
+   following JSON shows a conceptual example:
+
+   {
+     "erp-policy": [
+       "start-policy",
+       {
+         "fingerprint": Fpr1,
+         "signature": Sig_K1("erp-signature" || "example.com" || Fpr1)
+       },
+       {
+         "fingerprint": Fpr2,
+         "signature": Sig_K2("erp-signature" || "example.com" || Fpr2)
+       },
+       ...
+       {
+         "fingerprint": Fprn,
+         "signature": Sig_Kn("erp-signature" || "example.com" || Fprn)
+       },
+       "end-policy"
+     ]
+   }
+
+   Fpr refers to a relay's fingerprint as discussed above.  In the
+   signature, K refers to a relay's master private identity key.  The ||
+   operator refers to string concatenation, i.e., "foo" || "bar" results
+   in "foobar".  "erp-signature" is a constant and denotes the purpose
+   of the signature.  "start-policy" and "end-policy" are both constants
+   and meant to prevent an adversary from serving a client only a
+   partial list of pins.
+
+   The signatures over fingerprint and domain are necessary to prove
+   that an exit relay agrees to being pinned.  The website's domain --
+   in this case example.com -- is part of the signature, so third
+   parties such as evil.com cannot coerce exit relays they don't own to
+   serve as their pinned exit relays.
+
+   After having fetched an ERP policy, Tor Browser MUST first verify
+   that the two constants "start-policy" and "end-policy" are present,
+   and then validate the signature over all list elements.  If any
+   element does not validate, Tor Browser MUST abort the ERP procedure.
+
+   If an ERP policy contains more than one exit relay, Tor Browser MUST
+   select one at random, weighted by its bandwidth.  That way, we can
+   balance load across all pinned exit relays.
+
+   Tor Browser could enforce the mapping from domain to exit relay by
+   adding the following directive to its configuration file:
+
+     MapAddress example.com example.com.Fpr_n.exit
+
+2.4 Defending against malicious websites
+
+   The purpose of exit relay pinning is to protect a website's users
+   from malicious exit relays.  We must further protect the same users
+   from the website, however, because it could abuse ERP to reduce a
+   user's anonymity set.  The website could group users into
+   arbitrarily-sized buckets by serving them different ERP policies on
+   their first visit.  For example, the first Tor user could be pinned
+   to exit relay A, the second user could be pinned to exit relay B,
+   etc.  This would allow the website to link together the sessions of
+   anonymous users.
+
+   We cannot prevent websites from serving client-specific policies, but
+   we can detect it by having Tor Browser fetch a website's ERP policy
+   over multiple independent exit relays.  If the policies are not
+   identical, Tor Browser MUST ignore the ERP policies.
+
+   If Tor Browser would attempt to fetch the ERP policy over n circuits
+   as quickly as possible, the website would receive n connections
+   within a narrow time interval, suggesting that all these connections
+   originated from the same client.  To impede such time-based
+   correlation attacks, Tor Browser MUST wait for a randomly determined
+   time span before fetching the ERP policy.  Tor Browser SHOULD
+   randomly sample a delay from an exponential distribution.  The
+   disadvantage of this defence is that it can take a while until Tor
+   Browser knows that it can trust an ERP policy.
+
+2.5 Design trade-offs
+
+   We now briefly discuss alternative design decisions, and why we
+   defined ERP the way we did.
+
+   Instead of having a web server *tell* Tor Browser about pinned exit
+   relays, we could have Tor Browser *ask* the web server, e.g., by
+   making it fetch a predefined URL, similar to robots.txt.  We believe
+   that this would involve too much overhead because only a tiny
+   fraction of sites that Tor users visit will have an ERP policy.
+
+   ERP implies that adversaries get to learn all the exit relays from
+   which all users of a pinned site come from.  These exit relays could
+   then become a target for traffic analysis or compromise.  Therefore,
+   websites that pin exit relays SHOULD have a proper HTTPS setup and
+   host their exit relays topologically close to the content servers, to
+   mitigate the threat of network-level adversaries.
+
+   It's possible to work around the bootstrapping problem (i.e., the
+   very first website visit cannot use pinned exits) by having an
+   infrastructure that allows us to pin exits out-of-band, e.g., by
+   hard-coding them in Tor Browser, or by providing a lookup service
+   prior to connecting to a site, but the additional complexity does not
+   seem to justify the added security or reduced overhead.
+
+2.6 Open questions
+
+   o How should we deal with selective DoS or otherwise unavailable exit
+     relays?  That is, what if an adversary takes offline pinned exit
+     relays?  Should Tor Browser give up, or fall back to non-pinned
+     exit relays that are potentially malicious?  Should we give site
+     operators an option to express a fallback if they care more about
+     availability than security?
+
+   o Are there any aspects that are unnecessarily tricky to implement in
+     Tor Browser?  If so, let's figure out how to make it easier to
+     build.
+
+   o Is a domain-level pinning granularity sufficient?
+
+   o Should we use the Ed25519 master or signing key?
+
+   o Can cached ERP policies survive a Tor Browser restart?  After all,
+     we are not supposed to write to disk, and ERP policies are
+     basically like a browsing history.
+
+   o Should we have some notion of "freshness" in an ERP policy?  The
+     problem is that an adversary could save my ERP policy for
+     example.com, and if I ever give up example.com, the adversary could
+     register it, and use my relays for pinning.  This could easily be
+     mitigated by rotating my relay identity keys, and might not be that
+     big a problem.
+
+   o Should we support non-HTTP services?  For example, do we want to
+     support, say, SSH?  And if so, how would we go about it?
+
+   o HPKP also defines a "report-uri" directive to which errors should
+     be reported.  Do we want something similar, so site operators can
+     detect issues such as attempted DoS attacks?
+
+   o It is wasteful to send a 60-70 byte header to all browsers while
+     only a tiny fraction of them will want it.  Web servers could send
+     the header only to IP addresses that run an exit relay, but that
+     adds quite a bit of extra complexity.
+
+   o We currently defend against malicious websites by fetching the ERP
+     policy over several exit relays, spread over time.  In doing so, we
+     are making assumptions on the number of visits the website sees.
+     Is there a better solution that isn't significantly more complex?

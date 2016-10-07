@@ -193,6 +193,7 @@ Proposals by number:
 270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope [DRAFT]
 271  Another algorithm for guard selection [OPEN]
 272  Listed routers should be Valid, Running, and treated as such [FINISHED]
+273  Exit relay pinning for web services [DRAFT]
 
 
 Proposals by status:
@@ -221,6 +222,7 @@ Proposals by status:
    268  New Guard Selection Behaviour
    269  Transitionally secure hybrid handshakes
    270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope
+   273  Exit relay pinning for web services [for n/a]
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  NEEDS-RESEARCH:
