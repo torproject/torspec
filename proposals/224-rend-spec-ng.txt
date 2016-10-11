@@ -2,7 +2,7 @@ Filename: 224-rend-spec-ng.txt
 Title: Next-Generation Hidden Services in Tor
 Author: Nick Mathewson
 Created: 2013-11-29
-Status: Draft
+Status: Open
 
 Table of contents:
 
