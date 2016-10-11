@@ -893,7 +893,7 @@ Table of contents:
 
        [At start, exactly once.]
 
-       The version-number contains a positive integer indicating the version
+       The version-number is a 32 bit unsigned integer indicating the version
        of the descriptor. Current version is "3".
 
      "descriptor-lifetime" SP LifetimeMinutes NL
