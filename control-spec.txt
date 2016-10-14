@@ -1456,8 +1456,11 @@
                      private key as part of the response.
      "Detach"    / ; Do not associate the newly created Onion Service
                      to the current control connection.
-     "BasicAuth"   ; Client authorization is required using the "basic"
+     "BasicAuth" / ; Client authorization is required using the "basic"
                      method.
+     "NonAnonymous"; Add a non-anonymous Single Onion Service. Tor
+                     checks this flag matches its configured hidden
+                     service anonymity mode.
 
     VirtPort = The virtual TCP Port for the Onion Service (As in the
                HiddenServicePort "VIRTPORT" argument).
@@ -1499,6 +1502,16 @@
   "ClientBlob" is not specified for a client, a new credential will be
   randomly generated and returned.
 
+  Tor instances can either be in anonymous hidden service mode, or
+  non-anonymous single onion service mode. All hidden services on the same
+  tor instance have the same anonymity. To guard against unexpected loss
+  of anonymity, Tor checks that the ADD_ONION "NonAnonymous" flag matches
+  the current hidden service anonymity mode. The hidden service anonymity
+  mode is configured using the Tor options HiddenServiceSingleHopMode and
+  HiddenServiceNonAnonymousMode. If both these options are 1, the
+  "NonAnonymous" flag must be provided to ADD_ONION. If both these options
+  are 0 (the Tor default), the flag must NOT be provided.
+
   Once created the new Onion Service will remain active until either the
   Onion Service is removed via "DEL_ONION", the server terminates, or the
   control connection that originated the "ADD_ONION" command is closed.
@@ -1533,8 +1546,27 @@
      S: 250-ClientAuth=bob:[Blob Redacted]
      S: 250 OK
 
+  Examples with Tor in anonymous onion service mode:
+
+     C: ADD_ONION NEW:BEST Flags=DiscardPK Port=22
+     S: 250-ServiceID=testonion1234567
+     S: 250 OK
+
+     C: ADD_ONION NEW:BEST Flags=DiscardPK,NonAnonymous Port=22
+     S: 512 Tor is in anonymous hidden service mode
+
+  Examples with Tor in non-anonymous onion service mode:
+
+     C: ADD_ONION NEW:BEST Flags=DiscardPK Port=22
+     S: 512 Tor is in non-anonymous hidden service mode
+
+     C: ADD_ONION NEW:BEST Flags=DiscardPK,NonAnonymous Port=22
+     S: 250-ServiceID=testonion1234567
+     S: 250 OK
+
   [ADD_ONION was added in Tor 0.2.7.1-alpha.]
   [ClientAuth was added in Tor 0.2.9.1-alpha.]
+  [NonAnonymous was added in Tor 0.2.9.3-alpha.]
 
 3.28. DEL_ONION
 

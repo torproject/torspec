@@ -144,7 +144,7 @@ Proposals by number:
 221  Stop using CREATE_FAST [CLOSED]
 222  Stop sending client timestamps [CLOSED]
 223  Ace: Improved circuit-creation key exchange [RESERVE]
-224  Next-Generation Hidden Services in Tor [DRAFT]
+224  Next-Generation Hidden Services in Tor [OPEN]
 225  Strawman proposal: commit-and-reveal shared rng [SUPERSEDED]
 226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS" [OPEN]
 227  Include package fingerprints in consensus documents [CLOSED]
@@ -184,7 +184,7 @@ Proposals by number:
 261  AEZ for relay cryptography [OPEN]
 262  Re-keying live circuits with new cryptographic material [OPEN]
 263  Request to change key exchange protocol for handshake v1.2 [OBSOLETE]
-264  Putting version numbers on the Tor subprotocols [OPEN]
+264  Putting version numbers on the Tor subprotocols [FINISHED]
 265  Load Balancing with Overhead Parameters [ACCEPTED]
 266  Removing current obsolete clients from the Tor network [DRAFT]
 267  Tor Consensus Transparency [DRAFT]
@@ -192,7 +192,8 @@ Proposals by number:
 269  Transitionally secure hybrid handshakes [DRAFT]
 270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope [DRAFT]
 271  Another algorithm for guard selection [OPEN]
-272  Listed routers should be Valid, Running, and treated as such [OPEN]
+272  Listed routers should be Valid, Running, and treated as such [FINISHED]
+273  Exit relay pinning for web services [DRAFT]
 
 
 Proposals by status:
@@ -200,7 +201,6 @@ Proposals by status:
  DRAFT:
    195  TLS certificate normalization for Tor 0.2.4.x [for 0.2.4.x]
    203  Avoiding censorship by impersonating an HTTPS server
-   224  Next-Generation Hidden Services in Tor
    230  How to change RSA1024 relay identity keys [for 0.2.?]
    231  Migrating authority RSA1024 identity keys [for 0.2.?]
    239  Consensus Hash Chaining
@@ -221,6 +221,7 @@ Proposals by status:
    268  New Guard Selection Behaviour
    269  Transitionally secure hybrid handshakes
    270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope
+   273  Exit relay pinning for web services [for n/a]
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  NEEDS-RESEARCH:
@@ -240,6 +241,7 @@ Proposals by status:
    210  Faster Headless Consensus Bootstrapping [for 0.2.8.x+]
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
+   224  Next-Generation Hidden Services in Tor
    226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS"
    229  Further SOCKS5 extensions
    233  Making Tor2Web mode faster
@@ -250,9 +252,7 @@ Proposals by status:
    256  Key revocation for relays and authorities
    261  AEZ for relay cryptography
    262  Re-keying live circuits with new cryptographic material
-   264  Putting version numbers on the Tor subprotocols
    271  Another algorithm for guard selection
-   272  Listed routers should be Valid, Running, and treated as such
  ACCEPTED:
    140  Provide diffs between consensuses
    172  GETINFO controller option for circuit information
@@ -281,6 +281,8 @@ Proposals by status:
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
    232  Pluggable Transport through SOCKS proxy [in 0.2.6]
    235  Stop assigning (and eventually supporting) the Named flag [in 0.2.6, 0.2.7]
+   264  Putting version numbers on the Tor subprotocols [in 0.2.9.4-alpha]
+   272  Listed routers should be Valid, Running, and treated as such [in 0.2.9.3-alpha, 0.2.9.4-alpha]
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]

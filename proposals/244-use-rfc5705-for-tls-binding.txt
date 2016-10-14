@@ -21,7 +21,7 @@ Status: Accepted
   and TYPE field to be determined, that works the same as our current
   "RSA-SHA256-TLSSecret" authentication, except for these fields:
 
-    TYPE is a different constant string.
+    TYPE is a different constant string, "AUTH0002".
 
     TLSSECRETS is replaced by the output of the Exporter function in
     RFC5705, using as its inputs:
@@ -29,10 +29,10 @@ Status: Accepted
         * The context value equal to the client's identity key digest.
         * The length 32.
 
-  I propose that proposal 224's section on authenticating with ed25519
+  I propose that proposal 220's section on authenticating with ed25519
   keys be amended accordingly:
 
-    TYPE is a different constant string, different from the one above.
+    TYPE is a different constant string, "AUTH0003".
 
     TLSSECRETS is replaced by the output of the Exporter function in
     RFC5705, using as its inputs:

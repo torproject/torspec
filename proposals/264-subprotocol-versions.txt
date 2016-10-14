@@ -2,7 +2,8 @@ Filename: 264-subprotocol-versions.txt
 Title: Putting version numbers on the Tor subprotocols
 Author: Nick Mathewson
 Created: 6 Jan 2016
-Status: Open
+Status: Finished
+Implemented-In: 0.2.9.4-alpha
 
 
 1. Introduction
@@ -72,7 +73,8 @@ Status: Open
    "x-" or "X-".  Keywords are case-sensitive.
 
    During voting, authorities copy these lines immediately below the "v"
-   lines. When a descriptor does not contain a "proto" entry, the
+   lines, using "pr" as the keyword instead of "proto".
+   When a descriptor does not contain a "proto" entry, the
    authorities should reconstruct it using the approach described below
    in section A.1.  They are included in the consensus using the same
    rules as currently used for "v" lines, if a sufficiently late
@@ -104,7 +106,7 @@ Status: Open
    inferrable from the v line.  Removing all the v lines from the
    current consensus would save only 1.7% after gzip compression.]
 
-3. Using "proto" and "v" lines
+3. Using "proto"/"pr" and "v" lines
 
    Whenever possible, clients and relays should use the list of
    advertised protocols instead of version numbers.  Version numbers
@@ -198,14 +200,31 @@ Status: Open
          0.2.4.19.  Includes support for CREATE2 and CREATED2 and
          EXTEND2 and EXTENDED2.
 
-5.3. "HSMid"
+5.4. "HSIntro"
 
-   The "HSMid" protocols are those that handle introduction points and
-   rendezvous points.
+   The "HSIntro" protocol handles introduction points.
 
-      "1" -- supports all features in Tor 0.2.4.19
+      "3" -- supports authentication as of proposal 121 in Tor
+             0.2.1.6-alpha.
 
-5.4. "DirCache"
+5.5. "HSRend"
+
+   The "HSRend" protocol handles rendezvous points.
+
+      "1" -- supports all features in Tor 0.0.6.
+
+      "2" -- supports RENDEZVOUS2 cells of arbitrary length as long as they
+             have 20 bytes of cookie in Tor 0.2.9.1-alpha.
+
+5.6. "HSDir"
+
+   The HSDir protocols are the set of hidden service document types
+   that can be uploaded to, understood by, and downloaded from a tor
+   relay, and the set of URLs available to fetch them.
+
+      "2" -- supports all features in Tor 0.2.0.10-alpha.
+
+5.7. "DirCache"
 
    The "DirCache" protocols are the set of documents available for
    download from a directory cache via BEGIN_DIR, and the set of URLs
@@ -214,15 +233,7 @@ Status: Open
 
       "1" -- supports all features in Tor 0.2.4.19.
 
-5.5. "HSDir"
-
-   The HSDir protocols are the set of hidden service document types
-   that can be uploaded to, understood by, and downloaded from a tor
-   relay, and the set of URLs available to fetch them.
-
-      "1" -- supports all features in Tor 0.2.4.19.
-
-5.6. "Desc"
+5.8. "Desc"
 
    Describes features present or absent in descriptors.
 
@@ -235,7 +246,7 @@ Status: Open
       "2" -- cross-signing with onion-keys, signing with ed25519
              identities.
 
-5.7. "Microdesc"
+5.9. "Microdesc"
 
    Describes features present or absent in microdescriptors.
 
@@ -247,7 +258,7 @@ Status: Open
 
       "2" -- consensus method 21 (adds ed25519 keys to microdescs).
 
-5.8. "Cons"
+5.10. "Cons"
 
    Describes features present or absent in consensus documents.
 
@@ -280,7 +291,7 @@ Status: Open
 
    Because all relays currently on the network are 0.2.4.19 or later, we
    can require 0.2.4.19, and use 0.2.4.19 as the minimal version so we
-   we don't need to do code archeology to determine how many
+   we don't need to do code archaeology to determine how many
    no-longer-relevant versions of each protocol once existed.
 
    Adding new protocol types is pretty cheap, given compression.
@@ -304,16 +315,18 @@ A.1.  Inferring missing proto lines.
 
 A.2. Initial required protocols
 
-   For clients we will Recommend and Require these.  For relays, we will
-   Recommend these:
+   For clients we will Recommend and Require these.
 
-        Cons=1-2 Desc=1-2 DirCache=1 HSDir=1 HSMid=1 Link=4
+        Cons=1-2 Desc=1-2 DirCache=1 HSDir=2 HSIntro=3 HSRend=1 Link=4
         LinkAuth=1 Microdesc=1-2 Relay=2
 
    For relays we will Require:
 
-        Cons=1 Desc=1 DirCache=1 HSDir=1 HSMid=1 Link=3-4
-        LinkAuth=1 icrodesc=1 Relay=1-2
+        Cons=1 Desc=1 DirCache=1 HSDir=2 HSIntro=3 HSRend=1 Link=3-4
+        LinkAuth=1 Microdesc=1 Relay=1-2
+
+   For relays, we will additionally Recommend all protocols which we
+   recommend for clients.
 
 A.3. Example integration with other open proposals
 

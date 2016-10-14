@@ -670,3 +670,11 @@ A.5. Reserved numbers
         6: TLS authentication key certified by Ed25519 signing key
         7: RSA cross-certificate for Ed25519 identity key
 
+
+A.6. Related changes
+
+   As we merge this, proposal, we should also extend link key size to
+   2048 bits, and use SHA256 as the x509 cert algorithm for our link
+   keys. This will improve link security, and deliver better
+   fingerprinting resistence.  See proposal 179 for an older discussion
+   of this issue.
