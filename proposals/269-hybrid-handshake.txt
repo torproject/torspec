@@ -174,7 +174,7 @@ Status: Draft
 
     The server derives the authentication tag:
       verify          := EXPAND(seed, T_AUTH, MU)
-      TRANSCRIPT      := ID | A | X | EPK | Y | C
+      TRANSCRIPT      := ID | A | X | EPK | Y | C | PROTOID
       AUTH            := HMAC(verify, TRANSCRIPT)
 
     The server sends a CREATED cell with contents:
@@ -196,7 +196,7 @@ Status: Draft
 
     The client derives the authentication tag:
       verify          := EXPAND(seed, T_AUTH, MU)
-      TRANSCRIPT      := ID | A | X | EPK | Y | C
+      TRANSCRIPT      := ID | A | X | EPK | Y | C | PROTOID
       AUTH            := HMAC(verify, TRANSCRIPT)
 
     The client verifies that AUTH matches the tag received from the server.
@@ -221,18 +221,18 @@ Status: Draft
   |                                                                          |
   |               --- CREATE_DATA --->                                       |
   |                                                                          |
-  |                            y, Y         := DH_GEN()                      |
-  |                            s0           := H(DH_MUL(X,a))                |
-  |                            s1           := DH_MUL(X,y)                   |
-  |                            s2, C        := KEM_ENC(EPK)                  |
-  |                            SALT         := ID | A | X | EPK              |
-  |                            secret       := s0 | s1 | s2                  |
-  |                            seed         := EXTRACT(SALT, secret)         |
-  |                            verify       := EXPAND(seed, T_AUTH, MU)      |
-  |                            TRANSCRIPT   := ID | A | X | Y | EPK | C      |
-  |                            AUTH         := HMAC(verify, TRANSCRIPT)      |
-  |                            key          := EXPAND(seed, T_KEY, KEY_LEN)  |
-  |                            CREATED_DATA := Y | C | AUTH                  |
+  |                       y, Y         := DH_GEN()                           |
+  |                       s0           := H(DH_MUL(X,a))                     |
+  |                       s1           := DH_MUL(X,y)                        |
+  |                       s2, C        := KEM_ENC(EPK)                       |
+  |                       SALT         := ID | A | X | EPK                   |
+  |                       secret       := s0 | s1 | s2                       |
+  |                       seed         := EXTRACT(SALT, secret)              |
+  |                       verify       := EXPAND(seed, T_AUTH, MU)           |
+  |                       TRANSCRIPT   := ID | A | X | Y | EPK | C | PROTOID |
+  |                       AUTH         := HMAC(verify, TRANSCRIPT)           |
+  |                       key          := EXPAND(seed, T_KEY, KEY_LEN)       |
+  |                       CREATED_DATA := Y | C | AUTH                       |
   |                                                                          |
   |               <-- CREATED_DATA ---                                       |
   |                                                                          |
@@ -283,7 +283,7 @@ Status: Draft
     secret_input        := H(EXP(X,a)) | EXP(X,y)
     seed                := EXTRACT(SALT, secret_input)
     verify              := EXPAND(seed, T_AUTH, MU)
-    TRANSCRIPT          := ID | A | X | Y
+    TRANSCRIPT          := ID | A | X | Y | PROTOID
     AUTH                := HMAC(verify, TRANSCRIPT)
     key                 := EXPAND(seed, T_KEY, KEY_LEN)
 
