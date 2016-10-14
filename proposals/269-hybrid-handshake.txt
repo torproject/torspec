@@ -168,7 +168,7 @@ Status: Draft
       s2, C           := KEM_ENC(EPK)
 
     The server extracts the seed:
-      SALT            := H(ID | A | X | EPK)
+      SALT            := ID | A | X | EPK
       secret          := s0 | s1 | s2
       seed            := EXTRACT(SALT, secret)
 
@@ -190,7 +190,7 @@ Status: Draft
       s2              := KEM_DEC(C, esk)
 
     The client then derives the seed:
-      SALT            := H(ID | A | X | EPK)
+      SALT            := ID | A | X | EPK
       secret          := s0 | s1 | s2
       seed            := EXTRACT(SALT, secret);
 
@@ -225,7 +225,7 @@ Status: Draft
   |                            s0           := H(DH_MUL(X,a))                |
   |                            s1           := DH_MUL(X,y)                   |
   |                            s2, C        := KEM_ENC(EPK)                  |
-  |                            SALT         := H(ID | A | X | EPK)           |
+  |                            SALT         := ID | A | X | EPK              |
   |                            secret       := s0 | s1 | s2                  |
   |                            seed         := EXTRACT(SALT, secret)         |
   |                            verify       := EXPAND(seed, T_AUTH, MU)      |
@@ -239,7 +239,7 @@ Status: Draft
   | s0           := H(DH_MUL(A,x))                                           |
   | s1           := DH_MUL(Y,x)                                              |
   | s2           := KEM_DEC(C, esk)                                          |
-  | SALT         := H(ID | A | X | EPK)                                      |
+  | SALT         := ID | A | X | EPK                                         |
   | secret       := s0 | s1 | s2                                             |
   | seed         := EXTRACT(SALT, secret)                                    |
   | verify       := EXPAND(seed, T_AUTH, MU)                                 |
@@ -279,7 +279,7 @@ Status: Draft
     key                 := EXPAND(seed, M_EXPAND, KEY_LEN)
 
   In hybrid-null the server computes
-    SALT                := H(ID | A | X)
+    SALT                := ID | A | X
     secret_input        := H(EXP(X,a)) | EXP(X,y)
     seed                := EXTRACT(SALT, secret_input)
     verify              := EXPAND(seed, T_AUTH, MU)
