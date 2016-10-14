@@ -300,7 +300,46 @@ Status: Draft
   whereas the equivalent term in hybrid-null is the public transcript.
 
 
-4. Instantiation with NTRUEncrypt
+
+4. Versions
+
+  [XXX rewrite section w/ new versioning proposal]
+
+  Recognized handshake types are:
+    0x0000  TAP         --  the original Tor handshake;
+    0x0001  reserved
+    0x0002  ntor        --  the ntor-x25519-sha256 handshake;
+
+  Request for new handshake types:
+    0x010X  hybrid-XX   --  a hybrid of a x25519 handshake
+                            and a post-quantum key encapsulation mechanism
+
+  where
+    0x0101  hybrid-null      -- No post-quantum key encapsulation mechanism.
+
+    0x0102  hybrid-ees443ep2 -- Using NTRUEncrypt parameter set ntrueess443ep2
+
+    0x0103  hybrid-newhope   -- Using the New Hope R-LWE scheme
+
+        DEPENDENCY:
+          Proposal 249: Allow CREATE cells with >505 bytes of handshake data
+
+
+
+5. Bibliography
+
+[SWZ16]   Schanck, J., Whyte, W., and Z. Zhang, "Circuit extension handshakes
+          for Tor achieving forward secrecy in a quantum world", PETS 2016,
+          DOI 10.1515/popets-2016-0037, June 2016.
+[RFC2104] Krawczyk, H., Bellare, M., and R. Canetti,
+          "HMAC: Keyed-Hashing for Message Authentication",
+          RFC 2104, DOI 10.17487/RFC2104, February 1997
+[RFC5869] Krawczyk, H. and P. Eronen,
+          "HMAC-based Extract-and-Expand Key Derivation Function (HKDF)",
+          RFC 5869, DOI 10.17487/RFC5869, May 2010
+
+
+A1. Instantiation with NTRUEncrypt
 
   This example uses the NTRU parameter set EESS443EP2 [XXX cite] which is
   estimated at the 128 bit security level for both pre- and post-quantum
@@ -346,7 +385,7 @@ Status: Draft
       KEM_DEC(C, sk)             := EES443EP2_DECRYPT(C, sk)
 
 
-5. Instantiation with NewHope
+A2. Instantiation with NewHope
 
   [XXX write intro]
 
@@ -381,42 +420,3 @@ Status: Draft
                                           PK     := B | A_SEED
       KEM_ENC(PK)                -> NEWHOPE_ENCAPS(PK)
       KEM_DEC(C, sk)             -> NEWHOPE_DECAPS(C, sk)
-
-
-7. Versions
-
-  [XXX rewrite section w/ new versioning proposal]
-
-  Recognized handshake types are:
-    0x0000  TAP         --  the original Tor handshake;
-    0x0001  reserved
-    0x0002  ntor        --  the ntor-x25519-sha256 handshake;
-
-  Request for new handshake types:
-    0x010X  hybrid-XX   --  a hybrid of a x25519 handshake
-                            and a post-quantum key encapsulation mechanism
-
-  where
-    0x0101  hybrid-null      -- No post-quantum key encapsulation mechanism.
-
-    0x0102  hybrid-ees443ep2 -- Using NTRUEncrypt parameter set ntrueess443ep2
-
-    0x0103  hybrid-newhope   -- Using the New Hope R-LWE scheme
-
-        DEPENDENCY:
-          Proposal 249: Allow CREATE cells with >505 bytes of handshake data
-
-
-
-8. Bibliography
-
-[SWZ16]   Schanck, J., Whyte, W., and Z. Zhang, "Circuit extension handshakes
-          for Tor achieving forward secrecy in a quantum world", PETS 2016,
-          DOI 10.1515/popets-2016-0037, June 2016.
-[RFC2104] Krawczyk, H., Bellare, M., and R. Canetti,
-          "HMAC: Keyed-Hashing for Message Authentication",
-          RFC 2104, DOI 10.17487/RFC2104, February 1997
-[RFC5869] Krawczyk, H. and P. Eronen,
-          "HMAC-based Extract-and-Expand Key Derivation Function (HKDF)",
-          RFC 5869, DOI 10.17487/RFC5869, May 2010
-
