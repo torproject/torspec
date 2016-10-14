@@ -1284,7 +1284,7 @@
 
    At a future date, authorities will begin rejecting all
    descriptors whose RSA key was previously accompanied by an
-   Ed25519 key, if the descriptor does not list and Ed25519 key.
+   Ed25519 key, if the descriptor does not list an Ed25519 key.
 
    At a future date, authorities will begin rejecting all descriptors
    that do not list an Ed25519 key.
@@ -1472,8 +1472,8 @@
 
    Also, once an authority receives a vote from another authority, it
    examines it for new descriptors and fetches them from that authority.
-   This may the only way for an authority to hear about relays that didn't
-   publish their descriptor to all authorities, and while it's too late
+   This may be the only way for an authority to hear about relays that didn't
+   publish their descriptor to all authorities, and, while it's too late
    for the authority to include relays in its current vote, it can include
    them in its next vote.  See section 3.6 below for details.
 
