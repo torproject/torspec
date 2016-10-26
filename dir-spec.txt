@@ -2614,6 +2614,9 @@ The following methods have incorrect implementations; authorities SHOULD
 
   Let weight_scale = 10000
 
+  Starting with consensus method 26, G, M, E, and D are initialized to 1.
+  Prior consensus methods initialize them to 0.
+
   Let G be the total bandwidth for Guard-flagged nodes.
   Let M be the total bandwidth for non-flagged nodes.
   Let E be the total bandwidth for Exit-flagged nodes.
