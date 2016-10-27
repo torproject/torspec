@@ -2614,8 +2614,11 @@ The following methods have incorrect implementations; authorities SHOULD
 
   Let weight_scale = 10000
 
-  Starting with consensus method 26, G, M, E, and D are initialized to 1.
-  Prior consensus methods initialize them to 0.
+  Starting with consensus method 26, G, M, E, and D are initialized to 1 and
+  T to 4. Prior consensus methods initialize them all to 0. With this change,
+  test tor networks that are small or new are much more likely to produce
+  bandwidth-weights in their consensus. The extra bandwidth has a negligible
+  impact on the bandwidth weights in the public tor network.
 
   Let G be the total bandwidth for Guard-flagged nodes.
   Let M be the total bandwidth for non-flagged nodes.
