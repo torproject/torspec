@@ -2487,6 +2487,15 @@
         * If consensus-method 24 or later is in use, then routers that
           do not have the Valid flag are not listed at all.
 
+        * If consensus-method 25 or later is in use, then we vote
+          on recommended-protocols and required-protocols lines in the
+          consensus.  We also include protocols lines in routerstatus
+          entries.
+
+        * If consensus-method 26 or later is in use, then we initialize
+          bandwith weights to 1 in our calculations, to avoid
+          division-by-zero errors on unusual networks.
+
      The signatures at the end of a consensus document are sorted in
      ascending order by identity digest.
 
