@@ -552,6 +552,11 @@ Status: Accepted
    if the Ed25519 identity key it receives does not match the one in the
    consensus.
 
+   For testing, clients may have the ability to configure whether to
+   include Ed25519 identities in EXTEND2 cells.  By default, this should
+   be governed by the boolean "ExtendByEd25519ID" consensus parameter,
+   with default value '0'.
+
 6. Naming nodes in the interface
 
    Anywhere in the interface that takes an $identity should be able to
