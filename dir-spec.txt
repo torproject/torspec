@@ -3398,6 +3398,9 @@ B. General-use HTTP URLs
    The most recent v3 consensus should be available at:
       http://<hostname>/tor/status-vote/current/consensus.z
 
+   Similarly, the v3 microdescriptor consensus should be available at:
+      http://<hostname>/tor/status-vote/current/consensus-microdesc.z
+
    Starting with Tor version 0.2.1.1-alpha is also available at:
       http://<hostname>/tor/status-vote/current/consensus/<F1>+<F2>+<F3>.z
 
@@ -3503,9 +3506,6 @@ B. General-use HTTP URLs
    Clients SHOULD use upper case letters (A-F) when base16-encoding
    fingerprints.  Servers MUST accept both upper and lower case fingerprints
    in requests.
-
-   [XXX Add new URLs for microdescriptors, consensus flavors, and
-   microdescriptor consensus. -KL]
 
 C. Converting a curve25519 public key to an ed25519 public key
 
