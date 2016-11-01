@@ -102,17 +102,20 @@ A.1. List of certificate types
    **[00],[01],[02],[03] - Reserved to avoid conflict with types used
           in CERTS cells.
 
-   [04] - signing a signing key with an identity key (Section 2.5)
+   [04] - Ed25519 signing key with an identity key
+          (see prop220 section 4.2)
 
    [05] - TLS link certificate signed with ed25519 signing key
-         (Section 4.2)
+          (see prop220 section 4.2)
 
    [06] - Ed25519 authentication key signed with ed25519 signing key
-          (Section 4.2)
+          (see prop220 section 4.2)
 
-   **[07] - reserved for RSA identity cross-certification (Section 4.2)
+   [07] - RSA identity cross-certification
+          (see prop220 section 4.2)
 
    [0A] - ntor onion key cross-certifying ntor identity key
+          (see prop228 section 2.3)
 
 A.2. List of extension types
 
