@@ -185,6 +185,10 @@ Implemented-In: 0.2.9.4-alpha
 
    The current version is "1".
 
+   "2" is unused, and reserved by proposal 5705.
+
+   "3" is the ed25519 link handshake of proposal 220.
+
 5.3. "Relay"
 
    The "relay" protocols are those used to handle CREATE cells, and
