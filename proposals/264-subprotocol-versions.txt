@@ -194,7 +194,8 @@ Implemented-In: 0.2.9.4-alpha
    The "relay" protocols are those used to handle CREATE cells, and
    those that handle the various RELAY cell types received after a
    CREATE cell.  (Except, relay cells used to manage introduction and
-   rendezvous points are managed with the "HSMid" protocols.)
+   rendezvous points are managed with the "HSIntro" and "HSRend" protocols
+   respectively.)
 
       "1" -- supports the TAP key exchange, with all features in Tor
          0.2.3.  Support for CREATE and CREATED and CREATE_FAST and
@@ -226,7 +227,7 @@ Implemented-In: 0.2.9.4-alpha
    that can be uploaded to, understood by, and downloaded from a tor
    relay, and the set of URLs available to fetch them.
 
-      "2" -- supports all features in Tor 0.2.0.10-alpha.
+      "1" -- supports all features in Tor 0.2.0.10-alpha.
 
 5.7. "DirCache"
 
@@ -308,7 +309,8 @@ A.1.  Inferring missing proto lines.
    Tor earlier than 0.2.4.19, so that we can have the protocol list for
    all current Tor versions include:
 
-      DirCache=1 HSDir=1 HSMid=1 Link=1-4 LinkAuth=1 Relay=1-2
+     Cons=1-2 Desc=1-2 DirCache=1 HSDir=1 HSIntro=3 HSRend=1-2 Link=1-4
+     LinkAuth=1 Microdesc=1-2 Relay=1-2
 
    For Desc, Tor versions before 0.2.7.stable should be taken to have
    Desc=1 and versions 0.2.7.stable or later should have Desc=1-2.
@@ -377,7 +379,7 @@ A.3. Example integration with other open proposals
     189  AUTHORIZE and AUTHORIZED cells
 
          This would be a new protocol, either a Link protocol or a new
-         LinkAuthz protocol.
+         LinkAuth protocol.
 
     191  Bridge Detection Resistance against MITM-capable Adversaries
 
@@ -431,7 +433,7 @@ A.3. Example integration with other open proposals
 
     224  Next-Generation Hidden Services in Tor
 
-         Adds new HSDir and HSMid protocols.
+         Adds new HSDir and HSIntro and HSRend protocols.
 
     226 "Scalability and Stability Improvements to BridgeDB: Switching
          to a Distributed Database System and RDBMS"
@@ -474,7 +476,7 @@ A.3. Example integration with other open proposals
 
     246  Merging Hidden Service Directories and Introduction Points
 
-         Possibly adds a new HSMid protocol.
+         Possibly adds a new HSIntro or HSDir protocol.
 
     247  Defending Against Guard Discovery Attacks using Vanguards
 

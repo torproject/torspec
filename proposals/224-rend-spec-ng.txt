@@ -1755,8 +1755,8 @@ Appendix A. Signature scheme with key blinding [KEYBLIND]
 
   Let the basepoint be written as B. Assume B has prime order l, so
   lB=0. Let a master keypair be written as (a,A), where a is the private
-  key and A is the public key (A=aB).
-
+  key and A is the public key (A=aB)
+.
   To derive the key for a nonce N and an optional secret s, compute the
   blinding factor h as H(A | s, B, N), and let:
 
