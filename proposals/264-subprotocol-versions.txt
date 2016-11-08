@@ -185,7 +185,7 @@ Implemented-In: 0.2.9.4-alpha
 
    The current version is "1".
 
-   "2" is unused, and reserved by proposal 5705.
+   "2" is unused, and reserved by proposal 244.
 
    "3" is the ed25519 link handshake of proposal 220.
 
