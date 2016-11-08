@@ -1005,7 +1005,9 @@ Table of contents:
       [None or at most once]
 
       If present, this line indicates that the service is a Single Onion
-      Service (see prop260 for more details about that type of service).
+      Service (see prop260 for more details about that type of service). This
+      field has been introduced in 0.3.0 meaning 0.2.9 service don't include
+      this.
 
      Followed by zero or more introduction points as follows (see section
      [NUM_INTRO_POINT] below for accepted values):
