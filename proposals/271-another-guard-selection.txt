@@ -694,12 +694,69 @@ A.3. Controller changes
    but we will not use it because a circuit with a better guard might
    become built too.
 
+A.4. Persistent state format
+
+   The persistent state format doesn't need to be part of this
+   proposal, since different implementations can do it
+   differently. Nonetheless, here's the one Tor uses:
+
+   The "state" file contains one Guard entry for each sampled guard
+   in each instance of the guard state (see section 2).  The value
+   of this Guard entry is a set of space-separated K=V entries,
+   where K contains any nonspace character except =, and V contains
+   any nonspace characters.
+
+   Implementations must retain any unrecognized K=V entries for a
+   sampled guard when the regenerate the state file.
+
+   The order of K=V entries is not allowed to matter.
+
+   Recognized fields (values of K) are:
+
+        "in" -- the name of the guard state instance that this
+        sampled guard is in.  If a sampled guard is in two guard
+        states instances, it appears twice, with a different "in"
+        field each time. Required.
+
+        "rsa_id" -- the RSA id digest for this guard, encoded in
+        hex. Required.
+
+        "bridge_addr" -- If the guard is a bridge, its configured
+        address and OR port. Optional.
+
+        "nickname" -- the guard's nickname, if any. Optional.
+
+        "sampled_on" -- the date when the guard was sampled. Required.
+
+        "sampled_by" -- the Tor version that sampled this guard.
+        Optional.
+
+        "unlisted_since" -- the date since which the guard has been
+        unlisted. Optional.
+
+        "listed" -- 0 if the guard is not listed ; 1 if it is. Required.
+
+        "confirmed_on" -- date when the guard was
+        confirmed. Optional.
+
+        "confirmed_idx" -- position of the guard in the confirmed
+        list. Optional.
+
+        "pb_use_attempts", "pb_use_successes", "pb_circ_attempts",
+        "pb_circ_successes", "pb_successful_circuits_closed",
+        "pb_collapsed_circuits", "pb_unusable_circuits",
+        "pb_timeouts" -- state for the circuit path bias algorithm,
+        given in decimal fractions. Optional.
+
+   All dates here are given as a (spaceless) ISO8601 combined date
+   and time in UTC (e.g., 2016-11-29T19:39:31).
+
+   I do not plan to build a migration mechanism from the old format
+   to the new.
+
 
 TODO. Still non-addressed issues [Section:TODO]
 
-   Formats to use when making information persistent
-
-   Migration from old data format to new.
 
    Explain the overall flow of the circuit creation and guard
    picking algorithms, if they are not clear.
