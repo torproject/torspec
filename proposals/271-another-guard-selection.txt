@@ -449,6 +449,12 @@ Status: Open
 
   We update the {last_tried_connect} time for the guard to 'now.'
 
+  In some cases (for example, when we need a certain directory feature,
+  or when we need to avoid using a certain exit as a guard), we need to
+  restrict the guards that we use for a single circuit. When this happens, we
+  remember the restrictions that applied when choosing the guard for
+  that circuit, since we will need them later (see [UPDATE_WAITING].).
+
     ** Rationale **
 
   We're getting to the core of the algorithm here.  Our main goals are to
@@ -529,17 +535,21 @@ Status: Open
    <waiting_for_better_guard> circuit might be ready to be called
    <complete>.
 
-   * If any circuit is <waiting_for_better_guard>, and every
-     circuit with an {is_pending} guard having higher priority has been
-     in state <usable_if_no_better_guard> for at least
-     {NONPRIMARY_GUARD_CONNECT_TIMEOUT} seconds, and all primary
-     guards have reachable status of <no>, then call that circuit
-     <complete>.
+   * If any circuit C1 is <waiting_for_better_guard>, AND:
+       * All primary guards have reachable status of <no>.
+       * There is no circuit C2 that "blocks" C1.
+     Then, upgrade C1 to <complete>.
 
-   * If any circuit is <complete>, then do not use any
-     <waiting_for_better_guard> or <usable_if_no_better_guard> circuits
-     circuits whose guards have lower priority.  (Time them out
-     after a {NONPRIMARY_GUARD_IDLE_TIMEOUT} seconds.)
+   * If any circuit stays is <waiting_for_better_guard>
+     for more than {NONPRIMARY_GUARD_IDLE_TIMEOUT} seconds,
+     time it out.
+
+   Definition: In the algorithm above, C2 "blocks" C1 if:
+       * C2 obeys all the restrictions that C1 had to obey, AND
+       * C2 has higher priority than C1, AND
+       * Either C2 is <complete>, or C2 is <waiting_for_better_guard>,
+         or C2 has been <usable_if_no_better_guard> for no more than
+         {NONPRIMARY_GUARD_CONNECT_TIMEOUT} seconds.
 
       **Rationale**
 
