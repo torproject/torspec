@@ -60,8 +60,7 @@ Table of contents:
             3.3.1. Introduction handshake encryption requirements [INTRO-HANDSHAKE-REQS]
             3.3.2. Example encryption handshake: ntor with extra data [NTOR-WITH-EXTRA-DATA]
         3.4. Authentication during the introduction phase. [INTRO-AUTH]
-            3.4.1. Password-based authentication.
-            3.4.2. Ed25519-based authentication.
+            3.4.1. Ed25519-based authentication.
     4. The rendezvous protocol
         4.1. Establishing a rendezvous point [EST_REND_POINT]
         4.2. Joining to a rendezvous point [JOIN_REND]
@@ -1733,26 +1732,11 @@ Table of contents:
 
 3.4. Authentication during the introduction phase. [INTRO-AUTH]
 
-   Hidden services may restrict access only to authorized users.  One
-   mechanism to do so is the credential mechanism, where only users who
-   know the credential for a hidden service may connect at all. For more
-   fine-grained conntrol, a hidden service can be configured with
-   password-based or public-key-based authentication.
+   Hidden services may restrict access only to authorized users.
+   One mechanism to do so is the credential mechanism, where only users who
+   know the credential for a hidden service may connect at all.
 
-3.4.1. Password-based authentication.
-
-   To authenticate with a password, the user must include an extension
-   field in the encrypted part of the INTRODUCE1 cell with an
-   EXT_FIELD_TYPE type of [01] and the contents:
-
-     Username [00] Password.
-
-   The username may not include any [00] bytes. The password may.
-
-   On the server side, the password MUST be stored hashed and salted,
-   ideally with scrypt or something better.
-
-3.4.2. Ed25519-based authentication.
+3.4.1. Ed25519-based authentication.
 
    To authenticate with an Ed25519 private key, the user must include an
    extension field in the encrypted part of the INTRODUCE1 cell with an
