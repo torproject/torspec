@@ -23,6 +23,7 @@ Table of contents:
         1.7. In more detail: Keeping crypto keys offline
         1.8. In more detail: Encryption Keys And Replay Resistance
         1.9. In more detail: A menagerie of keys
+            1.9.1. In even more detail: Client authorization [CLIENT-AUTH]
     2. Generating and publishing hidden service descriptors [HSDIR]
         2.1. Deriving blinded keys and subcredentials [SUBCRED]
         2.2. Locating, uploading, and downloading hidden service descriptors
@@ -36,9 +37,17 @@ Table of contents:
             2.3.1. Client behavior in the absense of shared random values
             2.3.2. Hidden services and changing shared random values
         2.4. Hidden service descriptors: outer wrapper [DESC-OUTER]
-        2.5. Hidden service descriptors: encryption format [ENCRYPTED-DATA]
-            2.5.1. Number of introduction points [NUM_INTRO_POINT]
-    3. The introduction protocol
+        2.5. Hidden service descriptors: encryption format [HS-DESC-ENC]
+            2.5.1. First layer of encryption [HS-DESC-FIRST-LAYER]
+                2.5.1.1. First layer encryption logic
+                2.5.1.2. First layer plaintext format
+                2.5.1.3. Client behavior
+                2.5.1.4. Obfuscating the number of authorized clients
+            2.5.2. Second layer of encryption [HS-DESC-SECOND-LAYER]
+                2.5.2.1. Second layer encryption keys
+                2.5.2.2. Second layer plaintext format
+            2.5.3. Deriving hidden service descriptor encryption keys [HS-DESC-ENCRYPTION-KEYS]
+    3. The introduction protocol [INTRO-PROTOCOL]
         3.1. Registering an introduction point [REG_INTRO_POINT]
             3.1.1. Extensible ESTABLISH_INTRO protocol. [EST_INTRO]
             3.1.2. Registering an introduction point on a legacy Tor node [LEGACY_EST_INTRO]
@@ -424,34 +433,36 @@ Table of contents:
 
 1.3. In more detail: Access control [IMD:AC]
 
-   Access control for a hidden service is imposed at multiple points
-   through the process above.
+   Access control for a hidden service is imposed at multiple points through
+   the process above. Furthermore, there is also the option to impose
+   additional client authorization access control using pre-shared secrets
+   exchanged out-of-band between the hidden service and its clients.
 
-   In order to download a descriptor, clients must know which blinded
-   signing key was used to sign it. (See the next section for more info
-   on key blinding.)  This blinded signing key is derived from the
-   service's public key and, optionally, an additional secret that is
-   not part of the hidden service's onion address. The public key and
-   this secret together constitute the service's "credential".
+   The first stage of access control happens when downloading HS descriptors.
+   Specifically, in order to download a descriptor, clients must know which
+   blinded signing key was used to sign it. (See the next section for more info
+   on key blinding.)
 
-   When the secret is in use, the hidden service gains protections
-   equivalent to the "stealth mode" in previous designs.
+   To learn the introduction points, clients must decrypt the body of the
+   hidden service descriptor. To do so, clients must know the _unblinded_
+   public key of the service, which makes the descriptor unuseable by entities
+   without that knowledge (e.g. HSDirs that don't know the onion address).
 
-   To learn the introduction points, the clients must decrypt the body
-   of the hidden service descriptor. The encryption key for these is
-   derived from the service's credential.
+   Also, if optional client authorization is enabled, hidden service
+   descriptors are superencrypted using each authorized user's identity x25519
+   key, to further ensure that unauthorized entities cannot decrypt it.
 
    In order to make the introduction point send a rendezvous request to the
    service, the client needs to use the per-introduction-point authentication
    key found in the hidden service descriptor.
 
-   The final level of access control happens at the server itself, which
-   may decide to respond or not respond to the client's request
-   depending on the contents of the request. The protocol is extensible
-   at this point: at a minimum, the server requires that the client
-   demonstrate knowledge of the contents of the encrypted portion of the
-   hidden service descriptor. The service may additionally require a
-   user- or group-specific access token before it responds to requests.
+   The final level of access control happens at the server itself, which may
+   decide to respond or not respond to the client's request depending on the
+   contents of the request. The protocol is extensible at this point: at a
+   minimum, the server requires that the client demonstrate knowledge of the
+   contents of the encrypted portion of the hidden service descriptor. If
+   optional client authorization is enabled, the service may additionally
+   require the client to prove knowledge of a pre-shared private key.
 
 1.4. In more detail: Distributing hidden service descriptors. [IMD:DIST]
 
@@ -511,7 +522,7 @@ Table of contents:
 
    In order to operate a hidden service, the operator can generate in
    advance a number of blinded signing keys and descriptor signing
-   keys (and their credentials; see [DESC-OUTER] and [ENCRYPTED-DATA]
+   keys (and their credentials; see [DESC-OUTER] and [HS-DESC-ENC]
    below), and their corresponding descriptor encryption keys, and
    export those to the hidden service hosts.
 
@@ -597,6 +608,33 @@ Table of contents:
       part of the Tor circuit extension handshake, used to tie a request
       to a particular circuit.
 
+1.9.1. In even more detail: Client authorization keys [CLIENT-AUTH]
+
+   When client authorization is enabled, each authorized client of a hidden
+   service has two more assymetric keypairs which are shared with the hidden
+   service. An entity without those keys is not able to use the hidden
+   service. Throughout this document, we assume that these pre-shared keys are
+   exchanged between the hidden service and its clients in a secure out-of-band
+   fashion.
+
+   Specifically, each authorized client possesses:
+
+   - An x25519 keypair used to compute decryption keys that allow the client to
+     decrypt the hidden service descriptor. See [HS-DESC-ENC].
+
+   - An ed25519 keypair which allows the client to compute signatures which
+     prove to the hidden service that the client is authorized. These
+     signatures are inserted into the INTRODUCE1 cell, and without them the
+     introduction to the hidden service cannot be completed. See [INTRO-AUTH].
+
+   The right way to exchange these keys is to have the client generate keys and
+   send the corresponding public keys to the hidden service out-of-band. An
+   easier but less secure way of doing this exchange would be to have the
+   hidden service generate the keypairs and pass the corresponding private keys
+   to its clients. See section [CLIENT-AUTH-MGMT] for more details on how these
+   keys should be managed.
+
+   [TODO: Also specify stealth client authorization.]
 
 2. Generating and publishing hidden service descriptors [HSDIR]
 
@@ -610,7 +648,7 @@ Table of contents:
 
 2.1. Deriving blinded keys and subcredentials [SUBCRED]
 
-   In each time period (see [TIME-PERIOD] for a definition of time
+   In each time period (see [TIME-PERIODS] for a definition of time
    periods), a hidden service host uses a different blinded private key
    to sign its directory information, and clients use a different
    blinded public key as the index for fetching that information.
@@ -633,12 +671,10 @@ Table of contents:
 
    In the above formula, credential corresponds to:
 
-       credential = H(public-identity-key | authorization-key)
+       credential = H("credential" | public-identity-key)
 
    where public-identity-key is the public identity master key of the hidden
-   service, and authorization-key is an optional secret used for client
-   authorization. If no client authorization is specified, authorization-key is
-   left blank.
+   service.
 
 2.2. Locating, uploading, and downloading hidden service descriptors
        [HASHRING]
@@ -932,13 +968,13 @@ Table of contents:
        prevents an attacker from replacing a newer descriptor signed by
        a given key with a copy of an older version.)
 
-     "encrypted" NL encrypted-string
+     "superencrypted" NL encrypted-string
 
        [Exactly once.]
 
-       An encrypted blob, whose format is discussed in [ENCRYPTED-DATA]
-       below. The blob is base-64 encoded and enclosed in -----BEGIN
-       MESSAGE---- and ----END MESSAGE---- wrappers.
+       An encrypted blob, whose format is discussed in [HS-DESC-ENC] below. The
+       blob is base64 encoded and enclosed in -----BEGIN MESSAGE---- and
+       ----END MESSAGE---- wrappers.
 
      "signature" SP signature NL
 
@@ -950,37 +986,195 @@ Table of contents:
        the hidden service host does not need to have its private blinded key
        online.
 
-2.5. Hidden service descriptors: encryption format [ENCRYPTED-DATA]
+   HSDirs accept hidden service descriptors of up to 50k bytes (a consensus
+   parameter should also be introduced to control this value).
 
-   The encrypted part of the hidden service descriptor is encrypted and
-   authenticated with symmetric keys generated as follows:
+2.5. Hidden service descriptors: encryption format [HS-DESC-ENC]
 
-       SALT = 16 bytes from H(random), changes each time we rebuld the
-              descriptor even if the content of the descriptor hasn't changed.
-              (So that we don't leak whether the intro point list etc. changed)
+   Hidden service descriptors are protected by two layers of encryption.
+   Clients need to decrypt both layers to connect to the hidden service.
 
-       secret_input = blinded_public_key | subcredential |
-                      INT_8(revision_counter)
-       keys = KDF(secret_input, salt, "hsdir-encrypted-data",
-                  S_KEY_LEN + S_IV_LEN + MAC_KEY_LEN)
+   The first layer of encryption provides confidentiality against entities who
+   don't know the public key of the hidden service (e.g. HSDirs), while the
+   second layer of encryption is only useful when client authorization is enabled
+   and protects against entities that do not possess valid client credentials.
 
-       SECRET_KEY = first S_KEY_LEN bytes of keys
-       SECRET_IV  = next S_IV_LEN bytes of keys
-       MAC_KEY    = last MAC_KEY_LEN bytes of keys
+2.5.1. First layer of encryption [HS-DESC-FIRST-LAYER]
 
-   The encrypted data has the format:
+   The first layer of HS descriptor encryption is designed to protect
+   descriptor confidentiality against entities who don't know the blinded
+   public key of the hidden service.
 
-       SALT       hashed random bytes from above  [16 bytes]
-       ENCRYPTED  The plaintext encrypted with S  [variable]
-       MAC        MAC of both above fields        [32 bytes]
+2.5.1.1. First layer encryption logic
 
-   The encryption format is ENCRYPTED =
-               STREAM(SECRET_IV,SECRET_KEY) XOR Plaintext
+   The encryption keys and format for the first layer of encryption are
+   generated as specified in [HS-DESC-ENCRYPTION-KEYS] with customization
+   parameters:
 
-   Before encryption, the plaintext must be padded to a multiple of 4096 bytes
-   with NUL bytes.
+     SECRET_DATA = blinded-public-key
+     STRING_CONSTANT = "hsdir-superencrypted-data"
 
-   The plaintext format is:
+   The ciphertext is placed on the "superencrypted" field of the descriptor.
+
+   Before encryption the plaintext is padded with NUL bytes to the nearest
+   multiple of 10k bytes.
+
+2.5.1.2. First layer plaintext format
+
+   After clients decrypt the first layer of encryption, they need to parse the
+   plaintext to get to the second layer ciphertext which is contained in the
+   "encrypted" field.
+
+   If client auth is enabled, the hidden service generates a fresh
+   descriptor_cookie key (32 random bytes) and encrypts it using each
+   authorized client's identity x25519 key. Authorized clients can use the
+   descriptor cookie to decrypt the second layer of encryption. Our encryption
+   scheme requires the hidden service to also generate an ephemeral x25519
+   keypair for each new descriptor.
+
+   If client auth is disabled, fake data is placed in each of the fields below
+   to obfuscate whether client authorization is enabled.
+
+   Here are all the supported fields:
+
+     "desc-auth-type" SP type NL
+
+      [Exactly once]
+
+      This field contains the type of authorization used to protect the
+      descriptor. The only recognized type is "x25519" and specifies the
+      encryption scheme described in this section.
+
+      If client authorization is disabled, the value here should be "x25519".
+
+     "desc-auth-ephemeral-key" SP key NL
+
+      [Exactly once]
+
+      This field contains an ephemeral x25519 public key generated by the
+      hidden service and encoded in base64. The key is used by the encryption
+      scheme below.
+
+      If client authorization is disabled, the value here should be a fresh
+      x25519 pubkey that will remain unused.
+
+     "auth-client" SP client-id SP iv SP encrypted-cookie
+
+      [Any number]
+
+      When client authorization is enabled, the hidden service inserts an
+      "auth-client" line for each of its authorized clients. If client
+      authorization is disabled, the fields here can be populated with random
+      data of the right size (that's 8 bytes for 'client-id', 16 bytes for 'iv'
+      and 16 bytes for 'encrypted-cookie' all encoded with base64).
+
+      When client authorization is enabled, each "auth-client" line contains
+      the descriptor cookie encrypted to each individual client. We assume that
+      each authorized client possesses a pre-shared x25519 keypair which is
+      used to decrypt the descriptor cookie.
+
+      We now describe the descriptor cookie encryption scheme. Here are the
+      relevant keys:
+
+          client_x = private x25519 key of authorized client
+          client_X = public x25519 key of authorized client
+          hs_y = private key of ephemeral x25519 keypair of hidden service
+          hs_Y = public key of ephemeral x25519 keypair of hidden service
+          descriptor_cookie = descriptor cookie used to encrypt the descriptor
+
+      And here is what the hidden service computes:
+
+          SECRET_SEED = x25519(hs_y, client_X)
+          KEYS = KDF(SECRET_SEED, 40)
+          CLIENT-ID = fist 8 bytes of KEYS
+          COOKIE-KEY = last 32 bytes of KEYS
+
+      Here is a description of the fields in the "auth-client" line:
+
+      - The "client-id" field is CLIENT-ID from above encoded in base64.
+
+      - The "iv" field is 16 random bytes encoded in base64.
+
+      - The "encrypted-cookie" field contains the descriptor cookie ciphertext
+        as follows and is encoded in base64:
+           encrypted-cookie = STREAM(iv, COOKIE-KEY) XOR descriptor_cookie
+
+      See section [FIRST-LAYER-CLIENT-BEHAVIOR] for the client-side logic of
+      how to decrypt the descriptor cookie.
+
+    "encrypted" NL encrypted-string
+
+     [Exactly once]
+
+      An encrypted blob containing the second layer ciphertext, whose format is
+      discussed in [HS-DESC-SECOND-LAYER] below. The blob is base64 encoded
+      and enclosed in -----BEGIN MESSAGE---- and ----END MESSAGE---- wrappers.
+
+2.5.1.3. Client behavior [FIRST-LAYER-CLIENT-BEHAVIOR]
+
+    The goal of clients at this stage is to decrypt the "encrypted" field as
+    described in [HS-DESC-SECOND-LAYER].
+
+    If client authorization is enabled, authorized clients need to extract the
+    descriptor cookie to proceed with decryption of the second layer as
+    follows:
+
+    An authorized client parsing the first layer of an encrypted descriptor,
+    extracts the ephemeral key from "desc-auth-ephemeral-key" and calculates
+    CLIENT-ID and COOKIE-KEY as described in the section above using their
+    x25519 private key. The client then uses CLIENT-ID to find the right
+    "auth-client" field which contains the ciphertext of the descriptor
+    cookie. The client then uses COOKIE-KEY and the iv to decrypt the
+    descriptor_cookie, which is used to decrypt the second layer of descriptor
+    encryption as described in [HS-DESC-SECOND-LAYER].
+
+2.5.1.4. Hiding client authorization data
+
+    Hidden services should avoid leaking whether client authorization is
+    enabled or how many authorized clients there are.
+
+    Hence even when client authorization is disabled, the hidden service adds
+    fake "desc-auth-type", "desc-auth-ephemeral-key" and "auth-client" lines to
+    the descriptor, as described in [HS-DESC-FIRST-LAYER].
+
+    The hidden service also avoids leaking the number of authorized clients by
+    adding fake "auth-client" entries to its descriptor. Specifically,
+    descriptors always contain a number of authorized clients that is a
+    multiple of 16 by adding fake "auth-client" entries if needed.
+    [XXX consider randomization of the value 16]
+
+    Clients MUST accept descriptors with any number of "auth-client" lines as
+    long as the total descriptor size is within the max limit of 50k (also
+    controlled with a consensus parameter).
+
+2.5.2. Second layer of encryption [HS-DESC-SECOND-LAYER]
+
+   The second layer of descriptor encryption is designed to protect descriptor
+   confidentiality against unauthorized clients. If client authorization is
+   enabled, it's encrypted using the descriptor_cookie, and contains needed
+   information for connecting to the hidden service, like the list of its
+   introduction points.
+
+   If client authorization is disabled, then the second layer of HS encryption
+   does not offer any additional security, but is still used.
+
+2.5.2.1. Second layer encryption keys
+
+   The encryption keys and format for the second layer of encryption are
+   generated as specified in [HS-DESC-ENCRYPTION-KEYS] with customization
+   parameters as follows:
+
+     SECRET_DATA = blinded-public-key | descriptor_cookie
+     STRING_CONSTANT = "hsdir-encrypted-data"
+
+   If client authorization is disabled the 'descriptor_cookie' field is left blank.
+
+   The ciphertext is placed on the "encrypted" field of the descriptor.
+
+2.5.2.2. Second layer plaintext format
+
+   After decrypting the second layer ciphertext, clients can finally learn the
+   list of intro points etc. The plaintext has the following format:
 
      "create2-formats" SP formats NL
 
@@ -991,14 +1185,14 @@ Table of contents:
       tor-spec.txt. See tor-spec section 5.1 for a list of recognized
       handshake types.
 
-     "authentication-required" SP types NL
+     "intro-auth-required" SP types NL
 
       [At most once]
 
-      A space-separated list of authentication types. A client that does
-      not support at least one of these authentication types will not be
-      able to contact the host. Recognized types are: 'password' and
-      'ed25519'. See [INTRO-AUTH] below.
+      A space-separated list of introduction-layer authentication types; see
+      section [INTRO-AUTH] for more info. A client that does not support at
+      least one of these authentication types will not be able to contact the
+      host. Recognized types are: 'password' and 'ed25519'.
 
      "single-onion-service"
 
@@ -1069,7 +1263,43 @@ Table of contents:
    Other encryption and authentication key formats are allowed; clients
    should ignore ones they do not recognize.
 
-2.5.1. Number of introduction points [NUM_INTRO_POINT]
+   Clients who manage to extract the introduction points of the hidden service
+   can prroceed with the introduction protocol as specified in [INTRO-PROTOCOL].
+
+2.5.3. Deriving hidden service descriptor encryption keys [HS-DESC-ENCRYPTION-KEYS]
+
+   In this section we present the generic encryption format for hidden service
+   descriptors. We use the same encryption format in both encryption layers,
+   hence we introduce two customization parameters SECRET_DATA and
+   STRING_CONSTANT which vary between the layers.
+
+   The SECRET_DATA parameter specifies the secret data that are used during
+   encryption key generation, while STRING_CONSTANT is merely a string constant
+   that is used as part of the KDF.
+
+   Here is the key generation logic:
+
+       SALT = 16 bytes from H(random), changes each time we rebuld the
+              descriptor even if the content of the descriptor hasn't changed.
+              (So that we don't leak whether the intro point list etc. changed)
+
+       secret_input = SECRET_DATA | subcredential | INT_8(revision_counter)
+
+       keys = KDF(secret_input | salt | STRING_CONSTANT, S_KEY_LEN + S_IV_LEN + MAC_KEY_LEN)
+
+       SECRET_KEY = first S_KEY_LEN bytes of keys
+       SECRET_IV  = next S_IV_LEN bytes of keys
+       MAC_KEY    = last MAC_KEY_LEN bytes of keys
+
+   The encrypted data has the format:
+
+       SALT       hashed random bytes from above  [16 bytes]
+       ENCRYPTED  The ciphertext                  [variable]
+       MAC        MAC of both above fields        [32 bytes]
+
+   The final encryption format is ENCRYPTED = STREAM(SECRET_IV,SECRET_KEY) XOR Plaintext
+
+2.5.4. Number of introduction points [NUM_INTRO_POINT]
 
    This section defines how many introduction points an hidden service
    descriptor can have at minimum, by default and the maximum:
@@ -1085,7 +1315,7 @@ Table of contents:
    HSDirs) but also in order for the descriptor size to not overwhelmed hidden
    service directories with user defined values that could be gigantic.
 
-3. The introduction protocol
+3. The introduction protocol [INTRO-PROTOCOL]
 
    The introduction protocol proceeds in three steps.
 
@@ -1858,3 +2088,95 @@ Appendix E. Reserved numbers
 
       Note: The value "0A" is skipped because it's reserved for the onion key
             cross-certifying ntor identity key from proposal 228.
+
+Appendix F. Managing authorized client data [CLIENT-AUTH-MGMT]
+
+  Hidden services and clients can configure their authorized client data either
+  using the torrc, or using the control port. This section presents a suggested
+  scheme for configuring client authorization.
+
+  F.1. Configuring client authorization using torrc
+
+  F.1.1. Hidden Service side
+
+	  A hidden service that wants to perform client authorization, adds a new
+	  option HiddenServiceAuthorizeClient to its torrc file:
+
+	     HiddenServiceAuthorizeClient auth-type client-name,client-name,...
+
+	  The only recognized auth-type value is "basic" which describes the scheme in
+	  section [CLIENT-AUTH]. The rest of the line is a comma-separated list of
+	  human-readable authorized client names.
+
+	  Let's consider that one of the listed client names is "alice". In this case,
+	  Tor checks the directory at "DataDirectory/hidden_service/client_auth/" for
+	  any files with filename alice.key or alice.pub .
+
+	  Files ending in .key contain private keys for authorized clients, whereas
+	  .pub files contain public keys for authorized clients. In general, authorized
+	  clients should send their public keys to the hidden service operator, and the
+	  operator should place them in the filesystem as .pub files. Only .pub files
+	  are useful to the hidden service, whereas .key files are there only if the
+	  hidden service had to generate its client's keypairs as described below.
+
+	  If no alice.key or alice.pub files exist, Tor is tasked with generating
+	  client keys for Alice. To do so, Tor generates x25519 and ed25519 keypairs
+	  for Alice, then makes an alice.key file and writes the private keys inside;
+	  it also makes an alice.pub file and writes the public keys inside.
+	  [XXX what format? it should be convenient so that client can just copy-paste]
+
+	  In this case, the hidden service operator has the responsibility to pass the
+	  .key file to Alice in a secure out-of-band way. After the file is passed to
+	  Alice, it can be shredded from the filesystem, as only the public keys are
+	  required for the hidden service to function.
+
+  F.1.2. Client side
+
+	  A client who wants to register client authorization data for a hidden service
+	  needs to add the following line to their torrc:
+
+	        HidServAuth onion-address x25519-private-key ed25519-private-key
+
+	  The keys above are either generated by Alice using a key generation utility,
+	  or they are extracted from a .key file provided by the hidden service.
+
+	  In the former case, the client is also tasked with transfering the public
+	  keys to the hidden service in a secure out-of-band way.
+
+  F.2. Configuring client authorization using the control port
+
+  F.2.1. Service side
+
+	  A hidden service also has the option to configure authorized clients
+	  using the control port. The idea is that hidden service operators can use
+	  controller utilities that manage their access control instead of using
+	  the filesystem to register client keys.
+
+	  Specifically, we require a new control port command ADD_ONION_CLIENT_AUTH
+	  which is able to register x25519/ed25519 public keys tied to a specific
+	  authorized client.
+      [XXX figure out control port command format]
+
+	  Hidden services who use the control port interface for client auth need
+	  to perform their own key management.
+
+  F.2.2. Client side
+
+	  There should also be a control port interface for clients to register
+	  authorization data for hidden services without having to use the
+	  torrc. It should allow both generation of client authorization private
+	  keys, and also to import client authorization data provided by a hidden
+	  service
+
+	  This way, Tor Browser can present "Generate client auth keys" and "Import
+	  client auth keys" dialogs to users when they try to visit a hidden service
+	  that is protected by client authorization.
+
+	  Specifically, we require two new control port commands:
+	                IMPORT_ONION_CLIENT_AUTH_DATA
+	                GENERATE_ONION_CLIENT_AUTH_DATA
+	  which import and generate client authorization data respectively.
+
+	  [XXX how does key management work here?]
+	  [XXX what happens when people use both the control port interface and the
+	       filesystem interface?]
