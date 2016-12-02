@@ -438,6 +438,82 @@ again to remind me!
      against both website traffic fingerprinting as well as hidden service
      circuit setup fingerprinting. (9/2015)
 
+255  Controller features to allow for load-balancing hidden services [DRAFT]
+
+     Specifies a technique to improve the scalability of hidden services by
+     decoupling the introduction and rendezvous functionality so that they can
+     be performed in separate physical machines.
+
+256  Key revocation for relays and authorities [OPEN]
+
+     Specifies how directory authorities and relays can revoke compromised
+     long-term identity keys.
+
+257  Refactoring authorities and making them more isolated from the net [META]
+
+     Describes a strategy for making directory authorities less vulnerable to
+     DoS by reducing their exposure to the network.
+
+258  Denial-of-service resistance for directory authorities [ACCEPTED]
+
+     Describes heuristics that directory authorities can deploy to reduce the
+     threat of DoS due to large directory connection volumes.
+
+259  New Guard Selection Behaviour [OBSOLETE]
+
+     Specifies an improved guard-picking algorithm that is capable of defending
+     against targetted attacks. The proposal has since been obsoleted by
+     proposal 271.
+
+260  Rendezvous Single Onion Services [FINISHED]
+
+     Specifies a performance optimization for hidden service that do not care
+     about location anonymity, so that they build 1-hop circuits instead of
+     3-hop circuits to reduce communication latency.
+
+261  AEZ for relay cryptography [OPEN]
+
+     Specifies a circuit encryption scheme that is resistant to tagging
+     end-to-end correlation attacks.
+
+262  Re-keying live circuits with new cryptographic material [OPEN]
+
+     Specifies a way to rekey our circuit crypto so that we allow greater
+     amounts of encrypted data through them.
+
+263  Request to change key exchange protocol for handshake v1.2 [OBSOLETE]
+
+     Specifies a quantum-safe key agreement algorithm for Tor circuits. The
+     proposal was supereceded by proposal 269.
+
+264  Putting version numbers on the Tor subprotocols [CLOSED]
+
+     Specifies a way for relays to do versioning using their descriptors. In
+     the past we used the Tor version string for versioning, which is not an
+     elegant approach.
+
+265  Load Balancing with Overhead Parameters [ACCEPTED]
+
+     The proposal provides new load balancing equations for Tor which are
+     capable of taking into account non-standard traffic like padding or
+     directory and hidden service traffic.
+
+266  Removing current obsolete clients from the Tor network [DRAFT]
+
+     Specifies ways to disable outdated and insecure Tor clients.
+
+267  Tor Consensus Transparency [DRAFT]
+
+     Specifies how to apply the certificate transparency approach of TLS to Tor
+     consensus and vote documents, in an attempt to make attacks more easily
+     detectable.
+
+268  New Guard Selection Behaviour [DRAFT]
+
+     Specifies an improved guard-picking algorithm that is capable of defending
+     against targetted attacks. The proposal has since been obsoleted by
+     proposal 271.
+
 269  Transitionally secure hybrid handshakes [DRAFT]
 
      Describes a generalised protocol for composing X25519 key exchanges with
@@ -448,3 +524,20 @@ again to remind me!
      Describes a hybrid handshake based on the ntor handshake and the
      NewHope post-quantum key exchange.  Currently needs revision to
      specify how this proposal depends upon prop#269.
+
+271  Another algorithm for guard selection [OPEN]
+
+     Specifies an improved guard-picking algorithm that is capable of defending
+     against targetted attacks.
+
+272  Listed routers should be Valid, Running, and treated as such [FINISHED]
+
+     This proposal describes a change in how clients understand consensus
+     flags, and how authorities vote on consensuses.
+
+273  Exit relay pinning for web services [DRAFT]
+
+     The proposal specifies a scheme for websites to prevent additional
+     security against malicious exit nodes, by specifying their own set of exit
+     nodes.
+

@@ -2,9 +2,10 @@ Filename: 259-guard-selection.txt
 Title: New Guard Selection Behaviour
 Author: Isis Lovecruft, George Kadianakis
 Created: 2015-10-28
-Status: Draft
+Status: Obsolete
 Extends: 241-suspicious-guard-turnover.txt
 
+This proposal was made obsolete by proposal #271.
 
 §1. Overview
 

@@ -2,7 +2,7 @@ Filename: 260-rend-single-onion.txt
 Title: Rendezvous Single Onion Services
 Author: Tim Wilson-Brown, John Brooks, Aaron Johnson, Rob Jansen, George Kadianakis, Paul Syverson, Roger Dingledine
 Created: 2015-10-17
-Status: Draft
+Status: Finished
 
 1. Overview
 

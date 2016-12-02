@@ -2,12 +2,14 @@ Filename: 268-guard-selection.txt
 Title: New Guard Selection Behaviour
 Author: Isis Lovecruft, George Kadianakis, [Ola Bini]
 Created: 2015-10-28
-Status: Draft
+Status: Obsolete
 
   (Editorial note: this was origianlly written as a revision of
   proposal 259, but it diverges so substantially that it seemed
   better to assign it a new number for reference, so that we
   aren't always talking about "The old 259" and "the new 259". -NM)
+
+  This proposal has been obsoleted by proposal #271.
 
 §1. Overview
 

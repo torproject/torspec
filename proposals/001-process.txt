@@ -184,6 +184,9 @@ Proposal status:
       It isn't going to turn into a spec unless somebody copy-and-pastes
       it into a new spec for a new subsystem.
 
+   Obsolete: This proposal was flawed and has been superseded by another
+     proposal. See comments in the document for details.
+
    The editors maintain the correct status of proposals, based on rough
    consensus and their own discretion.
 
