@@ -203,8 +203,9 @@ Status: Open
    We require that {SAMPLED_GUARDS} contain at least
    {MIN_FILTERED_SAMPLE} guards from the consensus (if possible),
    but not more than {MAX_SAMPLE_THRESHOLD} of the number of guards
-   in the consensus.  (But if the maximum would be smaller than
-   {MIN_FILTERED_SAMPLE}, we set the maximum at {MIN_FILTERED_SAMPLE}.)
+   in the consensus, and not more then {MAX_SAMPLE_SIZE} in total.
+   (But if the maximum would be smaller than {MIN_FILTERED_SAMPLE}, we
+   set the maximum at {MIN_FILTERED_SAMPLE}.)
 
    To add a new guard to {SAMPLED_GUARDS}, pick an entry at random
    from ({GUARDS} - {SAMPLED_GUARDS}), weighted by bandwidth.
@@ -601,7 +602,9 @@ A.1.  Parameters with suggested values. [Section:PARAM_VALS]
 
    (All suggested values chosen arbitrarily)
 
-   {param:MAX_SAMPLE_THRESHOLD} -- 30%
+   {param:MAX_SAMPLE_THRESHOLD} -- 20%
+
+   {param:MAX_SAMPLE_SIZE} -- 60
 
    {param:GUARD_LIFETIME} -- 120 days
 
