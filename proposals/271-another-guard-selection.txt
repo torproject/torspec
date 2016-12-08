@@ -355,6 +355,10 @@ Status: Open
   PRIMARY_GUARDS chosen _uniformly_ at random from
   ({FILTERED_GUARDS} - {CONFIRMED_GUARDS}).
 
+  Once an element has been added to {PRIMARY_GUARDS}, we do not remove it
+  until it is replaced by some element from {CONFIRMED_GUARDS}. Confirmed
+  elements always proceed unconfirmed ones in the {PRIMARY_GUARDS} list.
+
   Note that {PRIMARY_GUARDS} do not have to be in
   {USABLE_FILTERED_GUARDS}: they might be unreachable.
 
