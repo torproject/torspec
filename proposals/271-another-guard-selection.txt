@@ -545,16 +545,18 @@ Status: Open
        * There is no circuit C2 that "blocks" C1.
      Then, upgrade C1 to <complete>.
 
-   * If any circuit stays is <waiting_for_better_guard>
-     for more than {NONPRIMARY_GUARD_IDLE_TIMEOUT} seconds,
-     time it out.
-
    Definition: In the algorithm above, C2 "blocks" C1 if:
        * C2 obeys all the restrictions that C1 had to obey, AND
        * C2 has higher priority than C1, AND
        * Either C2 is <complete>, or C2 is <waiting_for_better_guard>,
          or C2 has been <usable_if_no_better_guard> for no more than
          {NONPRIMARY_GUARD_CONNECT_TIMEOUT} seconds.
+
+   We run this procedure periodically:
+
+   * If any circuit stays is <waiting_for_better_guard>
+     for more than {NONPRIMARY_GUARD_IDLE_TIMEOUT} seconds,
+     time it out.
 
       **Rationale**
 
@@ -568,7 +570,6 @@ Status: Open
    lower-priority circuits immediately: we might decide to use
    them after all if the <complete> circuit goes down before
    {NONPRIMARY_GUARD_IDLE_TIMEOUT} seconds.
-
 
 3.10.  Whenever we get a new consensus. [Section:ON_CONSENSUS]
 
