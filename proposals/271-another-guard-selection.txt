@@ -108,6 +108,8 @@ Status: Open
       {SAMPLED_GUARDS} and {CONFIRMED_GUARDS} and other derived
       values for the UseBridges case.
 
+      In this case, we impose no upper limit on the sample size.
+
     B. EntryNodes / ExcludeNodes / Reachable*Addresses /
         FascistFirewall / ClientUseIPv4=0
 
@@ -117,6 +119,13 @@ Status: Open
 
       If this fraction is less than {MEANINGFUL_RESTRICTION_FRAC},
       we use a separate instance of the state.
+
+      (While Tor is running, we do not change back and forth between
+      the separate instance of the state and the default instance
+      unless the fraction of usable guards is 5% higher than, or 5%
+      lower than, {MEANINGFUL_RESTRICTION_FRAC}.  This prevents us
+      from flapping back and forth between instances if we happen to
+      hit {MEANINGFUL_RESTRICTION_FRAC} exactly.
 
       If this fraction is less than {EXTREME_RESTRICTION_FRAC}, we use a
       separate instance of the state, and warn the user.
@@ -134,8 +143,8 @@ Status: Open
 3.0.  The guards listed in the current consensus. [Section:GUARDS]
 
    By {set:GUARDS} we mean the set of all guards in the current
-   consensus that are usable for all circuits. (They must have the
-   flags: Stable, Fast, V2Dir, Guard.)
+   consensus that are usable for all circuits and directory
+   requests. (They must have the flags: Stable, Fast, V2Dir, Guard.)
 
       **Rationale**
 
@@ -192,9 +201,11 @@ Status: Open
         guard, and we don't know whether it will succeed.
 
    We require that {SAMPLED_GUARDS} contain at least
-   {MIN_SAMPLE_THRESHOLD} of the number of guards in the consensus
-   (if possible), but not more than {MAX_SAMPLE_THRESHOLD} of the
-   number of guards in the consensus.
+   {MIN_FILTERED_SAMPLE} guards from the consensus (if possible),
+   but not more than {MAX_SAMPLE_THRESHOLD} of the number of guards
+   in the consensus, and not more then {MAX_SAMPLE_SIZE} in total.
+   (But if the maximum would be smaller than {MIN_FILTERED_SAMPLE}, we
+   set the maximum at {MIN_FILTERED_SAMPLE}.)
 
    To add a new guard to {SAMPLED_GUARDS}, pick an entry at random
    from ({GUARDS} - {SAMPLED_GUARDS}), weighted by bandwidth.
@@ -204,11 +215,6 @@ Status: Open
       * We have a live consensus, and {IS_LISTED} is false, and
         {FIRST_UNLISTED_AT} is over {REMOVE_UNLISTED_GUARDS_AFTER}
         days in the past.
-
-     OR
-
-      * We have a live consensus, and we cannot parse
-        {ADDED_BY_VERSION}.
 
      OR
 
@@ -256,6 +262,8 @@ Status: Open
        - It is not disabled because of ExcludeNodes.
        - It is a bridge if UseBridges is true; or it is not a
          bridge if UseBridges is false.
+       - Is included in EntryNodes if EntryNodes is set and
+         UseBridges is not. (But see 2.B above).
 
    We have an additional subset, {set:USABLE_FILTERED_GUARDS}, which
    is defined to be the subset of {FILTERED_GUARDS} where
@@ -346,6 +354,10 @@ Status: Open
   {N_PRIMARY_GUARDS} elements, add additional elements to
   PRIMARY_GUARDS chosen _uniformly_ at random from
   ({FILTERED_GUARDS} - {CONFIRMED_GUARDS}).
+
+  Once an element has been added to {PRIMARY_GUARDS}, we do not remove it
+  until it is replaced by some element from {CONFIRMED_GUARDS}. Confirmed
+  elements always proceed unconfirmed ones in the {PRIMARY_GUARDS} list.
 
   Note that {PRIMARY_GUARDS} do not have to be in
   {USABLE_FILTERED_GUARDS}: they might be unreachable.
@@ -442,6 +454,12 @@ Status: Open
 
   We update the {last_tried_connect} time for the guard to 'now.'
 
+  In some cases (for example, when we need a certain directory feature,
+  or when we need to avoid using a certain exit as a guard), we need to
+  restrict the guards that we use for a single circuit. When this happens, we
+  remember the restrictions that applied when choosing the guard for
+  that circuit, since we will need them later (see [UPDATE_WAITING].).
+
     ** Rationale **
 
   We're getting to the core of the algorithm here.  Our main goals are to
@@ -522,17 +540,23 @@ Status: Open
    <waiting_for_better_guard> circuit might be ready to be called
    <complete>.
 
-   * If any circuit is <waiting_for_better_guard>, and every currently
-     {is_pending} circuit whose guard has higher priority has been
-     in state <usable_if_no_better_guard> for at least
-     {NONPRIMARY_GUARD_CONNECT_TIMEOUT} seconds, and all primary
-     guards have reachable status of <no>, then call that circuit
-     <complete>.
+   * If any circuit C1 is <waiting_for_better_guard>, AND:
+       * All primary guards have reachable status of <no>.
+       * There is no circuit C2 that "blocks" C1.
+     Then, upgrade C1 to <complete>.
 
-   * If any circuit is <complete>, then do not use any
-     <waiting_for_better_guard> or <usable_if_no_better_guard> circuits
-     circuits whose guards have lower priority.  (Time them out
-     after a {NONPRIMARY_GUARD_IDLE_TIMEOUT} seconds.)
+   Definition: In the algorithm above, C2 "blocks" C1 if:
+       * C2 obeys all the restrictions that C1 had to obey, AND
+       * C2 has higher priority than C1, AND
+       * Either C2 is <complete>, or C2 is <waiting_for_better_guard>,
+         or C2 has been <usable_if_no_better_guard> for no more than
+         {NONPRIMARY_GUARD_CONNECT_TIMEOUT} seconds.
+
+   We run this procedure periodically:
+
+   * If any circuit stays is <waiting_for_better_guard>
+     for more than {NONPRIMARY_GUARD_IDLE_TIMEOUT} seconds,
+     time it out.
 
       **Rationale**
 
@@ -546,7 +570,6 @@ Status: Open
    lower-priority circuits immediately: we might decide to use
    them after all if the <complete> circuit goes down before
    {NONPRIMARY_GUARD_IDLE_TIMEOUT} seconds.
-
 
 3.10.  Whenever we get a new consensus. [Section:ON_CONSENSUS]
 
@@ -584,16 +607,16 @@ A.1.  Parameters with suggested values. [Section:PARAM_VALS]
 
    (All suggested values chosen arbitrarily)
 
-   {param:MIN_SAMPLE_THRESHOLD} -- 15
+   {param:MAX_SAMPLE_THRESHOLD} -- 20%
 
-   {param:MAX_SAMPLE_THRESHOLD} -- 50
+   {param:MAX_SAMPLE_SIZE} -- 60
 
    {param:GUARD_LIFETIME} -- 120 days
 
    {param:REMOVE_UNLISTED_GUARDS_AFTER} -- 20 days
      [previously ENTRY_GUARD_REMOVE_AFTER]
 
-   {param:MIN_FILTERED_SAMPLE} -- 10
+   {param:MIN_FILTERED_SAMPLE} -- 20
 
    {param:N_PRIMARY_GUARDS} -- 3
 
@@ -681,11 +704,77 @@ A.3. Why not a sliding scale of primaryness? [Section:CVP]
         simple to make to the code after we implement the simpler
         version of the algorithm described above.
 
+A.3. Controller changes
+
+   We will add to control-spec.txt a new possible circuit state, GUARD_WAIT,
+   that can be given as part of circuit events and GETINFO responses about
+   circuits.  A circuit is in the GUARD_WAIT state when it is fully built,
+   but we will not use it because a circuit with a better guard might
+   become built too.
+
+A.4. Persistent state format
+
+   The persistent state format doesn't need to be part of this
+   proposal, since different implementations can do it
+   differently. Nonetheless, here's the one Tor uses:
+
+   The "state" file contains one Guard entry for each sampled guard
+   in each instance of the guard state (see section 2).  The value
+   of this Guard entry is a set of space-separated K=V entries,
+   where K contains any nonspace character except =, and V contains
+   any nonspace characters.
+
+   Implementations must retain any unrecognized K=V entries for a
+   sampled guard when the regenerate the state file.
+
+   The order of K=V entries is not allowed to matter.
+
+   Recognized fields (values of K) are:
+
+        "in" -- the name of the guard state instance that this
+        sampled guard is in.  If a sampled guard is in two guard
+        states instances, it appears twice, with a different "in"
+        field each time. Required.
+
+        "rsa_id" -- the RSA id digest for this guard, encoded in
+        hex. Required.
+
+        "bridge_addr" -- If the guard is a bridge, its configured
+        address and OR port. Optional.
+
+        "nickname" -- the guard's nickname, if any. Optional.
+
+        "sampled_on" -- the date when the guard was sampled. Required.
+
+        "sampled_by" -- the Tor version that sampled this guard.
+        Optional.
+
+        "unlisted_since" -- the date since which the guard has been
+        unlisted. Optional.
+
+        "listed" -- 0 if the guard is not listed ; 1 if it is. Required.
+
+        "confirmed_on" -- date when the guard was
+        confirmed. Optional.
+
+        "confirmed_idx" -- position of the guard in the confirmed
+        list. Optional.
+
+        "pb_use_attempts", "pb_use_successes", "pb_circ_attempts",
+        "pb_circ_successes", "pb_successful_circuits_closed",
+        "pb_collapsed_circuits", "pb_unusable_circuits",
+        "pb_timeouts" -- state for the circuit path bias algorithm,
+        given in decimal fractions. Optional.
+
+   All dates here are given as a (spaceless) ISO8601 combined date
+   and time in UTC (e.g., 2016-11-29T19:39:31).
+
+   I do not plan to build a migration mechanism from the old format
+   to the new.
+
+
 TODO. Still non-addressed issues [Section:TODO]
 
-   Formats to use when making information persistent
-
-   Migration from old data format to new.
 
    Explain the overall flow of the circuit creation and guard
    picking algorithms, if they are not clear.
