@@ -179,8 +179,8 @@ Proposals by number:
 256  Key revocation for relays and authorities [OPEN]
 257  Refactoring authorities and making them more isolated from the net [META]
 258  Denial-of-service resistance for directory authorities [ACCEPTED]
-259  New Guard Selection Behaviour [DRAFT]
-260  Rendezvous Single Onion Services [DRAFT]
+259  New Guard Selection Behaviour [OBSOLETE]
+260  Rendezvous Single Onion Services [FINISHED]
 261  AEZ for relay cryptography [OPEN]
 262  Re-keying live circuits with new cryptographic material [OPEN]
 263  Request to change key exchange protocol for handshake v1.2 [OBSOLETE]
@@ -188,10 +188,10 @@ Proposals by number:
 265  Load Balancing with Overhead Parameters [ACCEPTED]
 266  Removing current obsolete clients from the Tor network [DRAFT]
 267  Tor Consensus Transparency [DRAFT]
-268  New Guard Selection Behaviour [DRAFT]
+268  New Guard Selection Behaviour [OBSOLETE]
 269  Transitionally secure hybrid handshakes [DRAFT]
 270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope [DRAFT]
-271  Another algorithm for guard selection [OPEN]
+271  Another algorithm for guard selection [FINISHED]
 272  Listed routers should be Valid, Running, and treated as such [FINISHED]
 273  Exit relay pinning for web services [DRAFT]
 
@@ -214,11 +214,8 @@ Proposals by status:
    253  Out of Band Circuit HMACs
    254  Padding Negotiation
    255  Controller features to allow for load-balancing hidden services
-   259  New Guard Selection Behaviour
-   260  Rendezvous Single Onion Services
    266  Removing current obsolete clients from the Tor network
    267  Tor Consensus Transparency
-   268  New Guard Selection Behaviour
    269  Transitionally secure hybrid handshakes
    270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope
    273  Exit relay pinning for web services [for n/a]
@@ -252,7 +249,6 @@ Proposals by status:
    256  Key revocation for relays and authorities
    261  AEZ for relay cryptography
    262  Re-keying live circuits with new cryptographic material
-   271  Another algorithm for guard selection
  ACCEPTED:
    140  Provide diffs between consensuses
    172  GETINFO controller option for circuit information
@@ -281,6 +277,8 @@ Proposals by status:
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
    232  Pluggable Transport through SOCKS proxy [in 0.2.6]
    235  Stop assigning (and eventually supporting) the Named flag [in 0.2.6, 0.2.7]
+   260  Rendezvous Single Onion Services
+   271  Another algorithm for guard selection [in 0.3.0.1-alpha]
    272  Listed routers should be Valid, Running, and treated as such [in 0.2.9.3-alpha, 0.2.9.4-alpha]
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
@@ -383,7 +381,9 @@ Proposals by status:
    141  Download server descriptors on demand
    144  Increase the diversity of circuits by detecting nodes belonging the same provider
    199  Integration of BridgeFinder and BridgeFinderHelper
+   259  New Guard Selection Behaviour
    263  Request to change key exchange protocol for handshake v1.2
+   268  New Guard Selection Behaviour
  RESERVE:
    133  Incorporate Unreachable ORs into the Tor Network
    211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]

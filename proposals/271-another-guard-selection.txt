@@ -3,7 +3,8 @@ Title: Another algorithm for guard selection
 Author:  Isis Lovecruft, George Kadianakis, Ola Bini, Nick Mathewson
 Created: 2016-07-11
 Supersedes: 259, 268
-Status: Open
+Status: Finished
+Implemented-In: 0.3.0.1-alpha
 
 0.0. Preliminaries
 
