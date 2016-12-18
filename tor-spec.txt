@@ -1298,7 +1298,7 @@ see tor-design.pdf.
    entire circuit rather than a particular stream use a StreamID of zero
    -- they are marked in the table above as "[control]" style
    cells. (Sendme cells are marked as "sometimes control" because they
-   can take include a StreamID or not depending on their purpose -- see
+   can include a StreamID or not depending on their purpose -- see
    Section 7.)
 
    The 'Length' field of a relay cell contains the number of bytes in
