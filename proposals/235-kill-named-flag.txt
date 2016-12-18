@@ -1,6 +1,6 @@
 Filename: 235-kill-named-flag.txt
 Title: Stop assigning (and eventually supporting) the Named flag
-Authors: Sebastian Hahnn
+Authors: Sebastian Hahn
 Created: 10 April 2014
 Implemented-In: 0.2.6, 0.2.7
 Status: Finished
