@@ -1307,7 +1307,7 @@ see tor-design.pdf.
 
    If the RELAY cell is recognized but the relay command is not
    understood, the cell must be dropped and ignored. Its contents
-   still count with respect to the digests, though.
+   still count with respect to the digests and flow control windows, though.
 
 6.2. Opening streams and transferring data
 
