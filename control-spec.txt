@@ -500,8 +500,9 @@
       .
   Recognized keys and their values include:
 
-    "version" -- The version of the server's software, including the name
-      of the software. (example: "Tor 0.0.9.4")
+    "version" -- The version of the server's software, which MAY include the
+      name of the software, such as "Tor 0.0.9.4".  The name of the software,
+      if absent, is assumed to be "Tor".
 
     "config-file" -- The location of Tor's configuration file ("torrc").
 
