@@ -316,7 +316,7 @@ Implemented-In: 0.3.0.1-alpha
 
   Definition: we call Guard A "higher priority" than another Guard B
   if, when A and B are both reachable, we would rather use A.  We
-  define prioirty as follows:
+  define priority as follows:
 
      * Every guard in {CONFIRMED_GUARDS} has a higher priority
        than every guard not in {CONFIRMED_GUARDS}.
