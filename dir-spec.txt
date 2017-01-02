@@ -1575,50 +1575,6 @@
         consensus document produced from this vote should not be used.
         See section 1.4 for voting timeline information.
 
-    "flag-thresholds" SP Thresholds NL
-
-         [At most once for votes; does not occur in consensuses.]
-
-         A space-separated list of the internal performance thresholds
-         that the directory authority had at the moment it was forming
-         a vote.
-
-         The metaformat is:
-            Thresholds = Threshold | Threshold SP Thresholds
-            Threshold = ThresholdKey '=' ThresholdVal
-            ThresholdKey = (KeywordChar | "_") +
-            ThresholdVal = [0-9]+("."[0-9]+)? "%"?
-
-         Commonly used Thresholds at this point include:
-
-         "stable-uptime" -- Uptime (in seconds) required for a relay
-                            to be marked as stable.
-
-         "stable-mtbf" -- MTBF (in seconds) required for a relay to be
-                          marked as stable.
-
-         "enough-mtbf" -- Whether we have measured enough MTBF to look
-                          at stable-mtbf instead of stable-uptime.
-
-         "fast-speed" -- Bandwidth (in bytes per second) required for
-                         a relay to be marked as fast.
-
-         "guard-wfu" -- WFU (in seconds) required for a relay to be
-                        marked as guard.
-
-         "guard-tk" -- Weighted Time Known (in seconds) required for a
-                       relay to be marked as guard.
-
-         "guard-bw-inc-exits" -- If exits can be guards, then all guards
-                                 must have a bandwidth this high.
-
-         "guard-bw-exc-exits" -- If exits can't be guards, then all guards
-                                 must have a bandwidth this high.
-
-         "ignoring-advertised-bws" -- 1 if we have enough measured bandwidths
-                                 that we'll ignore the advertised bandwidth
-                                 claims of routers without measured bandwidth.
-
     "fresh-until" SP YYYY-MM-DD SP HH:MM:SS NL
 
         [Exactly once.]
@@ -1695,6 +1651,50 @@
         knows about them and might set them (if in a vote), or because
         enough votes were counted for the consensus for an authoritative
         opinion to have been formed about their status.
+
+    "flag-thresholds" SP Thresholds NL
+
+         [At most once for votes; does not occur in consensuses.]
+
+         A space-separated list of the internal performance thresholds
+         that the directory authority had at the moment it was forming
+         a vote.
+
+         The metaformat is:
+            Thresholds = Threshold | Threshold SP Thresholds
+            Threshold = ThresholdKey '=' ThresholdVal
+            ThresholdKey = (KeywordChar | "_") +
+            ThresholdVal = [0-9]+("."[0-9]+)? "%"?
+
+         Commonly used Thresholds at this point include:
+
+         "stable-uptime" -- Uptime (in seconds) required for a relay
+                            to be marked as stable.
+
+         "stable-mtbf" -- MTBF (in seconds) required for a relay to be
+                          marked as stable.
+
+         "enough-mtbf" -- Whether we have measured enough MTBF to look
+                          at stable-mtbf instead of stable-uptime.
+
+         "fast-speed" -- Bandwidth (in bytes per second) required for
+                         a relay to be marked as fast.
+
+         "guard-wfu" -- WFU (in seconds) required for a relay to be
+                        marked as guard.
+
+         "guard-tk" -- Weighted Time Known (in seconds) required for a
+                       relay to be marked as guard.
+
+         "guard-bw-inc-exits" -- If exits can be guards, then all guards
+                                 must have a bandwidth this high.
+
+         "guard-bw-exc-exits" -- If exits can't be guards, then all guards
+                                 must have a bandwidth this high.
+
+         "ignoring-advertised-bws" -- 1 if we have enough measured bandwidths
+                                 that we'll ignore the advertised bandwidth
+                                 claims of routers without measured bandwidth.
 
     "shared-rand-participate" NL
 
