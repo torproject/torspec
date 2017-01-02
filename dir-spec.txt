@@ -1696,78 +1696,10 @@
                                  that we'll ignore the advertised bandwidth
                                  claims of routers without measured bandwidth.
 
-    "shared-rand-participate" NL
-
-        [At most once for votes; does not occur in consensuses.]
-
-        Denotes that the directory authority supports and can participate in the
-        shared random protocol.
-
-    "shared-rand-commit" SP Version SP AlgName SP Identity SP Commit [SP Reveal] NL
-
-        [Any number for votes; does not occur in consensuses.]
-
-        Version ::= An integer greater or equal to 0.
-        AlgName ::= 1*(ALPHA / DIGIT / "_" / "-")
-        Identity ::= 40 * HEXDIG
-        Commit ::= Base64-encoded-data
-        Reveal ::= Base64-encoded-data
-
-        Denotes a directory authority commit for the shared randomness
-        protocol, containing the commitment value and potentially also the
-        reveal value. See sections [COMMITREVEAL] and [VALIDATEVALUES] of
-        proposal 250 on how to generate and validate these values.
-
-        Version is the current shared randomness protocol version. AlgName is
-        the hash algorithm that is used (e.g. "sha3-256") and Identity is the
-        authority's SHA1 v3 identity fingerprint. Commit is the encoded
-        commitment value in base64. Reveal is optional and if it's set, it
-        contains the reveal value in base64.
-
-        If a vote contains multiple commits from the same authority, the
-        receiver MUST only consider the first commit listed.
-
-    "shared-rand-previous-value" SP NumReveals SP Value NL
-
-        [At most once.]
-
-        NumReveals ::= An integer greater or equal to 0.
-        Value ::= Base64-encoded-data
-
-        The shared random value that was generated during the second-to-last
-        shared randomness protocol run. For example, if this document was
-        created on the 5th of November, this field carries the shared random
-        value generated during the protocol run of the 3rd of November.
-
-        See section [SRCALC] of proposal 250 for instructions on how to compute
-        this value, and see section [CONS] for why we include old shared random
-        values in votes and consensus.
-
-        Value is the actual shared random value encoded in base64. NumReveals
-        is the number of commits used to generate this SRV.
-
-    "shared-rand-current-value" SP NumReveals SP Value NL
-
-        [At most once.]
-
-        NumReveals ::= An integer greater or equal to 0.
-        Value ::= Base64-encoded-data
-
-        The shared random value that was generated during the latest shared
-        randomness protocol run. For example, if this document was created on
-        the 5th of November, this field carries the shared random value
-        generated during the protocol run of the 4th of November
-
-        See section [SRCALC] of proposal 250 for instructions on how to compute
-        this value given the active commits.
-
-        Value is the actual shared random value encoded in base64. NumReveals
-        is the number of commits used to generate this SRV.
-
-    "recommended-relay-protocols" SP Entries NL
-    "required-relay-protocols" SP Entries NL
     "recommended-client-protocols" SP Entries NL
+    "recommended-relay-protocols" SP Entries NL
     "required-client-protocols" SP Entries NL
+    "required-relay-protocols" SP Entries NL
 
         [At most once for each.]
 
@@ -1922,6 +1854,43 @@
         the shared randomness protocol).
         Min: 1. Max: INT32_MAX. Default: 2/3 of the total number of dirauth.
 
+    "shared-rand-previous-value" SP NumReveals SP Value NL
+
+        [At most once]
+
+        NumReveals ::= An integer greater or equal to 0.
+        Value ::= Base64-encoded-data
+
+        The shared random value that was generated during the second-to-last
+        shared randomness protocol run. For example, if this document was
+        created on the 5th of November, this field carries the shared random
+        value generated during the protocol run of the 3rd of November.
+
+        See section [SRCALC] of proposal 250 for instructions on how to compute
+        this value, and see section [CONS] for why we include old shared random
+        values in votes and consensus.
+
+        Value is the actual shared random value encoded in base64. NumReveals
+        is the number of commits used to generate this SRV.
+
+    "shared-rand-current-value" SP NumReveals SP Value NL
+
+        [At most once]
+
+        NumReveals ::= An integer greater or equal to 0.
+        Value ::= Base64-encoded-data
+
+        The shared random value that was generated during the latest shared
+        randomness protocol run. For example, if this document was created on
+        the 5th of November, this field carries the shared random value
+        generated during the protocol run of the 4th of November
+
+        See section [SRCALC] of proposal 250 for instructions on how to compute
+        this value given the active commits.
+
+        Value is the actual shared random value encoded in base64. NumReveals
+        is the number of commits used to generate this SRV.
+
    The authority section of a vote contains the following items, followed
    in turn by the authority's current key certificate:
 
@@ -1938,7 +1907,7 @@
 
     "contact" SP string NL
 
-        [Exactly once.]
+        [Exactly once]
 
         An arbitrary string describing how to contact the directory
         server's administrator.  Administrators should include at least an
@@ -1955,6 +1924,49 @@
         (Generally, this would only happen because of a security
         vulnerability that affected multiple authorities, like the
         Debian OpenSSL RNG bug of May 2008.)
+
+    "shared-rand-participate" NL
+
+        [At most once]
+
+        Denotes that the directory authority supports and can participate in the
+        shared random protocol.
+
+    "shared-rand-commit" SP Version SP AlgName SP Identity SP Commit [SP Reveal] NL
+
+        [Any number of times]
+
+        Version ::= An integer greater or equal to 0.
+        AlgName ::= 1*(ALPHA / DIGIT / "_" / "-")
+        Identity ::= 40 * HEXDIG
+        Commit ::= Base64-encoded-data
+        Reveal ::= Base64-encoded-data
+
+        Denotes a directory authority commit for the shared randomness
+        protocol, containing the commitment value and potentially also the
+        reveal value. See sections [COMMITREVEAL] and [VALIDATEVALUES] of
+        proposal 250 on how to generate and validate these values.
+
+        Version is the current shared randomness protocol version. AlgName is
+        the hash algorithm that is used (e.g. "sha3-256") and Identity is the
+        authority's SHA1 v3 identity fingerprint. Commit is the encoded
+        commitment value in base64. Reveal is optional and if it's set, it
+        contains the reveal value in base64.
+
+        If a vote contains multiple commits from the same authority, the
+        receiver MUST only consider the first commit listed.
+
+    "shared-rand-previous-value" SP NumReveals SP Value NL
+
+        [At most once]
+
+        See shared-rand-previous-value description above.
+
+    "shared-rand-current-value" SP NumReveals SP Value NL
+
+        [At most once]
+
+        See shared-rand-current-value decription above.
 
    The authority section of a consensus contains groups the following items,
    in the order given, with one group for each authority that contributed to
