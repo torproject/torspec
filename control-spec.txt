@@ -692,8 +692,11 @@
          OptionName = Keyword
          OptionType = "Integer" / "TimeInterval" / "TimeMsecInterval" /
            "DataSize" / "Float" / "Boolean" / "Time" / "CommaList" /
-           "Dependant" / "Virtual" / "String" / "LineList"
+           "Dependent" / "Virtual" / "String" / "LineList"
          Documentation = Text
+      Note: The incorrect spelling "Dependant" was used from the time this key
+      was introduced in Tor 0.1.1.4-alpha until it was corrected in Tor
+      0.3.0.2-alpha.  It is recommended that clients accept both spellings.
 
     "config/defaults"
       A series of lines listing default values for each configuration
