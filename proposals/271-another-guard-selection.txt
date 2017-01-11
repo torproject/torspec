@@ -203,7 +203,7 @@ Implemented-In: 0.3.0.1-alpha
    circuits already exist with higher-priority guards.
 
    If at any point the circuit fails, the guard is marked as
-   unreachable, the circuit is closed. and waiting circuits are updated.
+   unreachable, the circuit is closed, and waiting circuits are updated.
 
 4. The algorithm.
 
