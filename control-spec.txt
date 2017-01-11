@@ -996,6 +996,14 @@
         digest <Digest> as returned by the downloads/bridge/bridges key.  If
         the Tor process is not using bridges, a 551 error is returned.
 
+    "sr/current"
+    "sr/previous"
+      Get either the current or previous shared random value from the
+      consensus. The values are as seen in the consensus that is base64
+      encoded. An empty value means that it couldn't be found and thus is
+      non-existent in the current consensus the tor daemon has or tor doesn't
+      have a usable consensus.
+
   Examples:
      C: GETINFO version desc/name/moria1
      S: 250+desc/name/moria=
