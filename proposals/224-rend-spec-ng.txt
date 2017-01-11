@@ -155,7 +155,8 @@ Table of contents:
 
    We use INT_N(val) to denote the network (big-endian) encoding of the
    unsigned integer "val" in N bytes. For example, INT_4(1337) is [00 00
-   05 39].
+   05 39]. Values are truncated like so: val % (2 ^ (N * 8)). For example,
+   INT_4(42) is 42 % 4294967296 (32 bit).
 
 0.3. Cryptographic building blocks
 
