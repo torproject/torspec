@@ -723,7 +723,7 @@ Table of contents:
    in time period number 16903.
 
    Specifically, time period #16903 began 16903*1440*60 + (12*60*60) seconds
-   after the epoch at 2016-04-12 12:00 UTC, and ended at (16904+1)*1500*60 +
+   after the epoch at 2016-04-12 12:00 UTC, and ended at 16904*1440*60 +
    (12*60*60) seconds after the epoch at 2016-04-13 12:00 UTC.
 
 2.2.2. When to publish a hidden service descriptor [WHEN-HSDESC]
