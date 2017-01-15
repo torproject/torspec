@@ -915,6 +915,7 @@ see tor-design.pdf.
       KEYGEN()  = The curve25519 key generation algorithm, returning
                   a private/public keypair.
       m_expand  = PROTOID | ":key_expand"
+      KEYID(A)  = A
 
    To perform the handshake, the client needs to know an identity key
    digest for the server, and an ntor onion key (a curve25519 public
