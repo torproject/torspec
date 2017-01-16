@@ -29,13 +29,30 @@ This glossary is not a design document; it is only a reference.
    Client, aka OP (onion proxy)
 
    Bridge  -
-   Circuit - 
+
+   Circuit: An established path through the network, where cryptographic keys
+   are negotiated using the ntor protocol with each hop. Circuits can differ
+   in length depending on their purpose. See also Leaky Pipe Topology.
+
+    Origin Circuit -
+
+    Exit Circuit: A circuit which connects clients to destinations
+    outside the Tor network. For example, if a client wanted to visit
+    duckduckgo.com, this connection would require an exit circuit.
+
+    Internal Circuit: A circuit whose traffic never leaves the Tor
+    network. For example, a client could connect to a hidden service via
+    an internal circuit.
+
    Stream
    Edge connection:
 
    TLS connection:
-   
+
    Link handshake
    Circuit handshake
 
+   Leaky Pipe Topology: The ability for packets to be addressed to any hop
+   in the path of a circuit. The destination hop is determined by using the
+   recognized field of relay cells.
 

@@ -139,9 +139,75 @@ Implemented-In: 0.3.0.1-alpha
       If neither of the above variant-state instances is used,
       we use a default instance.
 
-3. The algorithm.
+3. Circuit Creation, Entry Guard Selection (1000 foot view)
 
-3.0.  The guards listed in the current consensus. [Section:GUARDS]
+   A circuit in Tor is a path through the network connecting a client to
+   its destination. At a high-level, a three-hop exit circuit will look
+   like this:
+
+   Client <-> Entry Guard <-> Middle Node <-> Exit Node <-> Destination
+
+   Entry guards are the only nodes which a client will connect to
+   directly, Exit relays are the nodes by which traffic exists the
+   Tor network in order to connect to an external destination.
+
+   3.1 Path selection
+
+   For any circuit, at least one entry guard and middle node(s) are
+   required. An exit node is required if traffic will exit the Tor
+   network. Depending on its configuration, a relay listed in a
+   consensus could be used for any of these roles. However, this
+   proposal defines how entry guards specifically should be selected and
+   managed, as opposed to middle or exit nodes.
+
+   3.1.1 Entry guard selection
+
+   At a high level, a relay listed in a consensus will move through the
+   following states in the process from initial selection to eventual
+   usage as an entry guard:
+
+      relays listed in consensus
+                 |
+               sampled
+               |     |
+         confirmed   filtered
+               |     |      |
+               primary      usable_filtered
+
+   Relays listed in the latest consensus can be sampled for guard usage
+   if they have the "Guard" flag. Sampling is random but weighted by
+   bandwidth.
+
+   Once a path is built and a circuit established using this guard, it
+   is marked as confirmed. Until this point, guards are first sampled
+   and then filtered based on information such as our current
+   configuration (see SAMPLED and FILTERED sections) and later marked as
+   usable_filtered if the guard is not primary but can be reached.
+
+   It is always preferable to use a primary guard when building a new
+   circuit in order to reduce guard churn; only on failure to connect to
+   existing primary guards will new guards be used.
+
+   3.1.2 Middle and exit node selection
+
+   Middle nodes are selected at random from relays listed in the
+   latest consensus, weighted by bandwidth. Exit nodes are chosen
+   similarly but restricted to relays with an exit policy.
+
+   3.2 Circuit Building
+
+   Once a path is chosen, Tor will use this path to build a new circuit.
+
+   If the circuit is built successfully, it either can be used
+   immediately or wait for a better guard, depending on whether other
+   circuits already exist with higher-priority guards.
+
+   If at any point the circuit fails, the guard is marked as
+   unreachable, the circuit is closed, and waiting circuits are updated.
+
+4. The algorithm.
+
+4.0.  The guards listed in the current consensus. [Section:GUARDS]
 
    By {set:GUARDS} we mean the set of all guards in the current
    consensus that are usable for all circuits and directory
@@ -152,7 +218,7 @@ Implemented-In: 0.3.0.1-alpha
    We require all guards to have the flags that we potentially need
    from any guard, so that all guards are usable for all circuits.
 
-3.1.  The Sampled Guard Set. [Section:SAMPLED]
+4.1.  The Sampled Guard Set. [Section:SAMPLED]
 
    We maintain a set, {set:SAMPLED_GUARDS}, that persists across
    invocations of Tor. It is an unordered subset of the nodes that
@@ -242,7 +308,7 @@ Implemented-In: 0.3.0.1-alpha
    over time.
 
 
-3.2. The Usable Sample [Section:FILTERED]
+4.2. The Usable Sample [Section:FILTERED]
 
    We maintain another set, {set:FILTERED_GUARDS}, that does not
    persist. It is derived from:
@@ -289,7 +355,7 @@ Implemented-In: 0.3.0.1-alpha
   before the sampling, then our sample would reflect the set of
   filtering restrictions that we had in the past.
 
-3.3. The confirmed-guard list. [Section:CONFIRMED]
+4.3. The confirmed-guard list. [Section:CONFIRMED]
 
   [formerly USED_GUARDS]
 
@@ -316,7 +382,7 @@ Implemented-In: 0.3.0.1-alpha
 
   Definition: we call Guard A "higher priority" than another Guard B
   if, when A and B are both reachable, we would rather use A.  We
-  define prioirty as follows:
+  define priority as follows:
 
      * Every guard in {CONFIRMED_GUARDS} has a higher priority
        than every guard not in {CONFIRMED_GUARDS}.
@@ -343,7 +409,7 @@ Implemented-In: 0.3.0.1-alpha
   committing to a guard before we actually use it for sensitive
   traffic.
 
-3.4. The Primary guards [Section:PRIMARY]
+4.4. The Primary guards [Section:PRIMARY]
 
   We keep a run-time non-persistent ordered list of
   {list:PRIMARY_GUARDS}.  It is a subset of {FILTERED_GUARDS}.  It
@@ -371,7 +437,7 @@ Implemented-In: 0.3.0.1-alpha
   first double-check whether perhaps one of the primary guards is
   usable after all.
 
-3.5. Retrying guards. [Section:RETRYING]
+4.5. Retrying guards. [Section:RETRYING]
 
   (We run this process as frequently as needed. It can be done once
   a second, or just-in-time.)
@@ -392,7 +458,7 @@ Implemented-In: 0.3.0.1-alpha
   a given amount of time, since we can't infer that it's unreachable
   now from the fact that it was unreachable a few minutes ago.
 
-3.6. Selecting guards for circuits. [Section:SELECTING]
+4.6. Selecting guards for circuits. [Section:SELECTING]
 
   Every origin circuit is now in one of these states:
      <state:usable_on_completion>,
@@ -479,7 +545,7 @@ Implemented-In: 0.3.0.1-alpha
 
          [XXX timeout.]
 
-3.7. When a circuit fails. [Section:ON_FAIL]
+4.7. When a circuit fails. [Section:ON_FAIL]
 
    When a circuit fails in a way that makes us conclude that a guard
    is not reachable, we take the following steps:
@@ -501,7 +567,7 @@ Implemented-In: 0.3.0.1-alpha
 
    See [SELECTING] above for rationale.
 
-3.8. When a circuit succeeds [Section:ON_SUCCESS]
+4.8. When a circuit succeeds [Section:ON_SUCCESS]
 
    When a circuit succeeds in a way that makes us conclude that a
    guard _was_ reachable, we take these steps:
@@ -535,7 +601,7 @@ Implemented-In: 0.3.0.1-alpha
 
    See [SELECTING] above for rationale.
 
-3.9. Updating the list of waiting circuits [Section:UPDATE_WAITING]
+4.9. Updating the list of waiting circuits [Section:UPDATE_WAITING]
 
    We run this procedure whenever it's possible that a
    <waiting_for_better_guard> circuit might be ready to be called
@@ -572,7 +638,7 @@ Implemented-In: 0.3.0.1-alpha
    them after all if the <complete> circuit goes down before
    {NONPRIMARY_GUARD_IDLE_TIMEOUT} seconds.
 
-3.10.  Whenever we get a new consensus. [Section:ON_CONSENSUS]
+4.10.  Whenever we get a new consensus. [Section:ON_CONSENSUS]
 
    We update {GUARDS}.
 
@@ -591,7 +657,7 @@ Implemented-In: 0.3.0.1-alpha
    filter is updated, we repeat the process above, starting at the
    [**] line.)
 
-3.11. Deciding whether to generate a new circuit.
+4.11. Deciding whether to generate a new circuit.
   [Section:NEW_CIRCUIT_NEEDED]
 
    In current Tor, we generate a new circuit when we don't have
@@ -775,10 +841,6 @@ A.4. Persistent state format
 
 
 TODO. Still non-addressed issues [Section:TODO]
-
-
-   Explain the overall flow of the circuit creation and guard
-   picking algorithms, if they are not clear.
 
    Simulate to answer:  Will this work in a dystopic world?
 
