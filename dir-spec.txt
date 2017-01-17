@@ -1526,9 +1526,8 @@
    Some items appear only in votes, and some items appear only in
    consensuses.  Unless specified, items occur in both.
 
-   The preamble contains the following items. Authorities building the
-   consensus MUST place items in the order given here, whereas clients parsing
-   the consensus MUST accept items in any order:
+   The preamble contains the following items.  They SHOULD occur in the
+   order given here:
 
     "network-status-version" SP version NL
 
