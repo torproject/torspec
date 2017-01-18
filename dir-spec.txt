@@ -2653,6 +2653,7 @@
      "23" -- Adds shared randomness protocol data.
      "24" -- No longer lists routers that are not Valid in the consensus.
      "25" -- Vote on recommended-protocols and required-protocols.
+     "26" -- Initialize bandwidth weights to 1 to avoid division-by-zero.
 
    Before generating a consensus, an authority must decide which consensus
    method to use.  To do this, it looks for the highest version number

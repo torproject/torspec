@@ -999,8 +999,8 @@
     "sr/current"
     "sr/previous"
       The current or previous shared random value, as received in the
-      consensus, base-64 encoded.  An empty value means that the consensus
-      either has no shared random value, or that Tor has no consensus.
+      consensus, base-64 encoded.  An empty value means that either
+      the consensus has no shared random value, or Tor has no consensus.
 
   Examples:
      C: GETINFO version desc/name/moria1
