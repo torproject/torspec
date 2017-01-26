@@ -1866,7 +1866,7 @@
         created on the 5th of November, this field carries the shared random
         value generated during the protocol run of the 3rd of November.
 
-        See section [SRCALC] of proposal 250 for instructions on how to compute
+        See section [SRCALC] of srv-spec.txt for instructions on how to compute
         this value, and see section [CONS] for why we include old shared random
         values in votes and consensus.
 
@@ -1885,7 +1885,7 @@
         the 5th of November, this field carries the shared random value
         generated during the protocol run of the 4th of November
 
-        See section [SRCALC] of proposal 250 for instructions on how to compute
+        See section [SRCALC] of srv-spec.txt for instructions on how to compute
         this value given the active commits.
 
         Value is the actual shared random value encoded in base64. NumReveals
@@ -1945,7 +1945,7 @@
         Denotes a directory authority commit for the shared randomness
         protocol, containing the commitment value and potentially also the
         reveal value. See sections [COMMITREVEAL] and [VALIDATEVALUES] of
-        proposal 250 on how to generate and validate these values.
+        srv-spec.txt on how to generate and validate these values.
 
         Version is the current shared randomness protocol version. AlgName is
         the hash algorithm that is used (e.g. "sha3-256") and Identity is the
