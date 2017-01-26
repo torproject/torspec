@@ -608,6 +608,14 @@
        Describes a way to contact the relay's administrator, preferably
        including an email address and a PGP key fingerprint.
 
+    "bridge-distribution-request" SP info NL
+
+       [At most once]
+
+       "info" describes how a Bridge address is distributed by BridgeDB. If
+       set to "none", BridgeDB will avoid distributing your bridge address.
+       The other possible options are specified in the BridgeDB documentation.
+
     "family" names NL
 
         [At most once]
