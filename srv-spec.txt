@@ -1,0 +1,641 @@
+Filename: 250-commit-reveal-consensus.txt
+Title: Random Number Generation  During Tor Voting
+Authors: David Goulet, George Kadianakis
+Created: 2015-08-03
+Status: Closed
+Supersedes: 225
+
+
+   Table Of Contents:
+
+      1. Introduction
+         1.1. Motivation
+         1.2. Previous work
+      2. Overview
+         2.1. Introduction to our commit-and-reveal protocol
+         2.2. Ten thousand feet view of the protocol
+         2.3. How we use the consensus [CONS]
+            2.3.1. Inserting Shared Random Values in the consensus
+         2.4. Persistent State of the Protocol [STATE]
+         2.5. Protocol Illustration
+      3. Protocol
+         3.1 Commitment Phase [COMMITMENTPHASE]
+            3.1.1. Voting During Commitment Phase
+            3.1.2. Persistent State During Commitment Phase [STATECOMMIT]
+         3.2 Reveal Phase
+            3.2.1. Voting During Reveal Phase
+            3.2.2. Persistent State During Reveal Phase [STATEREVEAL]
+         3.3. Shared Random Value Calculation At 00:00UTC
+            3.3.1. Shared Randomness Calculation [SRCALC]
+         3.4. Bootstrapping Procedure
+         3.5. Rebooting Directory Authorities [REBOOT]
+      4. Specification [SPEC]
+         4.1. Voting
+            4.1.1. Computing commitments and reveals [COMMITREVEAL]
+            4.1.2. Validating commitments and reveals [VALIDATEVALUES]
+            4.1.4. Encoding commit/reveal values in votes [COMMITVOTE]
+            4.1.5. Shared Random Value [SRVOTE]
+         4.2. Encoding Shared Random Values in the consensus [SRCONSENSUS]
+         4.3. Persistent state format [STATEFORMAT]
+      5. Security Analysis
+         5.1. Security of commit-and-reveal and future directions
+         5.2. Predicting the shared random value during reveal phase
+         5.3. Partition attacks
+            5.3.1. Partition attacks during commit phase
+            5.3.2. Partition attacks during reveal phase
+      6. Discussion
+         6.1. Why the added complexity from proposal 225?
+         6.2. Why do you do a commit-and-reveal protocol in 24 rounds?
+         6.3. Why can't we recover if the 00:00UTC consensus fails?
+      7. Acknowledgements
+
+
+1. Introduction
+
+1.1. Motivation
+
+   For the next generation hidden services project, we need the Tor network to
+   produce a fresh random value every day in such a way that it cannot be
+   predicted in advance or influenced by an attacker.
+
+   Currently we need this random value to make the HSDir hash ring
+   unpredictable (#8244), which should resolve a wide class of hidden service
+   DoS attacks and should make it harder for people to gauge the popularity
+   and activity of target hidden services. Furthermore this random value can
+   be used by other systems in need of fresh global randomness like
+   Tor-related protocols (e.g. OnioNS) or even non-Tor-related (e.g. warrant
+   canaries).
+
+1.2. Previous work
+
+   Proposal 225 specifies a commit-and-reveal protocol that can be run as an
+   external script and have the results be fed to the directory authorities.
+   However, directory authority operators feel unsafe running a third-party
+   script that opens TCP ports and accepts connections from the Internet.
+   Hence, this proposal aims to embed the commit-and-reveal idea in the Tor
+   voting process which should make it smoother to deploy and maintain.
+
+   Another idea proposed specifically for Tor is Nick Hopper's "A threshold
+   signature-based proposal for a shared RNG" which was never turned into an
+   actual Tor proposal.
+
+2. Overview
+
+   This proposal alters the Tor consensus protocol such that a random number is
+   generated every midnight by the directory authorities during the regular voting
+   process. The distributed random generator scheme is based on the
+   commit-and-reveal technique.
+
+   The proposal also specifies how the final shared random value is embedded
+   in consensus documents so that clients who need it can get it.
+
+2.1. Introduction to our commit-and-reveal protocol
+
+   Every day, before voting for the consensus at 00:00UTC each authority
+   generates a new random value and keeps it for the whole day. The authority
+   cryptographically hashes the random value and calls the output its
+   "commitment" value. The original random value is called the "reveal" value.
+
+   The idea is that given a reveal value you can cryptographically confirm that
+   it corresponds to a given commitment value (by hashing it). However given a
+   commitment value you should not be able to derive the underlying reveal
+   value. The construction of these values is specified in section [COMMITREVEAL].
+
+2.1. Ten thousand feet view of the protocol
+
+   Our commit-and-reveal protocol aims to produce a fresh shared random value
+   everyday at 00:00UTC. The final fresh random value is embedded in the
+   consensus document at that time.
+
+   Our protocol has two phases and uses the hourly voting procedure of Tor.
+   Each phase lasts 12 hours, which means that 12 voting rounds happen in
+   between. In short, the protocol works as follows:
+
+      Commit phase:
+
+        Starting at 00:00UTC and for a period of 12 hours, authorities every
+        hour include their commitment in their votes. They also include any
+        received commitments from other authorities, if available.
+
+      Reveal phase:
+
+        At 12:00UTC, the reveal phase starts and lasts till the end of the
+        protocol at 00:00UTC. In this stage, authorities must reveal the value
+        they committed to in the previous phase. The commitment and revealed
+        values from other authorities, when available, are also added to the
+        vote.
+
+      Shared Randomness Calculation:
+
+        At 00:00UTC, the shared random value is computed from the agreed
+        revealed values and added to the consensus.
+
+   This concludes the commit-and-reveal protocol at 00:00UTC everyday.
+
+2.3. How we use the consensus [CONS]
+
+   The produced shared random values needs to be readily available to
+   clients. For this reason we include them in the consensus documents.
+
+   Every hour the consensus documents need to include the shared random value
+   of the day, as well as the shared random value of the previous day. That's
+   because either of these values might be needed at a given time for a Tor
+   client to access a hidden service according to section [TIME-OVERLAP] of
+   proposal 224. This means that both of these two values need to be included
+   in votes as well.
+
+   Hence, consensuses need to include:
+
+      (a) The shared random value of the current time period.
+      (b) The shared random value of the previous time period.
+
+   For this, a new SR consensus method will be needed to indicate which
+   authorities support this new protocol.
+
+2.3.1. Inserting Shared Random Values in the consensus
+
+   After voting happens, we need to be careful on how we pick which shared
+   random values (SRV) to put in the consensus, to avoid breaking the consensus
+   because of authorities having different views of the commit-and-reveal
+   protocol (because maybe they missed some rounds of the protocol).
+
+   For this reason, authorities look at the received votes before creating a
+   consensus and employ the following logic:
+
+   - First of all, they make sure that the agreed upon consensus method is
+     above the SR consensus method.
+
+   - Authorities include an SRV in the consensus if and only if the SRV has
+     been voted by at least the majority of authorities.
+
+   - For the consensus at 00:00UTC, authorities include an SRV in the consensus
+     if and only if the SRV has been voted by at least AuthDirNumAgreements
+     authorities (where AuthDirNumAgreements is a newly introduced consensus
+     parameter).
+
+   Authorities include in the consensus the most popular SRV that also
+   satisfies the above constraints. Otherwise, no SRV should be included.
+
+   The above logic is used to make it harder to break the consensus by natural
+   partioning causes.
+
+   We use the AuthDirNumAgreements consensus parameter to enforce that a
+   _supermajority_ of dirauths supports the SR protocol during SRV creation, so
+   that even if a few of those dirauths drop offline in the middle of the run
+   the SR protocol does not get disturbed. We go to extra lengths to ensure
+   this because changing SRVs in the middle of the day has terrible
+   reachability consequences for hidden service clients.
+
+2.4. Persistent State of the Protocol [STATE]
+
+   A directory authority needs to keep a persistent state on disk of the on
+   going protocol run. This allows an authority to join the protocol seamlessly
+   in the case of a reboot.
+
+   During the commitment phase, it is populated with the commitments of all
+   authorities. Then during the reveal phase, the reveal values are also
+   stored in the state.
+
+   As discussed previously, the shared random values from the current and
+   previous time period must also be present in the state at all times if they
+   are available.
+
+2.5. Protocol Illustration
+
+   An illustration for better understanding the protocol can be found here:
+         https://people.torproject.org/~asn/hs_notes/shared_rand.jpg
+
+   It reads left-to-right.
+
+   The illustration displays what the authorities (A_1, A_2, A_3) put in their
+   votes. A chain 'A_1 -> c_1 -> r_1' denotes that authority A_1 committed to
+   the value c_1 which corresponds to the reveal value r_1.
+
+   The illustration depicts only a few rounds of the whole protocol. It starts
+   with the first three rounds of the commit phase, then it jumps to the last
+   round of the commit phase. It continues with the first two rounds of the
+   reveal phase and then it jumps to the final round of the protocol run. It
+   finally shows the first round of the commit phase of the next protocol run
+   (00:00UTC) where the final Shared Random Value is computed. In our fictional
+   example, the SRV was computed with 3 authority contributions and its value
+   is "a56fg39h".
+
+   We advice you to revisit this after you have read the whole document.
+
+3. Protocol
+
+   In this section we give a detailed specification of the protocol. We
+   describe the protocol participants' logic and the messages they send. The
+   encoding of the messages is specified in the next section ([SPEC]).
+
+   Now we go through the phases of the protocol:
+
+3.1 Commitment Phase [COMMITMENTPHASE]
+
+   The commit phase lasts from 00:00UTC to 12:00UTC.
+
+   During this phase, an authority commits a value in its vote and
+   saves it to the permanent state as well.
+
+   Authorities also save any received authoritative commits by other authorities
+   in their permanent state. We call a commit by Alice "authoritative" if it was
+   included in Alice's vote.
+
+3.1.1. Voting During Commitment Phase
+
+   During the commit phase, each authority includes in its votes:
+
+    - The commitment value for this protocol run.
+    - Any authoritative commitments received from other authorities.
+    - The two previous shared random values produced by the protocol (if any).
+
+   The commit phase lasts for 12 hours, so authorities have multiple chances to
+   commit their values. An authority MUST NOT commit a second value during a
+   subsequent round of the commit phase.
+
+   If an authority publishes a second commitment value in the same commit
+   phase, only the first commitment should be taken in account by other
+   authorities. Any subsequent commitments MUST be ignored.
+
+3.1.2. Persistent State During Commitment Phase [STATECOMMIT]
+
+   During the commitment phase, authorities save in their persistent state the
+   authoritative commits they have received from each authority. Only one commit
+   per authority must be considered trusted and active at a given time.
+
+3.2 Reveal Phase
+
+   The reveal phase lasts from 12:00UTC to 00:00UTC.
+
+   Now that the commitments have been agreed on, it's time for authorities to
+   reveal their random values.
+
+3.2.1. Voting During Reveal Phase
+
+   During the reveal phase, each authority includes in its votes:
+
+    - Its reveal value that was previously committed in the commit phase.
+    - All the commitments and reveals received from other authorities.
+    - The two previous shared random values produced by the protocol (if any).
+
+   The set of commitments have been decided during the commitment
+   phase and must remain the same. If an authority tries to change its
+   commitment during the reveal phase or introduce a new commitment,
+   the new commitment MUST be ignored.
+
+3.2.2. Persistent State During Reveal Phase [STATEREVEAL]
+
+   During the reveal phase, authorities keep the authoritative commits from the
+   commit phase in their persistent state. They also save any received reveals
+   that correspond to authoritative commits and are valid (as specified in
+   [VALIDATEVALUES]).
+
+   An authority that just received a reveal value from another authority's vote,
+   MUST wait till the next voting round before including that reveal value in
+   its votes.
+
+3.3. Shared Random Value Calculation At 00:00UTC
+
+   Finally, at 00:00UTC every day, authorities compute a fresh shared random
+   value and this value must be added to the consensus so clients can use it.
+
+   Authorities calculate the shared random value using the reveal values in
+   their state as specified in subsection [SRCALC].
+
+   Authorities at 00:00UTC start including this new shared random value in
+   their votes, replacing the one from two protocol runs ago. Authorities also
+   start including this new shared random value in the consensus as well.
+
+   Apart from that, authorities at 00:00UTC proceed voting normally as they
+   would in the first round of the commitment phase (section [COMMITMENTPHASE]).
+
+3.3.1. Shared Randomness Calculation [SRCALC]
+
+   An authority that wants to derive the shared random value SRV, should use
+   the appropriate reveal values for that time period and calculate SRV as
+   follows.
+
+      HASHED_REVEALS = H(ID_a | R_a | ID_b | R_b | ..)
+
+      SRV = SHA3-256("shared-random" | INT_8(REVEAL_NUM) | INT_4(VERSION) |
+                     HASHED_REVEALS | PREVIOUS_SRV)
+
+   where the ID_a value is the identity key fingerprint of authority 'a' and R_a
+   is the corresponding reveal value of that authority for the current period.
+
+   Also, REVEAL_NUM is the number of revealed values in this construction,
+   VERSION is the protocol version number and PREVIOUS_SRV is the previous
+   shared random value. If no previous shared random value is known, then
+   PREVIOUS_SRV is set to 32 NUL (\x00) bytes.
+
+   To maintain consistent ordering in HASHED_REVEALS, all the ID_a | R_a pairs
+   are ordered based on the R_a value in ascending order.
+
+3.4. Bootstrapping Procedure
+
+   As described in [CONS], two shared random values are required for the HSDir
+   overlay periods to work properly as specified in proposal 224. Hence
+   clients MUST NOT use the randomness of this system till it has bootstrapped
+   completely; that is, until two shared random values are included in a
+   consensus. This should happen after three 00:00UTC consensuses have been
+   produced, which takes 48 hours.
+
+3.5. Rebooting Directory Authorities [REBOOT]
+
+   The shared randomness protocol must be able to support directory
+   authorities who leave or join in the middle of the protocol execution.
+
+   An authority that commits in the Commitment Phase and then leaves MUST have
+   stored its reveal value on disk so that it continues participating in the
+   protocol if it returns before or during the Reveal Phase. The reveal value
+   MUST be stored timestamped to avoid sending it on wrong protocol runs.
+
+   An authority that misses the Commitment Phase cannot commit anymore, so it's
+   unable to participate in the protocol for that run. Same goes for an
+   authority that misses the Reveal phase. Authorities who do not participate in
+   the protocol SHOULD still carry commits and reveals of others in their vote.
+
+   Finally, authorities MUST implement their persistent state in such a way that they
+   will never commit two different values in the same protocol run, even if they
+   have to reboot in the middle (assuming that their persistent state file is
+   kept). A suggested way to structure the persistent state is found at [STATEFORMAT].
+
+4. Specification [SPEC]
+
+4.1. Voting
+
+   This section describes how commitments, reveals and SR values are encoded in
+   votes. We describe how to encode both the authority's own
+   commitments/reveals and also the commitments/reveals received from the other
+   authorities. Commitments and reveals share the same line, but reveals are
+   optional.
+
+   Participating authorities need to include the line:
+                 "shared-rand-participate"
+   in their votes to announce that they take part in the protocol.
+
+4.1.1. Computing commitments and reveals [COMMITREVEAL]
+
+   A directory authority that wants to participate in this protocol needs to
+   create a new pair of commitment/reveal values for every protocol
+   run. Authorities SHOULD generate a fresh pair of such values right before the
+   first commitment phase of the day (at 00:00UTC).
+
+   The value REVEAL is computed as follows:
+
+      REVEAL = base64-encode( TIMESTAMP || H(RN) )
+
+      where RN is the SHA3 hashed value of a 256-bit random value. We hash the
+      random value to avoid exposing raw bytes from our PRNG to the network (see
+      [RANDOM-REFS]).
+
+      TIMESTAMP is an 8-bytes network-endian time_t value. Authorities SHOULD
+      set TIMESTAMP to the valid-after time of the vote document they first plan
+      to publish their commit into (so usually at 00:00UTC, except if they start
+      up in a later commit round).
+
+   The value COMMIT is computed as follows:
+
+      COMMIT = base64-encode( TIMESTAMP || H(REVEAL) )
+
+4.1.2. Validating commitments and reveals [VALIDATEVALUES]
+
+   Given a COMMIT message and a REVEAL message it should be possible to verify
+   that they indeed correspond. To do so, the client extracts the random value
+   H(RN) from the REVEAL message, hashes it, and compares it with the H(H(RN))
+   from the COMMIT message. We say that the COMMIT and REVEAL messages
+   correspond, if the comparison was successful.
+
+   Pariticipants MUST also check that corresponding COMMIT and REVEAL values
+   have the same timestamp value.
+
+   Authorities should ignore reveal values during the Reveal Phase that don't
+   correspond to commit values published during the Commitment Phase.
+
+4.1.4. Encoding commit/reveal values in votes [COMMITVOTE]
+
+   An authority puts in its vote the commitments and reveals it has produced and
+   seen from the other authorities. To do so, it includes the following in its
+   votes:
+
+      "shared-rand-commit" SP VERSION SP ALGNAME SP IDENTITY SP COMMIT [SP REVEAL] NL
+
+   where VERSION is the version of the protocol the commit was created with.
+   IDENTITY is the authority's SHA1 identity fingerprint and COMMIT is the
+   encoded commit [COMMITREVEAL].  Authorities during the reveal phase can
+   also optionally include an encoded reveal value REVEAL.  There MUST be only
+   one line per authority else the vote is considered invalid. Finally, the
+   ALGNAME is the hash algorithm that should be used to compute COMMIT and
+   REVEAL which is "sha3-256" for version 1.
+
+4.1.5. Shared Random Value [SRVOTE]
+
+  Authorities include a shared random value (SRV) in their votes using the
+  following encoding for the previous and current value respectively:
+
+     "shared-rand-previous-value" SP NUM_REVEALS SP VALUE NL
+     "shared-rand-current-value" SP NUM_REVEALS SP VALUE NL
+
+  where VALUE is the actual shared random value encoded in hex (computed as
+  specified in section [SRCALC]. NUM_REVEALS is the number of reveal values
+  used to generate this SRV.
+
+  To maintain consistent ordering, the shared random values of the previous
+  period should be listed before the values of the current period.
+
+4.2. Encoding Shared Random Values in the consensus [SRCONSENSUS]
+
+   Authorities insert the two active shared random values in the consensus
+   following the same encoding format as in [SRVOTE].
+
+4.3. Persistent state format [STATEFORMAT]
+
+   As a way to keep ground truth state in this protocol, an authority MUST
+   keep a persistent state of the protocol. The next sub-section suggest a
+   format for this state which is the same as the current state file format.
+
+   It contains a preamble, a commitment and reveal section and a list of
+   shared random values.
+
+   The preamble (or header) contains the following items. They MUST occur in
+   the order given here:
+
+    "Version" SP version NL
+
+        [At start, exactly once.]
+
+        A document format version. For this specification, version is "1".
+
+    "ValidUntil" SP YYYY-MM-DD SP HH:MM:SS NL
+
+        [Exactly once]
+
+        After this time, this state is expired and shouldn't be used nor
+        trusted. The validity time period is till the end of the current
+        protocol run (the upcoming noon).
+
+   The following details the commitment and reveal section. They are encoded
+   the same as in the vote. This makes it easier for implementation purposes.
+
+     "Commit" SP version SP algname SP identity SP commit [SP reveal] NL
+
+        [Exactly once per authority]
+
+        The values are the same as detailed in section [COMMITVOTE].
+
+        This line is also used by an authority to store its own value.
+
+   Finally is the shared random value section.
+
+     "SharedRandPreviousValue" SP num_reveals SP value NL
+
+        [At most once]
+
+        This is the previous shared random value agreed on at the previous
+        period. The fields are the same as in section [SRVOTE].
+
+     "SharedRandCurrentValue" SP num_reveals SP value NL
+
+        [At most once]
+
+        This is the latest shared random value. The fields are the same as in
+        section [SRVOTE].
+
+5. Security Analysis
+
+5.1. Security of commit-and-reveal and future directions
+
+   The security of commit-and-reveal protocols is well understood, and has
+   certain flaws. Basically, the protocol is insecure to the extent that an
+   adversary who controls b of the authorities gets to choose among 2^b
+   outcomes for the result of the protocol. However, an attacker who is not a
+   dirauth should not be able to influence the outcome at all.
+
+   We believe that this system offers sufficient security especially compared
+   to the current situation. More secure solutions require much more advanced
+   crypto and more complex protocols so this seems like an acceptable solution
+   for now.
+
+   For alternative approaches on collaborative random number generation also
+   see the discussion at [RNGMESSAGING].
+
+5.2. Predicting the shared random value during reveal phase
+
+   The reveal phase lasts 12 hours, and most authorities will send their
+   reveal value on the first round of the reveal phase. This means that an
+   attacker can predict the final shared random value about 12 hours before
+   it's generated.
+
+   This does not pose a problem for the HSDir hash ring, since we impose an
+   higher uptime restriction on HSDir nodes, so 12 hours predictability is not
+   an issue.
+
+   Any other protocols using the shared random value from this system should
+   be aware of this property.
+
+5.3. Partition attacks
+
+   This design is not immune to certain partition attacks.  We believe they
+   don't offer much gain to an attacker as they are very easy to detect and
+   difficult to pull off since an attacker would need to compromise a directory
+   authority at the very least. Also, because of the byzantine general problem,
+   it's very hard (even impossible in some cases) to protect against all such
+   attacks. Nevertheless, this section describes all possible partition attack
+   and how to detect them.
+
+5.3.1. Partition attacks during commit phase
+
+   A malicious directory authority could send only its commit to one single
+   authority which results in that authority having an extra commit value for
+   the shared random calculation that the others don't have. Since the
+   consensus needs majority, this won't affect the final SRV value. However,
+   the attacker, using this attack, could remove a single directory authority
+   from the consensus decision at 24:00 when the SRV is computed.
+
+   An attacker could also partition the authorities by sending two different
+   commitment values to different authorities during the commit phase.
+
+   All of the above is fairly easy to detect. Commitment values in the vote
+   coming from an authority should NEVER be different between authorities. If
+   so, this means an attack is ongoing or very bad bug (highly unlikely).
+
+5.3.2. Partition attacks during reveal phase
+
+   Let's consider Alice, a malicious directory authority. Alice could wait
+   until the last reveal round, and reveal its value to half of the
+   authorities. That would partition the authorities into two sets: the ones
+   who think that the shared random value should contain this new reveal, and
+   the rest who don't know about it. This would result in a tie and two
+   different shared random value.
+
+   A similar attack is possible. For example, two rounds before the end of the
+   reveal phase, Alice could advertise her reveal value to only half of the
+   dirauths. This way, in the last reveal phase round, half of the dirauths
+   will include that reveal value in their votes and the others will not. In
+   the end of the reveal phase, half of the dirauths will calculate a
+   different shared randomness value than the others.
+
+   We claim that this attack is not particularly fruitful: Alice ends up
+   having two shared random values to chose from which is a fundamental
+   problem of commit-and-reveal protocols as well (since the last person can
+   always abort or reveal). The attacker can also sabotage the consensus, but
+   there are other ways this can be done with the current voting system.
+
+   Furthermore, we claim that such an attack is very noisy and detectable.
+   First of all, it requires the authority to sabotage two consensuses which
+   will cause quite some noise. Furthermore, the authority needs to send
+   different votes to different auths which is detectable. Like the commit
+   phase attack, the detection here is to make sure that the commiment values
+   in a vote coming from an authority are always the same for each authority.
+
+6. Discussion
+
+6.1. Why the added complexity from proposal 225?
+
+   The complexity difference between this proposal and prop225 is in part
+   because prop225 doesn't specify how the shared random value gets to the
+   clients. This proposal spends lots of effort specifying how the two shared
+   random values can always be readily accessible to clients.
+
+6.2. Why do you do a commit-and-reveal protocol in 24 rounds?
+
+   The reader might be wondering why we span the protocol over the course of a
+   whole day (24 hours), when only 3 rounds would be sufficient to generate a
+   shared random value.
+
+   We decided to do it this way, because we piggyback on the Tor voting
+   protocol which also happens every hour.
+
+   We could instead only do the shared randomness protocol from 21:00 to 00:00
+   every day. Or to do it multiple times a day.
+
+   However, we decided that since the shared random value needs to be in every
+   consensus anyway, carrying the commitments/reveals as well will not be a
+   big problem. Also, this way we give more chances for a failing dirauth to
+   recover and rejoin the protocol.
+
+6.3. Why can't we recover if the 00:00UTC consensus fails?
+
+   If the 00:00UTC consensus fails, there will be no shared random value for
+   the whole day. In theory, we could recover by calculating the shared
+   randomness of the day at 01:00UTC instead. However, the engineering issues
+   with adding such recovery logic are too great. For example, it's not easy
+   for an authority who just booted to learn whether a specific consensus
+   failed to be created.
+
+7. Acknowledgements
+
+   Thanks to everyone who has contributed to this design with feedback and
+   discussion.
+
+   Thanks go to arma, ioerror, kernelcorn, nickm, s7r, Sebastian, teor, weasel
+   and everyone else!
+
+References:
+
+[RANDOM-REFS]:
+   http://projectbullrun.org/dual-ec/ext-rand.html
+   https://lists.torproject.org/pipermail/tor-dev/2015-November/009954.html
+
+[RNGMESSAGING]:
+   https://moderncrypto.org/mail-archive/messaging/2015/002032.html
