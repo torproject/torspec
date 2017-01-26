@@ -1,10 +1,8 @@
-Filename: 250-commit-reveal-consensus.txt
-Title: Random Number Generation  During Tor Voting
-Authors: David Goulet, George Kadianakis
-Created: 2015-08-03
-Status: Closed
-Supersedes: 225
 
+                    Tor Shared Random Subsystem Specification
+
+This document specifies how the commit-and-reveal shared random subsystem of
+Tor works. This text used to be proposal 250-commit-reveal-consensus.txt.
 
    Table Of Contents:
 

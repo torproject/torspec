@@ -5,6 +5,7 @@ Created: 2015-08-03
 Status: Closed
 Supersedes: 225
 
+UPDATE 2017/01/26: This proposal now has its own specification file as srv-spec.txt .
 
    Table Of Contents:
 
