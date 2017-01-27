@@ -1528,6 +1528,7 @@ Table of contents:
      [00 00] -- Success: cell relayed to hidden service host.
      [00 01] -- Failure: service ID not recognized
      [00 02] -- Bad message format
+     [00 03] -- Can't relay cell to service
 
 3.3. Processing an INTRODUCE2 cell at the hidden service. [PROCESS_INTRO2]
 
