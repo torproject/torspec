@@ -1,4 +1,5 @@
 
+
                    TC: A Tor control protocol (Version 1)
 
 0. Scope
@@ -1774,6 +1775,8 @@
       CircStatus =
                "LAUNCHED" / ; circuit ID assigned to new circuit
                "BUILT"    / ; all hops finished, can now accept streams
+               "GUARD_WAIT" / ; all hops finished, waiting to see if a
+                              ;  circuit with a better guard will be usable.
                "EXTENDED" / ; one more hop has been completed
                "FAILED"   / ; circuit closed (was not built)
                "CLOSED"     ; circuit closed (was built)
