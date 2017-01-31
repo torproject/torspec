@@ -67,7 +67,8 @@ Table of contents:
             4.2.1. Key expansion
         4.3. Using legacy hosts as rendezvous points
     5. Encrypting data between client and host
-    6. Open Questions:
+    6. Encoding onion addresses [ONIONADDRESS]
+    7. Open Questions:
 
 -1. Draft notes
 
@@ -404,9 +405,10 @@ Table of contents:
 
 1.2. In more detail: naming hidden services [NAMING]
 
-   A hidden service's name is its long term master identity key.  This
-   is encoded as a hostname by encoding the entire key in Base 32, and
-   adding the string ".onion" at the end.
+   A hidden service's name is its long term master identity key.  This is
+   encoded as a hostname by encoding the entire key in Base 32, including a
+   version byte and a checksum, and then appending the string ".onion" at the
+   end. The result is a 56-character domain name.
 
    (This is a change from older versions of the hidden service protocol,
    where we used an 80-bit truncated SHA1 hash of a 1024 bit RSA key.)
@@ -419,17 +421,9 @@ Table of contents:
 
    And a new name following this specification might look like:
 
-        a1uik0w1gmfq3i5ievxdm9ceu27e88g6o7pe0rffdw9jmntwkdsd.onion
+        l5satjgud6gucryazcyvyvhuxhr74u6ygigiuyixe3a6ysis67ororad.onion
 
-   Note that since master keys are 32 bytes long, and 52 bytes of base
-   32 encoding can hold 260 bits of information, we have four unused
-   bits in each of these names.
-
-   [TODO: Alternatively, we could require that the first bit of the
-   master key always be zero, and use a 51-byte encoding. Or we could
-   require that the first two bits be zero, and use a 51-byte encoding
-   and reserve the first bit. Or we could require that the first nine
-   bits, or ten bits be zero, etc.]
+   Please see section [ONIONADDRESS] for the encoding specification.
 
 1.3. In more detail: Access control [IMD:AC]
 
@@ -1874,7 +1868,31 @@ Table of contents:
    decryption. The client encrypts with Kf and decrypts with Kb; the
    service host does the opposite.
 
-6. Open Questions:
+6. Encoding onion addresses [ONIONADDRESS]
+
+   The onion address of a hidden service includes its identity public key, a
+   version field and a basic checksum. All this information is then base32
+   encoded as shown below:
+
+     onion_address = base32(PUBKEY || CHECKSUM || VERSION) + ".onion"
+     CHECKSUM = H(".onion checksum" || PUBKEY || VERSION)
+
+     where:
+       - PUBKEY is the 32 bytes ed25519 master pubkey of the hidden service.
+       - VERSION is an one byte version field (default value '\x03')
+       - ".onion checksum" is a constant string
+       - CHECKSUM is truncated to two bytes before inserting it in onion_address
+
+  Here are a few example addresses (with broken checksum):
+
+       l5satjgud6gucryazcyvyvhuxhr74u6ygigiuyixe3a6ysis67ororad.onion
+       btojiu7nu5y5iwut64eufevogqdw4wmqzugnoluw232r4t3ecsfv37ad.onion
+       vckjr6bpchiahzhmtzslnl477hdfvwhzw7dmymz3s5lp64mwf6wfeqad.onion
+
+   For more information about this encoding, please see our discussion thread
+   at [ONIONADDRESS-REFS].
+
+7. Open Questions:
 
    Scaling hidden services is hard. There are on-going discussions that
    you might be able to help with. See [SCALING-REFS].
@@ -1940,6 +1958,9 @@ References:
 
 [VANITY-REFS]:
         https://github.com/Yawning/horse25519
+
+[ONIONADDRESS-REFS]:
+        https://lists.torproject.org/pipermail/tor-dev/2017-January/011816.html
 
 Appendix A. Signature scheme with key blinding [KEYBLIND]
 
@@ -2166,3 +2187,4 @@ Appendix F. Managing authorized client data [CLIENT-AUTH-MGMT]
 	  [XXX how does key management work here?]
 	  [XXX what happens when people use both the control port interface and the
 	       filesystem interface?]
+
