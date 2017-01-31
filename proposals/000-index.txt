@@ -191,7 +191,7 @@ Proposals by number:
 268  New Guard Selection Behaviour [OBSOLETE]
 269  Transitionally secure hybrid handshakes [DRAFT]
 270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope [DRAFT]
-271  Another algorithm for guard selection [FINISHED]
+271  Another algorithm for guard selection [CLOSED]
 272  Listed routers should be Valid, Running, and treated as such [FINISHED]
 273  Exit relay pinning for web services [DRAFT]
 
@@ -278,7 +278,6 @@ Proposals by status:
    232  Pluggable Transport through SOCKS proxy [in 0.2.6]
    235  Stop assigning (and eventually supporting) the Named flag [in 0.2.6, 0.2.7]
    260  Rendezvous Single Onion Services
-   271  Another algorithm for guard selection [in 0.3.0.1-alpha]
    272  Listed routers should be Valid, Running, and treated as such [in 0.2.9.3-alpha, 0.2.9.4-alpha]
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
@@ -342,6 +341,7 @@ Proposals by status:
    243  Give out HSDir flag only to relays with Stable flag
    250  Random Number Generation  During Tor Voting
    264  Putting version numbers on the Tor subprotocols [in 0.2.9.4-alpha]
+   271  Another algorithm for guard selection [in 0.3.0.1-alpha]
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration
