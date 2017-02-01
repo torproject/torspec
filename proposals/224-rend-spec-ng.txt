@@ -1875,7 +1875,7 @@ Table of contents:
    encoded as shown below:
 
      onion_address = base32(PUBKEY || CHECKSUM || VERSION) + ".onion"
-     CHECKSUM = H(".onion checksum" || PUBKEY || VERSION)
+     CHECKSUM = H(".onion checksum" || PUBKEY || VERSION)[:2]
 
      where:
        - PUBKEY is the 32 bytes ed25519 master pubkey of the hidden service.
@@ -1883,11 +1883,11 @@ Table of contents:
        - ".onion checksum" is a constant string
        - CHECKSUM is truncated to two bytes before inserting it in onion_address
 
-  Here are a few example addresses (with broken checksum):
+  Here are a few example addresses:
 
-       l5satjgud6gucryazcyvyvhuxhr74u6ygigiuyixe3a6ysis67ororad.onion
-       btojiu7nu5y5iwut64eufevogqdw4wmqzugnoluw232r4t3ecsfv37ad.onion
-       vckjr6bpchiahzhmtzslnl477hdfvwhzw7dmymz3s5lp64mwf6wfeqad.onion
+       pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion
+       sp3k262uwy4r2k3ycr5awluarykdpag6a7y33jxop4cs2lu5uz5sseqd.onion
+       xa4r2iadxm55fbnqgwwi5mymqdcofiu3w6rpbtqn7b2dyn7mgwj64jyd.onion
 
    For more information about this encoding, please see our discussion thread
    at [ONIONADDRESS-REFS].
