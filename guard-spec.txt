@@ -451,8 +451,10 @@
   When we want to build a circuit, and we need to pick a guard:
 
     * If any entry in PRIMARY_GUARDS has {is_reachable} status of
-      <maybe> or <yes>, return the first such guard. The circuit is
-      <usable_on_completion>.
+      <maybe> or <yes>, return one of the first
+      {NUM_USABLE_PRIMARY_GUARDS} or
+      {NUM_USABLE_PRIMARY_DIRECTORY_GUARDS} such guards, chosen
+      uniformly at random. The circuit is <usable_on_completion>.
 
       [Note: We do not use {is_pending} on primary guards, since we
       are willing to try to build multiple circuits through them
@@ -620,6 +622,18 @@
    circuits are neither built nor in-progress; that <complete>
    circuits are built; and that the other states are in-progress.
 
+4.12. When we are missing descriptors
+   [Section:MISSING_DESCRIPTORS]
+
+   We need either a router descriptor or a microdescriptor in order
+   to build a circuit through a guard.  If we do not have such a
+   descriptor for a guard, we can still use the guard for one-hop
+   directory fetches, but not for longer circuits.
+
+   (Also, when we are missing descriptors for our first
+   {NUM_USABLE_PRIMARY_GUARDS} primary guards, we don't build
+   circuits at all until we have fetched them.)
+
 A. Appendices
 
 A.1.  Parameters with suggested values. [Section:PARAM_VALS]
@@ -662,6 +676,10 @@ A.1.  Parameters with suggested values. [Section:PARAM_VALS]
    {param:EXTREME_RESTRICTION_FRAC} -- .01
 
    {param:GUARD_CONFIRMED_MIN_LIFETIME} -- 60 days
+
+   {param:NUM_USABLE_PRIMARY_GUARDS} -- 1
+
+   {param:NUM_USABLE_PRIMARY_DIRECTORY_GUARDS} -- 3
 
 A.2. Random values [Section:RANDOM]
 

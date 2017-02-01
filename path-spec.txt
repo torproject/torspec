@@ -112,6 +112,39 @@ of their choices.
 
 2.1. When we build
 
+2.1.0. We don't build circuits until we have enough directory info
+
+   There's a class of possible attacks where our directory servers
+   only give us information about the relays that they would like us
+   to use.  To prevent this attack, we don't build multi-hop
+   circuits for real traffic (like those in 2.1.1, 2.1.2, 2.1.4
+   below) until we have enough directory information to be
+   reasonably confident this attack isn't being done to us.
+
+   Here, "enough" directory information is defined as:
+
+      * Having a consensus that's been valid at some point in the
+        last REASONABLY_LIVE_TIME interval (24 hourts).
+
+      * Having enough descriptors that we could build at least some
+        fraction F of all bandwidth-weighted paths, without taking
+        ExitNodes/EntryNodes/etc into account.
+
+        (F is set by the PathsNeededToBuildCircuits option,
+        defaulting to the 'min_paths_for_circs_pct' consensus
+        parameter, with a final default value of 60%.)
+
+      * Having enough descriptors that we could build at least some
+        fraction F of all bandwidth-weighted paths, _while_ taking
+        ExitNodes/EntryNodes/etc into account.
+
+        (F is as above.)
+
+      * Having a descriptor for every one of the first
+        NUM_GUARDS_TO_USE guards among our primary guards. (see
+        guard-spec.txt)
+
+
 2.1.1. Clients build circuits preemptively
 
    When running as a client, Tor tries to maintain at least a certain
