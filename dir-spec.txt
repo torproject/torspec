@@ -2299,9 +2299,14 @@
    "Fast" -- A router is 'Fast' if it is active, and its bandwidth is either in
    the top 7/8ths for known active routers or at least 100KB/s.
 
-   "Guard" -- A router is a possible 'Guard' if its Weighted Fractional Uptime
-   is at least the median for "familiar" active routers, and if its bandwidth
-   is at least 2MB/s or is in the set of the 25% fastest relays.
+   "Guard" -- A router is a possible Guard if all of the following apply:
+       - It is Fast.
+       - It is Stable.
+       - Its Weighted Fractional Uptime is at least the median for "familiar"
+         active routers,
+       - It is "familiar",
+       - Its bandwidth is at least AuthDirGuardBWGuarantee (if set, 2 MB by
+         default), OR its bandwidth is among the 25% fastest relays.
 
         To calculate weighted fractional uptime, compute the fraction
         of time that the router is up in any given day, weighting so that
