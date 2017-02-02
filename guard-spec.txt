@@ -473,7 +473,12 @@
       random from {USABLE_FILTERED_GUARDS}. Set its {is_pending}
       field to true.  The circuit is <usable_if_no_better_guard>.
 
-  We update the {last_tried_connect} time for the guard to 'now.'
+  If during the above algorithm we exhaust all sampled guards before finding a
+  reachable one, then we proceed by marking all guards as <maybe> reachable so
+  that we can keep on sampling.
+
+  When we finally connect to a guard, we update the {last_tried_connect} time
+  for the guard to 'now.'
 
   In some cases (for example, when we need a certain directory feature,
   or when we need to avoid using a certain exit as a guard), we need to
