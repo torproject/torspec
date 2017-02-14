@@ -1704,6 +1704,9 @@ see tor-design.pdf.
    "3" -- supports authentication as of proposal 121 in Tor
           0.2.1.6-alpha.
 
+   "4" -- support ed25519 authentication keys which is defined by the HS v3
+          protocol as part of proposal 224 in Tor 0.3.0.4-alpha.
+
 9.5. "HSRend"
 
    The "HSRend" protocol handles rendezvous points.
@@ -1720,6 +1723,9 @@ see tor-design.pdf.
    of URLs available to fetch them.
 
    "1" -- supports all features in Tor 0.2.0.10-alpha.
+
+   "2" -- support ed25519 blinded keys request which is defined by the HS v3
+          protocol as part of proposal 224 in Tor 0.3.0.4-alpha.
 
 9.7. "DirCache"
 
