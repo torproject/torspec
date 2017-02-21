@@ -1010,7 +1010,7 @@
    If the authorization protocol of Section 2.2 is used, Tor also generates
    and stores the following data:
 
-     "client-key" NL a public key in PEM format
+     "client-key" NL a private key in PEM format
      [No extra arguments]
 
 2.4. Client configuration
