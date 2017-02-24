@@ -1,0 +1,113 @@
+Filename: 274-rotate-onion-keys-less.txt
+Title: Rotate onion keys less frequently.
+Author: Nick Mathewson
+Created: 20-Feb-2017
+Status: Open
+Target: 0.3.1.x-alpha
+
+1. Overview
+
+   This document proposes that, in order to limit the bandwidth needed
+   for microdescriptor listing and transmission, we reduce the onion key
+   rotation rate from the current value (7 days) to something closer to
+   28 days.
+
+   Doing this will reduce the total microdescriptor download volume
+   by approximately 70%.
+
+2. Motivation
+
+   Currently, clients must download a networkstatus consensus document
+   once an hour, and must download every unfamiliar microdescriptor
+   listed in that document.  Therefore, we can reduce client directory
+   bandwidth if we can cause microdescriptors to change less often.
+
+   Furthermore, we are planning (in proposal 140) to implement a
+   diff-based mechanism for clients to download only the parts of each
+   consensus that have changed.  If we do that, then by having the
+   microdescriptor for each router change less often, we can make these
+   consensus diffs smaller as well.
+
+3. Analysis
+
+   I analyzed microdescriptor changes over the month of January
+   2017, and found that 94.5% of all microdescriptor transitions
+   were changes in onion key alone.
+
+   Therefore, we could reduce the number of changed "m" lines in
+   consensus diffs by approximately 94.5% * (3/4) =~ 70%,
+   if we were to rotate onion keys one-fourth as often.
+
+   The number of microdescriptors to actually download should
+   decrease by a similar number.
+
+   This amount to a significant reduction: currently, by
+   back-of-the-envelope estimates, an always-on client that downloads
+   all the directory info in a month downloads about 449MB of compressed
+   consensuses and something around 97 MB of compressed
+   microdescriptors.  This proposal would save that user about 12% of
+   their total directory bandwidth.
+
+   If we assume that consensus diffs are implemented (see proposal 140),
+   then the user's compressed consensus downloads fall to something
+   closer to 27 MB.  Under that analysis, the microdescriptors will
+   dominate again at 97 MB -- so lowering the number of microdescriptors
+   to fetch would save more like 55% of the remaining bandwidth.
+
+   [Back-of-the-envelope technique: assume every consensus is
+   downloaded, and every microdesc is downloaded, and microdescs are
+   downloaded in groups of 61, which works out to a constant rate.]
+
+   We'll need to do more analysis to assess the impact on clients that
+   connect to the network infrequently enough to miss microdescriptors:
+   nonetheless, the 70% figure above ought to apply to clients that connect
+   at least weekly.
+
+   (XXXX Better results pending feedback from ahf's analysis.)
+
+4. Security analysis
+
+   The onion key is used to authenticate a relay to a client when the
+   client is building a circuit through that relay.  The only reason to
+   limit their lifetime is to limit the impact if an attacker steals an
+   onion key without being detected.
+
+   If an attacker steals an onion key and is detected, the relay can
+   issue a new onion key ahead of schedule, with little disruption.
+
+   But if the onion key theft is _not_ detected, then the attacker
+   can use that onion key to impersonate the relay until clients
+   start using the relay's next key.  In order to do so, the
+   attacker must also impersonate the target relay at the link
+   layer: either by stealing the relay's link keys, which rotate
+   more frequently, or by compromising the previous relay in the
+   circuit.
+
+   Therefore, onion key rotation provides a small amount of
+   protection only against an attacker who can compromise relay keys
+   very intermittently, and who controls only a small portion of the
+   network.  Against an attacker who can steal keys regularly it
+   does little, and an attacker who controls a lot of the network
+   can already mount other attacks.
+
+5. Proposal
+
+   I propose that we move the default onion key rotation interval
+   from 7 days to 28 days, as follows.
+
+   There should be a new consensus parameter, "onion-key-rotation-days",
+   measuring the key lifetime in days.  Its minimum should be 1, its
+   maximum should be 90, and its default should be 28.
+
+   There should also be a new consensus parameter,
+   "onion-key-grace-period-days", measuring the interval for which
+   older onion keys should still be accepted.  Its minimum should be
+   1, its maximum should be onion-key-rotation-days, and its default
+   should be 7.
+
+   Every relay should list each onion key it generates for
+   onion-key-rotation-days days after generating it, and then
+   replace it.  Relays should continue to accept their most recent
+   previous onion key for an additional onion-key-rotation-days days
+   after it is replaced.
+

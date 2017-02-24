@@ -1,0 +1,70 @@
+Filename: 276-lower-bw-granularity.txt
+Title: Report bandwidth with lower granularity in consensus documents
+Author: Nick Mathewson
+Created: 20-Feb-2017
+Status: Open
+Target: 0.3.1.x-alpha
+
+1. Overview
+
+   This document proposes that, in order to limit the bandwidth needed for
+   networkstatus diffs, we lower the granularity with which bandwidth is
+   reported in consensus documents.
+
+   Making this change will reduce the total compressed ed diff download
+   volume by around 10%.
+
+2. Motivation
+
+   Consensus documents currently report bandwidth values as the median
+   of the measured bandwidth values in the votes.  (Or as the median of
+   all votes' values if there are not enough measurements.)  And when
+   voting, in turn, authorities simply report whatever measured value
+   they most recently encountered, clipped to 3 significant base-10
+   figures.
+
+   This means that, from one consensus to the next, these weights very
+   often and with little significance:  A large fraction of bandwidth
+   transitions are under 2% in magnitude.
+
+   As we begin to use consensus diffs, each change will take space to
+   transmit.  So lowering the amount of changes will lower client
+   bandwidth requirements significantly.
+
+3. Proposal
+
+   I propose that we round the bandwidth values as they are placed in
+   the votes to two no more than significant digits.  In addition, for
+   values beginning with decimal "2" through "4", we should round the
+   first two digits the nearest multiple of 2.  For values beginning
+   with decimal "5" though "9", we should round to the nearest multiple
+   of 5.
+
+   This change does not require a consensus method; it will take effect
+   once enough authorities have upgraded.
+
+4. Analysis
+
+   The rounding proposed above will not round any value by more than
+   5%, so the overall impact on bandwidth balancing should be small.
+
+   In order to assess the bandwidth savings of this approach, I
+   smoothed the January 2017 consensus documents' Bandwidth fields,
+   using scripts from [1].  I found that if clients download
+   consensus diffs once an hour, they can expect 11-13% mean savings
+   after xz or gz compression.  For two-hour intervals, the savings
+   is 8-10%; for three-hour or four-hour intervals, the savings only
+   is 6-8%.  After that point, we start seeing diminishing returns,
+   with only 1-2% savings on a 72-hour interval's diff.
+
+    [1] https://github.com/nmathewson/consensus-diff-analysis
+
+5. Open questions:
+
+   Is there a greedier smoothing algorithm that would produce better
+   results?
+
+   Is there any reason to think this amount of smoothing would not
+   be save?
+
+   Would a time-aware smoothing mechanism work better?

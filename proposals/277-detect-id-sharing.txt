@@ -1,0 +1,59 @@
+Filename: 277-detect-id-sharing.txt
+Title: Detect multiple relay instances running with same ID.
+Author: Nick Mathewson
+Created: 20-Feb-2017
+Status: Open
+Target: 0.3.??
+
+1. Overview
+
+   This document proposes that we detect multiple relay instances running
+   with the same ID, and block them all, or block all but one of each.
+
+2. Motivation
+
+   While analyzing microdescriptor and relay status transitions (see
+   proposal XXXX), I found that something like 16/10631 router
+   identities from January 2017 were apparently shared by two or
+   more relays, based on their excessive number of onion key
+   transitions.  This is probably accidental: and if intentional,
+   it's probably not achieving whatever the relay operators
+   intended.
+
+   Sharing identities causes all the relays in question to "flip" back
+   and forth onto the network, depending on which one uploaded its
+   descriptor most recently.  One relay's address will be listed; and
+   so will that relay's onion key.  Routers connected to one of the
+   other relays will believe its identity, but be suspicious of its
+   address.  Attempts to extend to the relay will fail because of the
+   incorrect onion key.  No more than one of the relays' bandwidths will
+   actually get significant use.
+
+   So clearly, it would be best to prevent this.
+
+3. Proposal 1: relay-side detection
+
+   Relays should themselves try to detect whether another relay is using
+   its identity.  If a relay, while running, finds that it is listed in
+   a fresh consensus using an onion key other than its current or
+   previous onion key, it should tell its operator about the problem.
+
+   (This proposal borrows from Mike Perry's ideas related to key theft
+   detection.)
+
+4. Proposal 2: offline detection
+
+   Any relay that has a large number of onion-key transitions over time,
+   but only a small number of distinct onion keys, is probably two or
+   more relays in conflict with one another.
+
+   In this case, the operators can be contacted, or the relay
+   blacklisted.
+
+   We could build support for blacklisting all but one of the addresses,
+   but it's probably best to treat this as a misconfiguratino serious
+   enough that it needs to be resolved.
+
+
+
+

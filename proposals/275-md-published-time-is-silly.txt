@@ -1,0 +1,119 @@
+Filename: 275-md-published-time-is-silly.txt
+Title: Stop including meaningful "published" time in microdescriptor consensus
+Author: Nick Mathewson
+Created: 20-Feb-2017
+Status: Open
+Target: 0.3.1.x-alpha
+
+1. Overview
+
+   This document proposes that, in order to limit the bandwidth needed
+   for networkstatus diffs, we remove "published" part of the "r" lines
+   in microdescriptor consensuses.
+
+   The more extreme, compatibility-breaking version of this idea will
+   reduce ed consensus diff download volume by approximately 55-75%.  A
+   less-extreme interim version would still reduce volume by
+   approximately 5-6%.
+
+2. Motivation
+
+   The current microdescriptor consensus "r" line format is:
+     r Nickname Identity Published IP ORPort DirPort
+   as in:
+     r moria1 lpXfw1/+uGEym58asExGOXAgzjE 2017-01-10 07:59:25 \
+        128.31.0.34 9101 9131
+
+   As I'll show below, there's not much use for the "Published" part
+   of these lines.  By omitting them or replacing them with
+   something more compressible, we can save space.
+
+   What's more, changes in the Published field are one of the most
+   frequent changes between successive networkstatus consensus
+   documents.  If we were to remove this field, then networkstatus diffs
+   (see proposal 140) would be smaller.
+
+3. Compatibility notes
+
+   Above I've talked about "removing" the published field.  But of
+   course, doing this would make all existing consensus consumers
+   stop parsing the consensus successfully.
+
+   Instead, let's look at how this field is used currently in Tor,
+   and see if we can replace the value with something else.
+
+      * Published is used in the voting process to decide which
+        descriptor should be considered.  But that is takend from
+        vote networkstatus documents, not consensuses.
+
+      * Published is used in mark_my_descriptor_dirty_if_too_old()
+        to decide whether to upload a new router descriptor.  If the
+        published time in the consensus is more than 18 hours in the
+        past, we upload a new descriptor.  (Relays are potentially
+        looking at the microdesc consensus now, since #6769 was
+        merged in 0.3.0.1-alpha.)  Relays have plenty of other ways
+        to notice that they should upload new descriptors.
+
+      * Published is used in client_would_use_router() to decide
+        whether a routerstatus is one that we might possibly use.
+        We say that a routerstatus is not usable if its published
+        time is more than OLD_ROUTER_DESC_MAX_AGE (5 days) in the
+        past, or if it is not at least
+        TestingEstimatedDescriptorPropagationTime (10 minutes) in
+        the future. [***] Note that this is the only case where anything
+        is rejected because it comes from the future.
+
+          * client_would_use_router() decides whether we should
+            download a router descriptor (not a microdescriptor)
+            in routerlist.c
+
+          * client_would_use_router() is used from
+            count_usable_descriptors() to decide which relays are
+            potentially usable, thereby forming the denominator of
+            our "have descriptors / usable relays" fraction.
+
+   So we have a fairly limited constraints on which Published values
+   we can safely advertize with today's Tor implementations.  If we
+   advertise anything more than 10 minutes in the future,
+   client_would_use_router() will consider routerstatuses unusable.
+   If we advertize anything more than 18 hours in the past, relays
+   will upload their descriptors far too often.
+
+4. Proposal
+
+   Immediately, in 0.2.9.x-stable (our LTS release series), we
+   should stop caring about published_on dates in the future.  This
+   is a two-line change.
+
+   As an interim solution: We should add a new consensus method number
+   that changes the process by which Published fields in consensuses are
+   generated.  It should set all all Published fields in the consensus
+   should be the same value.  These fields should be taken to rotate
+   every 15 hours, by taking consensus valid-after time, and rounding
+   down to the nearest multiple of 15 hours since the epoch.
+
+   As a longer-term solution: Once all Tor versions earlier than 0.2.9.x
+   are obsolete (in mid 2018), we can update with a new consensus
+   method, and set the published_on date to some safe time in the
+   future.
+
+5. Analysis
+
+   To consider the impact on consensus diffs: I analyzed consensus
+   changes over the month of January 2017, using scripts at [1].
+
+   With the interim solution in place, compressed diff sizes fell by
+   2-7% at all measured intervals except 12 hours, where they increased
+   by about 4%.  Savings of 5-6% were most typical.
+
+   With the longer-term solution in place, and all published times held
+   constant permanently, the compressed diff sizes were uniformly at
+   least 56% smaller.
+
+   With this in mind, I think we might want to only plan to support the
+   longer-term solution.
+
+    [1] https://github.com/nmathewson/consensus-diff-analysis
+
+
+
