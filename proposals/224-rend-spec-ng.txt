@@ -1808,18 +1808,31 @@ Table of contents:
        HANDSHAKE_INFO             [variable; depends on handshake type
                                    used.]
 
-   where RENDEZVOUS_COOKIE is the cookie suggested by the client
-   during the introduction (see [PROCESS_INTRO2]).
+   where RENDEZVOUS_COOKIE is the cookie suggested by the client during the
+   introduction (see [PROCESS_INTRO2]) and HANDSHAKE_INFO is defined in
+   [NTOR-WITH-EXTRA-DATA].
 
    If the cookie matches the rendezvous cookie set on any
    not-yet-connected circuit on the rendezvous point, the rendezvous
    point connects the two circuits, and sends a RENDEZVOUS2 cell to the
    client containing the contents of the RENDEZVOUS1 cell.
 
-   Upon receiving the RENDEZVOUS2 cell, the client verifies that the
-   HANDSHAKE_INFO correctly completes a handshake. Now both parties use the
-   handshake output to derive shared keys for use on the circuit as specified
-   in the section below:
+   Upon receiving the RENDEZVOUS2 cell, the client verifies that HANDSHAKE_INFO
+   correctly completes a handshake. To do so, the client parses SERVER_PK from
+   HANDSHAKE_INFO and reverses the final operations of section
+   [NTOR-WITH-EXTRA-DATA] as shown here:
+
+      ntor_secret_input = EXP(Y,x) | EXP(B,x) | AUTH_KEY | B | X | Y | PROTOID
+      NTOR_KEY_SEED = MAC(ntor_secret_input, t_hsenc)
+      verify = MAC(ntor_secret_input, t_hsverify)
+      auth_input = verify | AUTH_KEY | B | Y | X | PROTOID | "Server"
+      AUTH_INPUT_MAC = MAC(auth_input, t_hsmac)
+
+   Finally the client verifies that the received AUTH field of HANDSHAKE_INFO
+   is equal to the computed AUTH_INPUT_MAC.
+
+   Now both parties use the handshake output to derive shared keys for use on
+   the circuit as specified in the section below:
 
 4.2.1. Key expansion
 
