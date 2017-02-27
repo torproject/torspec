@@ -2,7 +2,7 @@ Filename: 249-large-create-cells.txt
 Title: Allow CREATE cells with >505 bytes of handshake data
 Authors: Nick Mathewson
 Created: 23 July 15
-Status: Draft
+Status: Open
 
 1. Summary
 
