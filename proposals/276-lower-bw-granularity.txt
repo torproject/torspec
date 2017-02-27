@@ -33,20 +33,24 @@ Target: 0.3.1.x-alpha
 
 3. Proposal
 
-   I propose that we round the bandwidth values as they are placed in
-   the votes to two no more than significant digits.  In addition, for
+   I propose that we round the bandwidth values, as they are placed in votes,
+   to no more than two significant digits.  In addition, for
    values beginning with decimal "2" through "4", we should round the
    first two digits the nearest multiple of 2.  For values beginning
    with decimal "5" though "9", we should round to the nearest multiple
    of 5.
 
-   This change does not require a consensus method; it will take effect
-   once enough authorities have upgraded.
+   The change will take effect progressively as authorities upgrade: since
+   the median value is used, when one authority upgrades, 1/5 of the
+   bandwidths will be rounded (on average).
+
+   Once all authorities upgrade, all bandwidths will be rounded like this.
 
 4. Analysis
 
-   The rounding proposed above will not round any value by more than
-   5%, so the overall impact on bandwidth balancing should be small.
+   The rounding proposed above will not round any value by more than 5% more
+   than current rounding, so the overall impact on bandwidth balancing should
+   be small.
 
    In order to assess the bandwidth savings of this approach, I
    smoothed the January 2017 consensus documents' Bandwidth fields,
