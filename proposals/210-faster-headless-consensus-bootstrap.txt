@@ -3,9 +3,13 @@ Title: Faster Headless Consensus Bootstrapping
 Author: Mike Perry, Tim Wilson-Brown, Peter Palfrader
 Created: 01-10-2012
 Last Modified: 02-10-2015
-Status: Finished
+Status: Superseded
 Target: 0.2.8.x+
 
+Status-notes:
+
+   * This has been partially superseded by the fallback directory code,
+     and partially by the exponential-backoff code.
 
 Overview and Motiviation
 

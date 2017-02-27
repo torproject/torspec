@@ -130,7 +130,7 @@ Proposals by number:
 207  Directory guards [CLOSED]
 208  IPv6 Exits Redux [CLOSED]
 209  Tuning the Parameters for the Path Bias Defense [OPEN]
-210  Faster Headless Consensus Bootstrapping [FINISHED]
+210  Faster Headless Consensus Bootstrapping [SUPERSEDED]
 211  Internal Mapaddress for Tor Configuration Testing [RESERVE]
 212  Increase Acceptable Consensus Age [OPEN]
 213  Remove stream-level sendmes from the design [DEAD]
@@ -275,7 +275,6 @@ Proposals by status:
    162  Publish the consensus in multiple flavors [in 0.2.3.1-alpha]
    196  Extended ORPort and TransportControlPort [for 0.2.4.x]
    204  Subdomain support for Hidden Service addresses
-   210  Faster Headless Consensus Bootstrapping [for 0.2.8.x+]
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
    220  Migrate server identity keys to Ed25519 [for 0.2.x.x]
    232  Pluggable Transport through SOCKS proxy [in 0.2.6]
@@ -365,6 +364,7 @@ Proposals by status:
    170  Configuration options regarding circuit building
    185  Directory caches without DirPort
    194  Mnemonic .onion URLs
+   210  Faster Headless Consensus Bootstrapping
    225  Strawman proposal: commit-and-reveal shared rng
    252  Single Onion Services
    266  Removing current obsolete clients from the Tor network
