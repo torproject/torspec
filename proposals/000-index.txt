@@ -140,7 +140,7 @@ Proposals by number:
 217  Tor Extended ORPort Authentication [FINISHED]
 218  Controller events to better understand connection/circuit usage [CLOSED]
 219  Support for full DNS and DNSSEC resolution in Tor [OPEN]
-220  Migrate server identity keys to Ed25519 [ACCEPTED]
+220  Migrate server identity keys to Ed25519 [FINISHED]
 221  Stop using CREATE_FAST [CLOSED]
 222  Stop sending client timestamps [CLOSED]
 223  Ace: Improved circuit-creation key exchange [RESERVE]
@@ -156,15 +156,15 @@ Proposals by number:
 233  Making Tor2Web mode faster [OPEN]
 234  Adding remittance field to directory specification [OPEN]
 235  Stop assigning (and eventually supporting) the Named flag [FINISHED]
-236  The move to a single guard node [OPEN]
-237  All relays are directory servers [OPEN]
+236  The move to a single guard node [FINISHED]
+237  All relays are directory servers [FINISHED]
 238  Better hidden service stats from Tor relays [CLOSED]
 239  Consensus Hash Chaining [DRAFT]
 240  Early signing key revocation for directory authorities [DRAFT]
 241  Resisting guard-turnover attacks [REJECTED]
 242  Better performance and usability for the MyFamily option [OPEN]
 243  Give out HSDir flag only to relays with Stable flag [CLOSED]
-244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [ACCEPTED]
+244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [FINISHED]
 245  Deprecating and removing the TAP circuit extension protocol [DRAFT]
 246  Merging Hidden Service Directories and Introduction Points [NEEDS-RESEARCH]
 247  Defending Against Guard Discovery Attacks using Vanguards [DRAFT]
@@ -172,7 +172,7 @@ Proposals by number:
 249  Allow CREATE cells with >505 bytes of handshake data [DRAFT]
 250  Random Number Generation  During Tor Voting [CLOSED]
 251  Padding for netflow record resolution reduction [DRAFT]
-252  Single Onion Services [DRAFT]
+252  Single Onion Services [SUPERSEDED]
 253  Out of Band Circuit HMACs [DRAFT]
 254  Padding Negotiation [DRAFT]
 255  Controller features to allow for load-balancing hidden services [DRAFT]
@@ -186,7 +186,7 @@ Proposals by number:
 263  Request to change key exchange protocol for handshake v1.2 [OBSOLETE]
 264  Putting version numbers on the Tor subprotocols [CLOSED]
 265  Load Balancing with Overhead Parameters [ACCEPTED]
-266  Removing current obsolete clients from the Tor network [DRAFT]
+266  Removing current obsolete clients from the Tor network [SUPERSEDED]
 267  Tor Consensus Transparency [DRAFT]
 268  New Guard Selection Behaviour [OBSOLETE]
 269  Transitionally secure hybrid handshakes [DRAFT]
@@ -214,11 +214,9 @@ Proposals by status:
    248  Remove all RSA identity keys
    249  Allow CREATE cells with >505 bytes of handshake data
    251  Padding for netflow record resolution reduction
-   252  Single Onion Services
    253  Out of Band Circuit HMACs
    254  Padding Negotiation
    255  Controller features to allow for load-balancing hidden services
-   266  Removing current obsolete clients from the Tor network
    267  Tor Consensus Transparency
    269  Transitionally secure hybrid handshakes
    270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope
@@ -247,8 +245,6 @@ Proposals by status:
    229  Further SOCKS5 extensions
    233  Making Tor2Web mode faster
    234  Adding remittance field to directory specification
-   236  The move to a single guard node
-   237  All relays are directory servers [for 0.2.7.x]
    242  Better performance and usability for the MyFamily option
    256  Key revocation for relays and authorities
    261  AEZ for relay cryptography
@@ -262,8 +258,6 @@ Proposals by status:
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
    188  Bridge Guards and other anti-enumeration defenses
-   220  Migrate server identity keys to Ed25519 [for 0.2.x.x]
-   244  Use RFC5705 Key Exporting in our AUTHENTICATE calls
    258  Denial-of-service resistance for directory authorities
    265  Load Balancing with Overhead Parameters [for 0.2.9.x]
  META:
@@ -283,8 +277,12 @@ Proposals by status:
    196  Extended ORPort and TransportControlPort [for 0.2.4.x]
    204  Subdomain support for Hidden Service addresses
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
+   220  Migrate server identity keys to Ed25519 [for 0.2.x.x]
    232  Pluggable Transport through SOCKS proxy [in 0.2.6]
    235  Stop assigning (and eventually supporting) the Named flag [in 0.2.6, 0.2.7]
+   236  The move to a single guard node
+   237  All relays are directory servers [for 0.2.7.x]
+   244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [in 0.3.0.1-alpha]
    260  Rendezvous Single Onion Services
    272  Listed routers should be Valid, Running, and treated as such [in 0.2.9.3-alpha, 0.2.9.4-alpha]
  CLOSED:
@@ -368,6 +366,8 @@ Proposals by status:
    185  Directory caches without DirPort
    194  Mnemonic .onion URLs
    225  Strawman proposal: commit-and-reveal shared rng
+   252  Single Onion Services
+   266  Removing current obsolete clients from the Tor network
  DEAD:
    100  Tor Unreliable Datagram Extension Proposal
    115  Two Hop Paths

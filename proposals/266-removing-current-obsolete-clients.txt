@@ -2,8 +2,8 @@ Filename: 266-removing-current-obsolete-clients.txt
 Title: Removing current obsolete clients from the Tor network
 Author: Nick Mathewson
 Created: 14 Jan 2016
-Status: Draft
-
+Status: Superseded
+Superseded-by: 264, 272.
 
 1. Introduction
 

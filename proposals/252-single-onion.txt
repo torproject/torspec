@@ -2,7 +2,8 @@ Filename: 252-single-onion.txt
 Title: Single Onion Services
 Author: John Brooks, Paul Syverson, Roger Dingledine
 Created: 2015-07-13
-Status: Draft
+Status: Superseded
+Superseded-by: 260
 
 1. Overview
 
