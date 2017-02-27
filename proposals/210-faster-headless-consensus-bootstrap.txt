@@ -3,7 +3,7 @@ Title: Faster Headless Consensus Bootstrapping
 Author: Mike Perry, Tim Wilson-Brown, Peter Palfrader
 Created: 01-10-2012
 Last Modified: 02-10-2015
-Status: Open
+Status: Finished
 Target: 0.2.8.x+
 
 

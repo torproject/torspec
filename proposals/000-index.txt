@@ -130,7 +130,7 @@ Proposals by number:
 207  Directory guards [CLOSED]
 208  IPv6 Exits Redux [CLOSED]
 209  Tuning the Parameters for the Path Bias Defense [OPEN]
-210  Faster Headless Consensus Bootstrapping [OPEN]
+210  Faster Headless Consensus Bootstrapping [FINISHED]
 211  Internal Mapaddress for Tor Configuration Testing [RESERVE]
 212  Increase Acceptable Consensus Age [OPEN]
 213  Remove stream-level sendmes from the design [DEAD]
@@ -236,7 +236,6 @@ Proposals by status:
    201  Make bridges report statistics on daily v3 network status requests [for 0.2.4.x]
    202  Two improved relay encryption protocols for Tor cells
    209  Tuning the Parameters for the Path Bias Defense [for 0.2.4.x+]
-   210  Faster Headless Consensus Bootstrapping [for 0.2.8.x+]
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
    226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS"
@@ -276,6 +275,7 @@ Proposals by status:
    162  Publish the consensus in multiple flavors [in 0.2.3.1-alpha]
    196  Extended ORPort and TransportControlPort [for 0.2.4.x]
    204  Subdomain support for Hidden Service addresses
+   210  Faster Headless Consensus Bootstrapping [for 0.2.8.x+]
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
    220  Migrate server identity keys to Ed25519 [for 0.2.x.x]
    232  Pluggable Transport through SOCKS proxy [in 0.2.6]
