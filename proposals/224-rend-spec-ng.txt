@@ -1642,7 +1642,7 @@ Table of contents:
    generates a single-use keypair:
              x,X = KEYGEN()
    and computes:
-             secret_hs_input = EXP(B,x) | AUTH_KEYID | X | B | PROTOID
+             secret_hs_input = EXP(B,x) | AUTH_KEY | X | B | PROTOID
              info = m_hsexpand | subcredential
              hs_keys = KDF(secret_hs_input | t_hsenc | info, S_KEY_LEN+MAC_LEN)
              ENC_KEY = hs_keys[0:S_KEY_LEN]
@@ -1698,7 +1698,7 @@ Table of contents:
    service host generates a keypair of y,Y = KEYGEN(), and uses its
    introduction point encryption key 'b' to computes:
 
-      secret_hs_input = EXP(X,b) | AUTH_KEYID | X | B | PROTOID
+      secret_hs_input = EXP(X,b) | AUTH_KEY | X | B | PROTOID
       info = m_hsexpand | subcredential
       hs_keys = KDF(secret_hs_input | t_hsenc | info, S_KEY_LEN+MAC_LEN)
       HS_DEC_KEY = hs_keys[0:S_KEY_LEN]
@@ -1707,16 +1707,17 @@ Table of contents:
       (The above are used to check the MAC and then decrypt the
       encrypted data.)
 
-      ntor_secret_input = EXP(X,y) | EXP(X,b) | AUTH_KEYID | B | X | Y | PROTOID
+      ntor_secret_input = EXP(X,y) | EXP(X,b) | AUTH_KEY | B | X | Y | PROTOID
       NTOR_KEY_SEED = MAC(ntor_secret_input, t_hsenc)
       verify = MAC(ntor_secret_input, t_hsverify)
-      auth_input = verify | AUTH_KEYID | B | Y | X | PROTOID | "Server"
+      auth_input = verify | AUTH_KEY | B | Y | X | PROTOID | "Server"
+      AUTH_INPUT_MAC = MAC(auth_input, t_hsmac)
 
       (The above are used to finish the ntor handshake.)
 
    The server's handshake reply is:
        SERVER_PK   Y                         [G_LEN bytes]
-       AUTH        MAC(auth_input, t_hsmac)  [H_LEN bytes]
+       AUTH        AUTH_INPUT_MAC            [H_LEN bytes]
 
    These fields will be sent to the client in a RENDEZVOUS1 cell using the
    HANDSHAKE_INFO element (see [JOIN_REND]).
