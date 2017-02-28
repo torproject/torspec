@@ -1642,9 +1642,9 @@ Table of contents:
    generates a single-use keypair:
              x,X = KEYGEN()
    and computes:
-             secret_hs_input = EXP(B,x) | AUTH_KEY | X | B | PROTOID
+             intro_secret_hs_input = EXP(B,x) | AUTH_KEY | X | B | PROTOID
              info = m_hsexpand | subcredential
-             hs_keys = KDF(secret_hs_input | t_hsenc | info, S_KEY_LEN+MAC_LEN)
+             hs_keys = KDF(intro_secret_hs_input | t_hsenc | info, S_KEY_LEN+MAC_LEN)
              ENC_KEY = hs_keys[0:S_KEY_LEN]
              MAC_KEY = hs_keys[S_KEY_LEN:S_KEY_LEN+MAC_KEY_LEN]
 
@@ -1688,7 +1688,7 @@ Table of contents:
    To process this format, the hidden service checks PK_VALID(CLIENT_PK)
    as necessary, and then computes ENC_KEY and MAC_KEY as the client did
    above, except using EXP(CLIENT_PK,b) in the calculation of
-   secret_hs_input. The service host then checks whether the MAC is
+   intro_secret_hs_input. The service host then checks whether the MAC is
    correct. If it is invalid, it drops the cell. Otherwise, it computes
    the plaintext by decrypting ENCRYPTED_DATA.
 
@@ -1698,18 +1698,18 @@ Table of contents:
    service host generates a keypair of y,Y = KEYGEN(), and uses its
    introduction point encryption key 'b' to computes:
 
-      secret_hs_input = EXP(X,b) | AUTH_KEY | X | B | PROTOID
+      intro_secret_hs_input = EXP(X,b) | AUTH_KEY | X | B | PROTOID
       info = m_hsexpand | subcredential
-      hs_keys = KDF(secret_hs_input | t_hsenc | info, S_KEY_LEN+MAC_LEN)
+      hs_keys = KDF(intro_secret_hs_input | t_hsenc | info, S_KEY_LEN+MAC_LEN)
       HS_DEC_KEY = hs_keys[0:S_KEY_LEN]
       HS_MAC_KEY = hs_keys[S_KEY_LEN:S_KEY_LEN+MAC_KEY_LEN]
 
       (The above are used to check the MAC and then decrypt the
       encrypted data.)
 
-      ntor_secret_input = EXP(X,y) | EXP(X,b) | AUTH_KEY | B | X | Y | PROTOID
-      NTOR_KEY_SEED = MAC(ntor_secret_input, t_hsenc)
-      verify = MAC(ntor_secret_input, t_hsverify)
+      rend_secret_hs_input = EXP(X,y) | EXP(X,b) | AUTH_KEY | B | X | Y | PROTOID
+      NTOR_KEY_SEED = MAC(rend_secret_hs_input, t_hsenc)
+      verify = MAC(rend_secret_hs_input, t_hsverify)
       auth_input = verify | AUTH_KEY | B | Y | X | PROTOID | "Server"
       AUTH_INPUT_MAC = MAC(auth_input, t_hsmac)
 
@@ -1822,7 +1822,7 @@ Table of contents:
    HANDSHAKE_INFO and reverses the final operations of section
    [NTOR-WITH-EXTRA-DATA] as shown here:
 
-      ntor_secret_input = EXP(Y,x) | EXP(B,x) | AUTH_KEY | B | X | Y | PROTOID
+      rend_secret_hs_input = EXP(Y,x) | EXP(B,x) | AUTH_KEY | B | X | Y | PROTOID
       NTOR_KEY_SEED = MAC(ntor_secret_input, t_hsenc)
       verify = MAC(ntor_secret_input, t_hsverify)
       auth_input = verify | AUTH_KEY | B | Y | X | PROTOID | "Server"
