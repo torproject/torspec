@@ -12,6 +12,10 @@ Status: Accepted
   25-May-2014: Adapted to the new dir-spec version 3 and made the diff urls
   backwards-compatible. -mvdan
 
+  1-Mar-2017: Update to new stats, note newer proposals, note flavors,
+  diffs, add parameters, restore diff-only URLs, say what "Digest"
+  means. -nickm
+
 1. Overview.
 
   Tor clients and servers need a list of which relays are on the
@@ -28,14 +32,23 @@ Status: Accepted
 
 2. Numbers
 
-  After implementing proposal 138 which removes nodes that are not
-  running from the list a consensus document is about 92 kilobytes
-  in size after compression.
+  After implementing proposal 138, which removed nodes that are not
+  running from the list, a consensus document was about 92 kilobytes
+  in size after compression... back in 2008 when this proposal was first
+  written.
 
-  The diff between two consecutive consensus, in ed format, is on
-  average 13 kilobytes compressed.
+  But now in March 2017, that figure is more like 625 kilobytes.
+
+  The diff between two consecutive consensuses, in ed format, is on
+  average 37 kilobytes compressed.  So by making this change, we could
+  save something like 94% of our consensus download bandwidth.
 
 3. Proposal
+
+3.0. Preliminaries.
+
+  Unless otherwise specified, all hashes in this document are SHA3-256
+  hashes, encoded in base64.
 
 3.1 Clients
 
@@ -45,48 +58,38 @@ Status: Accepted
 
   [XXX: what is recent enough?
 	time delta in hours / size of compressed diff
-	 0	20
-	 1	9650
-	 2	17011
-	 3	23150
-	 4	29813
-	 5	36079
-	 6	39455
-	 7	43903
-	 8	48907
-	 9	54549
-	10	60057
-	11	67810
-	12	71171
-	13	73863
-	14	76048
-	15	80031
-	16	84686
-	17	89862
-	18	94760
-	19	94868
-	20	94223
-	21	93921
-	22	92144
-	23	90228
-	[ size of gzip compressed "diff -e" between the consensus on
-	  2008-06-01-00:00:00 and the following consensuses that day.
-	  Consensuses have been modified to exclude down routers per
-	  proposal 138. ]
 
-   Data suggests that for the first few hours diffs are very useful,
-   saving about 60% for the first three hours, 30% for the first 10,
-   and almost nothing once we are past 16 hours.
-  ]
+1:	38177
+2:      66955
+3:	93502
+4:	118959
+5:	143450
+6:	167136
+12:	291354
+18:	404008
+24:	416663
+30:	431240
+36:	443858
+42:	454849
+48:	464677
+54:	476716
+60:	487755
+66:	497502
+72:	506421
+
+   Data suggests that for the first few hours' diffs are very useful,
+   saving at least 50% for the first 12 hours.  After that, returns seem to
+   be more marginal.  But note the savings from proposals like 274-276, which
+   make diffs smaller over a much longer timeframe. ]
+
 
 3.2 Servers
 
-  Directory authorities and servers need to keep up to X [XXX: depends
-  on how long clients try to download diffs per above] old consensus
-  documents so they can build diffs.  They should offer a diff to the
-  most recent consensus at the following request:
+  Directory authorities and servers need to keep a number of old consensus
+  documents so they can build diffs.  (See section 5 below ).  They should
+  offer a diff to the most recent consensus at the following request:
 
-  HTTP/1.0 GET /tor/status-vote/current/consensus/<FPRLIST>.z
+  HTTP/1.0 GET /tor/status-vote/current/consensus{-Flavor}/<FPRLIST>.z
   X-Or-Diff-From-Consensus: HASH1 HASH2...
 
   where the hashes are the full digests of the consensuses the client
@@ -118,6 +121,15 @@ Status: Accepted
 
     I currently lean towards the empty diff.]
 
+  Additionally, specific diff for a given consensus hash should be available
+  a URL of the form:
+
+    /tor/status-vote/current/consensus{-Flavor}/diff/<HASH>/<FPRLIST>.z
+
+  This differs from the previous request type in that it should never
+  return a whole consensus: if a diff is not available, it should return
+  404.
+
 4. Diff Format
 
   Diffs start with the token "network-status-diff-version" followed by a
@@ -145,9 +157,9 @@ Status: Accepted
 
   We support the following ed commands, each on a line by itself:
    - "<n1>d"          Delete line n1
-   - "<n1>,<n2>d"     Delete lines n1 through n2, including
+   - "<n1>,<n2>d"     Delete lines n1 through n2, inclusive
    - "<n1>c"          Replace line n1 with the following block
-   - "<n1>,<n2>c"     Replace lines n1 through n2, including, with the
+   - "<n1>,<n2>c"     Replace lines n1 through n2, inclusive, with the
                       following block.
    - "<n1>a"          Append the following block after line n1.
    - "a"              Append the following block after the current line.
@@ -170,3 +182,29 @@ Status: Accepted
   just a period (".") ends the block (and is not part of the lines
   to add).  Note that it is impossible to insert a line with just
   a single dot.
+
+4.1. Concatenating multiple diffs
+
+  Directory caches may, at their discretion, return the concatenation of
+  multiple diffs using the format above.  Such diffs are to be applied from
+  first to last.  This allows the caches to cache a smaller number of
+  compressed diffs, at the expense of some loss in bandwidth efficiency.
+
+
+5. Networkstatus parameters
+
+  The following parameters govern how relays and clients use this protocol.
+
+     min-consensuses-age-to-cache-for-diff
+       (min 0, max 744, default 6)
+     max-consensuses-age-to-cache-for-diff
+       (min 0, max 8192, default 72)
+
+       These two parameters determine how much consensus history (in
+       hours) relays should try to cache in order to serve diffs.
+
+     try-diff-for-consensus-newer-than
+       (min 0, max 8192, default 72)
+
+       This parameter determines how old a consensus can be (in hours)
+       before a client should no longer try to find a diff for it.
