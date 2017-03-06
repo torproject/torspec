@@ -198,6 +198,7 @@ Proposals by number:
 275  Stop including meaningful "published" time in microdescriptor consensus [OPEN]
 276  Report bandwidth with lower granularity in consensus documents [OPEN]
 277  Detect multiple relay instances running with same ID [OPEN]
+278  Directory Compression Scheme Negotiation [DRAFT]
 
 
 Proposals by status:
@@ -220,6 +221,7 @@ Proposals by status:
    269  Transitionally secure hybrid handshakes
    270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope
    273  Exit relay pinning for web services [for n/a]
+   278  Directory Compression Scheme Negotiation [for N/A]
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  NEEDS-RESEARCH:

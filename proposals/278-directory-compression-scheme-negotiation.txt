@@ -1,0 +1,188 @@
+Filename: 278-directory-compression-scheme-negotiation.txt
+Title: Directory Compression Scheme Negotiation
+Author: Alexander Færøy
+Created: 2017-03-06
+Status: Draft
+Target: N/A
+
+0. Overview
+
+  This document describes a method to provide and use different
+  compression schemes in Tor's directory specification[0] and let it be
+  up the client and server to negotiate a mutually supported scheme
+  using the semantics of the HTTP protocol.
+
+  Furthermore this proposal also extends Tor's directory protocol with
+  support for the LZMA2 and Zstandard compression schemes.
+
+1. Motivation
+
+  Currently Tor serves each directory client with its different document
+  flavours in either an uncompressed format or, if the client adds a
+  ".z"-suffix to the URL file path, a zlib-compressed document.
+
+  This have historically been non-problematic, but it disallows us from
+  easily extending the set of supported compression schemes.
+
+  Some of the problems this proposal is trying to aid:
+
+    - We currently only support zlib-based compression schemes and there
+      is no way for directory servers or clients to announce which
+      compression schemes they support. Zlib might not be the ideal
+      compression scheme for all purposes.
+
+    - It is not easily possible to add support for additional
+      compression schemes without adding additional file extensions or
+      flavours of the directory documents.
+
+    - In low-bandwidth and/or low-memory client scenarios it is useful
+      to be able to limit the amount of supported compression schemes to
+      have a client only support the most efficient compression scheme
+      for the given use-case and have the directory servers support the
+      most commonly available compression schemes used throughout the
+      network.
+
+    - We add support for the LZMA2 compression scheme, which yields
+      better compressed size and decompression time at the expensive of
+      higher compression time and higher memory usage.
+
+    - We add support for the Zstandard compression scheme, which yields
+      better compression ratio than GZip, but slightly worse than LZMA2,
+      but with a smaller CPU and memory footprint than LZMA2.
+
+2. Analysis
+
+  We investigated the compression ratio, memory usage, memory allocation
+  strategies, and execution time for compression and decompression of
+  the GZip, BZip2, LZMA2, and Zstandard compression schemes at
+  compression levels 1 through 9.
+
+  The data used in this analysis can be found in [1] and the `bench`
+  tool for generating the data can be found in [2].
+
+  During the preparation for this proposal Nick have analysed
+  compressing consensus diffs using both GZip, LZMA2, and Zstandard. The
+  result of Nick's analysis can be found in [3].
+
+  We must continue to support both "gzip", "deflate", and "identity"
+  which are the currently available compression schemes in the Tor
+  network.
+
+  Further to enhance the compression ratio Nick have also worked on
+  proposal #274 (Rotate onion keys less frequently), #275 (Stop
+  including meaningful "published" time in microdescriptor consensus),
+  #276 (Report bandwidth with lower granularity in consensus documents),
+  and #277 (Detect multiple relay instances running with same ID) which
+  all aid in making our consensus documents less dynamic.
+
+3. Proposal
+
+  We extend the directory client requests to include the
+  "Accept-Encoding" header as part of its request. The "Accept-Encoding"
+  header should contain a comma-separated list of names of the
+  compression schemes of which the client supports.
+
+  For example:
+
+    GET / HTTP/1.0
+    Accept-Encoding: zstd, xz, gzip, deflate
+
+  When a directory server receives a request with the "Accept-Encoding"
+  header included it must decide on a mutually supported compression
+  scheme and add the "Content-Encoding" header to its response and thus
+  notifying the client of its decision. The "Content-Encoding" header
+  can at most contain one supported compression scheme. If no mutual
+  compression scheme can be negotiated the server must respond with an
+  HTTP error status code of 415 "Unsupported Media Type".
+
+  For example:
+
+    HTTP/1.0 200 OK
+    Content-Length: 1337
+    Connection: close
+    Content-Encoding: zstd
+
+  Currently supported compression scheme names includes "identity",
+  "gzip", and "deflate". This proposal adds two additional compression
+  scheme named "xz" (LZMA2) and "zstd" (Zstandard).
+
+  All compression scheme names are case-insensitive.
+
+  The "deflate", "gzip", and "identity" compression schemes must be
+  supported by directory servers for backwards compatibility.
+
+  Additionally, when a client, that supports this proposals, makes a
+  request to a directory document with the ".z"-suffix it must send an
+  ordered set of supported compression schemes where the last elements
+  in the set contains compression schemes that are supported by all of
+  the currently available Tor nodes ("gzip", "deflate", "identity"). In
+  this way older relays will simply respond with the document compressed
+  using zlib deflate without any prior knowledge of the newly added
+  compression schemes.
+
+  The "Content-Length" header contains the number of compressed bytes
+  sent to the client.
+
+  The new compression schemes will be available for directory clients
+  over both clearnet and BEGIN_DIR-style connections.
+
+4. Security Implications
+
+4.1 Compression and Decompression Bombs
+
+  We currently detect compression and decompression "bombs" and must
+  continue to do so with any additional compression schemes that we add.
+
+  The detection of compression and decompression bombs are handled in
+  `is_compression_bomb()` in torgzip.c and the same functionality is
+  used both for compression and decompression. These functions must be
+  extended to support LZMA2 and Zstandard.
+
+4.2 Detection of Compression Algorithms
+
+  To ensure that we do not pass compressed data through the incorrect
+  decompression handler, when we have received data from another peer,
+  Tor tries to detect the compression scheme in
+  `detect_compression_method()`` in torgzip.c. This function should be
+  extended to also detect the LZMA2 and Zstandard formats. Possible
+  methods of applying this detection is looking at xz-tools, zstd's CLI,
+  and the libmagic 'compress' module.
+
+4.3 Fingerprinting
+
+  All clients should aim at supporting the same set of supported
+  compression schemes to avoid fingerprinting.
+
+5. Compatibility
+
+  This proposal does not break any backwards compatibility.
+
+  Tor will continue to support serving uncompressed and zlib-compressed
+  objects using the method defined in the directory specification[0],
+  but will allow newer clients to negotiate a mutually supported
+  compression scheme.
+
+6. Performance and Scalability
+
+  Each newly added compression scheme adds to the compression cache of a
+  relay, which increases the memory requirements of a relay.
+
+  The LZMA2 compression scheme yields better compression ratio at the
+  expense of higher memory and CPU requirements for compression and
+  slightly higher memory and CPU requirements for decompression.
+
+  The Zstandard compression scheme yields better compression ratio than
+  GZip does, but does not suffer from the same high CPU and memory
+  requirements for compression as LZMA2 does.
+
+  Because of the high requirements for CPU and memory usage for LZMA2 it
+  is possible that we do not support this scheme for all available
+  documents or that we only support it in situations where it is
+  possible to pre-compute and cache the compressed document.
+
+7. References
+
+  [0]: https://gitweb.torproject.org/torspec.git/tree/dir-spec.txt
+  [1]: https://docs.google.com/spreadsheets/d/1devQlUOzMPStqUl9mPawFWP99xSsRM8xWv7DNcqjFdo
+  [2]: https://gitlab.com/ahf/tor-sponsor4-compression
+  [3]: https://github.com/nmathewson/consensus-diff-analysis
