@@ -141,7 +141,7 @@ Status: Accepted
 
   Following the network-status-diff line is another header line, starting with
   the token "hash" followed by the full digest of the consensus that this diff
-  applies to and the full digest of the consensus that the resulting consensus
+  applies to and the full digest that the resulting consensus
   should have.
 
   Following the network-status-diff header lines is a diff, or patch, in
@@ -165,7 +165,8 @@ Status: Accepted
    - "a"              Append the following block after the current line.
 
   Note that line numbers always apply to the file after all previous
-  commands have already been applied.
+  commands have already been applied.  Note also that line numbers
+  are 1-indexed.
 
   The commands MUST apply to the file from back to front, such that
   lines are only ever referred to by their position in the original
