@@ -1910,7 +1910,9 @@
         for the authority.  The identity is an uppercase hex fingerprint of
         the authority's current (v3 authority) identity key.  The address is
         the server's hostname.  The IP is the server's current IP address,
-        and dirport is its current directory port. XXXXorport
+        and dirport is its current directory port.  The orport is the
+        port at that address where the authority listens for OR
+        connections.
 
     "contact" SP string NL
 
