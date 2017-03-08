@@ -49,12 +49,16 @@
 3. .onion
 
   SYNTAX:  [digest].onion
+           [ignored].[digest].onion
 
   The digest is the first eighty bits of a SHA1 hash of the identity key for
   a hidden service, encoded in base32.
 
   When Tor sees an address in this format, it tries to look up and connect to
   the specified hidden service.  See rend-spec.txt for full details.
+
+  The "ignored" portion of the address is intended for use in vhosting, and
+  is supported in Tor 0.2.4.10-alpha and later.
 
 4. .noconnect
 

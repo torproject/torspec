@@ -124,7 +124,7 @@ Proposals by number:
 201  Make bridges report statistics on daily v3 network status requests [OPEN]
 202  Two improved relay encryption protocols for Tor cells [OPEN]
 203  Avoiding censorship by impersonating an HTTPS server [DRAFT]
-204  Subdomain support for Hidden Service addresses [FINISHED]
+204  Subdomain support for Hidden Service addresses [CLOSED]
 205  Remove global client-side DNS caching [CLOSED]
 206  Preconfigured directory sources for bootstrapping [CLOSED]
 207  Directory guards [CLOSED]
@@ -276,7 +276,6 @@ Proposals by status:
    161  Computing Bandwidth Adjustments [for 0.2.1.x]
    162  Publish the consensus in multiple flavors [in 0.2.3.1-alpha]
    196  Extended ORPort and TransportControlPort [for 0.2.4.x]
-   204  Subdomain support for Hidden Service addresses
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
    220  Migrate server identity keys to Ed25519 [for 0.2.x.x]
    232  Pluggable Transport through SOCKS proxy [in 0.2.6]
@@ -328,6 +327,7 @@ Proposals by status:
    193  Safe cookie authentication for Tor controllers
    198  Restore semantics of TLS ClientHello [for 0.2.4.x]
    200  Adding new, extensible CREATE, EXTEND, and related cells [in 0.2.4.8-alpha]
+   204  Subdomain support for Hidden Service addresses
    205  Remove global client-side DNS caching [in 0.2.4.7-alpha.]
    206  Preconfigured directory sources for bootstrapping [in 0.2.4.7-alpha]
    207  Directory guards [for 0.2.4.x]
