@@ -2,8 +2,9 @@ Filename: 237-directory-servers-for-all.txt
 Title: All relays are directory servers
 Author: Matthew Finkel
 Created: 29-Jul-2014
-Status: Finished
+Status: Closed
 Target: 0.2.7.x
+Implemented-in: 0.2.8.1-alpha
 Supersedes: 185
 
 Overview:

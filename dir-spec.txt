@@ -734,6 +734,9 @@
 
        Present if the router accepts "tunneled" directory requests using a
        BEGIN_DIR cell over the router's OR port.
+          (Added in 0.2.8.1-alpha. Before this, Tor relays accepted
+          tunneled directory requests only if they had a DirPort open,
+          or if they were bridges.)
 
    "proto" SP Entries NL
 
@@ -2323,9 +2326,10 @@
    generating the network-status document believes it is an authority.
 
    "V2Dir" -- A router supports the v2 directory protocol or higher if it has
-   an open directory port, and it is running a version of the directory
+   an open directory port OR a tunnelled-dir-server line in its router
+   descriptor, and it is running a version of the directory
    protocol that supports the functionality clients need.  (Currently, this
-   is 0.1.1.9-alpha or later.)
+   is every supported version of Tor.)
 
    "HSDir" -- A router is a v2 hidden service directory if it stores and
    serves v2 hidden service descriptors, has the Stable and Fast flag, and the
