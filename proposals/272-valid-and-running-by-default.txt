@@ -2,7 +2,7 @@ Filename: 272-valid-and-running-by-default.txt
 Title: Listed routers should be Valid, Running, and treated as such
 Created: 26 Aug 2016
 Author: Nick Mathewson
-Status: Finished
+Status: Closed
 Implemented-In: 0.2.9.3-alpha, 0.2.9.4-alpha
 
 1. Introduction and proposal.

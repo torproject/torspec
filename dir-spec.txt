@@ -2058,8 +2058,15 @@
           "NoEdConsensus" if any Ed25519 key in the router's descriptor or
              microdesriptor does not reflect authority consensus.
           "Stable" if the router is suitable for long-lived circuits.
-          "Running" if the router is currently usable.
-          "Valid" if the router has been 'validated'.
+          "Running" if the router is currently usable. Relays without this
+             flag are omitted from the consensus, and current clients
+             (since 0.2.9.4-alpha) assume that every listed relay has
+             this flag.
+          "Valid" if the router has been 'validated'. Clients before
+             0.2.9.4-alpha would not use routers without this flag by
+             default. Currently, relays without this flag are omitted
+             fromthe consensus, and current (post-0.2.9.4-alpha) clients
+             assume that every listed relay has this flag.
           "V2Dir" if the router implements the v2 directory protocol or
              higher.
 
