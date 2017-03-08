@@ -155,9 +155,9 @@ Proposals by number:
 232  Pluggable Transport through SOCKS proxy [FINISHED]
 233  Making Tor2Web mode faster [OPEN]
 234  Adding remittance field to directory specification [OPEN]
-235  Stop assigning (and eventually supporting) the Named flag [FINISHED]
-236  The move to a single guard node [FINISHED]
-237  All relays are directory servers [FINISHED]
+235  Stop assigning (and eventually supporting) the Named flag [CLOSED]
+236  The move to a single guard node [CLOSED]
+237  All relays are directory servers [CLOSED]
 238  Better hidden service stats from Tor relays [CLOSED]
 239  Consensus Hash Chaining [DRAFT]
 240  Early signing key revocation for directory authorities [DRAFT]
@@ -192,7 +192,7 @@ Proposals by number:
 269  Transitionally secure hybrid handshakes [DRAFT]
 270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope [DRAFT]
 271  Another algorithm for guard selection [CLOSED]
-272  Listed routers should be Valid, Running, and treated as such [FINISHED]
+272  Listed routers should be Valid, Running, and treated as such [CLOSED]
 273  Exit relay pinning for web services [DRAFT]
 274  Rotate onion keys less frequently [OPEN]
 275  Stop including meaningful "published" time in microdescriptor consensus [OPEN]
@@ -280,12 +280,8 @@ Proposals by status:
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
    220  Migrate server identity keys to Ed25519 [for 0.2.x.x]
    232  Pluggable Transport through SOCKS proxy [in 0.2.6]
-   235  Stop assigning (and eventually supporting) the Named flag [in 0.2.6, 0.2.7]
-   236  The move to a single guard node
-   237  All relays are directory servers [for 0.2.7.x]
    244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [in 0.3.0.1-alpha]
    260  Rendezvous Single Onion Services
-   272  Listed routers should be Valid, Running, and treated as such [in 0.2.9.3-alpha, 0.2.9.4-alpha]
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]
@@ -344,11 +340,15 @@ Proposals by status:
    222  Stop sending client timestamps [in 0.2.4.18]
    227  Include package fingerprints in consensus documents [in 0.2.6.3-alpha]
    228  Cross-certifying identity keys with onion keys
+   235  Stop assigning (and eventually supporting) the Named flag [in 0.2.6, 0.2.7]
+   236  The move to a single guard node
+   237  All relays are directory servers [for 0.2.7.x]
    238  Better hidden service stats from Tor relays
    243  Give out HSDir flag only to relays with Stable flag
    250  Random Number Generation  During Tor Voting
    264  Putting version numbers on the Tor subprotocols [in 0.2.9.4-alpha]
    271  Another algorithm for guard selection [in 0.3.0.1-alpha]
+   272  Listed routers should be Valid, Running, and treated as such [in 0.2.9.3-alpha, 0.2.9.4-alpha]
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration
