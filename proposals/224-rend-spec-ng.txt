@@ -1651,7 +1651,7 @@ Table of contents:
 
    and sends, as the ENCRYPTED part of the INTRODUCE1 cell:
 
-          CLIENT_PK                [G_LEN bytes]
+          CLIENT_PK                [PK_PUBKEY_LEN bytes]
           ENCRYPTED_DATA           [Padded to length of plaintext]
           MAC                      [MAC_LEN bytes]
 
@@ -1668,7 +1668,7 @@ Table of contents:
                EXT_FIELD_LEN            [1 byte]
                EXT_FIELD                [EXT_FIELD_LEN bytes]
             ENCRYPTED:
-               CLIENT_PK                [G_LEN bytes]
+               CLIENT_PK                [PK_PUBKEY_LEN bytes]
                ENCRYPTED_DATA           [Padded to length of plaintext]
                MAC                      [MAC_LEN bytes]
 
@@ -1717,8 +1717,8 @@ Table of contents:
       (The above are used to finish the ntor handshake.)
 
    The server's handshake reply is:
-       SERVER_PK   Y                         [G_LEN bytes]
-       AUTH        AUTH_INPUT_MAC            [H_LEN bytes]
+       SERVER_PK   Y                         [PK_PUBKEY_LEN bytes]
+       AUTH        AUTH_INPUT_MAC            [MAC_LEN bytes]
 
    These fields will be sent to the client in a RENDEZVOUS1 cell using the
    HANDSHAKE_INFO element (see [JOIN_REND]).
