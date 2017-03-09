@@ -209,9 +209,10 @@ Table of contents:
 
       * Instantiate H with SHA3-256.
 
-      * Instantiate MAC(key=k, message=m) with H(k || m).
-
       * Instantiate KDF with SHAKE-256.
+
+      * Instantiate MAC(key=k, message=m) with H(k_len || k || m),
+        where k_len is htonll(len(k)).
 
    For legacy purposes, we specify compatibility with older versions of
    the Tor introduction point and rendezvous point protocols. These used
