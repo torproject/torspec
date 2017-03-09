@@ -1993,7 +1993,7 @@ Appendix A. Signature scheme with key blinding [KEYBLIND]
         Without knowing pk, it is not possible to derive pk_n; without
         knowing sk, it is not possible to derive sk_n.
 
-        It's possible to check that a signature make with sk_n while
+        It's possible to check that a signature was made with sk_n while
         knowing only pk_n.
 
         Someone who sees a large number of blinded public keys and
