@@ -2,8 +2,8 @@ Filename: 274-rotate-onion-keys-less.txt
 Title: Rotate onion keys less frequently.
 Author: Nick Mathewson
 Created: 20-Feb-2017
-Status: Open
-Target: 0.3.1.x-alpha
+Status: Finished
+Implemented-In: 0.3.1.1-alpha
 
 1. Overview
 

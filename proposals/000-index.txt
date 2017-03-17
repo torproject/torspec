@@ -194,7 +194,7 @@ Proposals by number:
 271  Another algorithm for guard selection [CLOSED]
 272  Listed routers should be Valid, Running, and treated as such [CLOSED]
 273  Exit relay pinning for web services [DRAFT]
-274  Rotate onion keys less frequently [OPEN]
+274  Rotate onion keys less frequently [FINISHED]
 275  Stop including meaningful "published" time in microdescriptor consensus [OPEN]
 276  Report bandwidth with lower granularity in consensus documents [OPEN]
 277  Detect multiple relay instances running with same ID [OPEN]
@@ -249,7 +249,6 @@ Proposals by status:
    256  Key revocation for relays and authorities
    261  AEZ for relay cryptography
    262  Re-keying live circuits with new cryptographic material
-   274  Rotate onion keys less frequently [for 0.3.1.x-alpha]
    275  Stop including meaningful "published" time in microdescriptor consensus [for 0.3.1.x-alpha]
    276  Report bandwidth with lower granularity in consensus documents [for 0.3.1.x-alpha]
    277  Detect multiple relay instances running with same ID [for 0.3.??]
@@ -281,6 +280,7 @@ Proposals by status:
    232  Pluggable Transport through SOCKS proxy [in 0.2.6]
    244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [in 0.3.0.1-alpha]
    260  Rendezvous Single Onion Services
+   274  Rotate onion keys less frequently [in 0.3.1.1-alpha]
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]
