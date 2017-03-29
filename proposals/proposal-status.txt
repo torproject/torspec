@@ -541,3 +541,9 @@ again to remind me!
      security against malicious exit nodes, by specifying their own set of exit
      nodes.
 
+279  A Name System API for Tor Onion Services [DRAFT]
+
+     The proposal specifies a modular system for integrating naming systems
+     (GNS, Namecoin, etc.) with Tor onion services.
+
+

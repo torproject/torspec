@@ -1,0 +1,521 @@
+Filename: 279-naming-layer-api.txt
+Title: A Name System API for Tor Onion Services
+Author: George Kadianakis, Yawning Angel, David Goulet
+Created: 04-Oct-2016
+Status: Draft
+
+  Table Of Contents:
+
+			1. Introduction
+				1.1. Motivation
+				1.2. Design overview and rationale
+			2. System Specification
+				2.1. System overview [SYSTEMOVERVIEW]
+				2.2. System Illustration
+				2.3. System configuration [TORRC]
+					2.3.1. Tor name resolution logic
+				2.4. Name system initialization [INITPROTOCOL]
+				2.5. Name resolution using NS API
+					2.5.1. Message format
+					2.5.2. RESOLVED status codes
+					2.5.3. Further name resolution behavior
+				2.6. Cancelling a name resolution request
+				2.7. Launching name plugins [INITENVVARS]
+				2.8. Name plugin workflow [NSBEHAVIOR]
+					2.8.1. Name plugin shutdown [NSSHUTDOWN]
+				2.9. Further details of stdin/stdout communication
+					2.9.1. Message Format
+			3. Discussion
+				3.1. Using second-level domains instead of tld
+				3.2. Name plugins handling all tlds '*'
+				3.3. Deployment strategy
+				3.4. Miscellaneous discussion topics
+			4. Acknowledgements
+			A.1: Example communication Tor <-> name plugin [PROTOEXAMPLE]
+			A.2: Example plugins [PLUGINEXAMPLES]
+
+1. Introduction
+
+   This proposal specifies a modular API for integrating name systems with Tor.
+
+1.1. Motivation
+
+   Tor onion service addresses are decentralized and self-authenticated but
+   they are not human-memorable (e.g. 3g2upl4pq6kufc4m.onion). This is a source
+   of poor usability, since Internet users are familiar with the convenient
+   naming of DNS and are not used to addresses being random text.
+
+   In particular, onion addresses are currently composed of 16 random base32
+   characters, and they look like this:
+
+                      3g2upl4pq6kufc4m.onion
+                      vwakviie2ienjx7t.onion
+                      idnxcnkne4qt76tg.onion
+                      vwakviie2ienjx6t.onion
+
+   When Proposal 224 get deployed, onion addresses will become even
+   bigger: 53 base32 characters. That's:
+
+        llamanymityx4fi3l6x2gyzmtmgxjyqyorj9qsb5r543izcwymle.onion
+        lfels7g3rbceenuuqmpsz45z3lswakqf56n5i3bvqhc22d5rrsza.onion
+        odmmeotgcfx65l5hn6ejkaruvai222vs7o7tmtllszqk5xbysola.onion
+        qw3yvgovok3dsarhqephpu2pkiwzjdk2fgdfwwf3tb3vgzxr5kba.onion
+
+   Over the years Tor users have come up with various ad-hoc ways of handling
+   onion addresses. For example people memorize them, or use third-party
+   centralized directories, or just google them everytime.
+
+   We believe that the UX problem of non-human-memorable addresses is not
+   actually solved with the above ad-hoc solutions and remains a critical
+   usability barrier that prevents onion services from being used by a wider
+   audience.
+
+1.2. Design overview and rationale
+
+   During the past years there has been lots of research on secure naming and
+   various such systems have been proposed (e.g. GNS, Namecoin, etc.).
+
+   Turns out securely naming things is a very hard research problem, and hence
+   none of the proposed systems is a clear winner: all of them carry various
+   trade-offs. Furthermore, none of the proposed systems has seen widespread use
+   so far, which makes it even harder to pick a single project.
+
+   Given the plenitude of options, one approach to decide which system
+   is best is to make various decent name systems available and let the
+   Tor community and the sands of time pick the winner. Also, it might
+   be that there is no single winner, and perhaps different specialized
+   name system should be used in different situations. We believe that
+   by getting secure name systems actually get utilized by real users,
+   the whole field will mature and existing systems will get battle-hardened.
+
+   Hence, the contribution of this proposal is a modular Name System API
+   (NSA) that allows developers to integrate their own name systems in
+   Tor. The interface design is name-system-agnostic, and it's heavily
+   based on the pluggable transports API (proposal 180). It should be
+   flexible enough to accommodate all sorts of name systems (see [PLUGINEXAMPLES]).
+
+2. System Specification
+
+   A developer that wants to integrate a name system with Tor needs to first
+   write a wrapper that understands the Tor Name System API (NS API). Using the
+   Name System API, Tor asks the name system to perform name queries, and
+   receives the query results. The NS API works using environment variables and
+   stdin/stdout communication. It aims to be portable and easy to implement.
+
+2.1. System overview [SYSTEMOVERVIEW]
+
+   Here is an overview of the Tor name system:
+
+   Alice, a Tor user, can activate various name systems by editing her
+   torrc file and specifying which tld each name system is responsible
+   for. For this section, let's consider a simple fictional name system,
+   unicorn, which magically maps domains with the .corn tld to the
+   correct onion address. Here it is:
+
+       OnionNamePlugin 0 .corn   /usr/local/bin/unicorn
+
+   After Alice enables the unicorn plugin, she attempts connecting to
+   elephantforum.corn. Tor will intercept the SOCKS request, and use the
+   executable at /usr/local/bin/unicorn to query the unicorn name system
+   for elephantforum.corn. Tor communicates with the unicorn plugin
+   using the Tor NS API through which name queries and their results can
+   be transported using stdin/stdout.
+
+   If elephantforum.corn corresponds to an onion address in the unicorn
+   name system, unicorn should return the onion address to Tor using the
+   Tor NS API. Tor must then internally rewrite the elephantforum.corn
+   address to the actual onion address, and initiate a connection to it.
+
+2.2. System Illustration
+
+   Here is a diagram illustrating how the Tor Name System API works. The name
+   system used in this example is GNS, but there is nothing GNS-specific here
+   and GNS could be swapped for any other name system (like hosts files, or
+   Namecoin).
+
+   The example below illustrates how a user who types debian.zkey in their Tor
+   browser gets redirected to sejnfjrq6szgca7v.onion after Tor consults the GNS
+   network.
+
+   Please revisit this illustration after reading the rest of the proposal.
+
+       |                                    $~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~$
+       |  1.                                $          4. GNS magic!!              $
+       |  User: SOCKS CONNECT to            $ debian.zkey -> sejnfjrq6szgca7v.onion$
+       |        http://debian.zkey/         $~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~$~~~~~~~$
+       |                                                                   $
+ +-----|-----------------------------------------+                         $
+ |+----v-----+     2.                 +---------+|       3.                $
+ ||Tor       |     debian.zkey        |Tor      ||       debian.zkey     +-$-------+
+ ||Networking------------------------->Naming   ------------------------->         |
+ ||Submodule |                        |Submodule||  Tor Name System API  |  GNS    |
+ ||          <-------------------------         <-------------------------  wrapper|
+ ||          | 6.                     |         ||5.                     |         |
+ |+----|-----+ sejnfjrq6szgca7v.onion +---------+|sejnfjrq6szgca7v.onion +---------+
+ +-----|-----------------------------------------+
+       |  7.
+       |  Tor: Connect to
+       |       http://sejnfjrq6szgca7v.onion/
+       v
+
+
+2.3. System configuration [TORRC]
+
+   As demonstrated in [SYSTEMOVERVIEW], a Tor user who wants to use a name
+   system has to edit their configuration file appropriately. Here is the torrc
+   line format:
+
+       OnionNamePlugin <priority> <tld> <path>
+
+   where <priority> is a positive integer denoting the priority with which this
+   name plugin should be consulted. <tld> is a string which restricts the scope
+   of this plugin to a particular tld.  Finally, <path> is a filesystem path to
+   an executable that speaks the Tor Name System API and can act as an
+   intermediary between Tor and the name system.
+
+   For example here is a snippet from a torrc file:
+       OnionNamePlugin 0 .hosts      /usr/local/bin/local-hosts-file
+       OnionNamePlugin 1 .zkey       /usr/local/bin/gns-tor-wrapper
+       OnionNamePlugin 2 .bit        /usr/local/bin/namecoin-tor-wrapper
+       OnionNamePlugin 3 .scallion   /usr/local/bin/community-hosts-file
+
+2.3.1. Tor name resolution logic
+
+   When Tor receives a SOCKS request to an address that has a name
+   plugin assigned to it, it needs to perform a query for that address
+   using that name plugin.
+
+   If there are multiple name plugins that correspond to the requested
+   address, Tor queries all relevant plugins sorted by their priority
+   value, until one of them returns a successful result. If two plugins
+   have the same priority value, Tor MUST abort.
+
+   If all plugins fail to successfuly perform the name resolution, Tor SHOULD
+   default to using the exit node for name resolution.
+   XXX or not?  because of leaks?
+
+2.4. Name system initialization [INITPROTOCOL]
+
+   When Tor finds OnionNamePlugin lines in torrc, it launches and initializes
+   their respective executables.
+
+   When launching name plugins, Tor sets various environment variables to pass
+   data to the name plugin (e.g. NS API version, state directory, etc.). More
+   information on the environment variables at [INITENVVARS].
+
+   After a name plugin initializes and parses all needed environment
+   variables, it communicates with Tor using its stdin/stdout.
+
+   The first line that a name plugin sends to stdout signifies that it's ready
+   to receive name queries. This line looks like this:
+
+      INIT <VERSION> <STATUS_CODE> [<STATUS_MSG>]
+
+   where VERSION is the Tor NS API protocol version that the plugin supports,
+   STATUS_CODE is an integer status code, and STATUS_MSG is an optional string
+   error message. STATUS_CODE value 0 is reserved for "success", and all other
+   integers are error codes.
+
+   See [PROTOEXAMPLE] for an example of this protocol.
+
+2.5. Name resolution using NS API
+
+   Here is how actual name resolution requests are performed in NS API.
+
+2.5.1. Message format
+
+   When Tor receives a SOCKS request to an address with a tld that has a name
+   plugin assigned to it, Tor performs an NS API name query for that address.
+
+   Tor does this by printing lines on the name plugin stdout as follows:
+
+      RESOLVE <QUERY_ID> <NAME_STRING>
+
+   where QUERY_ID is a unique integer corresponding to this query, and
+   NAME_STRING is the name to be queried.
+
+   When the name plugin completes the name resolution, it prints the following
+   line in its stdout:
+
+      RESOLVED <QUERY_ID> <STATUS_CODE> <RESULT>
+
+   where QUERY_ID is the corresponding query ID and STATUS_CODE is an integer
+   status code. RESULT is the resolution result (an onion address) or an error
+   message if the resolution was not succesful.
+
+   See [PROTOEXAMPLE] for an example of this protocol.
+
+   XXX Should <RESULT> be optional in the case of failure?
+
+2.5.2. RESOLVED status codes
+
+   Name plugins can deliver the following status codes:
+
+   0 -- The name resolution was successful.
+
+   1 -- Name resolution generic failure.
+
+   2 -- Name tld not recognized.
+
+   3 -- Name not registered.
+
+   4 -- Name resolution timeout exceeded.
+
+   XXX add more status codes here as needed
+
+2.5.3. Further name resolution behavior
+
+   Tor and name plugins MAY cache name resolution results in memory as
+   needed. Caching results on disk should be avoided.
+
+   Tor SHOULD abort (or cancel) an ongoing name resolution request, if it takes
+   more than NAME_RESOLUTION_TIMEOUT seconds.
+   XXX NAME_RESOLUTION_TIMEOUT = ???
+
+   Tor MUST validate that the resolution result is a valid .onion name.
+   XXX should we also accept IPs and regular domain results???
+   XXX perhaps we should make sure that results are not names that need
+       additional name resolution to avoid endless loops. e.g. imagine
+       some sort of loop like this:
+        debian.zkey -> debian-bla.zkey -> debian.zkey -> etc.
+
+2.6. Cancelling a name resolution request
+
+   Tor might need to cancel an ongoing name resolution request
+   (e.g. because a timeout passed, or the client is not interested in
+   that address anymore). In this case, Tor sends the following line to
+   the plugin stdout as follows:
+
+     CANCEL <QUERY_ID>
+
+   to which the name plugin, after performing the cancellation, SHOULD
+   answer with:
+
+     CANCELED <QUERY_ID>
+
+2.7. Launching name plugins [INITENVVARS]
+
+   As described in [INITPROTOCOL], when Tor launches a name plugin, it sets
+   certain environment variables. At a minimum, it sets (in addition to the
+   normal environment variables inherited from Tor):
+
+    "TOR_NS_STATE_LOCATION" -- A filesystem directory path where the
+       plugin should store state if it wants to.  This directory is not
+       required to exist, but the plugin SHOULD be able to create it if
+       it doesn't.  The plugin MUST NOT store state elsewhere.
+      Example: TOR_NS_STATE_LOCATION=/var/lib/tor/ns_state/
+
+    "TOR_NS_PROTO_VERSION" -- To tell the plugin which versions of this
+       configuration protocol Tor supports. Future versions will give a
+       comma-separated list.  Plugins MUST accept comma-separated lists
+       containing any version that they recognize, and MUST work correctly even
+       if some of the versions they don't recognize are non-numeric.  Valid
+       version characters are non-space, non-comma printing ASCII characters.
+      Example: TOR_NS_PROTO_VERSION=1,1a,2,4B
+
+    "TOR_NS_PLUGIN_OPTIONS" -- Specifies configuration options for this
+       name plugin as a semicolon-separated list of k=v strings with
+       options that are to be passed to the plugin.
+
+       Colons, semicolons, equal signs and backslashes MUST be escaped with a
+       backslash.
+
+       If there are no arguments that need to be passed to any of the
+       plugins, "TOR_NS_PLUGIN_OPTIONS" MAY be omitted.
+
+       For example consider the following options for the "banana" name plugin:
+
+         TOR_NS_PLUGIN_OPTIONS=timeout=5;url=https://bananacake.com
+
+         Will pass to banana the parameters 'timeout=5' and
+         'url=https://bananacake.com'.
+
+       XXX Do we like this option-passing interface? Do we have any lessons
+           from our PT experiences?
+
+   XXX Add ControlPort/SocksPort environment variables.
+
+   See [PROTOEXAMPLE] for an example of this environment
+
+2.8. Name plugin workflow [NSBEHAVIOR]
+
+   Name plugins follow the following workflow:
+
+     1) Tor sets the required environment values and launches the name plugin
+        as a sub-process (fork()/exec()). See [INITENVVARS].
+
+     2) The name plugin checks its environment, and determines the supported NS
+        API versions using the env variable TOR_NS_PROTO_VERSION.
+
+        2.1) If there are no compatible versions, the name plugin writes
+             an INIT message with a failure status code as in
+             [INITPROTOCOL], and then shuts down.
+
+     3) The name plugin parses and handles the rest of the environment values.
+
+        3.1) If the environment variables are malformed, or otherwise
+             invalid, the name plugin writes an INIT message with a
+             failure status code as in [INITPROTOCOL], and then shuts
+             down.
+
+     4) After the name plugin completely initializes, it sends a successful
+        INIT message to stdout as in [INITPROTOCOL]. Then it continues
+        monitoring its stdin for incoming RESOLVE messages.
+
+     6) When the name plugin receives a RESOLVE message, it performs the name
+        resolution and replies with the appropriate RESOLVED message.
+
+     7) Upon being signaled to terminate by the parent process [NSSHUTDOWN], the
+        name plugin gracefully shuts down.
+
+2.8.1. Name plugin shutdown [NSSHUTDOWN]
+
+   To ensure clean shutdown of all name plugins when Tor shuts down, the
+   following rules apply for name plugins:
+
+   Name plugins MUST handle OS specific mechanisms to gracefully terminate
+   (e.g. SIGTERM).
+
+   Name plugins SHOULD monitor their stdin and exit gracefully when it is
+   closed.
+
+2.9. Further details of stdin/stdout communication
+
+2.9.1. Message Format
+
+   Tor communicates with its name plugins by writing NL-terminated lines to
+   stdout.  The line metaformat is
+
+      <Line> ::= <Keyword> <OptArgs> <NL>
+      <Keyword> ::= <KeywordChar> | <Keyword> <KeywordChar>
+      <KeyWordChar> ::= <any US-ASCII alphanumeric, dash, and underscore>
+      <OptArgs> ::= <Args>*
+      <Args> ::= <SP> <ArgChar> | <Args> <ArgChar>
+      <ArgChar> ::= <any US-ASCII character but NUL or NL>
+      <SP> ::= <US-ASCII whitespace symbol (32)>
+      <NL> ::= <US-ASCII newline (line feed) character (10)>
+
+   Tor MUST ignore lines with keywords that it doesn't recognize.
+
+3. Discussion
+
+3.1. Using second-level domains instead of tld
+
+   People have suggested that users should try to connect to reddit.zkey.onion
+   instead of reddit.zkey. That is, we should always preserve .onion as the
+   tld, and only utilize second-level domains for naming.
+
+   The argument for this is that this way users cannot accidentally leak
+   addresses to DNS, as the .onion domain is reserved by RFC 7686.
+
+   The counter-argument here is that this might be confusing to users since
+   they are not used to the second-level domain being special (e.g. co.uk).
+   Also, what happens when someone registers a 16-character name, that matches
+   the length of a vanilla onion address?
+
+   We should consider the concerns here and take the right decision.
+
+3.2. Name plugins handling all tlds '*'
+
+   In [TORRC], we assigned a single tld to each name plugin.  Should we also
+   accept catch-all tlds using '*'? I'm afraid that this way a name system
+   could try to resolve even normal domains like reddit.com .
+
+   Perhaps we trust the name plugin itself, but maybe the name system
+   network could exploit this? Also, the catch-all tld will probably
+   cause some engineering complications in this proposal (as it did for PTs).
+
+3.3. Deployment strategy
+
+   We need to devise a deployment strategy that will allow us to improve
+   the UX of our users as soon as possible, but without taking hasty,
+   sloppy or uneducated decisions.
+
+   For starters, we should make it easy for developers to write wrappers around
+   their secure name systems. We should develop libraries that speak the NS API
+   protocol and can be used to quickly write wrappers. Similar libraries were quite
+   successful during pluggable transport deployment; see pyptlib and goptlib.
+
+   In the beginning, name plugins should be third-party applications that can
+   be installed by interested users manually or through package managers. Users
+   will also have to add the appropriate OnionNamePlugin line to their torrc.
+   This will be a testing phase, and also a community-growing phase.
+
+   After some time, and when we get a better idea of how name plugins
+   work for the community, we can start considering how to make them
+   more easily usable.  For example, we can start by including some name
+   plugins into TBB in an optional opt-in fashion. We should be careful
+   here, as people have real incentives for attacking name systems and
+   we should not put our users unwillingly in danger.
+
+3.4. Miscellaneous discussion topics
+
+   1. The PT spec tries hard so that a single executable can expose multiple
+      PTs. In this spec, it's clear that each executable is a single name
+      plugin. Is this OK or a bad idea? Should we change interfaces so that
+      each name plugin has an identifier, and then use that identifier for
+      things?
+
+   2. Should we make our initialization protocol _identical_ to the PT API
+      initialization protocol? That is, use ENV-ERROR etc. instead of INT?
+
+   3. Does it make sense to support reverse queries, from .onion to names? So
+      that people auto-learn the names of the onions they use?
+
+4. Acknowledgements
+
+   Proposal details discussed during Tor hackfest in Seattle between
+   Yawning, David and me. Thanks to Lunar and indolering for more
+   discussion and feedback.
+
+Appendix A.1: Example communication Tor <-> name plugin [PROTOEXAMPLE]
+
+   Environemnt variables:
+
+     TOR_NS_STATE_LOCATION=/var/lib/tor/ns_state
+     TOR_NS_PROTO_VERSION=1
+     TOR_NS_PLUGIN_OPTIONS=timeout=5;cache=/home/user/name_cache
+
+   Messages between Tor and the banana name plugin:
+
+     Name plugin (banana) -> Tor:
+        INIT 1 0
+
+     Tor -> Name plugin (banana):
+        RESOLVE 1 daewonskate.banana
+
+     Name plugin (banana) -> Tor:
+        RESOLVED 1 0 jqkscnkne4qt91iq.onion
+
+     Tor -> Name plugin (banana):
+        RESOLVE 1 architecturedirect.zkey
+
+     Name plugin (banana) -> Tor (banana):
+        RESOLVE 1 2 "zkey not recognized tld"
+
+     Tor -> Name plugin (banana):
+        RESOLVE 1 origamihub.banana
+
+     Name plugin (banana) -> Tor (banana):
+        RESOLVE 1 2 wdxfpaxar4dg12vd.onion
+
+Appendix A.2: Example plugins [PLUGINEXAMPLES]
+
+   Here are a few examples of name plugins for brainstorming:
+
+   a) Simplest plugin: A local hosts file. Basically a local petname system
+      that maps names to onion addresses.
+
+   b) A remote hosts file. A centralized community hosts file that people trust.
+
+   c) Multiple remote hosts files. People can add their own favorite community
+      hosts file.
+
+   d) Multiple remote hosts files with notaries and reputation
+      trust. Like moxie's convergence tool but for names.
+
+   e) GNS
+
+   f) OnioNS
+
+   g) Namecoin/Blockstart
