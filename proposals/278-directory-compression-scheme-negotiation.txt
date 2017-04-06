@@ -85,7 +85,7 @@ Target: N/A
   For example:
 
     GET / HTTP/1.0
-    Accept-Encoding: zstd, xz, gzip, deflate
+    Accept-Encoding: x-zstd, x-lzma2, gzip, deflate
 
   When a directory server receives a request with the "Accept-Encoding"
   header included it must decide on a mutually supported compression
@@ -100,11 +100,11 @@ Target: N/A
     HTTP/1.0 200 OK
     Content-Length: 1337
     Connection: close
-    Content-Encoding: zstd
+    Content-Encoding: x-zstd
 
   Currently supported compression scheme names includes "identity",
   "gzip", and "deflate". This proposal adds two additional compression
-  scheme named "xz" (LZMA2) and "zstd" (Zstandard).
+  scheme named "x-lzma2" (LZMA2) and "x-zstd" (Zstandard).
 
   All compression scheme names are case-insensitive.
 
