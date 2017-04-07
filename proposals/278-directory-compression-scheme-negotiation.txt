@@ -120,6 +120,12 @@ Target: N/A
   using zlib deflate without any prior knowledge of the newly added
   compression schemes.
 
+  If a directory server receives a request to a document with the ".z"
+  suffix, where the client does not include an "Accept-Encoding" header,
+  the server should respond with the zlib compressed version of the
+  document for backwards compatibility with client that does not support
+  this proposal.
+
   The "Content-Length" header contains the number of compressed bytes
   sent to the client.
 
