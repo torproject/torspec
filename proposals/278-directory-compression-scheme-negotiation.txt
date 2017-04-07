@@ -88,12 +88,14 @@ Target: N/A
     Accept-Encoding: x-zstd, x-lzma2, gzip, deflate
 
   When a directory server receives a request with the "Accept-Encoding"
-  header included it must decide on a mutually supported compression
-  scheme and add the "Content-Encoding" header to its response and thus
-  notifying the client of its decision. The "Content-Encoding" header
-  can at most contain one supported compression scheme. If no mutual
-  compression scheme can be negotiated the server must respond with an
-  HTTP error status code of 415 "Unsupported Media Type".
+  header included, to either the ".z" compressed or the uncompressed
+  version of any given document, it must decide on a mutually supported
+  compression scheme and add the "Content-Encoding" header to its
+  response and thus notifying the client of its decision. The
+  "Content-Encoding" header can at most contain one supported
+  compression scheme. If no mutual compression scheme can be negotiated
+  the server must respond with an HTTP error status code of 415
+  "Unsupported Media Type".
 
   For example:
 
