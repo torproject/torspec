@@ -56,7 +56,7 @@
      A. UseBridges
 
       If UseBridges is set, then we replace the {GUARDS} set in
-      [Sec:GUARDS] below with the list of list of configured
+      [Sec:GUARDS] below with the list of configured
       bridges.  We maintain a separate persistent instance of
       {SAMPLED_GUARDS} and {CONFIRMED_GUARDS} and other derived
       values for the UseBridges case.
@@ -100,7 +100,7 @@
    Client <-> Entry Guard <-> Middle Node <-> Exit Node <-> Destination
 
    Entry guards are the only nodes which a client will connect to
-   directly, Exit relays are the nodes by which traffic exists the
+   directly. Exit relays are the nodes by which traffic exits the
    Tor network in order to connect to an external destination.
 
    3.1 Path selection
