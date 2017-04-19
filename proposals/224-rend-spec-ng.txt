@@ -903,9 +903,10 @@ Table of contents:
 
    To do so, Tor clients and services use:
 
-     SRV = HMAC("shared-random-disaster", TIME_PERIOD_NUM)
+     SRV = HMAC("shared-random-disaster", INT_8(period_num))
 
-   as the SRV for time period TIME_PERIOD_NUM.
+   where period_num is calculated as specified in [TIME-PERIODS] for the
+   wanted shared random value that could not be found originally.
 
 2.3.2. Hidden services and changing shared random values
 
