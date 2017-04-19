@@ -237,7 +237,8 @@ Table of contents:
 
    Link specifier types are as described in tor-spec.txt. Every set of
    link specifiers MUST include at minimum specifiers of type [00]
-   (TLS-over-TCP, IPv4) and [02] (legacy node identity).
+   (TLS-over-TCP, IPv4), [02] (legacy node identity) and [03] (ed25519
+   identity key).
 
    We also incorporate Tor's circuit extension handshakes, as used in
    the CREATE2 and CREATED2 cells described in tor-spec.txt. In these
