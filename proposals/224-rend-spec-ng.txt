@@ -211,7 +211,7 @@ Table of contents:
 
       * Instantiate KDF with SHAKE-256.
 
-      * Instantiate MAC(key=k, message=m) with H(k_len || k || m),
+      * Instantiate MAC(key=k, message=m) with H(k_len | k | m),
         where k_len is htonll(len(k)).
 
    For legacy purposes, we specify compatibility with older versions of
@@ -782,9 +782,9 @@ Table of contents:
 
         for replicanum in 1...hsdir_n_replicas:
             hs_index(replicanum) = H("store-at-idx" |
-                                 blinded_public_key |
-                                 INT_8(replicanum) |
-                                 INT_8(period_num) )
+                                     blinded_public_key |
+                                     INT_8(replicanum) |
+                                     INT_8(period_num) )
 
    where blinded_public_key is specified in section [KEYBLIND], and period_num
    is calculated using the current consensus "valid-after" as specified in
@@ -1891,8 +1891,8 @@ Table of contents:
    version field and a basic checksum. All this information is then base32
    encoded as shown below:
 
-     onion_address = base32(PUBKEY || CHECKSUM || VERSION) + ".onion"
-     CHECKSUM = H(".onion checksum" || PUBKEY || VERSION)[:2]
+     onion_address = base32(PUBKEY | CHECKSUM | VERSION) + ".onion"
+     CHECKSUM = H(".onion checksum" | PUBKEY | VERSION)[:2]
 
      where:
        - PUBKEY is the 32 bytes ed25519 master pubkey of the hidden service.
