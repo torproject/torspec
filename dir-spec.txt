@@ -703,7 +703,7 @@
        Present only if the router allows single-hop circuits to make exit
        connections.  Most Tor relays do not support this: this is
        included for specialized controllers designed to support perspective
-       access and such.
+       access and such. This is obsolete in tor version >= 0.3.1.0-alpha.
 
    "or-address" SP ADDRESS ":" PORT NL
 
