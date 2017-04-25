@@ -1995,6 +1995,8 @@ References:
 
 Appendix A. Signature scheme with key blinding [KEYBLIND]
 
+A.1. Key derivation overview
+
   As described in [IMD:DIST] and [SUBCRED] above, we require a "key
   blinding" system that works (roughly) as follows:
 
@@ -2022,6 +2024,7 @@ Appendix A. Signature scheme with key blinding [KEYBLIND]
 
         [TODO: Insert a more rigorous definition and better references.]
 
+A.2. Tor's key derivation scheme
 
   We propose the following scheme for key blinding, based on Ed25519.
 
@@ -2035,7 +2038,13 @@ Appendix A. Signature scheme with key blinding [KEYBLIND]
   key and A is the public key (A=aB)
 .
   To derive the key for a nonce N and an optional secret s, compute the
-  blinding factor h as H(A | s, B, N), and let:
+  blinding factor like this:
+
+           h = H(BLIND_STRING | A | s | B | N)
+           BLIND_STRING = "Derive temporary signing key"
+           N = "key-blind" | INT_8(period-number) | INT_8(period_length)
+
+  and then do the following:
 
       private key for the period:   a' = h a
       public key for the period:    A' = h A = (ha)B
@@ -2054,9 +2063,6 @@ Appendix A. Signature scheme with key blinding [KEYBLIND]
   See [KEYBLIND-REFS] for an extensive discussion on this scheme and
   possible alternatives. Also, see [KEYBLIND-PROOF] for a security
   proof of this scheme.
-
-  (To use this with Tor, set N = "key-blind" | INT_8(period-number) |
-  INT_8(period_length).)
 
 Appendix B. Selecting nodes [PICKNODES]
 
