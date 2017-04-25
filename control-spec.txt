@@ -2945,10 +2945,10 @@
               "FAILED" / "CREATED"
     HSAddress = 16*Base32Character / "UNKNOWN"
     AuthType = "NO_AUTH" / "BASIC_AUTH" / "STEALTH_AUTH" / "UNKNOWN"
-    HsDir = LongName / Fingerprint
+    HsDir = LongName / Fingerprint / "UNKNOWN"
     DescriptorID = 32*Base32Character
     Reason = "BAD_DESC" / "QUERY_REJECTED" / "UPLOAD_REJECTED" / "NOT_FOUND" /
-             "UNEXPECTED"
+             "UNEXPECTED" / "QUERY_NO_HSDIR"
     Replica = 1*DIGIT
 
     These events will be triggered when required HiddenService descriptor is
@@ -2973,6 +2973,10 @@
        - "UPLOAD_REJECTED" - descriptor was rejected by HS directory.
        - "NOT_FOUND" - HS descriptor with given identifier was not found.
        - "UNEXPECTED" - nature of failure is unknown.
+       - "QUERY_NO_HSDIR" - No suitable HSDir were found for the query.
+
+    For "QUERY_NO_HSDIR", the HsDir will be set to "UNKNOWN" which was
+    introduced in tor 0.3.1.0-alpha.
 
     If Action is "CREATED", Tor SHOULD send Replica field as well. The Replica
     field contains the replica number of the generated descriptor. The Replica
@@ -2988,7 +2992,7 @@
 
     HSAddress = 16*Base32Character / "UNKNOWN"
     DescId = 32*Base32Character
-    HsDir = LongName
+    HsDir = LongName / "UNKNOWN"
     Descriptor = The text of the descriptor formatted as specified in
     rend-spec.txt section 1.3 or empty string on failure.
 
@@ -2999,6 +3003,9 @@
   If a fetch fails, the Descriptor is an empty string and HSAddress is set
   to "UNKNOWN". The HS_DESC event should be used to get more information on
   the failed request.
+
+  If the fetch fails for the QUERY_NO_HSDIR reason from the HS_DESC event, the
+  HsDir is set to "UNKNOWN". This was introduced in 0.3.1.0-alpha.
 
   It's expected to receive a reply relatively fast as in it's the time it
   takes to fetch something over the Tor network. This can be between a
