@@ -518,4 +518,4 @@ Appendix A.2: Example plugins [PLUGINEXAMPLES]
 
    f) OnioNS
 
-   g) Namecoin/Blockstart
+   g) Namecoin/Blockstack
