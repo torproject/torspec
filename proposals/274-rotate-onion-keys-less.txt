@@ -41,7 +41,7 @@ Implemented-In: 0.3.1.1-alpha
    The number of microdescriptors to actually download should
    decrease by a similar number.
 
-   This amount to a significant reduction: currently, by
+   This amounts to a significant reduction: currently, by
    back-of-the-envelope estimates, an always-on client that downloads
    all the directory info in a month downloads about 449MB of compressed
    consensuses and something around 97 MB of compressed
