@@ -16,6 +16,11 @@ Status: Accepted
   diffs, add parameters, restore diff-only URLs, say what "Digest"
   means. -nickm
 
+  3-May-2017: Add a notion of "digest-as-signed" vs "full digest", since
+  otherwise the fact that there are multiple encodings of the same valid
+  consensus signatures would make clients identify which encodings they
+  had been given as they asked for diffs.
+
 1. Overview.
 
   Tor clients and servers need a list of which relays are on the
@@ -47,8 +52,17 @@ Status: Accepted
 
 3.0. Preliminaries.
 
-  Unless otherwise specified, all hashes in this document are SHA3-256
-  hashes, encoded in base64.
+  Unless otherwise specified, all digests in this document are SHA3-256
+  digests, encoded in base64.  This document also uses "hash" as
+  synonymous with "digest".
+
+  A "full digest" of a consensus document covers the entire document,
+  from the "network-status-version" through the newline after the final
+  "-----END SIGNATURE-----".
+
+  A "digest as signed" of a consensus document covers the same part that
+  the signatures cover: the "network-status-version" through the newline
+  immediately before the first "directory-signature" line.
 
 3.1 Clients
 
@@ -92,7 +106,7 @@ Status: Accepted
   HTTP/1.0 GET /tor/status-vote/current/consensus{-Flavor}/<FPRLIST>.z
   X-Or-Diff-From-Consensus: HASH1 HASH2...
 
-  where the hashes are the full digests of the consensuses the client
+  where the hashes are the digests-as-signed of the consensuses the client
   currently has, and FPRLIST is a list of (abbreviated) fingerprints of
   authorities the client trusts.
 
@@ -121,8 +135,8 @@ Status: Accepted
 
     I currently lean towards the empty diff.]
 
-  Additionally, specific diff for a given consensus hash should be available
-  a URL of the form:
+  Additionally, specific diff for a given consensus digest-as-signed
+  should be available a URL of the form:
 
     /tor/status-vote/current/consensus{-Flavor}/diff/<HASH>/<FPRLIST>.z
 
@@ -139,10 +153,10 @@ Status: Accepted
   to be a full consensus download and would therefore currently start
   with "network-status-version 3".
 
-  Following the network-status-diff line is another header line, starting with
-  the token "hash" followed by the full digest of the consensus that this diff
-  applies to and the full digest that the resulting consensus
-  should have.
+  Following the network-status-diff line is another header line,
+  starting with the token "hash" followed by the digest-as-signed of the
+  consensus that this diff applies to, and the full digest that the
+  resulting consensus should have.
 
   Following the network-status-diff header lines is a diff, or patch, in
   limited ed format.  We choose this format because it is easy to create
@@ -158,6 +172,7 @@ Status: Accepted
   We support the following ed commands, each on a line by itself:
    - "<n1>d"          Delete line n1
    - "<n1>,<n2>d"     Delete lines n1 through n2, inclusive
+   - "<n1>,$d"        Delete line n1 through the end of the file, inclusive.
    - "<n1>c"          Replace line n1 with the following block
    - "<n1>,<n2>c"     Replace lines n1 through n2, inclusive, with the
                       following block.
@@ -171,6 +186,12 @@ Status: Accepted
   The commands MUST apply to the file from back to front, such that
   lines are only ever referred to by their position in the original
   file.
+
+  If there are any directory signatures on the original document, the
+  first command MUST be a "<n1>,$d" form to remove all of the directory
+  signatures.  Using this format ensures that the client will
+  successfully apply the diff even if they have an unusual encoding for
+  the signatures.
 
   The "current line" is either the first line of the file, if this is
   the first command, the last line of a block we added in an append or
