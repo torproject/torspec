@@ -113,6 +113,13 @@ Target: N/A
   The "deflate", "gzip", and "identity" compression schemes must be
   supported by directory servers for backwards compatibility.
 
+  We use the name "x-tor-lzma" instead of just "x-lzma" because we
+  require a defined upper bound of memory usage that is available for
+  decompression of LZMA compressed data. The upper bound for memory
+  available for LZMA decompression is defined as 16 MB. This currently
+  means that will not use the LZMA compression scheme with a "preset"
+  value higher than 6.
+
   Additionally, when a client, that supports this proposals, makes a
   request to a directory document with the ".z"-suffix it must send an
   ordered set of supported compression schemes where the last elements
