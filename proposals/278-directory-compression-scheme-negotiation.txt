@@ -13,7 +13,7 @@ Target: N/A
   using the semantics of the HTTP protocol.
 
   Furthermore this proposal also extends Tor's directory protocol with
-  support for the LZMA2 and Zstandard compression schemes.
+  support for the LZMA and Zstandard compression schemes.
 
 1. Motivation
 
@@ -42,26 +42,26 @@ Target: N/A
       most commonly available compression schemes used throughout the
       network.
 
-    - We add support for the LZMA2 compression scheme, which yields
+    - We add support for the LZMA compression scheme, which yields
       better compressed size and decompression time at the expensive of
       higher compression time and higher memory usage.
 
     - We add support for the Zstandard compression scheme, which yields
-      better compression ratio than GZip, but slightly worse than LZMA2,
-      but with a smaller CPU and memory footprint than LZMA2.
+      better compression ratio than GZip, but slightly worse than LZMA,
+      but with a smaller CPU and memory footprint than LZMA.
 
 2. Analysis
 
   We investigated the compression ratio, memory usage, memory allocation
   strategies, and execution time for compression and decompression of
-  the GZip, BZip2, LZMA2, and Zstandard compression schemes at
+  the GZip, BZip2, LZMA, and Zstandard compression schemes at
   compression levels 1 through 9.
 
   The data used in this analysis can be found in [1] and the `bench`
   tool for generating the data can be found in [2].
 
   During the preparation for this proposal Nick have analysed
-  compressing consensus diffs using both GZip, LZMA2, and Zstandard. The
+  compressing consensus diffs using both GZip, LZMA, and Zstandard. The
   result of Nick's analysis can be found in [3].
 
   We must continue to support both "gzip", "deflate", and "identity"
@@ -85,7 +85,7 @@ Target: N/A
   For example:
 
     GET / HTTP/1.0
-    Accept-Encoding: x-zstd, x-lzma2, gzip, deflate
+    Accept-Encoding: x-zstd, x-tor-lzma, gzip, deflate
 
   When a directory server receives a request with the "Accept-Encoding"
   header included, to either the ".z" compressed or the uncompressed
@@ -106,7 +106,7 @@ Target: N/A
 
   Currently supported compression scheme names includes "identity",
   "gzip", and "deflate". This proposal adds two additional compression
-  scheme named "x-lzma2" (LZMA2) and "x-zstd" (Zstandard).
+  scheme named "x-tor-lzma" (LZMA) and "x-zstd" (Zstandard).
 
   All compression scheme names are case-insensitive.
 
@@ -144,7 +144,7 @@ Target: N/A
   The detection of compression and decompression bombs are handled in
   `is_compression_bomb()` in torgzip.c and the same functionality is
   used both for compression and decompression. These functions must be
-  extended to support LZMA2 and Zstandard.
+  extended to support LZMA and Zstandard.
 
 4.2 Detection of Compression Algorithms
 
@@ -152,7 +152,7 @@ Target: N/A
   decompression handler, when we have received data from another peer,
   Tor tries to detect the compression scheme in
   `detect_compression_method()`` in torgzip.c. This function should be
-  extended to also detect the LZMA2 and Zstandard formats. Possible
+  extended to also detect the LZMA and Zstandard formats. Possible
   methods of applying this detection is looking at xz-tools, zstd's CLI,
   and the libmagic 'compress' module.
 
@@ -175,15 +175,15 @@ Target: N/A
   Each newly added compression scheme adds to the compression cache of a
   relay, which increases the memory requirements of a relay.
 
-  The LZMA2 compression scheme yields better compression ratio at the
+  The LZMA compression scheme yields better compression ratio at the
   expense of higher memory and CPU requirements for compression and
   slightly higher memory and CPU requirements for decompression.
 
   The Zstandard compression scheme yields better compression ratio than
   GZip does, but does not suffer from the same high CPU and memory
-  requirements for compression as LZMA2 does.
+  requirements for compression as LZMA does.
 
-  Because of the high requirements for CPU and memory usage for LZMA2 it
+  Because of the high requirements for CPU and memory usage for LZMA it
   is possible that we do not support this scheme for all available
   documents or that we only support it in situations where it is
   possible to pre-compute and cache the compressed document.
