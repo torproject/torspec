@@ -61,8 +61,9 @@ Status: Accepted
   "-----END SIGNATURE-----".
 
   A "digest as signed" of a consensus document covers the same part that
-  the signatures cover: the "network-status-version" through the newline
-  immediately before the first "directory-signature" line.
+  the signatures cover: the "network-status-version" through the space
+  immediately after the "directory-signature" keyword on the first
+  "directory-signature" line.
 
 3.1 Clients
 
