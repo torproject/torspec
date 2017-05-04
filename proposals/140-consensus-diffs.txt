@@ -21,6 +21,8 @@ Status: Accepted
   consensus signatures would make clients identify which encodings they
   had been given as they asked for diffs.
 
+  4-May-2017: Remove support for truncated digest prefixes.
+
 1. Overview.
 
   Tor clients and servers need a list of which relays are on the
@@ -112,12 +114,8 @@ Status: Accepted
   authorities the client trusts.
 
   Servers will only return a consensus if more than half of the requested
-  authorities have signed the document, otherwise a 404 error will be sent
-  back.  The fingerprints can be shortened to a length of any multiple of
-  two, using only the leftmost part of the encoded fingerprint.  Tor uses
-  3 bytes (6 hex characters) of the fingerprint.  (This is just like the
-  conditional consensus downloads that Tor supports starting with
-  0.1.2.1-alpha.)
+  authorities have signed the document. Otherwise, a 404 error will be sent
+  back.
 
   The advantage of using the same URL that is currently used for
   consensuses is that the client doesn't need to know whether a server
