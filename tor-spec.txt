@@ -428,6 +428,7 @@ see tor-design.pdf.
          9 -- RELAY_EARLY (End-to-end data; limited)(See Sec 5.6)
          10 -- CREATE2    (Extended CREATE cell)    (See Sec 5.1)
          11 -- CREATED2   (Extended CREATED cell)    (See Sec 5.1)
+         12 -- PADDING_NEGOTIATE   (Padding negotiation)    (See Sec 7.2)
 
     Variable-length command values are:
          7 -- VERSIONS    (Negotiate proto version) (See Sec 4)
@@ -539,6 +540,7 @@ see tor-design.pdf.
           variable-length cells.
      3 -- Uses the in-protocol handshake.
      4 -- Increases circuit ID width to 4 bytes.
+     5 -- Adds support for link padding and negotiation (padding-spec.txt).
 
 
 4.2. CERTS cells
@@ -1535,11 +1537,24 @@ see tor-design.pdf.
    long-range padding.  The contents of a PADDING, VPADDING, or DROP
    cell SHOULD be chosen randomly, and MUST be ignored.
 
-   Currently nodes are not required to do any sort of link padding or
-   dummy traffic. Because strong attacks exist even with link padding,
-   and because link padding greatly increases the bandwidth requirements
-   for running a node, we plan to leave out link padding until this
-   tradeoff is better understood.
+   If the link protocol is version 5 or higher, link level padding is
+   enabled as per padding-spec.txt. On these connections, clients may
+   negotiate the use of padding with a CELL_PADDING_NEGOTIATE command
+   whose format is as follows:
+         Version           [1 byte]
+         Command           [1 byte]
+         ito_low_ms        [2 bytes]
+         ito_high_ms       [2 bytes]
+
+   Currently, only version 0 of this cell is defined. In it, the command
+   field is either 1 (stop padding) or 2 (start padding). For the start
+   padding command, a pair of timeout values specifying a low and a high
+   range bounds for randomized padding timeouts may be specified as unsigned
+   integer values in milliseconds. The ito_low_ms field must not be lower than
+   the current consensus parameter value for nf_ito_low (default: 1500).
+   ito_high_ms must be greater than ito_low_ms.
+
+   For more details on padding behavior, see padding-spec.txt.
 
 7.3. Circuit-level flow control
 

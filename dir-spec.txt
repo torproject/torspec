@@ -1158,6 +1158,46 @@
         Pluggable transports are only relevant to bridges, but these entries
         can appear in non-bridge relays as well.
 
+    "padding-counts" YYYY-MM-DD HH:MM:SS (NSEC s) key=val key=val ... NL
+        [At most once.]
+
+        YYYY-MM-DD HH:MM:SS defines the end of the included measurement
+        interval of length NSEC seconds (86400 seconds by default). Counts
+        are reset to 0 at the end of this interval.
+
+        The keyword list is currently as follows:
+
+         bin-size
+           - The current rounding value for cell count fields (10000 by
+             default)
+         write-drop
+           - The number of RELAY_DROP cells this relay sent
+         write-pad
+           - The number of CELL_PADDING cells this relay sent
+         write-total
+           - The total number of cells this relay cent
+         read-drop
+           - The number of RELAY_DROP cells this relay received
+         read-pad
+           - The number of CELL_PADDING cells this relay received
+         read-total
+           - The total number of cells this relay received
+         enabled-read-pad
+           - The number of CELL_PADDING cells this relay received on
+             connections that support padding
+         enabled-read-total
+           - The total number of cells this relay received on connections
+             that support padding
+         enabled-write-pad
+           - The total number of cells this relay received on connections
+             that support padding
+         enabled-write-total
+           - The total number of cells sent by this relay on connections
+             that support padding
+         max-chanpad-timers
+           - The maximum number of timers that this relay scheduled for
+             padding in the previous NSEC interval
+
     "router-sig-ed25519"
         [As in router descriptors]
 

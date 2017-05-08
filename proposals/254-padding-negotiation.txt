@@ -41,31 +41,27 @@ Proposal 251[1]).
 
 In that scenario, the primary negotiation mechanism we need is a way for
 mobile clients to tell their Guards to stop padding, or to pad less
-often. The following Trunnel payloads should cover the needed
+often. The following Trunnel payload should cover the needed
 parameters:
 
-    const CELL_PADDING_COMMAND_STOP = 1;
-    const CELL_PADDING_COMMAND_START = 2;
+  const CHANNELPADDING_COMMAND_STOP = 1;
+  const CHANNELPADDING_COMMAND_START = 2;
 
-    /* This command tells the relay to stop sending any periodic
-       CELL_PADDING cells. */
-    struct cell_padding_stop {
-      u8 command IN [CELL_PADDING_COMMAND_STOP];
-    };
+  /* The start command tells the relay to alter its min and max netflow
+     timeout range values, and send padding at that rate (resuming
+     if stopped). The stop command tells the relay to stop sending
+     link-level padding. */
+  struct channelpadding_negotiate {
+    u8 version IN [0];
+    u8 command IN [CHANNELPADDING_COMMAND_START, CHANNELPADDING_COMMAND_STOP];
 
-    /* This command tells the relay to alter its min and max netflow
-       timeout range values, and send padding at that rate (resuming
-       if stopped). */
-    struct cell_padding_start {
-      u8 command IN [CELL_PADDING_COMMAND_START];
+    /* Min must not be lower than the current consensus parameter
+       nf_ito_low. Ignored if command is stop. */
+    u16 ito_low_ms;
 
-      /* Min must not be lower than the current consensus parameter
-         nf_ito_low. */
-      u16 ito_low_ms;
-
-      /* Max must not be lower than ito_low_ms */
-      u16 ito_high_ms;
-    };
+    /* Max must not be lower than ito_low_ms. Ignored if command is stop. */
+    u16 ito_high_ms;
+  };
 
 More complicated forms of link-level padding can still be specified
 using the primitives in Section 3, by using "leaky pipe" topology to
