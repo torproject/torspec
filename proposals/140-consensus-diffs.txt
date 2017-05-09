@@ -2,7 +2,8 @@ Filename: 140-consensus-diffs.txt
 Title: Provide diffs between consensuses
 Author: Peter Palfrader
 Created: 13-Jun-2008
-Status: Accepted
+Implemented-In: 0.3.1.1-alpha
+Status: Closed
 
 0. History
 

@@ -1750,6 +1750,8 @@ see tor-design.pdf.
 
    "1" -- supports all features in Tor 0.2.4.19.
 
+   "2" -- adds support for consensus diffs.
+
 9.8. "Desc"
 
    Describes features present or absent in descriptors.

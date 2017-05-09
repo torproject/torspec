@@ -1899,7 +1899,17 @@
         authority votes required for a fresh shared random value to be written
         in the consensus (this rule only applies on the first commit round of
         the shared randomness protocol).
-        Min: 1. Max: INT32_MAX. Default: 2/3 of the total number of dirauth.
+        Min: 1. Max: INT32_MAX. Default: 2/3 of the total number of
+        dirauth.
+
+        "max-consensuses-age-to-cache-for-diff" -- Determines how
+        much consensus history (in hours) relays should try to cache
+        in order to serve diffs.  (min 0, max 8192, default 72)
+
+        "try-diff-for-consensus-newer-than" -- This parameter
+        determines how old a consensus can be (in hours) before a
+        client should no longer try to find a diff for it.  (min 0,
+        max 8192, default 72)
 
     "shared-rand-previous-value" SP NumReveals SP Value NL
 
@@ -3109,6 +3119,7 @@ The following methods have incorrect implementations; authorities SHOULD
       /tor/status-vote/(current|next)/consensus-F.z. and
       /tor/status-vote/(current|next)/consensus-F/<FP1>+....z.
 
+
 4. Directory cache operation
 
    All directory caches implement this section, except as noted.
@@ -3192,6 +3203,60 @@ The following methods have incorrect implementations; authorities SHOULD
    documents currently held.  If so, it downloads whatever extra-info
    documents are missing.  Caches download from authorities.  We follow the
    same splitting and back-off rules as in section 4.2.
+
+4.5. Consensus diffs
+
+   Instead of downloading an entire consensus, clients may download
+   a "diff" document containing an ed-style diff from a previous
+   consensus document.  Caches (and authorities) make these diffs as
+   they learn about new consensuses.  To do so, they must store a
+   record of older consensuses.
+
+   (Support for consensus diffs was added in 0.3.1.1-alpha, and is
+   advertised with the DirCache protocol version "2" or later.)
+
+4.5.1. Consensus diff format
+
+   Consensus diffs are formatted as follows:
+
+   The first line is "network-status-diff-version 1" NL
+
+   The second line is
+           "hash" SP FromDigest SP ToDigest NL
+
+   where FromDigest is the hex-encoded SHA3-256 digest of the _signed
+   part_ of the consensus that the diff should be applied to, and
+   ToDigest is the hex-encoded SHA3-256 digest of the _entire_
+   consensus resulting from applying the diff.  (See 3.4.1 for
+   information on that part of a consensus is signed.)
+
+   The third and subsequent lines encode the diff from FromDigest to
+   ToDigest in a limited subset of the ed diff format, as specified
+   in appendix E.
+
+4.5.2. Serving and requesting diffs.
+
+   When downloading the current consensus, a client may include an
+   HTTP header of the form
+
+        X-Or-Diff-From-Consensus: HASH1, HASH2, ...
+
+   where the HASH values are hex-encoded SHA3-256 digests of the
+   _signed part_ of one or more consensuses that the client knows
+   about.
+
+   If a cache knows a consensus diff from one of those consensuses
+   to the most recent consensus of the requested flavor, it may
+   send that diff instead of the specified consensus.
+
+   Caches also serve diffs from the URIs:
+
+       /tor/status-vote/current/consensus/diff/<HASH>/<FPRLIST>.z
+       /tor/status-vote/current/consensus-<FLAVOR>/diff/<HASH>/<FPRLIST>.z
+
+   where FLAVOR is the consensus flavor, defaulting to "ns", and
+   FPRLIST is +-separated list of recognized authority identity
+   fingerprints as in appendix B.
 
 5. Client operation
 
@@ -3641,3 +3706,46 @@ D. Inferring missing proto lines.
 
    For Microdesc and Cons, Tor versions before 0.2.7.stable should be taken to
    support version 1; 0.2.7.stable and later should have 1-2.
+
+E. Limited ed diff format
+
+   We support the following format for consensus diffs.  It's a
+   subset of the ed diff format, but clients MUST NOT accept other
+   ed commands.
+
+   We support the following ed commands, each on a line by itself:
+    - "<n1>d"          Delete line n1
+    - "<n1>,<n2>d"     Delete lines n1 through n2, inclusive
+    - "<n1>,$d"        Delete line n1 through the end of the file, inclusive.
+    - "<n1>c"          Replace line n1 with the following block
+    - "<n1>,<n2>c"     Replace lines n1 through n2, inclusive, with the
+                       following block.
+    - "<n1>a"          Append the following block after line n1.
+    - "a"              Append the following block after the current line.
+
+   Note that line numbers always apply to the file after all previous
+   commands have already been applied.  Note also that line numbers
+   are 1-indexed.
+
+   The commands MUST apply to the file from back to front, such that
+   lines are only ever referred to by their position in the original
+   file.
+
+   If there are any directory signatures on the original document, the
+   first command MUST be a "<n1>,$d" form to remove all of the directory
+   signatures.  Using this format ensures that the client will
+   successfully apply the diff even if they have an unusual encoding for
+   the signatures.
+
+   The "current line" is either the first line of the file, if this is
+   the first command, the last line of a block we added in an append or
+   change command, or the line immediate following a set of lines we just
+   deleted (or the last line of the file if there are no lines after
+   that).
+
+   The replace and append command take blocks.  These blocks are simply
+   appended to the diff after the line with the command.  A line with
+   just a period (".") ends the block (and is not part of the lines
+   to add).  Note that it is impossible to insert a line with just
+   a single dot.
+
