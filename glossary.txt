@@ -3,10 +3,13 @@
 
                                The Tor Project
 
-Note: This document aims to specify terms, notations or phrases related
-to Tor and The Tor Project.
+This document aims to specify terms, notations, and phrases related
+to Tor, as used in the Tor specification documents and other documentation.
 
 This glossary is not a design document; it is only a reference.
+
+This glossary is a work-in-progress; double-check its definitions before
+citing them authoritatively. ;)
 
 0. Preliminaries
 
@@ -22,54 +25,59 @@ This glossary is not a design document; it is only a reference.
 
 2.0 Tor network components
 
-   2.1 Relay, aka OR (onion router)
+   2.1 Relays, aka OR (onion router)
+
+    [Style guide: prefer the term "Relay"]
 
     2.1.1 Specific roles
 
       Exit relay: The final hop in an exit circuit before traffic leaves
       the Tor network to connect to external servers.
 
-      Non-exit relay: Relays which send and receive traffic only to
-      other Tor relays.
+      Non-exit relay: Relays that send and receive traffic only to
+      other Tor relays and Tor clients.
 
       Entry relay: The first hop in a Tor circuit. Can be either a guard
-      relay or a bridge, with bridges taking precedant.
+      relay or a bridge, depending on the client's configuration.
 
-      Guard relay: Currently only used as entry relays. Guard relays
-      are rotated more slowly to prevent enumeration attacks.
+      Guard relay: A relay that a client uses as its entry for a longer
+      period of time.  Guard relays are rotated more slowly to prevent
+      enumeration attacks.
 
       Bridge: A relay intentionally not listed in the public Tor
       consensus, with the purpose of circumventing entities (such as
       governments or ISPs) seeking to block clients from using Tor.
       Currently, bridges are used only as entry relays.
 
-      Directory cache: On bootstrap, clients will query a directory
-      authority for the latest consensus. However, later consensus
-      fetches can be made to directory caches, which can be any relay in
-      the network.
+      Directory cache: A relay that downloads cached directory information
+      from the directory authorities and serves it to clients on demand.
+      Any relay will act as a directory cache, if its bandwidth is high enough.
 
       Rendezvous point: A relay connecting a client to a hidden service.
-      Each party will build a three-hop circuit, meeting at the
+      Each party will builds a three-hop circuit, meeting at the
       rendezvous point.
 
    2.2 Client, aka OP (onion proxy)
+
+    [Style: the "OP" and "onion proxy" terms are deprecated.]
 
    2.3 Authorities:
 
     Directory Authority: Nine total in the Tor network, operated by
     trusted individuals. Directory authorities define and serve the
-    consensus document, i.e, the "state of the network," which contains
-    router statuses for all relays currently in the network. Directory
-    authorities also serve server descriptors, extra info documents,
-    microdescriptors, and the microdescriptor consensus,
+    consensus document, defining the "state of the network." This document
+    contains a "router status" section for every relays currently
+    in the network. Directory authorities also serve router descriptors,
+    extra info documents, microdescriptors, and the microdescriptor consensus,
 
     Bridge Authority: One total. Similar in responsibility to directory
     authorities, but for bridges.
 
-    Fallback Directory Mirror: On bootstrap, a client will first attempt
-    to fetch the consensus document from fallback directory mirrors,
-    a relay selected for this role due to its stability and longevity
-    on the network.
+    Fallback directory mirror: One of a list of directory caches distributed
+    with the Tor software. (When a client first connects to the network, and
+    has no directory information, it asks a fallback directory. From then on,
+    the client can ask any directory cache that's listed in the directory
+    information it has.)
 
    2.4 Hidden Service:
 
@@ -118,12 +126,16 @@ This glossary is not a design document; it is only a reference.
 
 4.0 General network definitions
 
-   Leaky Pipe Topology: The ability for packets to be addressed to any
-   hop in the path of a circuit. In Tor, the destination hop is
-   determined by using the recognized field of relay cells.
+   Leaky Pipe Topology: The ability for the origin of a circuit to address
+   relay cells to be addressed to any hop in the path of a circuit. In Tor,
+   the destination hop is determined by using the 'recognized' field of relay
+   cells.
 
-   Stream: In the Tor network specifically, TCP streams are multiplexed
-   over circuits.
+   Stream: A single application-level connection or request, multiplexed over
+   a Tor circuit.  A 'Stream' can currently carry the contents of a TCP
+   connection, a DNS request, or a Tor directory request.
 
-   TLS connection: All pairwise connections in the Tor network are made
-   over TLS.
+   Channel: A pairwise connection between two Tor relays, or between a
+   client and a relay. Circuits are multiplexed over Channels. All
+   channels are currently implemented as TLS connections.
+
