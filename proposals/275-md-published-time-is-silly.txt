@@ -43,7 +43,7 @@ Target: 0.3.1.x-alpha
    and see if we can replace the value with something else.
 
       * Published is used in the voting process to decide which
-        descriptor should be considered.  But that is takend from
+        descriptor should be considered.  But that is taken from
         vote networkstatus documents, not consensuses.
 
       * Published is used in mark_my_descriptor_dirty_if_too_old()
@@ -87,8 +87,8 @@ Target: 0.3.1.x-alpha
 
    As an interim solution: We should add a new consensus method number
    that changes the process by which Published fields in consensuses are
-   generated.  It should set all all Published fields in the consensus
-   should be the same value.  These fields should be taken to rotate
+   generated.  It should set all Published fields in the consensus
+   to be the same value.  These fields should be taken to rotate
    every 15 hours, by taking consensus valid-after time, and rounding
    down to the nearest multiple of 15 hours since the epoch.
 
