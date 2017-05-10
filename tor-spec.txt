@@ -1660,12 +1660,12 @@ see tor-design.pdf.
    Starting in version 0.2.9.4-alpha, the initial required protocols for
    clients that we will Recommend and Require are:
 
-      Cons=1-2 Desc=1-2 DirCache=1 HSDir=2 HSIntro=3 HSRend=1 Link=4
+      Cons=1-2 Desc=1-2 DirCache=1 HSDir=1 HSIntro=3 HSRend=1 Link=4
       LinkAuth=1 Microdesc=1-2 Relay=2
 
    For relays we will Require:
 
-      Cons=1 Desc=1 DirCache=1 HSDir=2 HSIntro=3 HSRend=1 Link=3-4
+      Cons=1 Desc=1 DirCache=1 HSDir=1 HSIntro=3 HSRend=1 Link=3-4
       LinkAuth=1 Microdesc=1 Relay=1-2
 
    For relays, we will additionally Recommend all protocols which we
