@@ -1221,39 +1221,49 @@ Table of contents:
           is included in the mandatory signing-key extension.  The certificate
           type must be [09].
 
-        Encryption key is specified as follow:
-
-        [Exactly once enc-key per introduction point]
-
-           "enc-key" SP "ntor" SP key NL
-
-             The key is a base64 encoded curve25519 public key used to encrypt
-             the introduction request to service.
-
-           "enc-key" SP "legacy" NL key NL
-
-             Base64 encoded RSA key, wrapped in "----BEGIN RSA PUBLIC
-             KEY-----" armor, for use with a legacy introduction point as
-             described in [LEGACY_EST_INTRO] and [LEGACY-INTRODUCE1] below.
-
-        "enc-key-certification" NL certificate NL
+        "enc-key" SP "ntor" SP key NL
 
           [Exactly once per introduction point]
 
-          Cross-certification of the descriptor signing key by the enc-key.
-          The format of this certificate depends on the type of enc-key.
+          The key is a base64 encoded curve25519 public key used to encrypt
+          the introduction request to service.
+
+        "enc-key-cert" NL certificate NL
+
+          [Exactly once per introduction point]
+
+          Cross-certification of the descriptor signing key by the encryption
+          key.
 
           For "ntor" keys, certificate is a proposal 220 certificate wrapped
           in "-----BEGIN ED25519 CERT-----" armor, cross-certifying the
-          descriptor signing key with the ed25519 equivalent of the curve25519
-          public key from "enc-key" derived using the process in proposal 228
-          appendix A. The certificate type must be [10], and the signing-key
+          descriptor signing key with the ed25519 equivalent of a curve25519
+          public encryption key derived using the process in proposal 228
+          appendix A. The certificate type must be [0B], and the signing-key
           extension is mandatory.
 
-          For "legacy" keys, certificate is a proposal 220 RSA->Ed
-          cross-certificate wrapped in "-----BEGIN CROSSCERT-----" armor,
-          cross-certifying the descriptor signing key with the legacy RSA
-          encryption key.
+        "legacy-key" NL key NL
+
+          [None or at most once per introduction point]
+
+          The key is an ASN.1 encoded RSA public key in PEM format used for a
+          legacy introduction point as described in [LEGACY_EST_INTRO] and
+          [LEGACY-INTRODUCE1] below.
+
+          This field is only present if the introduction point only supports
+          legacy protocol (v2) that is <= 0.2.9 or the protocol version value
+          "HSIntro 3".
+
+        "legacy-key-cert NL certificate NL
+
+          [None or at most once per introduction point]
+
+          MUST be present if "legacy-key" is present.
+
+          The certificate is a proposal 220 RSA->Ed cross-certificate wrapped
+          in "-----BEGIN CROSSCERT-----" armor, cross-certifying the
+          descriptor signing key with the RSA public key found in
+          "legacy-key".
 
    To remain compatible with future revisions to the descriptor format,
    clients should ignore unrecognized lines in the descriptor.
