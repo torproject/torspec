@@ -94,8 +94,8 @@ Target: N/A
   response and thus notifying the client of its decision. The
   "Content-Encoding" header can at most contain one supported
   compression scheme. If no mutual compression scheme can be negotiated
-  the server must respond with an HTTP error status code of 415
-  "Unsupported Media Type".
+  the server must respond with an HTTP error status code of 406
+  "Not Acceptable".
 
   For example:
 
