@@ -192,7 +192,7 @@ see tor-design.pdf.
    way, "renegotiation", the responder provides a single certificate,
    and the initiator immediately performs a TLS renegotiation.  (This is
    supported in Tor 0.2.0.21 and later.)  And in the third way,
-   "in-protocol", the initial TLS renegotiation completes, and the
+   "in-protocol", the initial TLS negotiation completes, and the
    parties bootstrap themselves to mutual authentication via use of the
    Tor protocol without further TLS handshaking.  (This is supported in
    0.2.3.6-alpha and later.)
