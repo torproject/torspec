@@ -60,7 +60,7 @@ Proposals by number:
 137  Keep controllers informed as Tor bootstraps [CLOSED]
 138  Remove routers that are not Running from consensus documents [CLOSED]
 139  Download consensus documents only when it will be trusted [CLOSED]
-140  Provide diffs between consensuses [ACCEPTED]
+140  Provide diffs between consensuses [CLOSED]
 141  Download server descriptors on demand [OBSOLETE]
 142  Combine Introduction and Rendezvous Points [DEAD]
 143  Improvements of Distributed Storage for Tor Hidden Service Descriptors [SUPERSEDED]
@@ -255,7 +255,6 @@ Proposals by status:
    276  Report bandwidth with lower granularity in consensus documents [for 0.3.1.x-alpha]
    277  Detect multiple relay instances running with same ID [for 0.3.??]
  ACCEPTED:
-   140  Provide diffs between consensuses
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
    188  Bridge Guards and other anti-enumeration defenses
@@ -309,6 +308,7 @@ Proposals by status:
    137  Keep controllers informed as Tor bootstraps [in 0.2.1.x]
    138  Remove routers that are not Running from consensus documents [in 0.2.1.2-alpha]
    139  Download consensus documents only when it will be trusted [in 0.2.1.x]
+   140  Provide diffs between consensuses [in 0.3.1.1-alpha]
    148  Stream end reasons from the client side should be uniform [in 0.2.1.9-alpha]
    150  Exclude Exit Nodes from a circuit [in 0.2.1.3-alpha]
    152  Optionally allow exit from single-hop circuits [in 0.2.1.6-alpha]
