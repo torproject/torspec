@@ -3,6 +3,7 @@ Title: Rendezvous Single Onion Services
 Author: Tim Wilson-Brown, John Brooks, Aaron Johnson, Rob Jansen, George Kadianakis, Paul Syverson, Roger Dingledine
 Created: 2015-10-17
 Status: Finished
+Implemented-In: 0.2.9.3-alpha
 
 1. Overview
 

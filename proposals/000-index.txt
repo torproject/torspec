@@ -268,7 +268,7 @@ Proposals by status:
    257  Refactoring authorities and making them more isolated from the net
  FINISHED:
    121  Hidden Service Authentication [in 0.2.1.x]
-   151  Improving Tor Path Selection
+   151  Improving Tor Path Selection [in 0.2.2.2-alpha]
    155  Four Improvements of Hidden Service Performance [in 0.2.1.x]
    158  Clients download consensus + microdescriptors [in 0.2.3.1-alpha]
    160  Authorities vote for bandwidth offsets in consensus [for 0.2.1.x]
@@ -279,7 +279,7 @@ Proposals by status:
    220  Migrate server identity keys to Ed25519 [for 0.2.x.x]
    232  Pluggable Transport through SOCKS proxy [in 0.2.6]
    244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [in 0.3.0.1-alpha]
-   260  Rendezvous Single Onion Services
+   260  Rendezvous Single Onion Services [in 0.2.9.3-alpha]
    274  Rotate onion keys less frequently [in 0.3.1.1-alpha]
    278  Directory Compression Scheme Negotiation [in 0.3.1.1-alpha]
  CLOSED:
