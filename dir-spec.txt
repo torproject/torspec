@@ -1911,6 +1911,17 @@
         client should no longer try to find a diff for it.  (min 0,
         max 8192, default 72)
 
+        onion key lifetime parameters:
+            "onion-key-rotation-days" -- (min 1, max 90, default 28)
+            "onion-key-grace-period-days" -- (min 1, max
+                                 onion-key-rotation-days, default 7)
+        Every relay should list each onion key it generates for
+        onion-key-rotation-days days after generating it, and then
+        replace it.  Relays should continue to accept their most recent
+        previous onion key for an additional onion-key-grace-period-days
+        days after it is replaced.  (Introduced in 0.3.1.1-alpha;
+        prior versions of tor hardcoded both of these values to 7 days.)
+
     "shared-rand-previous-value" SP NumReveals SP Value NL
 
         [At most once]

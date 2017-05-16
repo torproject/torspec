@@ -147,9 +147,10 @@ see tor-design.pdf.
     - A long-term signing-only "Identity key" used to sign documents and
       certificates, and used to establish relay identity.
     - A medium-term TAP "Onion key" used to decrypt onion skins when accepting
-      circuit extend attempts.  (See 5.1.)  Old keys MUST be accepted for at
-      least one week after they are no longer advertised.  Because of this,
-      relays MUST retain old keys for a while after they're rotated.
+      circuit extend attempts.  (See 5.1.)  Old keys MUST be accepted for a
+      while after they are no longer advertised.  Because of this,
+      relays MUST retain old keys for a while after they're rotated.  (See
+      "onion key lifetime parameters" in dir-spec.txt.)
     - A short-term "Connection key" used to negotiate TLS connections.
       Tor implementations MAY rotate this key as often as they like, and
       SHOULD rotate this key at least once a day.
@@ -160,7 +161,8 @@ see tor-design.pdf.
       accepting incoming circuit extend requests.  As with TAP onion keys,
       old ntor keys MUST be accepted for at least one week after they are no
       longer advertised.  Because of this, relays MUST retain old keys for a
-      while after they're rotated.
+      while after they're rotated. (See "onion key lifetime parameters" in
+      dir-spec.txt.)
 
    These are Ed25519 keys:
 
