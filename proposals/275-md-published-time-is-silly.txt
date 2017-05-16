@@ -5,6 +5,12 @@ Created: 20-Feb-2017
 Status: Open
 Target: 0.3.1.x-alpha
 
+0. Status:
+
+   As of 0.2.9.11 / 0.3.0.7 / 0.3.1.1-alpha, Tor no longer takes any
+   special action on "future" published times, as proposed in section 4.
+
+
 1. Overview
 
    This document proposes that, in order to limit the bandwidth needed

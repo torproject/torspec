@@ -2070,11 +2070,14 @@
         identity key, encoded in base64, with trailing equals sign(s)
         removed.  "Digest" is a hash of its most recent descriptor as
         signed (that is, not including the signature), encoded in base64.
-        "Publication" is the
-        publication time of its most recent descriptor, in the form
-        YYYY-MM-DD HH:MM:SS, in UTC.  "IP" is its current IP address;
-        ORPort is its current OR port, "DirPort" is its current directory
-        port, or "0" for "none".
+
+        "Publication" is the publication time of its most recent descriptor,
+        in the form YYYY-MM-DD HH:MM:SS, in UTC.  Implementations MAY base
+        decisions on publication times in the past, but MUST NOT reject
+        publication times in the future.
+
+        "IP" is its current IP address; ORPort is its current OR port,
+        "DirPort" is its current directory port, or "0" for "none".
 
     "a" SP address ":" port NL
 
