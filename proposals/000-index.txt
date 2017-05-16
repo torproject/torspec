@@ -198,7 +198,7 @@ Proposals by number:
 275  Stop including meaningful "published" time in microdescriptor consensus [OPEN]
 276  Report bandwidth with lower granularity in consensus documents [OPEN]
 277  Detect multiple relay instances running with same ID [OPEN]
-278  Directory Compression Scheme Negotiation [DRAFT]
+278  Directory Compression Scheme Negotiation [FINISHED]
 279  A Name System API for Tor Onion Services [DRAFT]
 
 
@@ -222,7 +222,6 @@ Proposals by status:
    269  Transitionally secure hybrid handshakes
    270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope
    273  Exit relay pinning for web services [for n/a]
-   278  Directory Compression Scheme Negotiation [for N/A]
    279  A Name System API for Tor Onion Services
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
@@ -282,6 +281,7 @@ Proposals by status:
    244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [in 0.3.0.1-alpha]
    260  Rendezvous Single Onion Services
    274  Rotate onion keys less frequently [in 0.3.1.1-alpha]
+   278  Directory Compression Scheme Negotiation [in 0.3.1.1-alpha]
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]
