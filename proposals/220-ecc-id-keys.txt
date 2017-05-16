@@ -2,7 +2,7 @@ Filename: 220-ecc-id-keys.txt
 Title: Migrate server identity keys to Ed25519
 Authors: Nick Mathewson
 Created: 12 August 2013
-Target: 0.2.x.x
+Implemented-In: 0.3.0.1-alpha
 Status: Finished
 
    [Note: This is a draft proposal; I've probably made some important
