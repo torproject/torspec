@@ -41,7 +41,7 @@ Proposals by number:
 118  Advertising multiple ORPorts at once [SUPERSEDED]
 119  New PROTOCOLINFO command for controllers [CLOSED]
 120  Shutdown descriptors when Tor servers stop [DEAD]
-121  Hidden Service Authentication [FINISHED]
+121  Hidden Service Authentication [CLOSED]
 122  Network status entries need a new Unnamed flag [CLOSED]
 123  Naming authorities automatically create bindings [CLOSED]
 124  Blocking resistant TLS certificate usage [SUPERSEDED]
@@ -75,7 +75,7 @@ Proposals by number:
 152  Optionally allow exit from single-hop circuits [CLOSED]
 153  Automatic software update protocol [SUPERSEDED]
 154  Automatic Software Update Protocol [SUPERSEDED]
-155  Four Improvements of Hidden Service Performance [FINISHED]
+155  Four Improvements of Hidden Service Performance [CLOSED]
 156  Tracking blocked ports on the client side [SUPERSEDED]
 157  Make certificate downloads specific [CLOSED]
 158  Clients download consensus + microdescriptors [FINISHED]
@@ -267,9 +267,7 @@ Proposals by status:
    099  Miscellaneous proposals
    257  Refactoring authorities and making them more isolated from the net
  FINISHED:
-   121  Hidden Service Authentication [in 0.2.1.x]
    151  Improving Tor Path Selection [in 0.2.2.2-alpha]
-   155  Four Improvements of Hidden Service Performance [in 0.2.1.x]
    158  Clients download consensus + microdescriptors [in 0.2.3.1-alpha]
    160  Authorities vote for bandwidth offsets in consensus [for 0.2.1.x]
    161  Computing Bandwidth Adjustments [for 0.2.1.x]
@@ -296,6 +294,7 @@ Proposals by status:
    114  Distributed Storage for Tor Hidden Service Descriptors [in 0.2.0.x]
    117  IPv6 exits [for 0.2.4.x] [in 0.2.4.7-alpha]
    119  New PROTOCOLINFO command for controllers [in 0.2.0.x]
+   121  Hidden Service Authentication [in 0.2.1.x]
    122  Network status entries need a new Unnamed flag [in 0.2.0.x]
    123  Naming authorities automatically create bindings [in 0.2.0.x]
    125  Behavior for bridge users, bridge relays, and bridge authorities [in 0.2.0.x]
@@ -311,6 +310,7 @@ Proposals by status:
    148  Stream end reasons from the client side should be uniform [in 0.2.1.9-alpha]
    150  Exclude Exit Nodes from a circuit [in 0.2.1.3-alpha]
    152  Optionally allow exit from single-hop circuits [in 0.2.1.6-alpha]
+   155  Four Improvements of Hidden Service Performance [in 0.2.1.x]
    157  Make certificate downloads specific [for 0.2.4.x]
    166  Including Network Statistics in Extra-Info Documents [for 0.2.2]
    167  Vote on network parameters in consensus [in 0.2.2]
