@@ -3,7 +3,7 @@ Filename: 161-computing-bandwidth-adjustments.txt
 Author: Mike Perry
 Created: 12-May-2009
 Target: 0.2.1.x
-Status: Finished
+Status: Closed
 
 
 1. Motivation
