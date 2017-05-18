@@ -118,10 +118,46 @@ citing them authoritatively. ;)
     summary of them in the network consensus.
 
 3.0 Tor network protocols
-   Link handshake
-   Circuit handshake
-   Hidden Service Protocol
-   Directory Protocol
+
+    3.1 Link handshake
+
+      The link handshake establishes the TLS connection over which two
+      Tor participants will send Tor cells.  This handshake also
+      authenticates the participants to each other, possibly using Tor
+      cells.
+
+    3.2 Circuit handshake
+
+      Circuit handshakes establish the hop-by-hop onion encryption
+      that clients use to tunnel their application traffic.  The
+      client does a pairwise key establishment handshake with each
+      individual relay in the circuit.  For every hop except the
+      first, these handshakes tunnel through existing hops in the
+      circuit.  Each cell type in this protocol also has a newer
+      version (with a "2" suffix), e.g., CREATE2.
+
+      CREATE cell: First part of a handshake, sent by the initiator.
+
+      CREATED cell: Second part of a handshake, sent by the responder.
+
+      EXTEND cell: (also known as a RELAY_EXTEND cell) First part of a
+      handshake, tunneled through an existing circuit.  The last relay
+      in the circuit so far will decrypt this cell and send the
+      payload in a CREATED cell to the chosen next hop relay.
+
+      EXTENDED cell: (also known as a RELAY_EXTENDED cell) Second part
+      of a handshake, tunneled through an existing circuit.  The last
+      relay in the circuit so far receives the CREATED cell from the
+      new last hop relay and encrypts the payload in an EXTENDED cell
+      to tunnel back to the client.
+
+      Onion skin: A CREATE/CREATE2 or EXTEND/EXTEND2 payload that
+      contains the first part of the TAP or ntor key establishment
+      handshake.
+
+    3.3 Hidden Service Protocol
+
+    3.4 Directory Protocol
 
 
 4.0 General network definitions
