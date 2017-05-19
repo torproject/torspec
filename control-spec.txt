@@ -388,14 +388,22 @@
 3.6. SAVECONF
 
   Sent from the client to the server.  The syntax is:
-     "SAVECONF" CRLF
+     "SAVECONF" [SP "FORCE"] CRLF
 
   Instructs the server to write out its config options into its torrc. Server
   returns "250 OK" if successful, or "551 Unable to write configuration
   to disk" if it can't write the file or some other error occurs.
 
+  If the %include option is used on torrc, SAVECONF will not write the
+  configuration to disk. If the flag string "FORCE" is provided, the configuration
+  will be overwritten even if %include is used. Using %include on defaults-torrc
+  does not affect SAVECONF.
+
   See also the "getinfo config-text" command, if the controller wants
   to write the torrc file itself.
+
+  See also the "getinfo config-can-saveconf" command, to tell if the FORCE
+  flag will be required.
 
 3.7. SIGNAL
 
@@ -1002,6 +1010,12 @@
       The current or previous shared random value, as received in the
       consensus, base-64 encoded.  An empty value means that either
       the consensus has no shared random value, or Tor has no consensus.
+
+      [New in Tor 0.3.1.0-alpha.]
+
+    "config-can-saveconf"
+      0 or 1, depending on whether it is possile to use SAVECONF without the
+      FORCE flag.
 
   Examples:
      C: GETINFO version desc/name/moria1
