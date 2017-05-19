@@ -18,11 +18,11 @@
   sample of every user's traffic with probability 1.
 
   To prevent this from happening, Tor clients choose a small number
-  of guard nodes (currently 3).  These guard nodes are the only
+  of guard nodes (e.g. 3).  These guard nodes are the only
   nodes that the client will connect to directly.  If they are not
   compromised, the user's paths are not compromised.
 
-  This proposal outlines Tor's current guard selection algorithm,
+  This specification outlines Tor's guard selection algorithm,
   which tries to meet the following goals:
 
     - Heuristics and algorithms for determining how and which guards
@@ -35,7 +35,7 @@
       usability.
 
     - Tor should make a best attempt at discovering the most
-      appropriate behaviour, with as little user input and
+      appropriate behavior, with as little user input and
       configuration as possible.
 
     - Tor clients should discover usable guards without too much
@@ -109,7 +109,7 @@
    required. An exit node is required if traffic will exit the Tor
    network. Depending on its configuration, a relay listed in a
    consensus could be used for any of these roles. However, this
-   proposal defines how entry guards specifically should be selected and
+   specification defines how entry guards specifically should be selected and
    managed, as opposed to middle or exit nodes.
 
    3.1.1 Entry guard selection
@@ -144,7 +144,8 @@
 
    Middle nodes are selected at random from relays listed in the
    latest consensus, weighted by bandwidth. Exit nodes are chosen
-   similarly but restricted to relays with an exit policy.
+   similarly but restricted to relays with a sufficiently permissive
+   exit policy.
 
    3.2 Circuit Building
 
@@ -222,7 +223,7 @@
    We require that {SAMPLED_GUARDS} contain at least
    {MIN_FILTERED_SAMPLE} guards from the consensus (if possible),
    but not more than {MAX_SAMPLE_THRESHOLD} of the number of guards
-   in the consensus, and not more then {MAX_SAMPLE_SIZE} in total.
+   in the consensus, and not more than {MAX_SAMPLE_SIZE} in total.
    (But if the maximum would be smaller than {MIN_FILTERED_SAMPLE}, we
    set the maximum at {MIN_FILTERED_SAMPLE}.)
 
@@ -274,7 +275,7 @@
        - It is a member of {SAMPLED_GUARDS}, with {IS_LISTED} set to
          true.
        - It is not disabled because of path bias issues.
-       - It is not disabled because of ReachableAddress police,
+       - It is not disabled because of ReachableAddresses policy,
          the ClientUseIPv4 setting, the ClientUseIPv6 setting,
          the FascistFirewall setting, or some other
          option that prevents using some addresses.
@@ -316,7 +317,7 @@
   order of using them.  It is a subset of {SAMPLED_GUARDS}.  For
   each guard in this list, we store persistently:
 
-      - {pvar:IDENTITY} Its fingerprint
+      - {pvar:IDENTITY} Its fingerprint.
 
       - {pvar:CONFIRMED_ON_DATE} When we added this guard to
         {CONFIRMED_GUARDS}.
@@ -346,7 +347,7 @@
        {is_pending}==true guards have higher priority.
 
      * Among those, the guard with earlier {last_tried_connect} time
-       have higher priority.
+       has higher priority.
 
      * Finally, among guards that do not appear in
        {CONFIRMED_GUARDS} with {is_pending==false}, all have equal
@@ -509,10 +510,10 @@
    When a circuit fails in a way that makes us conclude that a guard
    is not reachable, we take the following steps:
 
-      * We set the guard's {is_reachable} status to <no>.  If it had
+      * Set the guard's {is_reachable} status to <no>.  If it had
         {is_pending} set to true, we make it non-pending.
 
-      * We close the circuit, of course.  (This removes it from
+      * Close the circuit, of course.  (This removes it from
         consideration by the algorithm in [UPDATE_WAITING].)
 
       * Update the list of waiting circuits.  (See [UPDATE_WAITING]
@@ -580,7 +581,7 @@
 
    We run this procedure periodically:
 
-   * If any circuit stays is <waiting_for_better_guard>
+   * If any circuit stays in <waiting_for_better_guard>
      for more than {NONPRIMARY_GUARD_IDLE_TIMEOUT} seconds,
      time it out.
 
@@ -597,7 +598,7 @@
    them after all if the <complete> circuit goes down before
    {NONPRIMARY_GUARD_IDLE_TIMEOUT} seconds.
 
-4.10.  Whenever we get a new consensus. [Section:ON_CONSENSUS]
+4.10. Whenever we get a new consensus. [Section:ON_CONSENSUS]
 
    We update {GUARDS}.
 
@@ -619,7 +620,7 @@
 4.11. Deciding whether to generate a new circuit.
   [Section:NEW_CIRCUIT_NEEDED]
 
-   In current Tor, we generate a new circuit when we don't have
+   We generate a new circuit when we don't have
    enough circuits either built or in-progress to handle a given
    stream, or an expected stream.
 
@@ -627,7 +628,7 @@
    circuits are neither built nor in-progress; that <complete>
    circuits are built; and that the other states are in-progress.
 
-4.12. When we are missing descriptors
+4.12. When we are missing descriptors.
    [Section:MISSING_DESCRIPTORS]
 
    We need either a router descriptor or a microdescriptor in order
@@ -757,7 +758,7 @@ A.3. Controller changes
 A.4. Persistent state format
 
    The persistent state format doesn't need to be part of this
-   proposal, since different implementations can do it
+   specification, since different implementations can do it
    differently. Nonetheless, here's the one Tor uses:
 
    The "state" file contains one Guard entry for each sampled guard
@@ -767,7 +768,7 @@ A.4. Persistent state format
    any nonspace characters.
 
    Implementations must retain any unrecognized K=V entries for a
-   sampled guard when the regenerate the state file.
+   sampled guard when they regenerate the state file.
 
    The order of K=V entries is not allowed to matter.
 
@@ -794,7 +795,7 @@ A.4. Persistent state format
         "unlisted_since" -- the date since which the guard has been
         unlisted. Optional.
 
-        "listed" -- 0 if the guard is not listed ; 1 if it is. Required.
+        "listed" -- 0 if the guard is not listed; 1 if it is. Required.
 
         "confirmed_on" -- date when the guard was
         confirmed. Optional.
@@ -834,7 +835,7 @@ TODO. Still non-addressed issues [Section:TODO]
        We don't need to worry about directory guards for relays, since we
        aren't trying to prevent relay enumeration.
 
-   IP version preferenes via ClientPreferIPv6ORPort
+   IP version preferences via ClientPreferIPv6ORPort
 
        Suggestion: Treat it as a preference when adding to
        {CONFIRMED_GUARDS}, but not otherwise.
