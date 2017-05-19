@@ -442,7 +442,7 @@
        [Exactly once]
 
        The time, in UTC, when this descriptor (and its corresponding
-       extra-info document if any)  was generated.
+       extra-info document if any) was generated.
 
     "fingerprint" fingerprint NL
 
