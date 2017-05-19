@@ -395,15 +395,15 @@
   to disk" if it can't write the file or some other error occurs.
 
   If the %include option is used on torrc, SAVECONF will not write the
-  configuration to disk. If the flag string "FORCE" is provided, the configuration
-  will be overwritten even if %include is used. Using %include on defaults-torrc
-  does not affect SAVECONF.
+  configuration to disk. If the flag string "FORCE" is provided, the
+  configuration will be overwritten even if %include is used. Using %include
+  on defaults-torrc does not affect SAVECONF. (Introduced in 0.3.1.1-alpha.)
 
   See also the "getinfo config-text" command, if the controller wants
   to write the torrc file itself.
 
   See also the "getinfo config-can-saveconf" command, to tell if the FORCE
-  flag will be required.
+  flag will be required. (Also introduced in 0.3.1.1-alpha.)
 
 3.7. SIGNAL
 
@@ -1015,7 +1015,7 @@
 
     "config-can-saveconf"
       0 or 1, depending on whether it is possile to use SAVECONF without the
-      FORCE flag.
+      FORCE flag. (Introduced in 0.3.1.1-alpha.)
 
   Examples:
      C: GETINFO version desc/name/moria1
