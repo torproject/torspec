@@ -545,7 +545,7 @@
         and use it for hidden services.
 
       * If this circuit was <usable_if_no_better_guard>, it is now
-        <waiting_for retry>.  You may not yet attach streams to it.
+        <waiting_for_better_guard>.  You may not yet attach streams to it.
         Then check whether the {last_time_on_internet} is more than
         {INTERNET_LIKELY_DOWN_INTERVAL} seconds ago:
 
