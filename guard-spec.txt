@@ -326,7 +326,7 @@
 
         Randomized to a point in the past as RAND(now, {GUARD_LIFETIME}/10).
 
-  We add new members to {CONFIRMED_GUARDS} when we mark a circuit
+  We append new members to {CONFIRMED_GUARDS} when we mark a circuit
   built through a guard as "for user traffic."
 
   Whenever we remove a member from {SAMPLED_GUARDS}, we also remove
@@ -373,13 +373,13 @@
   To compute primary guards, take the ordered intersection of
   {CONFIRMED_GUARDS} and {FILTERED_GUARDS}, and take the first
   {N_PRIMARY_GUARDS} elements.  If there are fewer than
-  {N_PRIMARY_GUARDS} elements, add additional elements to
+  {N_PRIMARY_GUARDS} elements, append additional elements to
   PRIMARY_GUARDS chosen _uniformly_ at random from
   ({FILTERED_GUARDS} - {CONFIRMED_GUARDS}).
 
   Once an element has been added to {PRIMARY_GUARDS}, we do not remove it
   until it is replaced by some element from {CONFIRMED_GUARDS}. Confirmed
-  elements always proceed unconfirmed ones in the {PRIMARY_GUARDS} list.
+  elements always precede unconfirmed ones in the {PRIMARY_GUARDS} list.
 
   Note that {PRIMARY_GUARDS} do not have to be in
   {USABLE_FILTERED_GUARDS}: they might be unreachable.
@@ -478,7 +478,7 @@
 
     * Otherwise, if USABLE_FILTERED_GUARDS is empty, we have exhausted
       all the sampled guards.  In this case we proceed by marking all guards
-      as <maybe> reachable so that we can keep on sampling.
+      as <maybe> reachable so that we can keep on trying circuits.
 
   Whenever we select a guard for a new circuit attempt, we update the
   {last_tried_connect} time for the guard to 'now.'
@@ -784,8 +784,8 @@ A.4. Persistent state format
         "rsa_id" -- the RSA id digest for this guard, encoded in
         hex. Required.
 
-        "bridge_addr" -- If the guard is a bridge, its configured
-        address and OR port. Optional.
+        "bridge_addr" -- If the guard is a bridge, its configured address and
+        port (this can be the ORPort or a pluggable transport port). Optional.
 
         "nickname" -- the guard's nickname, if any. Optional.
 
