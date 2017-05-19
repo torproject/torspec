@@ -2493,9 +2493,9 @@
      authorities voted for that parameter. The values given are the
      low-median of all votes on that keyword.
 
-     Consensus methods 11 and before, entries are given on the "params"
-     line for every keyword on which any authority voted, the value given
-     being the low-median of all votes on that keyword.
+     (In consensus methods 7 to 11 inclusive, entries were given on
+     the "params" line for every keyword on which *any* authority voted,
+     the value given being the low-median of all votes on that keyword.)
 
     "client-versions" and "server-versions" are sorted in ascending
      order; A version is recommended in the consensus if it is recommended
