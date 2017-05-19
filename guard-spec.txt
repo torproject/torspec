@@ -105,7 +105,7 @@
 
    3.1 Path selection
 
-   For any circuit, at least one entry guard and middle node(s) are
+   For any multi-hop circuit, at least one entry guard and middle node(s) are
    required. An exit node is required if traffic will exit the Tor
    network. Depending on its configuration, a relay listed in a
    consensus could be used for any of these roles. However, this
@@ -151,12 +151,13 @@
 
    Once a path is chosen, Tor will use this path to build a new circuit.
 
-   If the circuit is built successfully, it either can be used
-   immediately or wait for a better guard, depending on whether other
-   circuits already exist with higher-priority guards.
+   If the circuit is built successfully, Tor will either use it
+   immediately, or Tor will wait for a circuit with a more preferred
+   guard if there's a good chance that it will be able to make one.
 
-   If at any point the circuit fails, the guard is marked as
-   unreachable, the circuit is closed, and waiting circuits are updated.
+   If the circuit fails in a way that makes us conclude that a guard
+   is not reachable, the guard is marked as unreachable, the circuit is
+   closed, and waiting circuits are updated.
 
 4. The algorithm.
 
@@ -181,7 +182,8 @@
       - {pvar:ADDED_ON_DATE}: The date on which it was added to
         sampled_guards.
 
-        We base this value on RAND(now, {GUARD_LIFETIME}/10). See
+        We set this value to a point in the past, using
+        RAND(now, {GUARD_LIFETIME}/10). See
         Appendix [RANDOM] below.
 
       - {pvar:ADDED_BY_VERSION}: The version of Tor that added it to
@@ -193,7 +195,7 @@
       - {pvar:FIRST_UNLISTED_AT}: If IS_LISTED is false, the publication date
         of the earliest consensus in which this guard was listed such that we
         have not seen it listed in any later consensus.  Otherwise "None."
-        We randomize this, based on
+        We randomize this to a point in the past, based on
           RAND(added_at_time, {REMOVE_UNLISTED_GUARDS_AFTER} / 5)
 
    For each guard in {SAMPLED_GUARDS}, we also record this data,
@@ -322,7 +324,7 @@
       - {pvar:CONFIRMED_ON_DATE} When we added this guard to
         {CONFIRMED_GUARDS}.
 
-        Randomized as RAND(now, {GUARD_LIFETIME}/10).
+        Randomized to a point in the past as RAND(now, {GUARD_LIFETIME}/10).
 
   We add new members to {CONFIRMED_GUARDS} when we mark a circuit
   built through a guard as "for user traffic."
@@ -478,8 +480,8 @@
       all the sampled guards.  In this case we proceed by marking all guards
       as <maybe> reachable so that we can keep on sampling.
 
-  Whenever we yield a guard, we update the {last_tried_connect} time
-  for the guard to 'now.'
+  Whenever we select a guard for a new circuit attempt, we update the
+  {last_tried_connect} time for the guard to 'now.'
 
   In some cases (for example, when we need a certain directory feature,
   or when we need to avoid using a certain exit as a guard), we need to
