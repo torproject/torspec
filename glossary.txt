@@ -42,7 +42,7 @@ citing them authoritatively. ;)
 
       Guard relay: A relay that a client uses as its entry for a longer
       period of time.  Guard relays are rotated more slowly to prevent
-      enumeration attacks.
+      attacks that can come from being exposed to too many guards.
 
       Bridge: A relay intentionally not listed in the public Tor
       consensus, with the purpose of circumventing entities (such as
@@ -54,7 +54,7 @@ citing them authoritatively. ;)
       Any relay will act as a directory cache, if its bandwidth is high enough.
 
       Rendezvous point: A relay connecting a client to a hidden service.
-      Each party will builds a three-hop circuit, meeting at the
+      Each party builds a three-hop circuit, meeting at the
       rendezvous point.
 
    2.2 Client, aka OP (onion proxy)
@@ -66,9 +66,9 @@ citing them authoritatively. ;)
     Directory Authority: Nine total in the Tor network, operated by
     trusted individuals. Directory authorities define and serve the
     consensus document, defining the "state of the network." This document
-    contains a "router status" section for every relays currently
+    contains a "router status" section for every relay currently
     in the network. Directory authorities also serve router descriptors,
-    extra info documents, microdescriptors, and the microdescriptor consensus,
+    extra info documents, microdescriptors, and the microdescriptor consensus.
 
     Bridge Authority: One total. Similar in responsibility to directory
     authorities, but for bridges.
@@ -91,7 +91,7 @@ citing them authoritatively. ;)
 
    An established path through the network, where cryptographic keys
    are negotiated using the ntor protocol or TAP (Tor Authentication
-   Protocol (deprecated) with each hop. Circuits can differ in length
+   Protocol (deprecated)) with each hop. Circuits can differ in length
    depending on their purpose. See also Leaky Pipe Topology.
 
     Origin Circuit -
@@ -113,8 +113,8 @@ citing them authoritatively. ;)
 
    2.8 Descriptor: Each descriptor represents information about one
     relay in the Tor network. The descriptor includes the relay's IP
-    address, public key fingerprint, along with other data. Relays send
-    descriptors to directory authorities, who will vote and publish a
+    address, public keys, and other data. Relays send
+    descriptors to directory authorities, who vote and publish a
     summary of them in the network consensus.
 
 3.0 Tor network protocols
