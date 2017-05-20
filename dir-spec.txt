@@ -368,9 +368,7 @@
 
 2.1.1. Server descriptor format
 
-   Server descriptors consist of the following items.  For backward
-   compatibility, there should be an extra NL at the end of each router
-   descriptor.
+   Server descriptors consist of the following items.
 
    In lines that take multiple arguments, extra arguments SHOULD be
    accepted and ignored.  Many of the nonterminals below are defined in
