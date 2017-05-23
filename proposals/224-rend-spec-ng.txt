@@ -1857,12 +1857,11 @@ Table of contents:
    NTOR_KEY_SEED part of the handshake output. To do so, they use the KDF
    construction as follows:
 
-       K = KDF(NTOR_KEY_SEED | m_hsexpand,    HASH_LEN * 3 + S_KEY_LEN * 2)
+       K = KDF(NTOR_KEY_SEED | m_hsexpand,    HASH_LEN * 2 + S_KEY_LEN * 2)
 
-   The first HASH_LEN bytes of K form KH; the next HASH_LEN form the forward
-   digest Df; the next HASH_LEN bytes form the backward digest Db; the next
-   S_KEY_LEN bytes form Kf, and the final S_KEY_LEN bytes form Kb.  Excess
-   bytes from K are discarded.
+   The first HASH_LEN bytes of K form the forward digest Df; the next HASH_LEN
+   bytes form the backward digest Db; the next S_KEY_LEN bytes form Kf, and the
+   final S_KEY_LEN bytes form Kb.  Excess bytes from K are discarded.
 
    Subsequently, the rendezvous point passes relay cells, unchanged, from each
    of the two circuits to the other.  When Alice's OP sends RELAY cells along
