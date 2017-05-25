@@ -2043,7 +2043,13 @@ A.2. Tor's key derivation scheme
            BLIND_STRING = "Derive temporary signing key"
            N = "key-blind" | INT_8(period-number) | INT_8(period_length)
 
-  and then do the following:
+  then clamp the blinding factor 'h' according to the ed25519 spec:
+
+           h[0] &= 248;
+           h[31] &= 127;
+           h[31] |= 64;
+
+  and do the key derivation as follows:
 
       private key for the period:   a' = h a
       public key for the period:    A' = h A = (ha)B
