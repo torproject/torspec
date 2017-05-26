@@ -2670,6 +2670,10 @@
   "protocol-family=count" pairs. For example,
   IPVersions=v4=16,v6=40
 
+  Note that these values are rounded, not exact.  The rounding
+  algorithm is specified in the description of "geoip-client-origins"
+  in dir-spec.txt.
+
 4.1.15. New consensus networkstatus has arrived
 
   The syntax is:
