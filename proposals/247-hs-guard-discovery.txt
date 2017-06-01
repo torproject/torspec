@@ -18,7 +18,7 @@ Status: Draft
 1. Overview
 
   This document tries to make the above guard discovery + compromise
-  attack harder to launch. It introduces an optional configuration
+  attack harder to launch. It introduces a configuration
   option which makes the hidden service also pin the second and third
   hops of its circuits for a longer duration.
 
@@ -49,7 +49,7 @@ Status: Draft
                      ->   ...    ->  ...
                      -> middle_n -> middle_n
 
-  this proposal pins the two middles nodes to a much more restricted
+  this proposal pins the two middle nodes to a much more restricted
   set, as follows:
 
                                   -> guard_3A_A
@@ -153,7 +153,7 @@ Status: Draft
   2. A Sybil attack against the second or first layer Guards will be
      more noisy than a Sybil attack against the third layer guard, since the
      second and first layer Sybil attack requires a timing side channel in
-     order to determine success, where as the Sybil success is almost
+     order to determine success, whereas the Sybil success is almost
      immediately obvious to third layer guard, since it will be instructed
      to connect to a cooperating malicious rend point by the adversary.
 
@@ -438,7 +438,7 @@ Status: Draft
   service, because they will see a large number of circuits that tend to
   pick the same Guard and Exit.
 
-  The final nodes will be able to tell with a similar level certainty
+  The final nodes will be able to tell with a similar level of certainty
   that depends on their capacity and the service popularity, because they
   will see a lot of rend handshakes that all tend to have the same second
   hop. The final nodes can also actively confirm that they have been
@@ -446,7 +446,7 @@ Status: Draft
   target hidden service, and seeing if they are chosen for the Rend point.
 
   The most serious of these is the Guard fingerprinting issue. When
-  proposal xxx-padding-negotiation is implemented, services that enable
+  proposal 254-padding-negotiation is implemented, services that enable
   this feature should use those padding primitives to create fake circuits
   to random middle nodes that are not their guards, in an attempt to look
   more like a client.
@@ -469,7 +469,7 @@ Status: Draft
 4.2. Hidden service linkability
 
   Multiple hidden services on the same Tor instance should use separate
-  second and third level guard sets, otherwise an adversary is trivially
+  second and third level guard sets; otherwise an adversary is trivially
   able to determine that the two hidden services are co-located by
   inspecting their current chosen rend point nodes.
 
@@ -488,12 +488,11 @@ Status: Draft
   different hidden services together (for example, to support concurrent file
   transfer and chat for the same identity), this behavior should be
   configurable. A torrc option DisjointHSVanguards should be provided that
-  defaults to keeping the Vanguards separate for each hidden service should
-  be provided.
+  defaults to keeping the Vanguards separate for each hidden service.
 
 4.3. Long term information leaks
 
-  Due to Tor's path selection constraints, the client will never chose
+  Due to Tor's path selection constraints, the client will never choose
   its primary guard node as later positions in the circuit. Over time,
   the absence of these nodes will give away information to the adversary.
 
@@ -529,7 +528,7 @@ Status: Draft
   degrade either performance or user experience significantly, simply by
   taking out a fraction of them. The solution to this is to make use
   of the circuit build timeout code (Section 5.2) to have the hidden
-  service retry the rend connection multiple times. Unfortunately, it
+  service retry the rend connection multiple times. Unfortunately, it is
   unwise to simply replace unresponsive third-level guards that fail to
   complete circuits, as this will accelerate the Sybil attack.
 
@@ -556,7 +555,7 @@ Status: Draft
   of transient overload at nodes selected by high-traffic hidden services.
 
   One option to reduce the impact of this transient overload is to
-  restrict the set of middle nodes that we chose from to some percentage
+  restrict the set of middle nodes that we choose from to some percentage
   of the fastest middle-capable relays in the network. This may have
   some impact on load balancing, but since the total volume of hidden
   service traffic is low, it may be unlikely to matter.
