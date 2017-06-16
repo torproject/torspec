@@ -279,7 +279,7 @@ Table of Contents
        is a PT name and <value> is a k=v string value with options
        that are to be passed to the transport.
 
-       Colons, semicolons, equal signs and backslashes MUST be
+       Colons, semicolons, and backslashes MUST be
        escaped with a backslash.
 
        If there are no arguments that need to be passed to any of
