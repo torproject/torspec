@@ -1675,7 +1675,8 @@
         DIGESTS = DIGEST | DIGESTS SP DIGEST
         DIGEST = DIGESTTYPE "=" DIGESTVAL
         NONSPACE = one or more non-space printing characters
-        DIGESTVAL = DIGESTTYPE = one or more non-=, non-" " characters.
+        DIGESTVAL = DIGESTTYPE = one or more non-space printing characters
+              other than "=".
 
         Indicates that a package called "package" of version VERSION may be
         found at URL, and its digest as computed with DIGESTTYPE is equal to
