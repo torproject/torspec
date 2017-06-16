@@ -2094,7 +2094,7 @@
 
         Present only if the OR has at least one IPv6 address.
 
-        Address and portlist are as for "or-address" as specified in
+        Address and port are as for "or-address" as specified in
         section 2.1.1.
 
         (Only included when the vote or consensus is generated with
