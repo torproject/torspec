@@ -2081,6 +2081,9 @@
 
 4.1.6. New descriptors available
 
+  This event generated when new router descriptors (not microdescs or
+  extrainfos or anything else) are received.
+
   Syntax:
      "650" SP "NEWDESC" 1*(SP LongName) CRLF
         ; In Tor versions 0.1.2.2-alpha through 0.2.2.1-alpha with feature
