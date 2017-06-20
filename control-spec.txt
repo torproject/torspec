@@ -2081,7 +2081,7 @@
 
 4.1.6. New descriptors available
 
-  This event generated when new router descriptors (not microdescs or
+  This event is generated when new router descriptors (not microdescs or
   extrainfos or anything else) are received.
 
   Syntax:
