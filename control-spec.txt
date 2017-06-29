@@ -3102,8 +3102,13 @@
 
 5.2. Don't let the buffer get too big.
 
-  If you ask for lots of events, and 16MB of them queue up on the buffer,
-  the Tor process will close the socket.
+  With old versions of Tor (before 0.2.0.16-alpha), if you ask for
+  lots of events, and 16MB of them queue up on the buffer, the Tor
+  process will close the socket.
+
+  Newer Tor versions do not have this 16 MB buffer limit. However,
+  if you leave huge numbers of events unread, Tor may still run out
+  of memory, so you should still be careful about buffer size.
 
 5.3. Backward compatibility with v0 control protocol.
 
