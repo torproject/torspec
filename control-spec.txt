@@ -1017,8 +1017,6 @@
       consensus, base-64 encoded.  An empty value means that either
       the consensus has no shared random value, or Tor has no consensus.
 
-      [New in Tor 0.3.1.0-alpha.]
-
     "config-can-saveconf"
       0 or 1, depending on whether it is possile to use SAVECONF without the
       FORCE flag. (Introduced in 0.3.1.1-alpha.)
