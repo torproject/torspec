@@ -1261,8 +1261,8 @@
      AuthMethod =
       "NULL"           / ; No authentication is required
       "HASHEDPASSWORD" / ; A controller must supply the original password
-      "COOKIE"         / ; A controller must supply the contents of a cookie
-      "SAFECOOKIE"       ; A controller must prove knowledge of a cookie
+      "COOKIE"         / ; ... or supply the contents of a cookie file
+      "SAFECOOKIE"       ; ... or prove knowledge of a cookie file's contents
 
      AuthCookieFile = QuotedString
      TorVersion = QuotedString
