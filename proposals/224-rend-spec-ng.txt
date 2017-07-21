@@ -12,7 +12,7 @@ Table of contents:
         0.3. Cryptographic building blocks
         0.4. Protocol building blocks [BUILDING-BLOCKS]
         0.5. Assigned relay cell types
-        0.5. Acknowledgments
+        0.6. Acknowledgments
     1. Protocol overview
         1.1. View from 10,000 feet
         1.2. In more detail: naming hidden services [NAMING]
@@ -306,7 +306,7 @@ Table of contents:
             receipt of INTRODUCE1 cell and reports success/failure.
             Discussed in [INTRO_ACK]
 
-0.5. Acknowledgments
+0.6. Acknowledgments
 
    [TODO reformat these once the lists are more complete.]
 
