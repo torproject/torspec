@@ -1675,6 +1675,7 @@ Table of contents:
    Substituting those fields into the INTRODUCE1 cell body format
    described in [FMT_INTRO1] above, we have
 
+            LEGACY_KEY_ID               [20 bytes]
             AUTH_KEY_TYPE               [1 byte]
             AUTH_KEY_LEN                [2 bytes]
             AUTH_KEY                    [AUTH_KEY_LEN bytes]
