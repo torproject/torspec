@@ -115,17 +115,20 @@ see tor-design.pdf.
 
    The "hybrid encryption" of a byte sequence M with a public key PK is
    computed as follows:
-      1. If M is less than PK_ENC_LEN-PK_PAD_LEN, pad and encrypt M with PK.
+      1. If the length of M is no more than PK_ENC_LEN-PK_PAD_LEN,
+         pad and encrypt M with PK.
       2. Otherwise, generate a KEY_LEN byte random key K.
          Let M1 = the first PK_ENC_LEN-PK_PAD_LEN-KEY_LEN bytes of M,
          and let M2 = the rest of M.
          Pad and encrypt K|M1 with PK.  Encrypt M2 with our stream cipher,
          using the key K.  Concatenate these encrypted values.
+
    [XXX Note that this "hybrid encryption" approach does not prevent
    an attacker from adding or removing bytes to the end of M. It also
    allows attackers to modify the bytes not covered by the OAEP --
-   see Goldberg's PET2006 paper for details. We will add a MAC to this
-   scheme one day. -RD]
+   see Goldberg's PET2006 paper for details.  Do not use it as the basis
+   for new protocols! Also note that as used in Tor's protocols, case 1
+   never occurs.]
 
 1. System overview
 
