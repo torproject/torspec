@@ -287,10 +287,15 @@ see tor-design.pdf.
 
    In all handshake variants, once all certificates are exchanged, all
    parties receiving certificates must confirm that the identity key is as
-   expected.  (When initiating a connection, the expected identity key is
-   the one given in the directory; when creating a connection because of an
-   EXTEND cell, the expected identity key is the one given in the cell.)  If
-   the key is not as expected, the party must close the connection.
+   expected.  If the key is not as expected, the party must close the
+   connection.
+
+   (When initiating a connection, if a reasonably live consensus is
+   available, then the expected identity key is taken from that
+   consensus. But when initiating a connection otherwise, the expected
+   identity key is the one given in the hard-coded authority or fallback
+   list.  Finally, when creating a connection because of an EXTEND cell, the
+   expected identity key is the one given in the cell.)
 
    When connecting to an OR, all parties SHOULD reject the connection if that
    OR has a malformed or missing certificate.  When accepting an incoming
