@@ -390,6 +390,10 @@ see tor-design.pdf.
    exacerbate some attacks (e.g. the "Triple Handshake" attack from
    Feb 2013), and it plays havoc with forward secrecy guarantees.
 
+   Implementations SHOULD NOT allow TLS compression -- although we don't
+   know a way to apply a CRIME-style attack to current Tor directly,
+   it's a waste of resources.
+
 3. Cell Packet format
 
    The basic unit of communication for onion routers and onion
