@@ -201,8 +201,12 @@
   Objects. A KeywordLine begins with a Keyword, optionally followed by
   whitespace and more non-newline characters, and ends with a newline.  A
   Keyword is a sequence of one or more characters in the set [A-Za-z0-9-].
-  An Object is a block of encoded data in pseudo-Open-PGP-style
-  armor. (cf. RFC 2440)
+  An Object is a block of encoded data in pseudo-Privacy-Enhanced-Mail (PEM)
+  style format: that is, lines of encoded data MAY be wrapped by inserting
+  an ascii linefeed ("LF", also called newline, or "NL" here) character
+  (cf. RFC 4648 §3.1).  When line wrapping, implementations MUST wrap lines
+  at 64 characters.  Upon decoding, implementations MUST ignore and discard
+  all linefeed characters.
 
   More formally:
 
