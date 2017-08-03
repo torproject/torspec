@@ -178,6 +178,23 @@ Implemented-In: 0.3.0.1-alpha
    if they have the "Guard" flag. Sampling is random but weighted by
    bandwidth.
 
+[Paul Syverson in a conversation at the Wilmington Meeting 2017 says that
+we should look into how we're doing this sampling.  Essentially, his
+concern is that, since we are sampling by bandwidth at first (when we
+choose the `sampled` set), then later there is another bias—when trying to
+build circuits (and hence marking guards as confirmed) we select those
+which completed a usable circuit first (and hence have the lowest
+latency)—that this sort of "doubly skewed" selection may "snub" some
+low-consensus-weight guards and leave them unused completely.  Thus the
+issue is primarily that we're not allocating network resources
+efficiently.  Mine and Nick's guard algorithm simulation code never
+checked what percentage of possible guards the algorithm reasonably
+allowed clients to use; this would be an interesting thing to check in
+simulation at some point.  If it does turn out to be a problem, Paul's
+intuition for a fix is to select uniformly at random to obtain the
+`sampled` set, then weight by bandwidth when trying to build circuits and
+marking guards as confirmed. —isis]
+
    Once a path is built and a circuit established using this guard, it
    is marked as confirmed. Until this point, guards are first sampled
    and then filtered based on information such as our current
