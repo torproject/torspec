@@ -389,7 +389,10 @@ marking guards as confirmed. —isis]
         Randomized as RAND(now, {GUARD_LIFETIME}/10).
 
   We add new members to {CONFIRMED_GUARDS} when we mark a circuit
-  built through a guard as "for user traffic."
+  built through a guard as "for user traffic."  That is, a circuit is
+  considered for use for client traffic when we have decided that we
+  could attach a stream to it; at that point the guard for that
+  circuit SHOULD be added to {CONFIRMED_GUARDS}.
 
   Whenever we remove a member from {SAMPLED_GUARDS}, we also remove
   it from {CONFIRMED_GUARDS}.
