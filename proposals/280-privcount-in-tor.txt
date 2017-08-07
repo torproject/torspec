@@ -1,0 +1,332 @@
+Filename: 280-privcount-in-tor.txt
+Title: Privacy-Preseving Statistics with Privcount in Tor
+Author: Nick Mathewson, Tim Wilson-Brown
+Created: 02-Aug-2017
+Status: Draft
+
+0. Acknowledgments
+
+  Tariq Elahi, George Danezis, and Ian Goldberg designed and implemented
+  the PrivEx blinding scheme. Rob Jansen and Aaron Johnson extended
+  PrivEx's differential privacy guarantees to multiple counters in
+  PrivCount:
+
+  https://github.com/privcount/privcount/blob/master/README.markdown#research-background
+
+  Rob Jansen and Tim Wilson-Brown wrote the majority of the experimental
+  PrivCount code, based on the PrivEx secret-sharing variant. This
+  implementation includes contributions from the PrivEx authors, and
+  others:
+
+  https://github.com/privcount/privcount/blob/master/CONTRIBUTORS.markdown
+
+1. Introduction and scope
+
+  PrivCount is a privacy-preserving way to collect aggregate statistics
+  about the Tor network without exposing the statistics from any single
+  Tor relay.
+
+  This document describes the behavior of the in-Tor portion of the
+  PrivCount system.  It DOES NOT describe the counter configurations,
+  or any other parts of the system. (These will be covered in separate
+  proposals.)
+
+2. PrivCount overview
+
+  Here follows an oversimplified summary of PrivCount, with enough
+  information to explain the Tor side of things.  The actual operation
+  of the non-Tor components is trickier than described below.
+
+  All values in the scheme below are 64-bit unsigned integers; addition
+  and subtraction are modulo 2^64.
+
+  In PrivCount, a Data Collector (in this case a Tor relay) shares
+  numeric data with N different Tally Reporters. (A Tally Reporter
+  performs the summing and unblinding roles of the Tally Server and Share
+  Keeper from experimental PrivCount.)
+
+  All N Tally Reporters together can reconstruct the original data, but
+  no (N-1)-sized subset of the Tally Reporters can learn anything about
+  the data.
+
+  (In reality, the Tally Reporters don't reconstruct the original data
+  at all! Instead, they will reconstruct a _sum_ of the original data
+  across all participating relays.)
+
+  To share data, for each value X to be shared, the relay generates
+  random values B_1 though B_n, and shares each B_i secretly with a
+  single Tally Reporter.  The relay then publishes Y = X + SUM(B_i) + Z,
+  where Z is a noise value taken at random from a gaussian distribution.
+  The Tally Reporters can reconstruct X+Z by securely computing SUM(B_i)
+  across all contributing Data Collectors. (Tally Reporters MUST NOT
+  share individual B_i values: that would expose the underlying relay
+  totals.)
+
+  In order to prevent bogus data from corrupting the tally, the Tor
+  relays and the Tally Reporters perform multiple "instances" of this
+  algorithm, randomly sampling in each relays. The relay sends multiple
+  Y values for each measurement, built with different sets of B_i.
+  These "instances" are numbered in order from 1 to R.
+
+  So that the system will still produce results in the event of a single
+  Tally Reporter failure, these instances are distributed across multiple
+  subsets of Tally Reporters.
+
+  Below we describe a data format for this.
+
+3. The document format
+
+  This document format builds on the line-based directory format used
+  for other tor documents, described in Tor's dir-spec.txt.
+
+  Using this format, we describe two kinds of documents here: a
+  "counters" document that publishes all the Y values, and a "blinding"
+  document that describes the B_i values.  But see "An optimized
+  alternative" below.
+
+  The "counters" document has these elements:
+
+    "privctr-dump-format" SP VERSION SP SigningKey
+
+       [At start, exactly once]
+
+       Describes the version of the dump format, and provides an ed25519
+       signing key to identify the relay.  The signing key is encoded in
+       base64 with padding stripped. VERSION is "alpha" now, but should
+       be "1" once this document is finalized.
+
+       [[[TODO: Do we need a counter version as well?
+
+          Noise is distributed across a particular set of counters,
+          to provide differential privacy guarantees for those counters.
+          Reducing noise requires a break in the collection.
+          Adding counters is ok if the noise on each counter
+          monotonically increases. (Removing counters always reduces
+          noise.)
+
+          We also need to work out how to handle instances with mixed
+          Tor versions, where some Data Collectors report different
+          counters to other Data Collectors. (The blinding works if we
+          substitute zeroes for missing counters on Tally Reporters.
+          But we also need to add noise in this case.)
+
+          -teor
+        ]]]
+
+    "starting-at" SP IsoTime
+
+       [Exactly once]
+
+       The start of the time period when the statistics here were
+       collected.
+
+    "ending-at" SP IsoTime
+
+       [Exactly once]
+
+       The end of the time period when the statistics here were
+       collected.
+
+    "num-instances" SP Number
+
+       [Exactly once]
+
+       The number of "instances" that the relay used (see above.)
+
+    "tally-reporter" SP Identifier SP Key SP InstanceNumbers
+
+       [At least twice]
+
+       The curve25519 public key of each Tally Reporter that the relay
+       believes in.  (If the list does not match the list of
+       participating tally reporters, they won't be able to find the
+       relay's values correctly.)  The identifiers are non-space,
+       non-nul character sequences.  The Key values are encoded in
+       base64 with padding stripped; they must be unique within each
+       counters document.  The InstanceNumbers are comma-separated lists
+       of decimal integers from 0 to (num-instances - 1), in ascending
+       order.
+
+    Keyword ":" SP Int SP Int SP Int ...
+
+       [Any number of times]
+
+       The Y values for a single measurement.  There are num-instances
+       such Y values for each measurement.  They are 64-bit unsigned
+       integers, expressed in decimal.
+
+       The "Keyword" denotes which measurement is being shared. Keyword
+       MAY be any sequence of characters other than colon, nul, space,
+       and newline, though implementators SHOULD avoid getting too
+       creative here.  Keywords MUST be unique within a single document.
+       Tally Reporters MUST handle unrecognized keywords.  Keywords MAY
+       appear in any order.
+
+       It is safe to send the blinded totals for each instance to every
+       Tally Reporter. To unblind the totals, a Tally Reporter needs:
+         * a blinding document from each relay in the instance, and
+         * the per-counter blinding sums from the other Tally Reporters
+           in their instance.
+
+       [[[TODO: But is it safer to create a per-instance counters
+          document? -- teor]]]
+
+       The semantics of individual measurements are not specified here.
+
+    "signature" SP Signature
+
+       [At end, exactly once]
+
+       The Ed25519 signature of all the fields in the document, from the
+       first byte, up to but not including the "signature" keyword here.
+       The signature is encoded in base64 with padding stripped.
+
+
+  The "blinding" document has these elements:
+
+    "privctr-secret-offsets" SP VERSION SP SigningKey
+
+       [At start, exactly once.]
+
+       The VERSION and SigningKey parameters are the same as for
+       "privctr-dump-format".
+
+    "instances" SP Numbers
+
+       [Exactly once]
+
+       The instances that this Tally Reporter handles.
+       They are given as comma-separated decimal integers, as in the
+       "tally-reporter" entry in the counters document.  They MUST
+       match the instances listed in the counters document.
+
+       [[[TODO: this is redundant. Specify the constraint instead? --teor]]]
+
+    "num-counters" SP Number
+
+       [Exactly once]
+
+       The number of counters that the relay used in its counters
+       document. This MUST be equal to the number of keywords in the
+       counters document.
+
+       [[[TODO: this is redundant. Specify the constraint instead? --teor]]]
+
+    "tally-reporter-pubkey" SP Key
+
+       [Exactly once]
+
+       The curve25519 public key of the tally reporter who is intended
+       to receive an decrypt this document.  The key is base64-encoded
+       with padding stripped.
+
+    "count-document-digest" SP "sha3" Digest NL
+    "-----BEGIN ENCRYPTED DATA-----" NL
+    Data
+    "-----END ENCRYPTED DATA-----" NL
+
+       [Exactly once]
+
+       The SHA3-256 digest of the count document corresponding to this
+       blinding document.  The digest is base64-encoded with padding
+       stripped.  The data encodes the blinding values (See "The
+       Blinding Values") below, and is encrypted to the tally reporter's
+       public key using the hybrid encryption algorithm described below.
+
+    "signature" SP Signature
+
+       [At end, exactly once]
+
+       The Ed25519 signature of all the fields in the document, from the
+       first byte, up to but not including the "signature" keyword here.
+       The signature is encoded in base64 with padding stripped.
+
+
+4. The Blinding Values
+
+  The "Data" field of the blinding documents above, when decrypted,
+  yields a sequence of 64-bit binary values, encoded in network
+  (big-endian) order.  There are C * R such values, where C is the number
+  of keywords in the count document, and R is the number of instances
+  that the Tally Reporter participates in. The client generates all of
+  these values uniformly at random.
+
+  For each keyword in the count document, in the order specified by the
+  count document, the decrypted data holds R*8 bytes for the specified
+  instance of that keyword's blinded counter.
+
+  For example: if the count document lists the keywords "b", "x", "g",
+  and "a" (in that order), and lists instances "0", and "2", then the
+  decrypted data will hold the blinding values in this order:
+      b, instance 0
+      b, instance 2
+      x, instance 0
+      x, instance 2
+      g, instance 0
+      g, instance 2
+      a, instance 0
+      a, instance 2
+
+
+4. Implementation Notes
+
+  A relay should, when starting a new round, generate all the blinding
+  values and noise values in advance.  The relay should then use these
+  values to compute Y_0 = SUM(B_i) + Z for each instance of each
+  counter.  Having done this, the relay MUST encrypt the blinding values
+  to the public key of each tally reporter, and wipe them from memory.
+
+
+5. The hybrid encryption algorithm
+
+  We use a hybrid encryption scheme above, where items can be encrypted
+  to a public key.  We instantiate it as follows, using curve25519
+  public keys.
+
+  To encrypt a plaintext M to a public key PK1
+     1. the sender generates a new ephemeral keypair sk2, PK2.
+     2. The sender computes the shared diffie hellman secret
+        SEED = (sk2 * PK1).
+
+     3. The sender derives 64 bytes of key material as
+          SHAKE256(TEXT | SEED)[...64]
+        where "TEXT" is "Expand curve25519 for privcount encryption".
+
+        The first 32 bytes of this is an aes key K1;
+        the second 32 bytes are a mac key K2.
+
+     4. The sender computes a ciphertext C as AES256_CTR(K1, M)
+
+     5. The sender computes a MAC as
+          SHA3_256([00 00 00 00  00 00 00 20] | K2 | C)
+
+     6. The hybrid-encrypted text is PK2 | MAC | C.
+
+
+6. An optimized alternative
+
+   As an alternative, the sequences of blinding values is NOT transmitted
+   to the tally reporters.  Instead the client generates a single
+   ephemeral keypair sk_c, PK_c, and places the public key in its counts
+   document.  It does this each time a new round begins.
+
+   For each tally reporter with public key PK_i, the client then does
+   the handshake sk_c * PK_i to compute SEED_i.
+
+   The client then generates the blinding values for that tally reporter
+   as SHAKE256(SEED_i)[...R*C*8].
+
+   After initializing the counters to Y_0, the client can discard the
+   blinding values and sk_c.
+
+   Later, the tally reporters can reconstruct the blinding values as
+   SHAKE256(sk_i * PK_c)[...]
+
+   This alternative allows the client to transmit only a single public
+   key, when previously it would need to transmit a complete set of
+   blinding factors for each tally reporter. Further, the alternative
+   does away with the need for blinding documents altogether.  It is,
+   however, more sensitive to any defects in SHAKE256 than the design
+   above.  Like the rest of this design, it would need rethinking if we
+   want to expand this scheme to work with anonymous data collectors,
+   such as Tor clients.

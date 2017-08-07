@@ -200,6 +200,7 @@ Proposals by number:
 277  Detect multiple relay instances running with same ID [OPEN]
 278  Directory Compression Scheme Negotiation [FINISHED]
 279  A Name System API for Tor Onion Services [DRAFT]
+280  Privacy-Preseving Statistics with Privcount in Tor [DRAFT]
 
 
 Proposals by status:
@@ -223,6 +224,7 @@ Proposals by status:
    270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope
    273  Exit relay pinning for web services [for n/a]
    279  A Name System API for Tor Onion Services
+   280  Privacy-Preseving Statistics with Privcount in Tor
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  NEEDS-RESEARCH:
