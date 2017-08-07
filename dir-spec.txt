@@ -535,10 +535,13 @@
        [0a].  The signed key here is the master identity key.
 
        Bit must be "0" or "1".  It indicates the sign of the ed25519
-       public key corresponding to the ntor onion key.
+       public key corresponding to the ntor onion key.  If Bit is "0",
+       then implementations MUST guarantee that the x-coordinate of
+       the resulting ed25519 public key is positive.  Otherwise, if
+       Bit is "1", then the sign of the x-coordinate MUST be negative.
 
-       To compute the ed25519 public key corresponding to a
-       curve25519 key, see appendix C.
+       To compute the ed25519 public key corresponding to a curve25519
+       key, and for further explanation on key formats, see appendix C.
 
        This signature proves that the party creating the descriptor
        had control over the secret key corresponding to the
@@ -3688,24 +3691,66 @@ B. General-use HTTP URLs
 
 C. Converting a curve25519 public key to an ed25519 public key
 
-   Given a curve25519 x-coordinate (u), we can get the y coordinate
-   of the ed25519 key using
+   Given an X25519 key, that is, an affine point (u,v) on the
+   Montgomery curve defined by
 
-         y = (u-1)/(u+1)
+         bv^2 = u(u^2 + au +1)
 
-   and then we can apply the usual ed25519 point decompression
-   algorithm to find the x coordinate of the ed25519 point to check
-   signatures with.
+   where
 
-   Note that we need the sign of the X coordinate to do this
-   operation; otherwise, we'll have two possible X coordinates that
-   might have correspond to the key.  Therefore, we need the 'sign'
-   of the X coordinate, as used by the ed25519 key expansion
-   algorithm.
+         a = 486662
+         b = 1
 
-   To get the sign, the easiest way is to take the same private key,
-   feed it to the ed25519 public key generation algorithm, and see
-   what the sign is.
+   and comprised of the compressed form (i.e. consisting of only the
+   u-coordinate), we can retrieve the y-coordinate of the affine point
+   (x,y) on the twisted Edwards form of the curve defined by
+
+         -x^2 + y^2 = 1 + d x^2 y^2
+
+   where
+
+         d = - 121665/121666
+
+   by computing
+
+         y = (u-1)/(u+1).
+
+   and then we can apply the usual curve25519 twisted Edwards point
+   decompression algorithm to find _an_ x-coordinate of an affine
+   twisted Edwards point to check signatures with.  Signing keys for
+   ed25519 are compressed curve points in twisted Edwards form (so a
+   y-coordinate and the sign of the x-coordinate), and X25519 keys are
+   compressed curve points in Montgomery form (i.e. a u-coordinate).
+
+   However, note that compressed point in Montgomery form neglects to
+   encode what the sign of the corresponding twisted Edwards
+   x-coordinate would be.  Thus, we need the sign of the x-coordinate
+   to do this operation; otherwise, we'll have two possible
+   x-coordinates that might have correspond to the ed25519 public key.
+
+   To get the sign, the easiest way is to take the corresponding
+   private key, feed it to the ed25519 public key generation
+   algorithm, and see what the sign is.
+
+   [Recomputing the sign bit from the private key every time sounds
+   rather strange and inefficient to me… —isis]
+
+   Alternatively, without access to the corresponding ed25519 private
+   key, one may use the Montgomery u-coordinate to recover the
+   Montgomery v-coordinate by computing the right-hand side of the
+   Montgomery curve equation:
+
+         bv^2 = u(u^2 + au +1)
+
+   where
+
+         a = 486662
+         b = 1
+
+   Then, knowing the intended sign of the Edwards x-coordinate, one
+   may recover said x-coordinate by computing:
+
+         x = (u/v) * sqrt(-a - 2)
 
 D. Inferring missing proto lines.
 
