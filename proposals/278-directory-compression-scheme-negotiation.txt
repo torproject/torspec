@@ -201,3 +201,9 @@ Implemented-In: 0.3.1.1-alpha
   [1]: https://docs.google.com/spreadsheets/d/1devQlUOzMPStqUl9mPawFWP99xSsRM8xWv7DNcqjFdo
   [2]: https://gitlab.com/ahf/tor-sponsor4-compression
   [3]: https://github.com/nmathewson/consensus-diff-analysis
+
+8. Acknowledgements
+
+  This research was supported in part by NSF grants CNS-1111539,
+  CNS-1314637, CNS-1526306, CNS-1619454, and CNS-1640548.
+

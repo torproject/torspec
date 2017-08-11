@@ -468,6 +468,9 @@ Status: Draft
    Yawning, David and me. Thanks to Lunar and indolering for more
    discussion and feedback.
 
+   This research was supported in part by NSF grants CNS-1111539,
+   CNS-1314637, CNS-1526306, CNS-1619454, and CNS-1640548.
+
 Appendix A.1: Example communication Tor <-> name plugin [PROTOEXAMPLE]
 
    Environemnt variables:
