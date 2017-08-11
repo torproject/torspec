@@ -1,0 +1,89 @@
+Filename: 281-bulk-md-download.txt
+Title: Downloading microdescriptors in bulk
+Author: Nick Mathewson
+Created: 11-Aug-2017
+Status: Draft
+
+1. Introduction
+
+  This proposal describes a ways to download more microdescriptors
+  at a time, using fewer bytes.
+
+  Right now, to download N microdescriptors, the client must send
+  about 44*N bytes in its HTTP request.  Because clients can request
+  microdescriptors in any combination, the directory caches cannot
+  pre-compress responses to these requests, and need to use less
+  space-efficient on-the-fly compression algorithms.
+
+  Under this proposal, clients simply say "Send me the
+  microdescriptors I need", given what I know.
+
+2. Combined microdescriptor downloads
+
+2.1. By diff
+
+  If a client has a consensus with base64 sha3-256 digest X, and it
+  previously had a consensus with base64 sha3-256 digests Y then
+  it may request all the microdescriptors listed in X but not Y,
+  by asking for the resource:
+      /tor/micro/diff/X/Y
+
+  Clients SHOULD only ask for this resource compressed.
+
+  Caches MUST NOT answer this request unless they recognize the
+  consensus with digest X, and digest Y.
+  digest Y.  If answering, caches MUST reply with all of the
+  microdescriptors that the cache holds that were listed by
+  consensus X, and MUST omit all the microdescriptors that were
+  omitted listed in consensus Y.
+
+2.2. By consensus:
+
+  If a client has fewer than NMNM% of the microdescriptors listed in a
+  consensus X, it should fetch the resource
+      /tor/micro/full/X
+
+  Clients SHOULD only ask for this resource compressed.
+
+  Caches MUST NOT answer this request unless they recognize the
+  consensus with digest X. They should send all the microdescriptors
+  they have that are listed in that consensus.
+
+2.3. When to make these requests
+
+  Clients should decide to use this format in preference to the
+  old download-by-digest format if the consensus X lists their
+  preferred directory cache as using a new DirCache subprotocol
+  version. (See 5 below.)
+
+3. Performance analysis
+
+  This is a back-of-the-envelope analysis using a month's worth of
+  consensus documents, and a randomly chosen sample of
+  microdescriptors.
+
+
+  On average, about 0.5% of the microdescriptors change between any
+  two consensuses.  Call it 50.  That means 50*43 bytes == 2150
+  bytes to request the microdescriptors.  It means ~24530 bytes of
+  microdescriptors downloaded, compressed to ~13687 bytes by zstd.
+
+  With this proposal, we're down to 86 bytes for the request, and we
+  can precompute the compressed output, making it save to use lzma2,
+  getting a compressed result more like 13362.
+
+  It appears that this change would save about 15% for incremental
+  microdescriptor downloads, most of that coming from the reduction
+  in request size.
+
+  For complete downloads, a complete set of microdescriptors is about
+  7700 microdesciptors long.  That makes the total number of bytes
+  for the requests 7700*43 == 331100 bytes.  The response, if
+  compressed with lzma instead of zstd, would fall from 1659682 to
+  1587804 bytes, for a total savings of 20%.
+
+
+5. Compatibility
+
+   Caches supporting this download protocol need to advertise
+   support of a new DirCache subprotocol version.

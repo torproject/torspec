@@ -201,6 +201,7 @@ Proposals by number:
 278  Directory Compression Scheme Negotiation [FINISHED]
 279  A Name System API for Tor Onion Services [DRAFT]
 280  Privacy-Preseving Statistics with Privcount in Tor [DRAFT]
+281  Downloading microdescriptors in bulk [DRAFT]
 
 
 Proposals by status:
@@ -225,6 +226,7 @@ Proposals by status:
    273  Exit relay pinning for web services [for n/a]
    279  A Name System API for Tor Onion Services
    280  Privacy-Preseving Statistics with Privcount in Tor
+   281  Downloading microdescriptors in bulk
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  NEEDS-RESEARCH:
