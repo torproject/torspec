@@ -1417,6 +1417,11 @@ see tor-design.pdf.
    Clients MUST generate an all-zero payload for RELAY_BEGIN_DIR cells,
    and relays MUST ignore the payload.
 
+   In response to a RELAY_BEGIN_DIR cell, relays respond either with a
+   RELAY_CONNECTED cell on succcess, or a RELAY_END cell on failure. They
+   MUST send a RELAY_CONNECTED cell all-zero payload, and clients MUST ignore
+   the payload.
+
    [RELAY_BEGIN_DIR was not supported before Tor 0.1.2.2-alpha; clients
    SHOULD NOT send it to routers running earlier versions of Tor.]
 
