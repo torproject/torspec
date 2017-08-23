@@ -550,8 +550,9 @@
       need to use "md" instead.)
 
     "md/id/<OR identity>" or "md/name/<OR nickname>" -- the latest
-      microdescriptor for a given OR. [First implemented in
-      0.2.3.8-alpha.]
+      microdescriptor for a given OR. Empty if we have no microdescriptor for
+      that OR (because we haven't downloaded one, or it isn't in the
+      consensus). [First implemented in 0.2.3.8-alpha.]
 
     "desc/download-enabled" -- "1" if we try to download router descriptors;
       "0" otherwise. [First implemented in 0.3.2.1-alpha]
@@ -573,8 +574,8 @@
 
     "ns/id/<OR identity>" or "ns/name/<OR nickname>" -- the latest router
       status info (v3 directory style) for a given OR.  Router status
-      info is as given in
-      dir-spec.txt, and reflects the current beliefs of this Tor about the
+      info is as given in dir-spec.txt, and reflects the latest
+      consensus opinion about the
       router in question. Like directory clients, controllers MUST
       tolerate unrecognized flags and lines.  The published date and
       descriptor digest are those believed to be best by this Tor,
@@ -583,7 +584,7 @@
       [In 0.2.0.9-alpha this switched from v2 directory style to v3]
 
     "ns/all" -- Router status info (v3 directory style) for all ORs we
-      have an opinion about, joined by newlines.
+      that the consensus has an opinion about, joined by newlines.
       [First implemented in 0.1.2.3-alpha.]
       [In 0.2.0.9-alpha this switched from v2 directory style to v3]
 
