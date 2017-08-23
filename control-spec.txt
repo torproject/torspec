@@ -267,7 +267,7 @@
   to set it back to its default).  SETCONF is all-or-nothing: if there
   is an error in any of the configuration settings, Tor sets none of them.
 
-  Tor responds with a "250 configuration values set" reply on success.
+  Tor responds with a "250 OK" reply on success.
   If some of the listed keywords can't be found, Tor replies with a
   "552 Unrecognized option" message. Otherwise, Tor responds with a
   "513 syntax error in configuration values" reply on syntax error, or a
@@ -495,8 +495,6 @@
 
   Sent from the client to the server.  The syntax is as for GETCONF:
     "GETINFO" 1*(SP keyword) CRLF
-  one or more NL-terminated strings.  The server replies with an INFOVALUE
-  message, or a 551 or 552 error.
 
   Unlike GETCONF, this message is used for data that are not stored in the Tor
   configuration file, and that may be longer than a single line.  On success,
@@ -507,6 +505,8 @@
       250+keyword=
       value
       .
+  The server sends a 551 or 552 error on failure.
+
   Recognized keys and their values include:
 
     "version" -- The version of the server's software, which MAY include the
