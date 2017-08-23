@@ -3295,8 +3295,8 @@ The following methods have incorrect implementations; authorities SHOULD
    release time.]
 
    Clients try to have a live consensus network-status document at all times.
-   A network-status document is "live" if the time in its valid-until field
-   has not passed.
+   A network-status document is "live" if the time in its valid-after field
+   has passed, and the time in its valid-until field has not passed.
 
    When a client has no consensus network-status document, it downloads it
    from a randomly chosen fallback directory mirror or authority. Clients
@@ -3353,6 +3353,10 @@ The following methods have incorrect implementations; authorities SHOULD
    of the general network status consensus.  In that case they should use
    the same update strategy as for the normal consensus.  They should not
    download more than one consensus flavor.
+
+   When a client does not have a live consensus, it will generally use the
+   most recent consensus it has if that consensus is "reasonably live". A
+   "reasonably live" consensus is one that expired less than 24 hours ago.
 
 5.2. Downloading server descriptors or microdescriptors
 
