@@ -920,17 +920,31 @@
     "downloads/"
       The keys under downloads/ are used to query download statuses; they all
       return either a sequence of newline-terminated hex encoded digests, or
-      a serialized download status as follows:
+      a "serialized download status" as follows:
 
-      "next-attempt-at" SP ISOTime CRLF
-      "n-download-failures" SP UInt CRLF
-      "n-download-attempts" SP UInt CRLF
-      "schedule" SP DownloadSchedule CRLF
-      "want-authority" SP DownloadWantAuthority CRLF
-      "increment-on" SP DownloadIncrementOn CRLF
-      "backoff" SP DownloadBackoff CRLF
-      [ "last-backoff-position" Uint CRLF
-        "last-delay-used UInt CRLF ]
+       SerializedDownloadSatus =
+         -- when do we plan to next attempt to download this object?
+         "next-attempt-at" SP ISOTime CRLF
+         -- how many times have we failed since the last success?
+         "n-download-failures" SP UInt CRLF
+         -- how many times have we tried to download this?
+         "n-download-attempts" SP UInt CRLF
+         -- according to which schedule rule will we download this?
+         "schedule" SP DownloadSchedule CRLF
+         -- do we want to fetch this from an authority, or will any cache do?
+         "want-authority" SP DownloadWantAuthority CRLF
+         -- do we increase our download delay whenever we fail to fetch this,
+         -- or whenever we attempt fetching this?
+         "increment-on" SP DownloadIncrementOn CRLF
+         -- do we increase the download schedule deterministically, or at
+         -- random?
+         "backoff" SP DownloadBackoff CRLF
+         [
+           -- with an exponential backoff, where are we in the schedule?
+           "last-backoff-position" Uint CRLF
+           -- with an exponential backoff, what was our last delay?
+           "last-delay-used UInt CRLF
+         ]
 
       where
 
@@ -950,35 +964,37 @@
       In detail, the keys supported are:
 
       "downloads/networkstatus/ns"
-        The serialized download status for the FLAV_NS consensus for whichever
-        bootstrap state Tor is currently in.
+        The SerializedDownloadStatus for the NS-flavored consensus for
+        whichever bootstrap state Tor is currently in.
 
       "downloads/networkstatus/ns/bootstrap"
-        The serialized download status for the FLAV_NS consensus at bootstrap
-        time, regardless of whether we are currently bootstrapping.
+        The SerializedDownloadStatus for the NS-flavored consensus at
+        bootstrap time, regardless of whether we are currently bootstrapping.
 
       "downloads/networkstatus/ns/running"
-        The serialized download status for the FLAV_NS consensus when running,
-        regardless of whether we are currently bootstrapping.
+
+        The SerializedDownloadStatus for the NS-flavored consensus when
+        running, regardless of whether we are currently bootstrapping.
 
       "downloads/networkstatus/microdesc"
-        The serialized download status for the FLAV_MICRODESC consensus for
+        The SerializedDownloadStatus for the microdesc-flavored consensus for
         whichever bootstrap state Tor is currently in.
 
       "downloads/networkstatus/microdesc/bootstrap"
-        The serialized download status for the FLAV_MICRODESC consensus at
+        The SerializedDownloadStatus for the microdesc-flavored consensus at
         bootstrap time, regardless of whether we are currently bootstrapping.
 
       "downloads/networkstatus/microdesc/running"
-        The serialized download status for the FLAV_MICRODESC consensus when
+        The SerializedDownloadStatus for the microdesc-flavored consensus when
         running, regardless of whether we are currently bootstrapping.
 
       "downloads/cert/fps"
-        A newline-separated list of hex-encoded digests for authority certificates
-        for which we have download status available.
+
+        A newline-separated list of hex-encoded digests for authority
+        certificates for which we have download status available.
 
       "downloads/cert/fp/<Fingerprint>"
-        A serialized download status for the default certificate for the
+        A SerializedDownloadStatus for the default certificate for the
         identity digest <Fingerprint> returned by the downloads/cert/fps key.
 
       "downloads/cert/fp/<Fingerprint>/sks"
@@ -987,7 +1003,7 @@
         downloads/cert/fps key.
 
       "downloads/cert/fp/<Fingerprint>/<SKDigest>"
-        A serialized download status for the certificate for the identity
+        A SerializedDownloadStatus for the certificate for the identity
         digest <Fingerprint> returned by the downloads/cert/fps key and signing
         key digest <SKDigest> returned by the downloads/cert/fp/<Fingerprint>/
         sks key.
@@ -996,19 +1012,19 @@
         A newline-separated list of hex-encoded router descriptor digests
         [note, not identity digests - the Tor process may not have seen them
         yet while downloading router descriptors].  If the Tor process is not
-        using a FLAV_NS consensus, a 551 error is returned.
+        using a NS-flavored consensus, a 551 error is returned.
 
       "downloads/desc/<Digest>"
-        A serialized download status for the router descriptor with digest
+        A SerializedDownloadStatus for the router descriptor with digest
         <Digest> as returned by the downloads/desc/descs key.  If the Tor
-        process is not using a FLAV_NS consensus, a 551 error is returned.
+        process is not using a NS-flavored consensus, a 551 error is returned.
 
       "downloads/bridge/bridges"
         A newline-separated list of hex-encoded bridge identity digests.  If
         the Tor process is not using bridges, a 551 error is returned.
 
       "downloads/bridge/<Digest>"
-        A serialized download status for the bridge descriptor with identity
+        A SerializedDownloadStatus for the bridge descriptor with identity
         digest <Digest> as returned by the downloads/bridge/bridges key.  If
         the Tor process is not using bridges, a 551 error is returned.
 
