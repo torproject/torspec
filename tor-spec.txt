@@ -1435,8 +1435,8 @@ see tor-design.pdf.
    circuit for that stream.
 
    The payload of a RELAY_END cell begins with a single 'reason' byte to
-   describe why the stream is closing, plus optional data (depending on
-   the reason.)  The values are:
+   describe why the stream is closing.  For some reasons, it contains
+   additional data (depending on the reason.)  The values are:
 
        1 -- REASON_MISC           (catch-all for unlisted reasons)
        2 -- REASON_RESOLVEFAILED  (couldn't look up hostname)
