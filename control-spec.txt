@@ -744,6 +744,11 @@
       A space-separated list of all the values supported by the SIGNAL
       command.
 
+    "ip-to-country/ipv4-available"
+    "ip-to-country/ipv6-available"
+      "1" if the relevant geoip or geoip6 database is present; "0" otherwise.
+      This field was added in Tor 0.3.2.1-alpha.
+
     "ip-to-country/*"
       Maps IP addresses to 2-letter country codes.  For example,
       "GETINFO ip-to-country/18.0.0.1" should give "US".
