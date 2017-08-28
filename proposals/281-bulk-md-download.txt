@@ -32,7 +32,8 @@ Status: Draft
 
   Caches MUST NOT answer this request unless they recognize the
   consensus with digest X, and digest Y.
-  digest Y.  If answering, caches MUST reply with all of the
+
+  If answering, caches MUST reply with all of the
   microdescriptors that the cache holds that were listed by
   consensus X, and MUST omit all the microdescriptors that were
   omitted listed in consensus Y.
