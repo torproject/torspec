@@ -36,7 +36,9 @@ Status: Draft
   If answering, caches MUST reply with all of the
   microdescriptors that the cache holds that were listed by
   consensus X, and MUST omit all the microdescriptors that were
-  omitted listed in consensus Y.
+  not listed in consensus Y.  (For the purposes of this proposal,
+  microdescriptors are "the same" if they are textually identical
+  and have the same digest.)
 
 2.2. By consensus:
 
@@ -52,10 +54,18 @@ Status: Draft
 
 2.3. When to make these requests
 
-  Clients should decide to use this format in preference to the
-  old download-by-digest format if the consensus X lists their
-  preferred directory cache as using a new DirCache subprotocol
-  version. (See 5 below.)
+  Clients should decide to use this format in preference to the old
+  download-by-digest format if the consensus X lists their preferred
+  directory cache as using a new DirCache subprotocol version. (See
+  5 below.)
+
+  When a client has some preferred directory caches that support
+  this subprotocol and some that do not, it chooses one at random,
+  and uses these requests if that one supports this subprotocol.
+
+  (A client always has a consensus when it requests
+  microdescriptors, so it will know whether any given cache supports
+  these requests.)
 
 3. Performance analysis
 
