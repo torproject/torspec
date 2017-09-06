@@ -1888,6 +1888,11 @@ Table of contents:
    this length with random bytes, to make them difficult to distinguish from
    older protocols at the rendezvous point.
 
+   Relays older than 0.2.9.1 should not be used for rendezvous points by next
+   generation onion services because they enforce too-strict legth checks to
+   rendezvous cells. Hence the "HSRend" protocol from proposal#264 should be
+   used to select relays for rendezvous points.
+
 5. Encrypting data between client and host
 
    A successfully completed handshake, as embedded in the
