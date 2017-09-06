@@ -274,6 +274,10 @@ the anonymity and load-balancing implications of their choices.
         open.
       - Default: 3600
 
+A. Acknowledgments
+
+  This research was supported in part by NSF grants CNS-1111539,
+  CNS-1314637, CNS-1526306, CNS-1619454, and CNS-1640548.
 
 1. https://en.wikipedia.org/wiki/NetFlow
 2. http://infodoc.alcatel-lucent.com/html/0_add-h-f/93-0073-10-01/7750_SR_OS_Router_Configuration_Guide/Cflowd-CLI.html

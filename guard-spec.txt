@@ -644,6 +644,11 @@
 
 A. Appendices
 
+A.0. Acknowledgements
+
+  This research was supported in part by NSF grants CNS-1111539,
+  CNS-1314637, CNS-1526306, CNS-1619454, and CNS-1640548.
+
 A.1.  Parameters with suggested values. [Section:PARAM_VALS]
 
    (All suggested values chosen arbitrarily)
