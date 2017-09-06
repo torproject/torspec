@@ -1889,7 +1889,7 @@ Table of contents:
    older protocols at the rendezvous point.
 
    Relays older than 0.2.9.1 should not be used for rendezvous points by next
-   generation onion services because they enforce too-strict legth checks to
+   generation onion services because they enforce too-strict length checks to
    rendezvous cells. Hence the "HSRend" protocol from proposal#264 should be
    used to select relays for rendezvous points.
 
