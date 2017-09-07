@@ -504,9 +504,9 @@ see tor-design.pdf.
    authenticate or not. If it does not want to authenticate, it MUST
    send a NETINFO cell.  If it does want to authenticate, it MUST send a
    CERTS cell, an AUTHENTICATE cell (4.4), and a NETINFO.  When this
-   handshake is in use, the first cell must be VERSIONS, VPADDING or
+   handshake is in use, the first cell must be VERSIONS, VPADDING, or
    AUTHORIZE, and no other cell type is allowed to intervene besides
-   those specified, except for PADDING and VPADDING cells.
+   those specified, except for VPADDING cells.
 
    The AUTHORIZE cell type is reserved for future use by scanning-resistance
    designs.
