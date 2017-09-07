@@ -736,38 +736,29 @@ Table of contents:
 
 2.2.2.1. Overlapping descriptors
 
-   Hidden services need to upload their descriptors to the HSDirs _before_ the
-   beginning of each time period, so that they are readily available for
-   clients to fetch them. However, if every hidden service were to upload a new
-   descriptor at exactly the start of each time period, directories would get
-   overwhelmed by every host uploading at the same time.
+   Hidden services need to upload multiple descriptors so that they can be
+   reachable to clients with older or newer consensuses than them. Services
+   need to upload their descriptors to the HSDirs _before_ the beginning of
+   each upcoming time period, so that they are readily available for clients to
+   fetch them. Furthermore, services should keep uploading their old descriptor
+   even after the end of a time period, so that they can be reachable by
+   clients that still have consensuses from the previous time period.
 
-   To avoid this thundering herd problem, hidden services upload descriptors
-   for the upcoming time period at a random time _before_ the time period
-   starts.
-
-   For the above "descriptor overlap" system to work, fresh shared random
-   values must be available multiple hours *before* the time period changes, so
-   that hidden services have enough time to publish their overlap descriptors
-   to the future set of responsible HSDirs. In the current system, fresh shared
-   random values get published at 00:00UTC every day, whereas the time period
-   changes at 12:00UTC, giving 12 hours for hidden services to fetch new
-   consensuses and upload overlap descriptors.
-
-   Specifically, when a hidden service fetches a consensus with "valid-after"
-   between 00:00UTC and 12:00UTC, it goes into "descriptor overlap"
-   mode. During "descriptor overlap" mode, the hidden service uploads its
-   descriptor to the HSDirs of the current time period (using the previous SRV
-   from the consensus) _and_ it also uploads its descriptors for the upcoming
-   time period (using the current SRV from the consensus).
-
-   The above mechanism ensures that when the time period starts at 12:00UTC,
-   the hidden service will already have uploaded its descriptors to the
-   responsible HSDirs for that time period.
+   Hence, services maintain two active descriptors at every point. Clients on
+   the other hand, don't have a notion of overlapping descriptors, and instead
+   always download the descriptor for the current time period and shared random
+   value. It's the job of the service to ensure that descriptors will be
+   available for all clients. See section [FETCHUPLOADDESC] for how this is
+   achieved.
 
    [TODO: What to do when we run multiple hidden services in a single host?]
 
 2.2.3. Where to publish a hidden service descriptor [WHERE-HSDESC]
+
+   This section specifies how the HSDir hash ring is formed at any given
+   time. Whenever a time value is needed (e.g. to get the current time period
+   number), we assume that clients and services use the valid-after time from
+   their latest live consensus.
 
    The following consensus parameters control where a hidden service
    descriptor is stored;
@@ -818,10 +809,17 @@ Table of contents:
    Again, nodes from lower-numbered replicas are disregarded when
    choosing the spread for a replica.
 
-2.2.4. Using time periods and SRVs to fetch/upload HS descriptors
+2.2.4. Using time periods and SRVs to fetch/upload HS descriptors [FETCHUPLOADDESC]
 
-   Hidden services and clients need to make correct use of time periods and
-   shared random values (SRVs) to successfuly fetch and upload descriptors.
+   Hidden services and clients need to make correct use of time periods (TP)
+   and shared random values (SRVs) to successfuly fetch and upload
+   descriptors. Furthermore, to avoid problems with skewed clocks, both clients
+   and services use the 'valid-after' time of a live consensus as a way to take
+   decisions with regards to uploading and fetching descriptors. By using the
+   consensus times as the ground truth here, we minimize the desynchronization
+   of clients and services due to system clock. Whenever time-based decisions
+   are taken in this section, assume that they are consensus times and not
+   system times.
 
    As [PUB-SHAREDRANDOM] specifies, consensuses contain two shared random
    values (the current one and the previous one). Hidden services and clients
@@ -843,22 +841,113 @@ Table of contents:
 
                                       Legend: [TP#1 = Time Period #1]
                                               [SRV#1 = Shared Random Value #1]
-                                              ["=" denotes descriptor overlap period]
+                                              ["$" = descriptor rotation moment]
 
-   Looking at the diagram above, SRV#1 gets published 12 hours before TP#1
-   starts and TP#1 lasts 24 hours. By defining the lifetime of SRV#1 to be 36
-   hours, we can pair SRV#1 with TP#1.
+2.2.4.1. Client behavior for fetching descriptors [CLIENTFETCH]
 
-   Hence, when clients and hidden services see an SRV for the first time, they
-   calculate its expiry date (using a 36 hour lifetime) and use that SRV for
-   uploading/fetching descriptors until it expires. When that SRV expires, they
-   switch to the next SRV in the consensus.
+   And here is how clients use TPs and SRVs to fetch descriptors:
 
-   Hidden services in "descriptor overlap" mode _always_ use the current SRV
-   for publishing overlap descriptors. Clients on the other hand ignore the
-   overlap period and always fetch the descriptor of the current time period.
+   Clients always aim to synchronize their TP with SRV, so they always want to
+   use TP#N with SRV#N: To achieve this wrt time periods, clients always use
+   the current time period when fetching descriptors. Now wrt SRVs, if a client
+   is in the time segment between a new time period and a new SRV (i.e. the
+   segments drawn with "-") it uses the current SRV, else if the client is in a
+   time segment between a new SRV and a new time period (i.e. the segments
+   drawn with "="), it uses the previous SRV.
 
-   For examples and discussion on this technique, please see [SRV-TP-REFS].
+   Example:
+
+   +------------------------------------------------------------------+
+   |                                                                  |
+   | 00:00      12:00       00:00       12:00       00:00       12:00 |
+   | SRV#1      TP#1        SRV#2       TP#2        SRV#3       TP#3  |
+   |                                                                  |
+   |  $==========|-----------$===========|-----------$===========|    |
+   |              ^           ^                                       |
+   |              C1          C2                                      |
+   +------------------------------------------------------------------+
+
+   If a client (C1) is at 13:00 right after TP#1, then it will use TP#1 and
+   SRV#1 for fetching descriptors. Also, if a client (C2) is at 01:00 right
+   after SRV#2, it will still use TP#1 and SRV#1.
+
+2.2.4.2. Service behavior for uploading descriptors [SERVICEUPLOAD]
+
+   As discussed above, services maintain two active descriptors at any time. We
+   call these the "first" and "second" service descriptors. Services rotate
+   their descriptor everytime they receive a consensus with a valid_after time
+   past the next SRV calculation time. They rotate their descriptors by
+   discarding their first descriptor, pushing the second descriptor to the
+   first, and rebuilding their second descriptor with the latest data.
+
+   Services like clients also employ a different logic for picking SRV and TP
+   values based on their position in the graph above. Here is the logic:
+
+2.2.4.2.1. First descriptor upload logic [FIRSTDESCUPLOAD]
+
+   Here is the service logic for uploading its first descriptor:
+
+   When a service is in the time segment between a new time period a new SRV
+   (i.e. the segments drawn with "-"), it uses the previous time period and
+   previous SRV for uploading its first descriptor: that's meant to cover
+   for clients that have a consensus that is still in the previous time period.
+
+   Example: Consider in the above illustration that the service is at 13:00
+   right after TP#1. It will upload its first descriptor using TP#0 and SRV#0.
+   So if a client still has a 11:00 consensus it will be able to access it
+   based on the client logic above.
+
+   Now if a service is in the time segment between a new SRV and a new time
+   period (i.e. the segments drawn with "=") it uses the current time period
+   and the previous SRV for its first descriptor: that's meant to cover clients
+   with an up-to-date consensus in the same time period as the service.
+
+   Example:
+
+   +------------------------------------------------------------------+
+   |                                                                  |
+   | 00:00      12:00       00:00       12:00       00:00       12:00 |
+   | SRV#1      TP#1        SRV#2       TP#2        SRV#3       TP#3  |
+   |                                                                  |
+   |  $==========|-----------$===========|-----------$===========|    |
+   |                          ^                                       |
+   |                          S                                       |
+   +------------------------------------------------------------------+
+
+   Consider that the service is at 01:00 right after SRV#2: it will upload its
+   first descriptor using TP#1 and SRV#1.
+
+2.2.4.2.2. Second descriptor upload logic [SECONDDESCUPLOAD]
+
+   Here is the service logic for uploading its second descriptor:
+
+   When a service is in the time segment between a new time period a new SRV
+   (i.e. the segments drawn with "-"), it uses the current time period and
+   current SRV for uploading its second descriptor: that's meant to cover for
+   clients that have an up-to-date consensus on the same TP as the service.
+
+   Example: Consider in the above illustration that the service is at 13:00
+   right after TP#1: it will upload its second descriptor using TP#1 and SRV#1.
+
+   Now if a service is in the time segment between a new SRV and a new time
+   period (i.e. the segments drawn with "=") it uses the next time period and
+   the current SRV for its second descriptor: that's meant to cover clients
+   with a newer consensus than the service (in the next time period).
+
+   Example:
+
+   +------------------------------------------------------------------+
+   |                                                                  |
+   | 00:00      12:00       00:00       12:00       00:00       12:00 |
+   | SRV#1      TP#1        SRV#2       TP#2        SRV#3       TP#3  |
+   |                                                                  |
+   |  $==========|-----------$===========|-----------$===========|    |
+   |                          ^                                       |
+   |                          S                                       |
+   +------------------------------------------------------------------+
+
+   Consider that the service is at 01:00 right after SRV#2: it will upload its
+   second descriptor using TP#2 and SRV#2.
 
 2.2.5. Expiring hidden service descriptors [EXPIRE-DESC]
 
