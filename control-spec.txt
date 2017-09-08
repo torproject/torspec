@@ -2148,6 +2148,8 @@
 
 4.1.8. Descriptors uploaded to us in our role as authoritative dirserver
 
+  [NOTE: This feature was removed in Tor 0.3.2.1-alpha.]
+
   Tor generates this event when it's an directory authority, and
   somebody has just uploaded a server descriptor.
 
