@@ -692,13 +692,10 @@
 
        [At most once.]
 
-       Both lists are space-separated sequences of numbers, to indicate which
-       protocols the server supports.  As of 30 Mar 2008, specified
-       protocols are "Link 1 2 Circuit 1".  See section 4.1 of tor-spec.txt
-       for more information about link protocol versions.
-
-       [NOTE: No version of Tor uses this protocol list.  It will be removed
-         in a future version of Tor.]
+       An obsolete list of protocol versions, superseded by the "proto"
+       entry.  This list was never parsed, and has not been emitted
+       since Tor 0.2.9.4-alpha. New code should neither generate nor
+       parse this line.
 
    "allow-single-hop-exits" NL
 
