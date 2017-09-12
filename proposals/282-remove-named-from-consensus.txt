@@ -1,0 +1,24 @@
+Filename: 282-remove-named-from-consensus.txt
+Title: Remove "Named" and "Unnamed" handling from consensus voting
+Author: Nick Mathewson
+Created: 12-Sep-2017
+Status: Open
+Target: 0.3.3.x
+
+1. Summary
+
+   Authorities no longer vote for the "Named" and "Unnamed" flags, and we
+   have begun to remove the client code that supports them. (See proposal
+   235). The next logical step is to remove the special handling from these
+   flags from the consensus voting algorithm.  We specify this here.
+
+2. Proposal
+
+   We add a new consensus method, here represented as M, to be allocated
+   when this proposal's implementation is merged.
+
+   We specify that the Named and Unnamed flags are only handled
+   specially when the negotiated consensus method is earlier than M.  If
+   the negotiated method is M or later, then the Named and Unnamed
+   flags are handled as if any they were any other consensus flags.
+
