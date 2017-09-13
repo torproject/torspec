@@ -67,9 +67,9 @@ Status: Draft
 
   In order to prevent bogus data from corrupting the tally, the Tor
   relays and the Tally Reporters perform multiple "instances" of this
-  algorithm, randomly sampling in each relays. The relay sends multiple
-  Y values for each measurement, built with different sets of B_i.
-  These "instances" are numbered in order from 1 to R.
+  algorithm, randomly sampling the relays in each instance. Each relay
+  sends multiple Y values for each measurement, built with different
+  sets of B_i. These "instances" are numbered in order from 1 to R.
 
   So that the system will still produce results in the event of a single
   Tally Reporter failure, these instances are distributed across multiple
@@ -108,9 +108,9 @@ Status: Draft
           noise.)
 
           We also need to work out how to handle instances with mixed
-          Tor versions, where some Data Collectors report different
-          counters to other Data Collectors. (The blinding works if we
-          substitute zeroes for missing counters on Tally Reporters.
+          Tor versions, where some Data Collectors report a different
+          set of counters than other Data Collectors. (The blinding works
+          if we substitute zeroes for missing counters on Tally Reporters.
           But we also need to add noise in this case.)
 
           -teor
