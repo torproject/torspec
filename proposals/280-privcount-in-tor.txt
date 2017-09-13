@@ -220,7 +220,7 @@ Status: Draft
        [Exactly once]
 
        The curve25519 public key of the tally reporter who is intended
-       to receive an decrypt this document.  The key is base64-encoded
+       to receive and decrypt this document.  The key is base64-encoded
        with padding stripped.
 
     "count-document-digest" SP "sha3" Digest NL
@@ -259,7 +259,7 @@ Status: Draft
   instance of that keyword's blinded counter.
 
   For example: if the count document lists the keywords "b", "x", "g",
-  and "a" (in that order), and lists instances "0", and "2", then the
+  and "a" (in that order), and lists instances "0" and "2", then the
   decrypted data will hold the blinding values in this order:
       b, instance 0
       b, instance 2
@@ -308,7 +308,7 @@ Status: Draft
 
 6. An optimized alternative
 
-   As an alternative, the sequences of blinding values is NOT transmitted
+   As an alternative, the sequences of blinding values are NOT transmitted
    to the tally reporters.  Instead the client generates a single
    ephemeral keypair sk_c, PK_c, and places the public key in its counts
    document.  It does this each time a new round begins.
