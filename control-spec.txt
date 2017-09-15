@@ -2657,9 +2657,11 @@
 4.1.13. Bandwidth used on an application stream
 
   The syntax is:
-     "650" SP "STREAM_BW" SP StreamID SP BytesWritten SP BytesRead CRLF
+     "650" SP "STREAM_BW" SP StreamID SP BytesWritten SP BytesRead SP
+              Time CRLF
      BytesWritten = 1*DIGIT
      BytesRead = 1*DIGIT
+     Time = ISOTime2Frac
 
   BytesWritten and BytesRead are the number of bytes written and read
   by the application since the last STREAM_BW event on this stream.
@@ -2667,6 +2669,9 @@
   Note that from Tor's perspective, *reading* a byte on a stream means
   that the application *wrote* the byte. That's why the order of "written"
   vs "read" is opposite for stream_bw events compared to bw events.
+
+  The Time field is provided only in versions 0.3.2.1-alpha and later. It
+  records when Tor created the bandwidth event.
 
   These events are generated about once per second per stream; no events
   are generated for streams that have not written or read. These events
@@ -2860,13 +2865,17 @@
 
   The syntax is:
      "650" SP "CIRC_BW" SP "ID=" CircuitID SP "READ=" BytesRead SP
-              "WRITTEN=" BytesWritten CRLF
+              "WRITTEN=" BytesWritten SP "TIME=" Time CRLF
      BytesRead = 1*DIGIT
      BytesWritten = 1*DIGIT
+     Time = ISOTime2Frac
 
   BytesRead and BytesWritten are the number of bytes read and written by
   all applications with streams attached to this circuit since the last
   CIRC_BW event.
+
+  The Time field is provided only in versions 0.3.2.1-alpha and later. It
+  records when Tor created the bandwidth event.
 
   These events are generated about once per second per circuit; no events
   are generated for circuits that had no attached stream writing or
