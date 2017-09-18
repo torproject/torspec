@@ -2049,6 +2049,9 @@ References:
         J. Bernstein, Niels Duif, Tanja Lange, Peter Schwabe, and
         Bo-Yin Yang. http://cr.yp.to/papers.html#ed25519
 
+[ED25519-B-REF]:
+        https://tools.ietf.org/html/draft-josefsson-eddsa-ed25519-03#section-5:
+
 [PRNG-REFS]:
         http://projectbullrun.org/dual-ec/ext-rand.html
         https://lists.torproject.org/pipermail/tor-dev/2015-November/009954.html
@@ -2102,10 +2105,13 @@ A.2. Tor's key derivation scheme
   addition. See the Ed25519 paper [Reference ED25519-REFS] for a fairly
   clear writeup.)
 
-  Let the basepoint be written as B. Assume B has prime order l, so
-  lB=0. Let a master keypair be written as (a,A), where a is the private
-  key and A is the public key (A=aB)
-.
+  Let B be the ed25519 basepoint as found in section 5 of [ED25519-B-REF]:
+      B = (15112221349535400772501151409588531511454012693041857206046113283949847762202,
+           46316835694926478169428394003475163141307993866256225615783033603165251855960)
+
+  Assume B has prime order l, so lB=0. Let a master keypair be written as
+  (a,A), where a is the private key and A is the public key (A=aB).
+
   To derive the key for a nonce N and an optional secret s, compute the
   blinding factor like this:
 
