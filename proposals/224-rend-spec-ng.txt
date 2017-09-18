@@ -1922,7 +1922,7 @@ Table of contents:
    If the cookie matches the rendezvous cookie set on any
    not-yet-connected circuit on the rendezvous point, the rendezvous
    point connects the two circuits, and sends a RENDEZVOUS2 cell to the
-   client containing the contents of the RENDEZVOUS1 cell.
+   client containing the HANDSHAKE_INFO field of the RENDEZVOUS1 cell.
 
    Upon receiving the RENDEZVOUS2 cell, the client verifies that HANDSHAKE_INFO
    correctly completes a handshake. To do so, the client parses SERVER_PK from
