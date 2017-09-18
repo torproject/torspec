@@ -1636,11 +1636,11 @@ Table of contents:
    the AUTH_KEY or LEGACY_KEY_ID field matches the keys for this
    introduction circuit.
 
-   The service host then checks whether it has received a cell with
-   these contents before. If it has, it silently drops it as a
-   replay. (It must maintain a replay cache for as long as it accepts
-   cells with the same encryption key. Note that the encryption format below
-   should be non-malleable.)
+   The service host then checks whether it has received a cell with these
+   contents or rendezvous cookie before. If it has, it silently drops it as a
+   replay. (It must maintain a replay cache for as long as it accepts cells
+   with the same encryption key. Note that the encryption format below should
+   be non-malleable.)
 
    If the cell is not a replay, it decrypts the ENCRYPTED field,
    establishes a shared key with the client, and authenticates the whole
