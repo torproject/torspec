@@ -638,12 +638,9 @@ Table of contents:
 2. Generating and publishing hidden service descriptors [HSDIR]
 
    Hidden service descriptors follow the same metaformat as other Tor
-   directory objects. They are published anonymously to Tor servers with
-   the HSDir3 flag.
-
-   (Authorities should assign this flag as they currently assign the
-   HSDir flag, except that they should restrict it to Tor versions
-   implementing the HSDir parts of this specification.)
+   directory objects. They are published anonymously to Tor servers with the
+   HSDir flag, HSDir=2 protocol version and tor version >= 0.3.0.8 (because a
+   bug was fixed in this version).
 
 2.1. Deriving blinded keys and subcredentials [SUBCRED]
 
