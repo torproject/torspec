@@ -1,6 +1,6 @@
 Filename: 224-rend-spec-ng.txt
 Title: Next-Generation Hidden Services in Tor
-Author: Nick Mathewson
+Author: David Goulet, George Kadianakis, Nick Mathewson
 Created: 2013-11-29
 Status: Accepted
 
@@ -101,11 +101,6 @@ Table of contents:
    the responder does not, hidden services attempt to provide
    bidirectional anonymity.
 
-   Other features include:
-
-     * [TODO: WRITE ME once there have been some more drafts and we know
-       what the summary should say.]
-
    Participants:
 
       Operator -- A person running a hidden service
@@ -128,12 +123,18 @@ Table of contents:
       Rendezvous Point -- A Tor node to which clients and servers
         connect and which relays traffic between them.
 
-
-
 0.1. Improvements over previous versions.
 
-   [TODO write me once there have been more drafts and we know what the
-   summary should say.]
+   Here is a list of improvements of this proposal over the legacy hidden
+   services:
+
+   a) Better crypto (replaced SHA1/DH/RSA1024 with SHA3/ed25519/curve25519)
+   b) Improved directory protocol leaking less to directory servers.
+   c) Improved directory protocol with smaller surface for targeted attacks.
+   d) Better onion address security against impersonation.
+   e) More extensible introduction/rendezvous protocol.
+   f) Offline keys for onion services
+   g) Advanced client authorization
 
 0.2. Notation and vocabulary
 
@@ -307,8 +308,6 @@ Table of contents:
 
 0.6. Acknowledgments
 
-   [TODO reformat these once the lists are more complete.]
-
    This design includes ideas from many people, including
      Christopher Baines,
      Daniel J. Bernstein,
@@ -318,6 +317,11 @@ Table of contents:
      Aniket Kate,
      Tanja Lange,
      Robert Ransom,
+     Roger Dingledine,
+     Aaron Johnson,
+     Tim Wilson-Brown ("teor"),
+     special (John Brooks),
+     s7r
 
    It's based on Tor's original hidden service design by Roger
    Dingledine, Nick Mathewson, and Paul Syverson, and on improvements to
