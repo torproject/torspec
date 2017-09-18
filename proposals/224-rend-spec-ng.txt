@@ -54,8 +54,7 @@ Table of contents:
             3.1.3. Acknowledging establishment of introduction point [INTRO_ESTABLISHED]
         3.2. Sending an INTRODUCE1 cell to the introduction point. [SEND_INTRO1]
             3.2.1. INTRODUCE1 cell format [FMT_INTRO1]
-            3.2.2. Legacy formats [LEGACY-INTRODUCE1]
-            3.2.3. INTRODUCE_ACK cell format. [INTRO_ACK]
+            3.2.2. INTRODUCE_ACK cell format. [INTRO_ACK]
         3.3. Processing an INTRODUCE2 cell at the hidden service. [PROCESS_INTRO2]
             3.3.1. Introduction handshake encryption requirements [INTRO-HANDSHAKE-REQS]
             3.3.2. Example encryption handshake: ntor with extra data [NTOR-WITH-EXTRA-DATA]
@@ -1340,8 +1339,7 @@ Table of contents:
           [None or at most once per introduction point]
 
           The key is an ASN.1 encoded RSA public key in PEM format used for a
-          legacy introduction point as described in [LEGACY_EST_INTRO] and
-          [LEGACY-INTRODUCE1] below.
+          legacy introduction point as described in [LEGACY_EST_INTRO].
 
           This field is only present if the introduction point only supports
           legacy protocol (v2) that is <= 0.2.9 or the protocol version value
@@ -1578,14 +1576,14 @@ Table of contents:
        EXT_FIELD      [EXT_FIELD_LEN bytes]
      ENCRYPTED        [Up to end of relay payload]
 
+   AUTH_KEY_TYPE is defined as in [EST_INTRO]. Currently, the only value of
+   AUTH_KEY_TYPE for this cell is an Ed25519 public key [02].
+
    The LEGACY_KEY_ID field is used to distinguish between legacy and new style
    INTRODUCE1 cells. In new style INTRODUCE1 cells, LEGACY_KEY_ID is 20 zero
    bytes. Upon receiving an INTRODUCE1 cell, the introduction point checks the
    LEGACY_KEY_ID field. If LEGACY_KEY_ID is non-zero, the INTRODUCE1 cell
-   should be handled as specified in [LEGACY-INTRODUCE1].
-
-   AUTH_KEY_TYPE is defined as in [EST_INTRO]. Currently, the only value of
-   AUTH_KEY_TYPE for this cell is an Ed25519 public key [02].
+   should be handled as a legacy INTRODUCE1 cell by the intro point.
 
    Upon receiving a INTRODUCE1 cell, the introduction point checks
    whether AUTH_KEY matches the introduction point authentication key for an
@@ -1593,27 +1591,7 @@ Table of contents:
    INTRODUCE2 cell with exactly the same contents to the service, and sends an
    INTRODUCE_ACK response to the client.
 
-3.2.2. Legacy formats [LEGACY-INTRODUCE1]
-
-   For legacy introduction points, INTRODUCE1 cells should be of the form:
-
-     LEGACY_KEY_ID        [20 bytes]
-     N_EXTENSIONS         [1 byte]
-     N_EXTENSIONS times:
-       EXT_FIELD_TYPE     [1 byte]
-       EXT_FIELD_LEN      [1 byte]
-       EXT_FIELD          [EXT_FIELD_LEN bytes]
-     ENCRYPTED            [Up to end of relay payload]
-
-   Here, LEGACY_KEY_ID is the hash of the introduction point legacy
-   encryption key that was included in the hidden service descriptor.
-
-   Because of limitations in older versions of Tor, the relay payload size for
-   these INTRODUCE1 cells must always be at least 246 bytes, or they will be
-   rejected as invalid. The ENCRYPTED field may contain padding to reach this
-   length.
-
-3.2.3. INTRODUCE_ACK cell format. [INTRO_ACK]
+3.2.2. INTRODUCE_ACK cell format. [INTRO_ACK]
 
    An INTRODUCE_ACK cell has the following fields:
 
@@ -1780,10 +1758,7 @@ Table of contents:
 
 
    (This format is as documented in [FMT_INTRO1] above, except that here
-   we describe how to build the ENCRYPTED portion. If the introduction
-   point is running an older Tor that does not support this protocol,
-   the first field is replaced by a 20-byte AUTH_KEYID_HASH field as
-   described in [LEGACY-INTRODUCE1].)
+   we describe how to build the ENCRYPTED portion.)
 
    Here, the encryption key plays the role of B in the regular ntor
    handshake, and the AUTH_KEY field plays the role of the node ID.
