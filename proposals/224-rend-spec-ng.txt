@@ -1304,6 +1304,14 @@ Table of contents:
           The link-specifiers is a base64 encoding of a link specifier
           block in the format described in BUILDING-BLOCKS.
 
+        "onion-key" SP "ntor" SP key NL
+
+          [Exactly once per introduction point]
+
+          The key is a base64 encoded curve25519 public key which is the onion
+          key of the introduction point Tor node used for the ntor handshake
+          when a client extends to it.
+
         "auth-key" NL certificate NL
 
           [Exactly once per introduction point]
