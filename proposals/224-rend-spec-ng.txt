@@ -972,6 +972,27 @@ Table of contents:
    These requests must be made anonymously, on circuits not used for
    anything else.
 
+2.2.7. Client-side validation of onion addresses
+
+   When a Tor client receives a prop224 onion address from the user, it should
+   validate the onion address before attempting to connect or fetch its
+   descriptor.
+
+   As part of the address validation, Tor clients should check that the
+   underlying ed25519 key does not have a torsion component. If Tor accepted
+   ed25519 keys with torsion components, attackers could create multiple
+   equivalent onion addresses for a single ed25519 key, which would map to the
+   same service. We want to avoid that because it could lead to phishing
+   attacks and surprising behaviors (e.g. imagine a browser plugin that blocks
+   onion addresses, but could be bypassed using an equivalent onion address
+   with a torsion component).
+
+   The right way for clients to detect such fraudulent addresses (which should
+   only occur malevolently and never natutally) is to extract the ed25519
+   public key from the onion address and multiply it by the ed25519 group order
+   and ensure that the result is the ed25519 identity element. For more
+   details, please see [TORSION-REFS].
+
 2.3. Publishing shared random values [PUB-SHAREDRANDOM]
 
    Our design for limiting the predictability of HSDir upload locations
@@ -2086,6 +2107,10 @@ References:
 
 [ONIONADDRESS-REFS]:
         https://lists.torproject.org/pipermail/tor-dev/2017-January/011816.html
+
+[TORSION-REFS]:
+        https://lists.torproject.org/pipermail/tor-dev/2017-April/012164.html
+        https://getmonero.org/2017/05/17/disclosure-of-a-major-bug-in-cryptonote-based-currencies.html
 
 Appendix A. Signature scheme with key blinding [KEYBLIND]
 
