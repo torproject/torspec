@@ -792,17 +792,18 @@ see tor-design.pdf.
 
    To prevent CircID collisions, when one node sends a CREATE cell to
    another, it chooses from only one half of the possible values based
-   on the ORs' public identity keys.  In link protocol version 3 or
-   lower, if the sending node has a lower key, it chooses a CircID with
-   an MSB of 0; otherwise, it chooses a CircID with an MSB of 1. (Public
-   keys are compared numerically by modulus.)
+   on the ORs' public identity keys.
+
+   In link protocol version 3 or lower, if the sending node has a lower
+   key, it chooses a CircID with an MSB of 0; otherwise, it chooses a
+   CircID with an MSB of 1. (Public keys are compared numerically by
+   modulus.)  With protocol version 3 or lower, a client with no public key
+   MAY choose any CircID it wishes, since clients never need to process a
+   CREATE cell.
 
    In link protocol version 4 or higher, whichever node initiated the
    connection sets its MSB to 1, and whichever node didn't initiate the
    connection sets its MSB to 0.
-
-   (An OP with no public key MAY choose any CircID it wishes, since an OP
-   never needs to process a CREATE cell.)
 
    The CircID value 0 is specifically reserved for cells that do not
    belong to any circuit: CircID 0 must not be used for circuits.  No
