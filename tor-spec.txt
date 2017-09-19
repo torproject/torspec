@@ -434,8 +434,9 @@ see tor-design.pdf.
    byte equal to 7 ("VERSIONS"), or greater than or equal to 128.
 
    CIRCID_LEN is 2 for link protocol versions 1, 2, and 3.  CIRCID_LEN
-   is 4 for link protocol version 4 or higher.  The VERSIONS cell itself
-   always has CIRCID_LEN == 2 for backward compatibility.
+   is 4 for link protocol version 4 or higher.  The first VERSIONS cell,
+   and any cells sent before the first VERSIONS cell, always have
+   CIRCID_LEN == 2 for backward compatibility.
 
    The CircID field determines which circuit, if any, the cell is
    associated with.
@@ -543,8 +544,9 @@ see tor-design.pdf.
    right after the renegotiation is finished, before any other cells are
    sent.  In "in-protocol", the initiator sends a VERSIONS cell
    immediately after the initial TLS handshake, and the responder
-   replies immediately with a VERSIONS cell.  Parties MUST NOT send any
-   other cells on a connection until they have received a VERSIONS cell.
+   replies immediately with a VERSIONS cell. (As an exception to this rule,
+   if both sides support the "in-protocol" handshake, either side may send
+   VPADDING cells at any time.)
 
    The payload in a VERSIONS cell is a series of big-endian two-byte
    integers.  Both parties MUST select as the link protocol version the
