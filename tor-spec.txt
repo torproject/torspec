@@ -706,9 +706,9 @@ see tor-design.pdf.
          Number of addresses    [1 byte]
          This OR's addresses    [variable]
 
-   The address format is a type/length/value sequence as given in section
-   6.4 below.  The timestamp is a big-endian unsigned integer number of
-   seconds since the Unix epoch.
+   The address format is a type/length/value sequence as given in
+   section 6.4 below, without the final TTL.  The timestamp is a
+   big-endian unsigned integer number of seconds since the Unix epoch.
 
    Implementations MAY use the timestamp value to help decide if their
    clocks are skewed.  Initiators MAY use "other OR's address" to help
@@ -1522,7 +1522,16 @@ see tor-design.pdf.
       0xF0 -- Error, transient
       0xF1 -- Error, nontransient
 
-    If any answer has a type of 'Error', then no other answer may be given.
+    If any answer has a type of 'Error', then no other answer may be
+    given.
+
+    The 'Value' field encodes the answer:
+        IP addresses are given in network order.
+        Hostnames are given in standard DNS order ("www.example.com")
+          and not NUL-terminated.
+        The content of Errors is currently ignored. Relays currently
+          set it to the string "Error resolving hostname" with no
+          terminating NUL. Implementations MUST ignore this value.
 
     For backward compatibility, if there are any IPv4 answers, one of those
     must be given as the first answer.
