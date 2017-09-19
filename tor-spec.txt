@@ -556,6 +556,10 @@ see tor-design.pdf.
    close the connection if the versions cell is not well-formed (for example,
    if it contains an odd number of bytes).
 
+   Any VERSIONS cells sent after the first VERSIONS cell MUST be ignored.
+   (To be interpreted correctly, later VERSIONS cells MUST have a CIRCID_LEN
+   matching the version negotiated with the first VERSIONS cell.)
+
    Since the version 1 link protocol does not use the "renegotiation"
    handshake, implementations MUST NOT list version 1 in their VERSIONS
    cell.  When the "renegotiation" handshake is used, implementations
