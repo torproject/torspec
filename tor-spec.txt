@@ -71,19 +71,24 @@ see tor-design.pdf.
 
 0.3. Ciphers
 
-   For a stream cipher, we use 128-bit AES in counter mode, with an IV of all
-   0 bytes.
+   These are the ciphers we use _unless otherwise specified_.  Several of
+   them are deprecated for new use.
 
-   For a public-key cipher, we use RSA with 1024-bit keys and a fixed
-   exponent of 65537.  We use OAEP-MGF1 padding, with SHA-1 as its digest
-   function.  We leave the optional "Label" parameter unset. (For OAEP
-   padding, see ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-1/pkcs-1v2-1.pdf)
+   For a stream cipher, unless otherwise specified, we use 128-bit AES in
+   counter mode, with an IV of all 0 bytes.  (We also require AES256.)
 
-   For the "ntor" handshake, we also use the Curve25519 elliptic curve group.
+   For a public-key cipher, unless otherwise specified, we use RSA with
+   1024-bit keys and a fixed exponent of 65537.  We use OAEP-MGF1
+   padding, with SHA-1 as its digest function.  We leave the optional
+   "Label" parameter unset. (For OAEP padding, see
+   ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-1/pkcs-1v2-1.pdf)
 
-   For Diffie-Hellman, we use a generator (g) of 2.  For the modulus (p), we
-   use the 1024-bit safe prime from rfc2409 section 6.2 whose hex
-   representation is:
+   We also use the Curve25519 group and the Ed25519 signature format in
+   several places.
+
+   For Diffie-Hellman, unless otherwise specified, we use a generator
+   (g) of 2.  For the modulus (p), we use the 1024-bit safe prime from
+   rfc2409 section 6.2 whose hex representation is:
 
      "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E08"
      "8A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B"
@@ -99,22 +104,28 @@ see tor-design.pdf.
    per second, but there are too many oddball attacks for me to be
    comfortable that this is safe. -NM]
 
-   For a hash function, we use SHA-1.
+   For a hash function, unless otherwise specified, we use SHA-1.
 
    KEY_LEN=16.
    DH_LEN=128; DH_SEC_LEN=40.
    PK_ENC_LEN=128; PK_PAD_LEN=42.
    HASH_LEN=20.
 
-   When we refer to "the hash of a public key", we mean the SHA-1 hash of the
-   DER encoding of an ASN.1 RSA public key (as specified in PKCS.1).
+   We also use SHA256 and SHA3-256 in some places.
+
+   When we refer to "the hash of a public key", unless otherwise
+   specified, we mean the SHA-1 hash of the DER encoding of an ASN.1 RSA
+   public key (as specified in PKCS.1).
 
    All "random" values MUST be generated with a cryptographically
    strong pseudorandom number generator seeded from a strong entropy
    source, unless otherwise noted.
 
-   The "hybrid encryption" of a byte sequence M with a public key PK is
-   computed as follows:
+0.4. A bad hybrid encryption algorithm, for legacy purposes.
+
+   Some specifications will refer to the "legacy hybrid encryption" of a
+   byte sequence M with a public key PK.  It is computed as follows:
+
       1. If the length of M is no more than PK_ENC_LEN-PK_PAD_LEN,
          pad and encrypt M with PK.
       2. Otherwise, generate a KEY_LEN byte random key K.
@@ -123,12 +134,12 @@ see tor-design.pdf.
          Pad and encrypt K|M1 with PK.  Encrypt M2 with our stream cipher,
          using the key K.  Concatenate these encrypted values.
 
-   [XXX Note that this "hybrid encryption" approach does not prevent
+   Note that this "hybrid encryption" approach does not prevent
    an attacker from adding or removing bytes to the end of M. It also
    allows attackers to modify the bytes not covered by the OAEP --
    see Goldberg's PET2006 paper for details.  Do not use it as the basis
    for new protocols! Also note that as used in Tor's protocols, case 1
-   never occurs.]
+   never occurs.
 
 1. System overview
 
@@ -878,8 +889,8 @@ see tor-design.pdf.
 
    The payload for a CREATE cell is an 'onion skin', which consists of
    the first step of the DH handshake data (also known as g^x).  This
-   value is hybrid-encrypted (see 0.3) to the server's onion key, giving
-   a client handshake of:
+   value is encrypted using the "legacy hybrid encryption" algorithm
+   (see 0.4 above) to the server's onion key, giving a client handshake:
 
        PK-encrypted:
          Padding                       [PK_PAD_LEN bytes]

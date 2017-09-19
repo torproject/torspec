@@ -658,10 +658,10 @@
    an identity key digest that is encoded in hex and prefixed with a '$'.
 
    The hybrid encryption to Bob's PK works just like the hybrid
-   encryption in CREATE cells (see tor-spec). Thus the payload of the
-   version 0 RELAY_COMMAND_INTRODUCE1 cell on the wire will contain
-   20+42+16+20+20+128=246 bytes, and the version 1 and version 2
-   introduction formats have other sizes.
+   encryption in CREATE cells (see tor-spec, section 0.4). Thus the
+   payload of the version 0 RELAY_COMMAND_INTRODUCE1 cell on the
+   wire will contain 20+42+16+20+20+128=246 bytes, and the version 1
+   and version 2 introduction formats have other sizes.
 
    Through Tor 0.2.0.6-alpha, clients only generated the v0 introduction
    format, whereas hidden services have understood and accepted v0,
@@ -689,14 +689,15 @@
    determined later; the current implementation sends a single '1' byte on
    failure.)
 
-   When Bob's OP receives the RELAY_COMMAND_INTRODUCE2 cell, it first checks
-   for a replay.  Because of the (undesirable!) malleability of the hybrid
-   encryption, Bob's OP should only check whether the RSA-encrypted part is
-   replayed.  It does this by keeping, for each introduction key, a list of
-   cryptographic digests of all the RSA-encrypted parts of the INTRODUCE2
-   cells that it's seen, and dropping any INTRODUCE2 cell whose RSA-encrypted
-   part it has seen before.  When Bob's OP stops using a given introduction
-   key, it drops the replay cache corresponding to that key.
+   When Bob's OP receives the RELAY_COMMAND_INTRODUCE2 cell, it first
+   checks for a replay.  Because of the (undesirable!) malleability of
+   the legacy hybrid encryption algorithm, Bob's OP should only check
+   whether the RSA-encrypted part is replayed.  It does this by keeping,
+   for each introduction key, a list of cryptographic digests of all the
+   RSA-encrypted parts of the INTRODUCE2 cells that it's seen, and
+   dropping any INTRODUCE2 cell whose RSA-encrypted part it has seen
+   before.  When Bob's OP stops using a given introduction key, it drops
+   the replay cache corresponding to that key.
 
    (Versions of Tor before 0.2.3.9-alpha used the timestamp in the INTRODUCE2
    cell to limit the lifetime of entries in the replay cache. This proved to
