@@ -1604,9 +1604,9 @@ see tor-design.pdf.
    if no 'circwindow' value is given,
    in each direction (cells that are not data cells do not affect
    the window).  When an OR is willing to deliver more cells, it sends a
-   RELAY_SENDME cell towards the OP, with Stream ID zero.  When an OR
-   receives a RELAY_SENDME cell with stream ID zero, it increments its
-   packaging window.
+   RELAY_SENDME cell towards the OP, with Stream ID zero and an empty
+   body. When an OR receives a RELAY_SENDME cell with stream ID zero, it
+   increments its packaging window. (The body SHOULD be ignored.)
 
    Each of these cells increments the corresponding window by 100.
 
@@ -1631,6 +1631,8 @@ see tor-design.pdf.
    cells when both a) the window is <= 450, and b) there are less than
    ten cell payloads remaining to be flushed at that edge.
 
+   Stream-level RELAY_SENDME cells are distinguished by having nonzero
+   StreamID. They are still empty; the body still SHOULD be ignored.
 
 
 8. Handling resource exhaustion
