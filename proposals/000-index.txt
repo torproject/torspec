@@ -144,7 +144,7 @@ Proposals by number:
 221  Stop using CREATE_FAST [CLOSED]
 222  Stop sending client timestamps [CLOSED]
 223  Ace: Improved circuit-creation key exchange [RESERVE]
-224  Next-Generation Hidden Services in Tor [ACCEPTED]
+224  Next-Generation Hidden Services in Tor [CLOSED]
 225  Strawman proposal: commit-and-reveal shared rng [SUPERSEDED]
 226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS" [OPEN]
 227  Include package fingerprints in consensus documents [CLOSED]
@@ -263,7 +263,6 @@ Proposals by status:
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
    188  Bridge Guards and other anti-enumeration defenses
-   224  Next-Generation Hidden Services in Tor
    258  Denial-of-service resistance for directory authorities
    265  Load Balancing with Overhead Parameters [for 0.2.9.x]
  META:
@@ -345,6 +344,7 @@ Proposals by status:
    218  Controller events to better understand connection/circuit usage [in 0.2.5.2-alpha]
    221  Stop using CREATE_FAST [for 0.2.5.x]
    222  Stop sending client timestamps [in 0.2.4.18]
+   224  Next-Generation Hidden Services in Tor [in 0.3.2.1-alpha]
    227  Include package fingerprints in consensus documents [in 0.2.6.3-alpha]
    228  Cross-certifying identity keys with onion keys
    235  Stop assigning (and eventually supporting) the Named flag [in 0.2.6, 0.2.7]

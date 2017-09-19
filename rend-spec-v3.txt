@@ -1,9 +1,8 @@
-Filename: 224-rend-spec-ng.txt
-Title: Next-Generation Hidden Services in Tor
-Author: David Goulet, George Kadianakis, Nick Mathewson
-Created: 2013-11-29
-Status: Closed
-Implemented-In: 0.3.2.1-alpha
+                     Tor Rendezvous Specification - Version 3
+
+This document specifies how the hidden service version 3 protocol works.  This
+text used to be proposal 224-rend-spec-ng.txt.
+
 
 Table of contents:
 
