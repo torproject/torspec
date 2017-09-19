@@ -463,6 +463,8 @@ Table of contents:
    optional client authorization is enabled, the service may additionally
    require the client to prove knowledge of a pre-shared private key.
 
+   (NOTE: client authorization is not implemented as of 0.3.2.1-alpha.)
+
 1.4. In more detail: Distributing hidden service descriptors. [IMD:DIST]
 
    Periodically, hidden service descriptors become stored at different
@@ -534,6 +536,9 @@ Table of contents:
    key to the Hidden Service since an attacker can derive from it the
    secret master identity key. The secret blinded signing key should
    only be used to create credentials for the descriptor signing keys.
+
+   (NOTE: although the protocol allows them, offline keys are not
+   implemented as of 0.3.2.1-alpha.)
 
 1.8. In more detail: Encryption Keys And Replay Resistance
 
@@ -634,6 +639,8 @@ Table of contents:
    keys should be managed.
 
    [TODO: Also specify stealth client authorization.]
+
+   (NOTE: client authorization is not implemented as of 0.3.2.1-alpha.)
 
 2. Generating and publishing hidden service descriptors [HSDIR]
 
@@ -1173,6 +1180,8 @@ Table of contents:
      "auth-client" SP client-id SP iv SP encrypted-cookie
 
       [Any number]
+
+      (NOTE: client authorization is not implemented as of 0.3.2.1-alpha.)
 
       When client authorization is enabled, the hidden service inserts an
       "auth-client" line for each of its authorized clients. If client
@@ -2269,6 +2278,9 @@ Appendix F. Hidden service directory format [HIDSERVDIR-FORMAT]
    as the ~/.ssh/authorized_keys of onion services. See [CLIENT-AUTH-MGMT] for
    more details.
 
+   (NOTE: client authorization is not implemented as of 0.3.2.1-alpha.)
+
+
   - "./client_authorized_privkeys/"                  [DIRECTORY]
     "./client_authorized_privkeys/alice.privkey"     [FILE]
     "./client_authorized_privkeys/bob.privkey"       [FILE]
@@ -2279,12 +2291,16 @@ Appendix F. Hidden service directory format [HIDSERVDIR-FORMAT]
    then this directory contains files with client's private keys. See
    [CLIENT-AUTH-MGMT] for more details.
 
+   (NOTE: client authorization is not implemented as of 0.3.2.1-alpha.)
+
 Appendix E. Managing authorized client data [CLIENT-AUTH-MGMT]
 
   Hidden services and clients can configure their authorized client data either
   using the torrc, or using the control port. This section presents a suggested
   scheme for configuring client authorization. Please see appendix
   [HIDSERVDIR-FORMAT] for more information about relevant hidden service files.
+
+  (NOTE: client authorization is not implemented as of 0.3.2.1-alpha.)
 
   E.1. Configuring client authorization using torrc
 
