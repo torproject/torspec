@@ -974,9 +974,10 @@ Table of contents:
 
 2.2.7. Client-side validation of onion addresses
 
-   When a Tor client receives a prop224 onion address from the user, it should
-   validate the onion address before attempting to connect or fetch its
-   descriptor.
+   When a Tor client receives a prop224 onion address from the user, it
+   MUST first validate the onion address before attempting to connect or
+   fetch its descriptor. If the validation fails, the client MUST
+   refuse to connect.
 
    As part of the address validation, Tor clients should check that the
    underlying ed25519 key does not have a torsion component. If Tor accepted
