@@ -185,8 +185,10 @@ see tor-design.pdf.
       kept offline.
     - A medium-term "signing" key.  This key is signed by the master identity
       key, and must be kept online.  A new one should be generated
-      periodically.
-    - A short-term "link authentication" key.  Not yet used.
+      periodically.  It signs nearly everything else.
+    - A short-term "link authentication" key, used to authenticate
+      the link handshake: see section 4 below.  This key is signed
+      by the "signing" key, and should be regenerated frequently.
 
    The RSA identity key and Ed25519 master identity key together identify a
    router uniquely.  Once a router has used an Ed25519 master identity key
@@ -589,17 +591,49 @@ see tor-design.pdf.
 
    Any extra octets at the end of a CERTS cell MUST be ignored.
 
-     CertType values are:
+     Relevant certType values are:
         1: Link key certificate certified by RSA1024 identity
-        2: RSA1024 Identity certificate
-        3: RSA1024 AUTHENTICATE cell link certificate
+        2: RSA1024 Identity certificate, self-signed.
+        3: RSA1024 AUTHENTICATE cell link certificate, signed with RSA1024 key.
+        4: Ed25519 signing key, signed with identity key.
+        5: TLS link certificate, signed with ed25519 signing key.
+        6: Ed25519 AUTHENTICATE cell key, signed with ed25519 signing key.
+        7: Ed25519 identity, signed with RSA identity.
 
-   The certificate format for the above certificate types is DER encoded
-   X509.
+   The certificate format for certificate types 1-3 is DER encoded
+   X509.  For others, the format is as documented in cert-spec.txt.
+   Note that type 7 uses a different format from types 4-6.
 
    A CERTS cell may have no more than one certificate of each CertType.
 
-   To authenticate the responder, the initiator MUST check the following:
+
+   To authenticate the responder as having a given Ed25519,RSA identity key
+   combination, the initiator MUST check the following.
+     * The CERTS cell contains exactly one CertType 2 "ID" certificate.
+     * The CERTS cell contains exactly one CertType 4 Ed25519
+       "Id->Signing" cert.
+     * The CERTS cell contains exactly one CertType 5 Ed25519
+       "Signing->link" certificate.
+     * The CERTS cell contains exactly one CertType 7 "RSA->Ed25519"
+       cross-certificate.
+     * All X.509 certificates above have validAfter and validUntil dates;
+       no X.509 or Ed25519 certificates are expired.
+     * All certificates are correctly signed.
+     * The certified key in the Signing->Link certificate matches the
+       SHA256 digest of the certificate that was used to
+       authenticate the TLS connection.
+     * The identity key listed in the ID->Signing cert was used to
+       sign the ID->Signing Cert.
+     * The Signing->Link cert was signed with the Signing key listed
+       in the ID->Signing cert.
+     * The RSA->Ed25519 cross-certificate certifies the Ed25519
+       identity, and is signed with the RSA identity listed in the
+       "ID" certificate.
+     * The certified key in the ID certificate is a 1024-bit RSA key.
+     * The RSA ID certificate is correctly self-signed.
+
+   To authenticate the responder as having a given RSA identity only,
+   the initiator MUST check the following:
      * The CERTS cell contains exactly one CertType 1 "Link" certificate.
      * The CERTS cell contains exactly one CertType 2 "ID" certificate.
      * Both certificates have validAfter and validUntil dates that
@@ -612,12 +646,37 @@ see tor-design.pdf.
      * The link certificate is correctly signed with the key in the
        ID certificate
      * The ID certificate is correctly self-signed.
-   Checking these conditions is sufficient to authenticate that the
-   initiator is talking to the Tor node with the expected identity,
-   as certified in the ID certificate.
 
-   To authenticate the initiator, the responder MUST check the
-   following:
+   In both cases above, checking these conditions is sufficient to
+   authenticate that the initiator is talking to the Tor node with the
+   expected identity, as certified in the ID certificate(s).
+
+
+   To authenticate the initiator as having a given Ed25519,RSA
+   identity key combination, the responder MUST check the following:
+     * The CERTS cell contains exactly one CertType 2 "ID" certificate.
+     * The CERTS cell contains exactly one CertType 4 Ed25519
+       "Id->Signing" certificate.
+     * The CERTS cell contains exactly one CertType 6 Ed25519
+       "Signing->auth" certificate.
+     * The CERTS cell contains exactly one CertType 7 "RSA->Ed25519"
+       cross-certificate.
+     * All X.509 certificates above have validAfter and validUntil dates;
+       no X.509 or Ed25519 certificates are expired.
+     * All certificates are correctly signed.
+     * The identity key listed in the ID->Signing cert was used to
+       sign the ID->Signing Cert.
+     * The Signing->AUTH cert was signed with the Signing key listed
+       in the ID->Signing cert.
+     * The RSA->Ed25519 cross-certificate certifies the Ed25519
+       identity, and is signed with the RSA identity listed in the
+       "ID" certificate.
+     * The certified key in the ID certificate is a 1024-bit RSA key.
+     * The RSA ID certificate is correctly self-signed.
+
+
+   To authenticate the initiator as having an RSA identity key only,
+   the responder MUST check the following:
      * The CERTS cell contains exactly one CertType 3 "AUTH" certificate.
      * The CERTS cell contains exactly one CertType 2 "ID" certificate.
      * Both certificates have validAfter and validUntil dates that
@@ -632,6 +691,7 @@ see tor-design.pdf.
    Checking these conditions is NOT sufficient to authenticate that the
    initiator has the ID it claims; to do so, the cells in 4.3 and 4.4
    below must be exchanged.
+
 
 4.3. AUTH_CHALLENGE cells
 
@@ -648,20 +708,21 @@ see tor-design.pdf.
    The Challenge field is a randomly generated string that the
    initiator must sign (a hash of) as part of authenticating.  The
    methods are the authentication methods that the responder will
-   accept.  Only one authentication method is defined right now:
-   see 4.4 below.
+   accept.  Only two authentication methods are defined right now:
+   see 4.4.1 and 4.4.2 below.
 
 4.4. AUTHENTICATE cells
 
    If an initiator wants to authenticate, it responds to the
    AUTH_CHALLENGE cell with a CERTS cell and an AUTHENTICATE cell.
    The CERTS cell is as a server would send, except that instead of
-   sending a CertType 1 cert for an arbitrary link certificate, the
-   client sends a CertType 3 cert for an RSA AUTHENTICATE key.
-   (This difference is because we allow any link key type on a TLS
-   link, but the protocol described here will only work for 1024-bit
-   RSA keys.  A later protocol version should extend the protocol
-   here to work with non-1024-bit, non-RSA keys.)
+   sending a CertType 1 (and possibly CertType 5) certs for arbitrary link
+   certificates, the initiator sends a CertType 3 (and possibly
+   CertType 6) cert for an RSA/Ed25519 AUTHENTICATE key.
+
+   This difference is because we allow any link key type on a TLS
+   link, but the protocol described here will only work for specific key
+   types as described in 4.4.1 and 4.4.2 below.
 
    An AUTHENTICATE cell contains the following:
 
@@ -670,8 +731,17 @@ see tor-design.pdf.
         Authentication                        [AuthLen octets]
 
    Responders MUST ignore extra bytes at the end of an AUTHENTICATE
-   cell.  If AuthType is 1 (meaning "RSA-SHA256-TLSSecret"), then the
-   Authentication contains the following:
+   cell.  Recognized AuthTypes are 1 and 3, described in the next
+   two sections.
+
+   Initiators MUST NOT send an AUTHENTICATE cell before they have
+   verified the certificates presented in the responder's CERTS
+   cell, and authenticated the responder.
+
+4.4.1. Link authentication type 1: RSA-SHA256-TLSSecret
+
+   If AuthType is 1 (meaning "RSA-SHA256-TLSSecret"), then the
+   Authentication field of the AUTHENTICATE cell contains the following:
 
        TYPE: The characters "AUTH0001" [8 octets]
        CID: A SHA256 hash of the initiator's RSA1024 identity key [32 octets]
@@ -707,11 +777,51 @@ see tor-design.pdf.
    from TYPE through TLSSECRETS contain their unique
    correct values as described above, and then verifies the signature.
    The server MUST ignore any extra bytes in the signed data after
-   the SHA256 hash.
+   the RAND field.
 
-   Initiators MUST NOT send an AUTHENTICATE cell before they have
-   verified the certificates presented in the responder's CERTS
-   cell, and authenticated the responder.
+   Responders MUST NOT accept this AuthType if the initiator has
+   claimed to have an Ed25519 identity.
+
+   (There is no AuthType 2: It was reserved but never implemented.)
+
+4.4.2. Link authentication type 3: Ed25519-SHA256-RFC5705.
+
+   If AuthType is 3, meaning "Ed25519-SHA256-RFC5705", the
+   Authentication field of the AuthType cell is as below:
+
+   Modified values and new fields below are marked with asterisks.
+
+       TYPE: The characters "AUTH0003" [8 octets]
+       CID: A SHA256 hash of the initiator's RSA1024 identity key [32 octets]
+       SID: A SHA256 hash of the responder's RSA1024 identity key [32 octets]
+       CID_ED: The initiator's Ed25519 identity key [32 octets]
+       SID_ED: The responder's Ed25519 identity key, or all-zero. [32 octets]
+       SLOG: A SHA256 hash of all bytes sent from the responder to the
+         initiator as part of the negotiation up to and including the
+         AUTH_CHALLENGE cell; that is, the VERSIONS cell, the CERTS cell,
+         the AUTH_CHALLENGE cell, and any padding cells.  [32 octets]
+       CLOG: A SHA256 hash of all bytes sent from the initiator to the
+         responder as part of the negotiation so far; that is, the
+         VERSIONS cell and the CERTS cell and any padding cells. [32
+         octets]
+       SCERT: A SHA256 hash of the responder's TLS link certificate. [32
+         octets]
+       TLSSECRETS: The output of an RFC5705 Exporter function on the
+         TLS session, using as its inputs:
+          - The label string "EXPORTER FOR TOR TLS CLIENT BINDING AUTH0003"
+          - The context value equal to the initiator's Ed25519 identity key.
+          - The length 32.
+            [32 octets]
+       RAND: A 24 byte value, randomly chosen by the initiator. [24 octets]
+       SIG: A signature of all previous fields using the initiator's
+          Ed25519 authentication key (as in the cert with CertType 6).
+          [variable length]
+
+   To check the AUTHENTICATE cell, a responder checks that all fields
+   from TYPE through TLSSECRETS contain their unique
+   correct values as described above, and then verifies the signature.
+   The server MUST ignore any extra bytes in the signed data after
+   the RAND field.
 
 4.5. NETINFO cells
 
@@ -849,6 +959,9 @@ see tor-design.pdf.
            A sixteen-byte IPv6 address plus two-byte ORPort
       [02] Legacy identity
            A 20-byte SHA1 identity fingerprint. At most one may be listed.
+      [03] Ed25519 identity
+           A 32-byte Ed25519 identity fingerprint. At most one may
+           be listed.
 
    Nodes MUST ignore unrecognized specifiers, and MUST accept multiple
    instances of specifiers other than 'legacy identity'.
@@ -859,11 +972,25 @@ see tor-design.pdf.
          Onion skin                    [TAP_C_HANDSHAKE_LEN bytes]
          Identity fingerprint          [HASH_LEN bytes]
 
-   The "legacy identity" and "identity fingerprint fields are the SHA1
-   hash of the PKCS#1 ASN1 encoding of the next onion router's identity
-   (signing) key.  (See 0.3 above.)  Including this hash allows the
-   extending OR verify that it is indeed connected to the correct target
-   OR, and prevents certain man-in-the-middle attacks.
+   The "legacy identity" and "identity fingerprint" fields are the
+   SHA1 hash of the PKCS#1 ASN1 encoding of the next onion router's
+   identity (signing) key.  (See 0.3 above.)  The "Ed25519 identity"
+   field is the Ed25519 identity key of the target node.  Including
+   this key information allows the extending OR verify that it is
+   indeed connected to the correct target OR, and prevents certain
+   man-in-the-middle attacks.
+
+   Extending ORs MUST check _all_ provided identity keys (if they
+   recognize the format), and and MUST NOT extend the circuit if the
+   target OR did not prove its ownership of any such identity key.
+   If only one identity key is provided, but the extending OR knows
+   the other (from directory information), then the OR SHOULD also
+   enforce that key.
+
+   If an extending OR has a channel with a given Ed25519 ID and RSA
+   identity, and receives a request for that Ed25519 ID and a
+   different RSA identity, it SHOULD NOT attempt to make another
+   connection: it should just fail and DESTROY the circuit.
 
    The payload of an EXTENDED cell is the same as the payload of a
    CREATED cell.
@@ -877,6 +1004,10 @@ see tor-design.pdf.
    handshake, and MUST use it whenever the EXTEND cell will be handled
    by a node running a version of Tor too old to support EXTEND2.  In
    other cases, clients SHOULD use EXTEND2.
+
+   When generating an EXTEND2 cell, clients SHOULD include the target's
+   Ed25519 identity whenever the target has one, and whenever the
+   target supports LinkAuth subprotocol version "3". (See section 9.2.)
 
    When encoding a non-TAP handshake in an EXTEND cell, clients SHOULD
    use the format with 'client handshake type tag'.
@@ -1741,11 +1872,14 @@ see tor-design.pdf.
    LinkAuth protocols correspond to varieties of Authenticate cells used for
    the v3+ link protocools.
 
-   The current version is "1".
+   Current versions are:
+
+   "1" is the RSA link authentication described in section 4.4.1 above.
 
    "2" is unused, and reserved by proposal 244.
 
-   "3" is the ed25519 link handshake of proposal 220.
+   "3" is the ed25519 link authentication described in 4.4.2 above.
+
 
 9.3. "Relay"
 
