@@ -24,7 +24,7 @@
 
 2. Document formats
 
-2.1. Certificates
+2.1. Ed25519 Certificates
 
    When generating a signing key, we also generate a certificate for it.
    Unlike the certificates for authorities' signing keys, these
@@ -90,6 +90,27 @@
    When this extension is present, it MUST match the key used to
    sign the certificate.
 
+2.3. RSA->Ed25519 cross-certificate
+
+   Certificate type [07] (Cross-certification of Ed25519 identity
+   with RSA key) contains the following data:
+
+       ED25519_KEY                       [32 bytes]
+       EXPIRATION_DATE                   [4 bytes]
+       SIGLEN                            [1 byte]
+       SIGNATURE                         [SIGLEN bytes]
+
+   Here, the Ed25519 identity key is signed with router's RSA
+   identity key, to indicate that authenticating with a key
+   certified by the Ed25519 key counts as certifying with RSA
+   identity key.  (The signature is computed on the SHA256 hash of
+   the non-signature parts of the certificate, prefixed with the
+   string "Tor TLS RSA/Ed25519 cross-certificate".)
+
+   This certificate type is used to mean, "This Ed25519 identity key
+   acts with the authority of the RSA key that signed this
+   certificate."
+
 A.1. List of certificate types
 
    The values marked with asterisks are not types corresponding to
@@ -111,8 +132,8 @@ A.1. List of certificate types
    [06] - Ed25519 authentication key signed with ed25519 signing key
           (see prop220 section 4.2)
 
-   [07] - RSA identity cross-certification
-          (see prop220 section 4.2)
+   **[07] - Reserved for RSA identity cross-certification;
+          (see section 2.3 above, and tor-spec.txt section 4.2)
 
    [08] - Onion service: short-term descriptor signing key, signed
           with blinded public key.
