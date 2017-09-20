@@ -114,8 +114,20 @@ A.1. List of certificate types
    [07] - RSA identity cross-certification
           (see prop220 section 4.2)
 
-   [0A] - ntor onion key cross-certifying ntor identity key
-          (see prop228 section 2.3)
+   [08] - Onion service: short-term descriptor signing key, signed
+          with blinded public key.
+          (See rend-spec-v3.txt, section [DESC_OUTER])
+
+   [09] - Onion service: intro point authentication key, cross-certifying the
+          descriptor signing key.
+          (See rend-spec-v3.txt, description of "auth-key")
+
+   [0A] - ntor onion key cross-certifying ed25519 identity key
+          (see dir-spec.txt, description of "ntor-onion-key-crosscert")
+
+   [0B] - Onion service: ntor-extra encryption key, cross-certifying
+          descriptor signing key.
+          (see rend-spec-v3.txt, description of "enc-key-cert")
 
 A.2. List of extension types
 
