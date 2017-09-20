@@ -3034,7 +3034,7 @@ The following methods have incorrect implementations; authorities SHOULD
         [*Before consensus method 13, this field was sometimes erroneously
         omitted.]
 
-   Additionally, a microdescriptor consensus MAY use the sha256 digest
+   Additionally, a microdescriptor consensus SHOULD use the sha256 digest
    algorithm for its signatures.
 
 3.10. Exchanging detached signatures
