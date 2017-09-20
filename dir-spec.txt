@@ -2961,7 +2961,7 @@ The following methods have incorrect implementations; authorities SHOULD
 
    Every consensus flavor has a name consisting of a sequence of one
    or more alphanumeric characters and dashes.  For compatibility,
-   current descriptor flavor is called "ns".
+   the original (unflavored) consensus type is called "ns".
 
    The supported consensus flavors are defined as part of the
    authorities' consensus method.

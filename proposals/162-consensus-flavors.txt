@@ -3,7 +3,9 @@ Title: Publish the consensus in multiple flavors
 Author: Nick Mathewson
 Created: 14-May-2009
 Implemented-In: 0.2.3.1-alpha
-Status: Finished
+Status: Closed
+
+[Implementation notes: the 'consensus index' feature never got implemented.]
 
 Overview:
 
