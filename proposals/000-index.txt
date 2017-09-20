@@ -140,7 +140,7 @@ Proposals by number:
 217  Tor Extended ORPort Authentication [FINISHED]
 218  Controller events to better understand connection/circuit usage [CLOSED]
 219  Support for full DNS and DNSSEC resolution in Tor [OPEN]
-220  Migrate server identity keys to Ed25519 [FINISHED]
+220  Migrate server identity keys to Ed25519 [CLOSED]
 221  Stop using CREATE_FAST [CLOSED]
 222  Stop sending client timestamps [CLOSED]
 223  Ace: Improved circuit-creation key exchange [RESERVE]
@@ -164,7 +164,7 @@ Proposals by number:
 241  Resisting guard-turnover attacks [REJECTED]
 242  Better performance and usability for the MyFamily option [OPEN]
 243  Give out HSDir flag only to relays with Stable flag [CLOSED]
-244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [FINISHED]
+244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [CLOSED]
 245  Deprecating and removing the TAP circuit extension protocol [DRAFT]
 246  Merging Hidden Service Directories and Introduction Points [NEEDS-RESEARCH]
 247  Defending Against Guard Discovery Attacks using Vanguards [DRAFT]
@@ -275,9 +275,7 @@ Proposals by status:
    160  Authorities vote for bandwidth offsets in consensus [for 0.2.1.x]
    196  Extended ORPort and TransportControlPort [in 0.2.5.2-alpha]
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
-   220  Migrate server identity keys to Ed25519 [in 0.3.0.1-alpha]
    232  Pluggable Transport through SOCKS proxy [in 0.2.6]
-   244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [in 0.3.0.1-alpha]
    260  Rendezvous Single Onion Services [in 0.2.9.3-alpha]
    278  Directory Compression Scheme Negotiation [in 0.3.1.1-alpha]
  CLOSED:
@@ -342,6 +340,7 @@ Proposals by status:
    215  Let the minimum consensus method change with time [in 0.2.6.1-alpha]
    216  Improved circuit-creation key exchange [in 0.2.4.8-alpha]
    218  Controller events to better understand connection/circuit usage [in 0.2.5.2-alpha]
+   220  Migrate server identity keys to Ed25519 [in 0.3.0.1-alpha]
    221  Stop using CREATE_FAST [for 0.2.5.x]
    222  Stop sending client timestamps [in 0.2.4.18]
    224  Next-Generation Hidden Services in Tor [in 0.3.2.1-alpha]
@@ -352,6 +351,7 @@ Proposals by status:
    237  All relays are directory servers [for 0.2.7.x]
    238  Better hidden service stats from Tor relays
    243  Give out HSDir flag only to relays with Stable flag
+   244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [in 0.3.0.1-alpha]
    250  Random Number Generation  During Tor Voting
    264  Putting version numbers on the Tor subprotocols [in 0.2.9.4-alpha]
    271  Another algorithm for guard selection [in 0.3.0.1-alpha]
