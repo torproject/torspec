@@ -78,7 +78,7 @@ Proposals by number:
 155  Four Improvements of Hidden Service Performance [CLOSED]
 156  Tracking blocked ports on the client side [SUPERSEDED]
 157  Make certificate downloads specific [CLOSED]
-158  Clients download consensus + microdescriptors [FINISHED]
+158  Clients download consensus + microdescriptors [CLOSED]
 159  Exit Scanning [INFORMATIONAL]
 160  Authorities vote for bandwidth offsets in consensus [FINISHED]
 161  Computing Bandwidth Adjustments [CLOSED]
@@ -272,7 +272,6 @@ Proposals by status:
    099  Miscellaneous proposals
    257  Refactoring authorities and making them more isolated from the net
  FINISHED:
-   158  Clients download consensus + microdescriptors [in 0.2.3.1-alpha]
    160  Authorities vote for bandwidth offsets in consensus [for 0.2.1.x]
    162  Publish the consensus in multiple flavors [in 0.2.3.1-alpha]
    196  Extended ORPort and TransportControlPort [in 0.2.5.2-alpha]
@@ -316,6 +315,7 @@ Proposals by status:
    152  Optionally allow exit from single-hop circuits [in 0.2.1.6-alpha]
    155  Four Improvements of Hidden Service Performance [in 0.2.1.x]
    157  Make certificate downloads specific [for 0.2.4.x]
+   158  Clients download consensus + microdescriptors [in 0.2.3.1-alpha]
    161  Computing Bandwidth Adjustments [for 0.2.1.x]
    166  Including Network Statistics in Extra-Info Documents [for 0.2.2]
    167  Vote on network parameters in consensus [in 0.2.2]
