@@ -21,7 +21,7 @@
 2. The New Way
 
  After 0.1.0, versions are of the format:
-    MAJOR.MINOR.MICRO[.PATCHLEVEL][-STATUS_TAG][ (EXTRA_INFO)]
+    MAJOR.MINOR.MICRO[.PATCHLEVEL][-STATUS_TAG][ (EXTRA_INFO)]*
  The stuff in parentheses is optional.  As before, MAJOR, MINOR, MICRO,
  and PATCHLEVEL are numbers, with an absent number equivalent to 0.
  All versions should be distinguishable purely by those four
@@ -38,7 +38,8 @@
  The EXTRA_INFO is also purely informational, often containing information
  about the SCM commit this version came from. It is surrounded by parentheses
  and can't contain whitespace. Unlike the STATUS_TAG this never impacts the way
- that versions should be compared.
+ that versions should be compared. EXTRA_INFO may appear any number of
+ times. Tools should generally not parse EXTRA_INFO entries.
 
  Now, we start each development branch with (say) 0.1.1.1-alpha.  The
  patchlevel increments consistently as the status tag changes, for
