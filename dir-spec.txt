@@ -615,7 +615,7 @@
 
     "bridge-distribution-request" SP Method NL
 
-        [At most once]
+        [At most once, bridges only.]
 
         The "Method" describes how a Bridge address is distributed by
         BridgeDB. Recognized methods are: "none", "any", "https", "email",
@@ -635,6 +635,9 @@
 
         Potential future "Method" specifiers must be as follows:
             Method = (KeywordChar | "_") +
+
+        All bridges SHOULD include this line. Non-bridges MUST NOT include
+        it.  (It is not currently implemented, or obeyed by Bridge DB.)
 
         (Default: "any")
 
