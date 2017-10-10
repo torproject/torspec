@@ -639,6 +639,9 @@
         All bridges SHOULD include this line. Non-bridges MUST NOT include
         it.  (It is not currently implemented, or obeyed by Bridge DB.)
 
+        BridgeDB SHOULD treat unrecognized Method values as if they were
+        "none".
+
         (Default: "any")
 
     "family" names NL
