@@ -2170,11 +2170,11 @@
           "NoEdConsensus" if any Ed25519 key in the router's descriptor or
              microdesriptor does not reflect authority consensus.
           "Stable" if the router is suitable for long-lived circuits.
-          "Running" if the router is currently usable over the ORPorts that
-             an authority considers mandatory. Relays without this flag are
-             omitted from the consensus, and current clients
-             (since 0.2.9.4-alpha) assume that every listed relay has this
-             flag.
+          "Running" if the router is currently usable over all its published
+             ORPorts. (Authorities ignore IPv6 ORPorts unless configured to
+             check IPv6 reachability.) Relays without this flag are omitted
+             from the consensus, and current clients (since 0.2.9.4-alpha)
+             assume that every listed relay has this flag.
           "Valid" if the router has been 'validated'. Clients before
              0.2.9.4-alpha would not use routers without this flag by
              default. Currently, relays without this flag are omitted
@@ -2379,12 +2379,15 @@
       canonically linked to its public key.
 
    "Running" -- A router is 'Running' if the authority managed to connect to
-   it successfully within the last 45 minutes on the ORPorts it considers
-   mandatory. Since 0.2.4.x, the mandatory ORPorts are:
+   it successfully within the last 45 minutes on all its published ORPorts.
+   Authorities check reachability on:
      * the IPv4 ORPort in the "r" line, and
      * the IPv6 ORPort considered for the "a" line, if:
        * the router advertises at least one IPv6 ORPort, and
-       * AuthDirHasIPv6Connectivity 1 is set on the authority
+       * AuthDirHasIPv6Connectivity 1 is set on the authority.
+   A minority of voting authorities that set AuthDirHasIPv6Connectivity will
+   drop unreachable IPv6 addresses from the full consensus. But they can not
+   drop IPv6 addresses from microdescriptors.
 
    "Stable" -- A router is 'Stable' if it is active, and either its Weighted
    MTBF is at least the median for known active routers or its Weighted MTBF
