@@ -2631,6 +2631,9 @@
           parameters that more than half of the total number of
           authorities voted for are included in the consensus.
 
+        [ As of 0.2.6.1-alpha, authorities no longer advertise or negotiate
+          any consensus methods lower than 13. ]
+
         * If consensus method 13 or later is used, microdesc consensuses
           omit any router for which no microdesc was agreed upon.
 
@@ -2651,7 +2654,19 @@
           flag to such 'w' lines.
 
         * If consensus method 18 or later is used, authorities include
-          "id" lines in microdescriptors.
+          "id" lines in microdescriptors. This method adds RSA ids.
+
+        * If consensus method 19 or later is used, authorities may include
+          "package" lines in consensuses.
+
+        * If consensus method 20 or later is used, authorities may include
+          GuardFraction information in microdescriptors.
+
+        * If consensus method 21 or later is used, authorities may include
+          an "id" line for ed25519 identities in microdescriptors.
+
+        [ As of 0.2.8.2-alpha, authorities no longer advertise or negotiate
+          consensus method 21, because it contains bugs. ]
 
         * If consensus method 22 or later is used, and the votes do not
           produce a majority consensus about a relay's Ed25519 key (see
