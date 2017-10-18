@@ -2430,7 +2430,7 @@
    choose from, authorities should first prefer authorities to
    non-authorities, then prefer Running to non-Running, and then prefer
    high-bandwidth to low-bandwidth[*].  To 'disable' a relay, the
-   authority *should* advertise it without the Running or Valid flag.
+   authority *should* vote for it without the Running or Valid flag.
 
       [*] In this comparison, measured bandwidth is used unless it is not
           present for a router, in which case advertised bandwidth is used.
@@ -2775,7 +2775,7 @@
    making changes in the contents of consensus; not for making
    backward-incompatible changes in their format.)
 
-The following methods have incorrect implementations; authorities SHOULD
+   The following methods have incorrect implementations; authorities SHOULD
    NOT advertise support for them:
      "21" -- Did not correctly enable support for ed25519 key collation.
 
