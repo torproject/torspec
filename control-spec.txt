@@ -3218,6 +3218,17 @@
 
     (String.  Default: unset.)
 
+  __OwningControllerFD
+
+    If this option is a valid socket, Tor will start with an open control
+    connection on this socket.  Added in Tor 0.3.3.xxxx.
+
+    This socket will be an owning controller, as if it had already called
+    TAKEOWNERSHIP.  It will be automatically authenticated.  This option
+    should only be used by other programs that are starting Tor.
+
+    (Integer. Default: -1.)
+
 5.5. Phases from the Bootstrap status event.
 
   This section describes the various bootstrap phases currently reported
