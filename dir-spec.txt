@@ -757,8 +757,8 @@
        duplicate the address:port pair from its "router" line.
 
        The ordering of or-address lines and their PORT entries matter because
-       Tor MAY accept a limited number of addresses or ports. As of Tor 0.2.3.x
-       only the first address and the first port are used.
+       Tor MAY accept a limited number of address/port pairs. As of
+       Tor 0.2.3.x only the first address/port pair is advertised and used.
 
    "tunnelled-dir-server" NL
 
@@ -1463,9 +1463,18 @@
 
      "a" SP address ":" port NL
 
-        [Any number]
+        [At most once]
 
-        The "or-address" element as specified in section 2.1.1.
+        The first advertised IPv6 address for the OR.
+
+        Present only if the OR advertises at least one IPv6 address.
+        Any other IPv4 or IPv6 addresses are ignored.
+
+        Address and port are as for "or-address" as specified in
+        section 2.1.1.
+
+        (Only included when generating microdescriptors for
+        consensus-method 14 or later.)
 
      "family" names NL
 
@@ -2126,9 +2135,13 @@
 
     "a" SP address ":" port NL
 
-        [Any number.]
+        [At most once]
 
-        Present only if the OR has at least one IPv6 address.
+        The first advertised IPv6 address for the OR, if it is reachable.
+
+        Present only if the OR advertises at least one IPv6 address, and the
+        authority believes that the first advertised address is reachable.
+        Any other IPv4 or IPv6 addresses are ignored.
 
         Address and port are as for "or-address" as specified in
         section 2.1.1.
@@ -2156,10 +2169,11 @@
           "NoEdConsensus" if any Ed25519 key in the router's descriptor or
              microdesriptor does not reflect authority consensus.
           "Stable" if the router is suitable for long-lived circuits.
-          "Running" if the router is currently usable. Relays without this
-             flag are omitted from the consensus, and current clients
-             (since 0.2.9.4-alpha) assume that every listed relay has
-             this flag.
+          "Running" if the router is currently usable over the ORPorts that
+             an authority considers mandatory. Relays without this flag are
+             omitted from the consensus, and current clients
+             (since 0.2.9.4-alpha) assume that every listed relay has this
+             flag.
           "Valid" if the router has been 'validated'. Clients before
              0.2.9.4-alpha would not use routers without this flag by
              default. Currently, relays without this flag are omitted
@@ -2364,7 +2378,12 @@
       canonically linked to its public key.
 
    "Running" -- A router is 'Running' if the authority managed to connect to
-   it successfully within the last 45 minutes.
+   it successfully within the last 45 minutes on the ORPorts it considers
+   mandatory. Since 0.2.4.x, the mandatory ORPorts are:
+     * the IPv4 ORPort in the "r" line, and
+     * the IPv6 ORPort considered for the "a" line, if:
+       * the router advertises at least one IPv6 ORPort, and
+       * AuthDirHasIPv6Connectivity 1 is set on the authority
 
    "Stable" -- A router is 'Stable' if it is active, and either its Weighted
    MTBF is at least the median for known active routers or its Weighted MTBF
@@ -2637,9 +2656,9 @@
         * If consensus method 13 or later is used, microdesc consensuses
           omit any router for which no microdesc was agreed upon.
 
-        * If consensus method 14 or later is used, votes and
-          consensuses may include "a" lines listing additional OR
-          ports.
+        * If consensus method 14 or later is used, the ns consensus and
+          microdescriptors may include an "a" line for each router, listing
+          an IPv6 OR port.
 
         * If consensus method 15 or later is used, microdescriptors
           include "p6" lines including IPv6 exit policies.
@@ -2757,7 +2776,7 @@
      "11" -- Don't consider BadExits when calculating bandwidth weights
      "12" -- Params are only included if enough auths voted for them
      "13" -- Omit router entries with missing microdescriptors.
-     "14" -- Adds support for "a" lines.
+     "14" -- Adds support for "a" lines in ns consensues and microdescriptors.
      "15" -- Adds support for "p6" lines.
      "16" -- Adds ntor keys to microdescriptors
      "17" -- Adds "Unmeasured=1" flags to "w" lines
@@ -3055,6 +3074,13 @@
         [At start, exactly once.]
 
         Similar to "r" lines in section 3.4.1, but without the digest element.
+
+    "a" SP address ":" port NL
+
+        [Zero times.]
+
+        IPv6 ORPorts are contained in microdescriptors and therefore omitted
+        in the microdescriptor consensus.
 
     "p" ... NL
 
