@@ -747,9 +747,6 @@
       Maps IP addresses to 2-letter country codes.  For example,
       "GETINFO ip-to-country/18.0.0.1" should give "US".
 
-    "next-circuit/IP:port"
-      XXX todo.
-
     "process/pid" -- Process id belonging to the main tor process.
     "process/uid" -- User id running the tor process, -1 if unknown (this is
      unimplemented on Windows, returning -1).
