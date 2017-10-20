@@ -1268,6 +1268,9 @@
 
     PIVERSION: 1*DIGIT
 
+  This command tells the controller what kinds of authentication are
+  supported.
+
   Tor MAY give its InfoLines in any order; controllers MUST ignore InfoLines
   with keywords they do not recognize.  Controllers MUST ignore extraneous
   data on any InfoLine.
