@@ -360,6 +360,12 @@
   Sent from the client to the server.  The syntax is:
      "AUTHENTICATE" [ SP 1*HEXDIG / QuotedString ] CRLF
 
+  This command is used to authenticate to the server. The provided string is
+  either the original password represented as a QuotedString if HASHEDPASSWORD
+  is to be used, the contents of the cookie file formatted as hexidecimal if
+  COOKIE is to be used, or the resulting HMAC if AUTHCHALLENGE has been
+  previously sent (and therefore SAFECOOKIE is to be used).
+
   The server responds with "250 OK" on success or "515 Bad authentication" if
   the authentication cookie is incorrect.  Tor closes the connection on an
   authentication failure.
@@ -752,9 +758,6 @@
     "ip-to-country/*"
       Maps IP addresses to 2-letter country codes.  For example,
       "GETINFO ip-to-country/18.0.0.1" should give "US".
-
-    "next-circuit/IP:port"
-      XXX todo.
 
     "process/pid" -- Process id belonging to the main tor process.
     "process/uid" -- User id running the tor process, -1 if unknown (this is
@@ -1293,6 +1296,9 @@
 
     PIVERSION: 1*DIGIT
 
+  This command tells the controller what kinds of authentication are
+  supported.
+
   Tor MAY give its InfoLines in any order; controllers MUST ignore InfoLines
   with keywords they do not recognize.  Controllers MUST ignore extraneous
   data on any InfoLine.
@@ -1398,6 +1404,9 @@
                     CRLF
 
     ClientNonce = 2*HEXDIG / QuotedString
+
+  This command is used to begin the authentication routine for the
+  SAFECOOKIE method of authentication.
 
   If the server accepts the command, the server reply format is:
     "250 AUTHCHALLENGE"
