@@ -361,10 +361,15 @@
      "AUTHENTICATE" [ SP 1*HEXDIG / QuotedString ] CRLF
 
   This command is used to authenticate to the server. The provided string is
-  either the original password represented as a QuotedString if HASHEDPASSWORD
-  is to be used, the contents of the cookie file formatted as hexidecimal if
-  COOKIE is to be used, or the resulting HMAC if AUTHCHALLENGE has been
-  previously sent (and therefore SAFECOOKIE is to be used).
+  one of the following:
+     * (For the HASHEDPASSWORD authentication method; see 3.21)
+       The original password represented as a QuotedString.
+
+     * (For the COOKIE is authentication method; see 3.21)
+       The contents of the cookie file, formatted in hexadecimal
+
+     * (For the SAFECOOKIE authentication method; see 3.21)
+       The HMAC based on the AUTHCHALLENGE message, in hexadecimal.
 
   The server responds with "250 OK" on success or "515 Bad authentication" if
   the authentication cookie is incorrect.  Tor closes the connection on an
