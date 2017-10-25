@@ -1463,12 +1463,13 @@
 
      "a" SP address ":" port NL
 
-        [At most once]
+        [Any number]
 
-        The first advertised IPv6 address for the OR.
+        Additional advertised addresses for the OR.
 
-        Present only if the OR advertises at least one IPv6 address.
-        Any other IPv4 or IPv6 addresses are ignored.
+        Present currently only if the OR advertises at least one IPv6
+        address; currently, the first address is included and all others are
+        omitted. Any other IPv4 or IPv6 addresses should be ignored.
 
         Address and port are as for "or-address" as specified in
         section 2.1.1.
@@ -2135,13 +2136,13 @@
 
     "a" SP address ":" port NL
 
-        [At most once]
+        [Any number]
 
         The first advertised IPv6 address for the OR, if it is reachable.
 
         Present only if the OR advertises at least one IPv6 address, and the
         authority believes that the first advertised address is reachable.
-        Any other IPv4 or IPv6 addresses are ignored.
+        Any other IPv4 or IPv6 addresses should be ignored.
 
         Address and port are as for "or-address" as specified in
         section 2.1.1.
@@ -3077,10 +3078,12 @@
 
     "a" SP address ":" port NL
 
-        [Zero times.]
+        [Any number]
 
         IPv6 ORPorts are contained in microdescriptors and therefore omitted
         in the microdescriptor consensus.
+
+        Not currently generated.
 
     "p" ... NL
 
