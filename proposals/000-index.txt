@@ -203,6 +203,7 @@ Proposals by number:
 280  Privacy-Preserving Statistics with Privcount in Tor [DRAFT]
 281  Downloading microdescriptors in bulk [DRAFT]
 282  Remove "Named" and "Unnamed" handling from consensus voting [OPEN]
+283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [OPEN]
 
 
 Proposals by status:
@@ -259,6 +260,7 @@ Proposals by status:
    276  Report bandwidth with lower granularity in consensus documents [for 0.3.1.x-alpha]
    277  Detect multiple relay instances running with same ID [for 0.3.??]
    282  Remove "Named" and "Unnamed" handling from consensus voting [for 0.3.3.x]
+   283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [for 0.3.3.x]
  ACCEPTED:
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
