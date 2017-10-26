@@ -3087,7 +3087,9 @@
 
     "p" ... NL
 
-        [Zero times.]
+        [At most once]
+
+        Not currently generated.
 
         Exit policy summaries are contained in microdescriptors and
         therefore omitted in the microdescriptor consensus.
