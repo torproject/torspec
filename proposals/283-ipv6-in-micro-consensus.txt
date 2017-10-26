@@ -136,7 +136,7 @@ Target: 0.3.3.x
 
 5. Data Size
 
-   This change removes 2-50 bytes from the microdescriptors of relays that
+   This change removes 7-50 bytes from the microdescriptors of relays that
    have an IPv6 ORPort, and adds them to reachable IPv6 relays' microdesc
    consensus entries.
 
