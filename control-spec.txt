@@ -428,14 +428,14 @@
 
   The meaning of the signals are:
 
-      RELOAD    -- Reload: reload config items. (like HUP)
+      RELOAD    -- Reload: reload config items.
       SHUTDOWN  -- Controlled shutdown: if server is an OP, exit immediately.
                    If it's an OR, close listeners and exit after
-                   ShutdownWaitLength seconds. (like INT)
+                   ShutdownWaitLength seconds.
       DUMP      -- Dump stats: log information about open connections and
-                   circuits. (like USR1)
-      DEBUG     -- Debug: switch all open logs to loglevel debug. (like USR2)
-      HALT      -- Immediate shutdown: clean up and exit now. (like TERM)
+                   circuits.
+      DEBUG     -- Debug: switch all open logs to loglevel debug.
+      HALT      -- Immediate shutdown: clean up and exit now.
       CLEARDNSCACHE -- Forget the client-side cached IPs for all hostnames.
       NEWNYM    -- Switch to clean circuits, so new application requests
                    don't share any circuits with old ones.  Also clears
@@ -446,6 +446,16 @@
   The server responds with "250 OK" if the signal is recognized (or simply
   closes the socket if it was asked to close immediately), or "552
   Unrecognized signal" if the signal is unrecognized.
+
+  Note that not all of these signals have POSIX signal equivalents.  The
+  ones that do are as below.  You may also use these POSIX names for the
+  signal that have them.
+
+      RELOAD: HUP
+      SHUTDOWN: INT
+      HALT: TERM
+      DUMP: USR1
+      DEBUG: USR2
 
 3.8. MAPADDRESS
 
