@@ -204,6 +204,7 @@ Proposals by number:
 281  Downloading microdescriptors in bulk [DRAFT]
 282  Remove "Named" and "Unnamed" handling from consensus voting [OPEN]
 283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [OPEN]
+284  Hidden Service v3 Control Port [OPEN]
 
 
 Proposals by status:
@@ -261,6 +262,7 @@ Proposals by status:
    277  Detect multiple relay instances running with same ID [for 0.3.??]
    282  Remove "Named" and "Unnamed" handling from consensus voting [for 0.3.3.x]
    283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [for 0.3.3.x]
+   284  Hidden Service v3 Control Port
  ACCEPTED:
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
