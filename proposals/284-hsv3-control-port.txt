@@ -88,11 +88,16 @@ Status: Open
    New "KeyType" value to "ED25519-V3" which identifies the key type to be a
    v3 ed25519 key.
 
-   New "KeyBlob" value to support the new "ED25519-V3", if specified, will
-   generate a new ed25519 private key.
+   With the KeyType == "ED25519-V3", the "KeyBlob" should be a base64 encoded
+   ed25519 private key.
+
+   The "NEW:BEST" option will still return a version 2 address as long as the
+   HiddenServiceVersion torrc option default is 2. To ask for a new v3 key,
+   this should be used: "NEW:ED25519-V3".
 
    Because client authentication is not yet implemented, the "ClientAuth"
-   field is ignored as well as "Flags=BasicAuth".
+   field is ignored as well as "Flags=BasicAuth". A 513 error is returned if
+   "ClientAuth" is used with an ED25519-V3 key type.
 
 3.1.4. DEL_ONION
 
