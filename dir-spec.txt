@@ -1966,6 +1966,25 @@
         days after it is replaced.  (Introduced in 0.3.1.1-alpha;
         prior versions of tor hardcoded both of these values to 7 days.)
 
+        Hidden service v3 parameters:
+         "hs_intro_min_introduce2"
+         "hs_intro_max_introduce2" -- Minimum/maximum amount of INTRODUCE2 cells
+                                      allowed per circuits before rotation (actual
+                                      amount picked at random between these two values).
+         "hs_intro_min_lifetime"
+         "hs_intro_max_lifetime"   -- Minimum/maximum lifetime in seconds that a service
+                                      should keep an intro point for (actual lifetime picked at
+                                      random between these two values).
+         "hs_intro_num_extra"      -- Number of extra intro points a service is allowed to open.
+                                      This concept comes from proposal #155.
+         "hsdir_interval"          -- The length of a time period. See rend-spec-v3.txt
+                                      section [TIME-PERIODS].
+         "hsdir_n_replicas"        -- Number of HS descriptor replicas.
+         "hsdir_spread_fetch"      -- Total number of HSDirs per replica a tor client
+                                      should select to try to fetch a descriptor.
+         "hsdir_spread_store"      -- Total number of HSDirs per replica a service
+                                      will upload its descriptor to.
+
     "shared-rand-previous-value" SP NumReveals SP Value NL
 
         [At most once]
