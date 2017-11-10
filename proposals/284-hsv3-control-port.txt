@@ -142,6 +142,9 @@ Status: Open
    The "DescriptorID" key is extended to accept 43 base64 characters which is
    the descriptor blinded key used for the index value at the "HsDir".
 
+   The "REPLICA=" field is not used for the "CREATED" event because v3 doesn't
+   use the replica number in the descriptor ID computation.
+
    Because client authentication is not yet implemented, the "AuthType" field
    is always "NO_AUTH".
 
