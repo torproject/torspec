@@ -126,7 +126,7 @@ Status: Open
      HSAddress = 16*Base32Character / 56*Base32Character / "UNKNOWN"
      AuthType = "NO_AUTH" / "BASIC_AUTH" / "STEALTH_AUTH" / "UNKNOWN"
      HsDir = LongName / Fingerprint / "UNKNOWN"
-     DescriptorID = 32*Base32Character / 32*Base64Character
+     DescriptorID = 32*Base32Character / 43*Base64Character
      Reason = "BAD_DESC" / "QUERY_REJECTED" / "UPLOAD_REJECTED" / "NOT_FOUND" /
               "UNEXPECTED" / "QUERY_NO_HSDIR"
      Replica = 1*DIGIT
@@ -139,7 +139,7 @@ Status: Open
    The "HSAddress" key is extended to accept 56 base32 characters which is the
    format of a version 3 onion address.
 
-   The "DescriptorID" key is extended to accept 32 base64 characters which is
+   The "DescriptorID" key is extended to accept 43 base64 characters which is
    the descriptor blinded key used for the index value at the "HsDir".
 
    Because client authentication is not yet implemented, the "AuthType" field
