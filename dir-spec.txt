@@ -1984,6 +1984,7 @@
                                       should select to try to fetch a descriptor.
          "hsdir_spread_store"      -- Total number of HSDirs per replica a service
                                       will upload its descriptor to.
+         "HSV3MaxDescriptorSize"   -- Maximum descriptor size (in bytes).
 
     "shared-rand-previous-value" SP NumReveals SP Value NL
 
