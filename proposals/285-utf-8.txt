@@ -1,0 +1,60 @@
+Filename: 285-utf-8.txt
+Title: Directory documents should be standardized as UTF-8
+Author: Nick Mathewson
+Created: 13 November 2017
+Status: Open
+
+1. Summary and motivation
+
+   People frequently want to include non-ASCII text in their router
+   descriptors.  The Contact line is a favorite place to do this, but in
+   principle the platform line would also be pretty logical.
+
+   Unfortunately, there's no specified way to encode non-ASCII in our
+   directory documents.
+
+   Fortunately, almost everybody who does it, uses UTF-8 anyway.
+
+   As we move towards Rust support in Tor, we gain another motivation
+   for standarding on UTF-8, since Rust's native strings strongly prefer
+   UTF-8.
+
+   So, in this proposal, we describe a migration path to having all
+   directory documents be fully UTF-8.
+
+2. Proposal
+
+   First, we should have Tor relays reject ContactInfo lines (and any
+   other lines copied directly into router descriptors) that are not
+   UTF-8.
+
+   At the same time, we should have authorities reject any router
+   descriptors or extrainfo documents that are not valid UTF-8.
+   Simultaneously, we can have all Tor instances reject all
+   non-directory-descriptor directory documents that are not UTF-8,
+   since none should exist today.
+
+   Finally, once the authorities have updated, we should have all Tor
+   instances reject all directory documents that are not UTF-8.  (We
+   should not take this step until the authorities have upgraded, or
+   else the behavior of updated and non-updated clients could be
+   distinguished.)
+
+2.1. Hidden service descriptors' encrypted bodies
+
+   For the encrypted bodies of hidden service descriptors, we cannot
+   reject them at the authority level, and so we need to take a slightly
+   different approach to prevent client fingerprinting attacks.
+
+   First, we should make Tor instances start warning about any hidden
+   service descriptors whose bodies, post-decryption, contain non-utf-8
+   plaintext.  At the same time, we add a consensus parameter to
+   indicate that hidden service descriptors with non-utf-8 plantexts
+   should be rejected entirely: "reject-encrypted-non-utf-8".  If that
+   parameter is set to 1, then hidden service clients will not only
+   warn, but reject the descriptors.
+
+   Once the vast majority of clients are running versions that support
+   the "reject-encrypted-non-utf-8" parameter, that parameter can be set
+   to 1.
+

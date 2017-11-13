@@ -205,6 +205,7 @@ Proposals by number:
 282  Remove "Named" and "Unnamed" handling from consensus voting [OPEN]
 283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [OPEN]
 284  Hidden Service v3 Control Port [OPEN]
+285  Directory documents should be standardized as UTF-8 [OPEN]
 
 
 Proposals by status:
@@ -263,6 +264,7 @@ Proposals by status:
    282  Remove "Named" and "Unnamed" handling from consensus voting [for 0.3.3.x]
    283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [for 0.3.3.x]
    284  Hidden Service v3 Control Port
+   285  Directory documents should be standardized as UTF-8
  ACCEPTED:
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
