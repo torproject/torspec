@@ -1511,6 +1511,7 @@
   The syntax is:
     "ADD_ONION" SP KeyType ":" KeyBlob
             [SP "Flags=" Flag *("," Flag)]
+            [SP "MaxStreams=" NumStreams]
             1*(SP "Port=" VirtPort ["," Target])
             *(SP "ClientAuth=" ClientName [":" ClientBlob]) CRLF
 
@@ -1533,9 +1534,15 @@
                      to the current control connection.
      "BasicAuth" / ; Client authorization is required using the "basic"
                      method.
-     "NonAnonymous"; Add a non-anonymous Single Onion Service. Tor
-                     checks this flag matches its configured hidden
-                     service anonymity mode.
+     "NonAnonymous" /; Add a non-anonymous Single Onion Service. Tor
+                       checks this flag matches its configured hidden
+                       service anonymity mode.
+     "MaxStreamsCloseCircuit"; Close the circuit is the maximum streams
+                               allowed is reached.
+
+    NumStreams = A value between 0 and 65535 which is used as the maximum
+                 streams that can be attached on a rendezvous circuit. Setting
+                 it to 0 means unlimited which is also the default behavior.
 
     VirtPort = The virtual TCP Port for the Onion Service (As in the
                HiddenServicePort "VIRTPORT" argument).
