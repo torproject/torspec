@@ -3587,18 +3587,7 @@
 
 5.4.4. Warning about a router's status.
 
-   If a router tries to publish its descriptor to a Naming authority
-   that has its nickname mapped to another key, the router SHOULD
-   warn the operator that it is either using the wrong key or is using
-   an already claimed nickname.
-
-   If a router has fetched a consensus document,, and the
-   authorities do not publish a binding for the router's nickname, the
-   router MAY remind the operator that the chosen nickname is not
-   bound to this key at the authorities, and suggest contacting the
-   authority operators.
-
-   ...
+   (This section is removed; authorities no longer assign the 'Named' flag.)
 
 6. Standards compliance
 
