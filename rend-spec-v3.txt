@@ -2232,7 +2232,7 @@ Appendix C. Recommendations for searching for vanity .onions [VANITY]
         While pk does not satisfy X:
 
             Add the number 8 to sk
-            Add the scalar 8*B to pk
+            Add the point 8*B to pk
 
         Return sk, pk.
 
