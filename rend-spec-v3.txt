@@ -2162,6 +2162,7 @@ A.2. Tor's key derivation scheme
            h = H(BLIND_STRING | A | s | B | N)
            BLIND_STRING = "Derive temporary signing key" | INT_1(0)
            N = "key-blind" | INT_8(period-number) | INT_8(period_length)
+           B = "(1511[...]2202, 4631[...]5960)"
 
   then clamp the blinding factor 'h' according to the ed25519 spec:
 
@@ -2171,8 +2172,15 @@ A.2. Tor's key derivation scheme
 
   and do the key derivation as follows:
 
-      private key for the period:   a' = h a
-      public key for the period:    A' = h A = (ha)B
+      private key for the period:
+
+           a' = h a mod l
+           RH' = SHA-512(RH_BLIND_STRING | RH)[:32]
+           RH_BLIND_STRING = "Derive temporary signing key hash input"
+
+      public key for the period:
+
+           A' = h A = (ha)B
 
   Generating a signature of M: given a deterministic random-looking r
   (see EdDSA paper), take R=rB, S=r+hash(R,A',M)ah mod l. Send signature
@@ -2184,6 +2192,8 @@ A.2. Tor's key derivation scheme
        SB = (r + hash(R,A',M)ah)B
           = rB + (hash(R,A',M)ah)B
           = R + hash(R,A',M)A' )
+
+  This boils down to regular Ed25519 with key pair (a', A').
 
   See [KEYBLIND-REFS] for an extensive discussion on this scheme and
   possible alternatives. Also, see [KEYBLIND-PROOF] for a security
