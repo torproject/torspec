@@ -2160,7 +2160,7 @@ A.2. Tor's key derivation scheme
   blinding factor like this:
 
            h = H(BLIND_STRING | A | s | B | N)
-           BLIND_STRING = "Derive temporary signing key"
+           BLIND_STRING = "Derive temporary signing key" | INT_1(0)
            N = "key-blind" | INT_8(period-number) | INT_8(period_length)
 
   then clamp the blinding factor 'h' according to the ed25519 spec:
