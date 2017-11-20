@@ -75,9 +75,8 @@ How new proposals get added:
 
   To get your proposal in, send it to the tor-dev mailing list.
 
-  The current proposal editors are Nick Mathewson, Jacob Appelbaum, George
-  Kadianakis, Damian Johnson, Isis Lovecruft, and David
-  Goulet.
+  The current proposal editors are Nick Mathewson, George Kadianakis,
+  Damian Johnson, Isis Lovecruft, and David Goulet.
 
 What should go in a proposal:
 
