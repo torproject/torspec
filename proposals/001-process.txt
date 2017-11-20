@@ -85,11 +85,19 @@ What should go in a proposal:
      Filename, Title, Author, Created, Status.
 
    These fields are optional but recommended:
-     Target, Implemented-In.
+     Target, Implemented-In, Ticket**.
+
    The Target field should describe which version the proposal is hoped to be
    implemented in (if it's Open or Accepted).  The Implemented-In field
    should describe which version the proposal was implemented in (if it's
-   Finished or Closed).
+   Finished or Closed).  The Ticket field should be a ticket number referring
+   to Tor's canonical bug tracker (e.g. "#7144" refers to
+   https://bugs.torproject.org/7144) or to a publicly accessible URI where one
+   may subscribe to updates and/or retrieve information on implementation
+   status.
+
+   ** Proposals with assigned numbers of prop#283 and higher are REQUIRED to
+      have a Ticket field if the Status is OPEN, ACCEPTED, CLOSED, or FINISHED.
 
    The body of the proposal should start with an Overview section explaining
    what the proposal's about, what it does, and about what state it's in.

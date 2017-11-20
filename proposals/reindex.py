@@ -5,11 +5,11 @@ class Error(Exception): pass
 
 STATUSES = """DRAFT NEEDS-REVISION NEEDS-RESEARCH OPEN ACCEPTED META FINISHED
    CLOSED SUPERSEDED DEAD REJECTED OBSOLETE RESERVE INFORMATIONAL""".split()
-REQUIRED_FIELDS = [ "Filename", "Status", "Title" ]
-CONDITIONAL_FIELDS = { "OPEN" : [ "Target" ],
-                       "ACCEPTED" : [ "Target "],
-                       "CLOSED" : [ "Implemented-In" ],
-                       "FINISHED" : [ "Implemented-In" ] }
+REQUIRED_FIELDS = [ "Filename", "Status", "Title"]
+CONDITIONAL_FIELDS = { "OPEN" : [ "Target", "Ticket" ],
+                       "ACCEPTED" : [ "Target", "Ticket" ],
+                       "CLOSED" : [ "Implemented-In", "Ticket" ],
+                       "FINISHED" : [ "Implemented-In", "Ticket" ] }
 FNAME_RE = re.compile(r'^(\d\d\d)-.*[^\~]$')
 DIR = "."
 OUTFILE = "000-index.txt"
@@ -45,9 +45,29 @@ def readProposal(fn):
     finally:
         f.close()
 
+def getProposalNumber(fn):
+    """Get the proposal's assigned number from its filename `fn`."""
+    parts = fn.split('-', 1)
+
+    assert len(parts) == 2, \
+        "Filename must have a proposal number and title separated by a '-'"
+
+    return int(parts[0])
+
 def checkProposal(fn, fields):
     status = fields.get("Status")
     need_fields = REQUIRED_FIELDS + CONDITIONAL_FIELDS.get(status, [])
+
+    number = getProposalNumber(fn)
+    # Since prop#288 was the newest when we began requiring the 'Ticket:'
+    # field, we don't require the field for it or any older proposal.
+    # (Although you're encouraged to add it to your proposal, and add it for
+    # older proposals where you know the correct ticket, as it greatly helps
+    # newcomers find more information on the implementation.)
+    if number <= 288:
+        if "Ticket" in need_fields:
+            need_fields.remove("Ticket")
+
     for f in need_fields:
         if not fields.has_key(f):
             raise Error("%s has no %s field"%(fn, f))
