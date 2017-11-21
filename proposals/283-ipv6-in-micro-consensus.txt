@@ -1,6 +1,6 @@
 Filename: 283-ipv6-in-micro-consensus.txt
 Title: Move IPv6 ORPorts from microdescriptors to the microdesc consensus
-Author: Tim Wilson-Brown (teor)
+Author: Tim Wilson-Brown (teor), Nick Mathewson
 Created: 18-Oct-2017
 Status: Open
 Target: 0.3.3.x
@@ -10,16 +10,21 @@ Target: 0.3.3.x
    Moving IPv6 ORPorts from microdescs to the microdesc consensus will make
    it easier for IPv6 clients to bootstrap and select reachable guards.
 
-   Since consensus method 14, authorities have voted for IPv6 address/port
-   pairs (ORPorts) in "a" lines. Unreachable IPv6 ORPorts are dropped from the
-   full consensus. But for clients that use microdescriptors (the default),
-   IPv6 ORPorts are placed in microdescriptors. So these clients can only tell
-   if an IPv6 ORPort is unreachable when a majority of voting authorities
-   mark the relay as not Running.
+   Tor clients on IPv6-only connections currently have to use IPv6 Fallback
+   Directory Mirrors to fetch their microdescriptors. This does not scale
+   well. After this change, they will be able to fetch microdescriptors from
+   any IPv6-enabled directory mirror in the consensus.
 
-   This proposal puts reachable relay IPv6 ORPorts in an "a" line in the
-   microdesc consensus. This allows clients to discover unreachable IPv6
-   ORPorts, even if a minority of voting authorities set
+   Tor clients on versions 0.2.8.x and 0.2.9.x are currently unable to
+   bootstrap over IPv6-only connections when using microdescriptors. After
+   this consensus change, they will be able to bootstrap without any client
+   code changes.
+
+   For clients that use microdescriptors (the default), IPv6 ORPorts are
+   always placed in microdescriptors. So these clients can only tell if an
+   IPv6 ORPort is unreachable when a majority of voting authorities mark the
+   relay as not Running. After this proposal, clients will be able to discover
+   unreachable ORPorts, even if a minority of voting authorities set
    AuthDirHasIPv6Connectivity 1.
 
 2. Proposal
@@ -40,8 +45,8 @@ Target: 0.3.3.x
 
 2.2. Remove IPv6 ORPorts from Microdescriptors
 
-   We specify that microdescriptors created with methods N or later do not
-   contain any IPv6 ORPorts.
+   We specify that microdescriptors created with methods N or later start
+   omitting IPv6 ORPorts.
 
 3. Retaining Existing Behaviour
 
@@ -55,22 +60,22 @@ Target: 0.3.3.x
    This means that:
    * if no voting authorities set AuthDirHasIPv6Connectivity 1, there will be
      no IPv6 ORPorts in the consensus,
-   * if a minority of voting authorities set AuthDirHasIPv6Connectivity 1,
-     unreachable IPv6 ORPort lines will be dropped from the consensus, but the
-     relay will still be listed as Running,
+   * if a minority of voting authorities set AuthDirHasIPv6Connectivity 1:
+     unreachable IPv6 ORPort lines will be dropped from the consensus, but
+     the relay will still be listed as Running, and
+     reachable IPv6 ORPort lines will be included in the consensus.
    * if a majority of voting authorities set AuthDirHasIPv6Connectivity 1,
-     relays with unreachable IPv6 ORPorts will be dropped from the consensus.
+     relays with unreachable IPv6 ORPorts will not be listed as Running.
+     Reachable IPv6 ORPort lines will be included in the consensus.
+     (To ensure that any valid majority will vote relays with unreachable
+     IPv6 ORPorts not Running, 75% of authorities must set
+     AuthDirHasIPv6Connectivity 1.)
 
    We will document this behaviour in the tor manual page, see #23870.
 
-3.2. Full Consensus IPv6 ORPorts
+3.2. NS Consensus IPv6 ORPorts
 
-   The full consensus will continue to contain reachable IPv6 ORPorts.
-
-3.3. Clients that use Full Descriptors
-
-   Tor clients that use full descriptors already ignore unreachable IPv6
-   ORPorts, and have done so since at least 0.2.8.x.
+   The NS consensus will continue to contain reachable IPv6 ORPorts.
 
 4. Impact and Related Changes
 
@@ -103,36 +108,44 @@ Target: 0.3.3.x
 
    Their behaviour will be identical to the current behaviour for consensus
    methods M and earlier. When consensus method N is used, they will ignore
-   unreachable IPv6 ORPorts without any code changes.
+   unreachable IPv6 ORPorts without any code changes, as long as they are
+   using microdescriptors.
 
 4.3.1.2. IPv6 ORPort Bootstrap
 
    Tor clients on versions 0.2.8.x and 0.2.9.x are currently unable to
-   bootstrap over IPv6 only connections when using microdescriptors. This
+   bootstrap over IPv6-only connections when using microdescriptors. This
    happens because the microdesc consensus does not contain IPv6 ORPorts.
+   (IPv6-only Tor clients on versions 0.3.0.2-alpha and later use fallback
+   directory mirrors to fetch their microdescriptors.)
 
-   When consensus method M is used, they will be able to bootstrap over IPv6
-   only connections using microdescriptors, without any code changes.
+   When consensus method M is used, 0.2.8.x and 0.2.9.x clients will be able
+   to bootstrap over IPv6-only connections using microdescriptors, without any
+   code changes.
 
 4.3.2. Future Clients
 
 4.3.2.1. Ignoring IPv6 ORPorts in Microdescs
 
    Tor clients on versions 0.3.3.x and later will ignore unreachable IPv6
-   ORPorts once consensus method M or later is in use. (See #23827.)
+   ORPorts once consensus method M or later is in use. This requires some code
+   changes, see #23827.
 
 4.3.2.2. IPv6 ORPort Bootstrap
 
    If a bootstrapping IPv6-only client has a consensus made with method M or
    later, it should download microdescriptors from one of the IPv6 ORPorts in
-   that consensus. Previously, IPv6-only clients would use fallback directory
+   that consensus. This requires some code changes, see #23827.
+
+   Previously, IPv6-only clients would use fallback directory
    mirrors to download microdescs, because there were no IPv6 ORPorts in the
-   microdesc consensus. (See #23827.)
+   microdesc consensus.
 
 4.3.2.3. Ignoring Addresses in Unused Directory Documents
 
    If a client doesn't use a particular directory document type for a node,
-   it should ignore any addresses in that document type. (See #23975.)
+   it should ignore any addresses in that document type. This requires some
+   code changes, see #23975.
 
 5. Data Size
 
@@ -140,22 +153,34 @@ Target: 0.3.3.x
    have an IPv6 ORPort, and adds them to reachable IPv6 relays' microdesc
    consensus entries.
 
-   As of October 2017, 600 relays (9%) have IPv6 ORPorts in the full
+   As of October 2017, 600 relays (9%) have IPv6 ORPorts in the NS
    consensus. Their "a" lines take up 19 KB, or 33 bytes each on average.
-   The microdesc consensus is 1981 KB, so this represents about 1% of its
-   uncompressed size.
+
+   The gzip-compressed microdesc consensus is 564 KB, and adding the existing
+   IPv6 addresses makes it 576 KB (a 2.1% increase). Adding IPv6 addresses to
+   every relay makes it 644 KB (a 14% increase). zstd-compressed microdesc
+   consensuses show smaller increases of 1.7% and 8.0%, respectively.
 
    Most tor clients are already running 0.3.1.7, which implements consensus
-   diffs. We expect that most directory mirrors will also implement consensus
-   diffs by the time 2/3 of authorities are voting for consensus method M.
-
-   So we expect that this change will have a minimal impact, which is made
-   even smaller by compression and consensus diffs.
+   diffs and zstd compression. We expect that most directory mirrors will also
+   implement consensus diffs and zstd compression by the time 2/3 of
+   authorities are voting for consensus method M. Consensus diffs will reduce
+   the worst-case impact of this change for clients and relays that have a
+   recent consensus.
 
 6. External Impacts
 
    We don't expect this change to impact Onionoo and similar projects, because
-   they typically use the full consensus.
+   they typically use the NS consensus.
 
-   Metrics doesn't currently graph IPv6 usage in Tor, but would like to in
-   future.
+7. Monitoring
+
+   OnionOO has implemented an "unreachable IPv6 address" attribute:
+   https://trac.torproject.org/projects/tor/ticket/21637
+
+   Metrics is working on IPv6 relay graphs:
+   https://trac.torproject.org/projects/tor/ticket/23761
+
+   Consensus-health implements a ReachableIPv6 pseudo-flag for authorities
+   and relays:
+   https://consensus-health.torproject.org/
