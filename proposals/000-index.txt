@@ -206,6 +206,7 @@ Proposals by number:
 283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [OPEN]
 284  Hidden Service v3 Control Port [OPEN]
 285  Directory documents should be standardized as UTF-8 [OPEN]
+286  Controller APIs for hibernation access on mobile [OPEN]
 
 
 Proposals by status:
@@ -265,6 +266,7 @@ Proposals by status:
    283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [for 0.3.3.x]
    284  Hidden Service v3 Control Port
    285  Directory documents should be standardized as UTF-8
+   286  Controller APIs for hibernation access on mobile
  ACCEPTED:
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion

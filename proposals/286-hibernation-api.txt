@@ -1,0 +1,194 @@
+Filename: 286-hibernation-api.txt
+Title: Controller APIs for hibernation access on mobile
+Author: Nick Mathewson
+Created: 30-November-2017
+Status: Open
+
+
+1. Introduction
+
+   On mobile platforms, battery life is achieved by reducing
+   needless network access and CPU access.  Tor currently provides
+   few ways for controllers and operating systems to tune its
+   behavior.
+
+   This proposal describes controller APIs for better management of
+   Tor's hibernation mechanisms, and extensions to those mechanisms,
+   for better power management in mobile environments.
+
+1.1. Background: hibernation and idling in Tor today
+
+   We have an existing "hibernation" mechanism that we use to
+   implement "bandwidth accounting" and "slow shutdown" mechanisms:
+   When a Tor instance is close to its bandwidth limit: it stops
+   accepting new connections or circuits, and only processes those
+   it has, until the bandwidth limit is reached.  Once the bandwidth
+   limit is reached, Tor closes all connections and circuits, and
+   all non-controller listeners, until a new accounting limit
+   begins.
+
+   Tor handles the INT signal on relays similarly: it stops
+   accepting new connections or circuits, and gives the existing
+   ones a short interval in which to shut down.  Then Tor closes all
+   connections and exits the process entirely.
+
+   Tor's "idle" mechanism is related to hibernation, though its
+   implementation is separate.  When a Tor clients has passed a
+   certain amount of time without any user activity, it declares
+   itself "idle" and stops performing certain background tasks, such
+   as fetching directory information, or building circuits in
+   anticipation of future needs.  (This is tied in the codebase to
+   the "predicted ports" mechanism, but it doesn't have to be.)
+
+
+1.2. Background: power-management signals on mobile platforms
+
+   (I'm not a mobile developer, so I'm about to wildly oversimplify.
+   Please let me know where I'm wrong.)
+
+   Mobile platforms achieve long battery life by turning off the
+   parts they don't need.  The most important parts to turn off are
+   the antenna(s) and the screen; the CPU can be run in a slower
+   mode.
+
+   But it doesn't do much good turning things off when they're
+   unused, if some background app is going to make sure that they're
+   always in use!  So mobile platforms use signals of various kinds
+   to tell applications "okay, shut up now".
+
+   Some apps need to do online background activities periodically;
+   to help this out, mobile platforms give them a signal "Hey, now
+   is a good time if you want to do that" and "stop now!"
+
+
+1.3. Mostly out-of-scope: limiting CPU wakeups when idle.
+
+   The changes described here will be of limited use if we do not
+   also alter Tor so that, when it's idle, the CPU is pretty quiet.
+   That isn't the case right now: we have large numbers of callbacks
+   that happen periodically (every second, every minute, etc)
+   whether they need to or not.  We're hoping to limit those, but
+   that's not what this proposal is about.
+
+
+2. Improvements to the hibernation model
+
+   To present a consistent interface that applications and
+   controllers can use to manage power consumption, we make these
+   enhancements to our hibernation model.
+
+   First, we add three new hibernation states: "IDLE",
+   "IDLE_UPDATING", "SLEEP", and "SLEEP_UPDATING".
+
+   "IDLE" is like the current "idle" or "no predicted ports" state:
+   Tor doesn't launch circuits or start any directory activity, but
+   its listeners are still open.  Tor clients can enter the IDLE
+   state on their own when they are LIVE, but haven't gotten any
+   client activity for a while.  Existing connections and circuits
+   are not closed. If the Tor instance receives any new connections,
+   it becomes LIVE.
+
+   "IDLE_UPDATING" is like IDLE, except that Tor should check for
+   directory updates as appropriate.  If there are any, it should
+   fetch directory information, and then become IDLE again.
+
+   "SLEEPING" is like the current "dormant state we use for
+   bandwidth exhaustion, but it is controller-initiated: it begins
+   when Tor is told to enter it, and ends when Tor is told to leave
+   it.  Existing connections and circuits are closed; listeners are
+   closed too.
+
+   "SLEEP_UPDATING" is like SLEEP, except that Tor should check for
+   directory updates as appropriate.  If there are any, it should
+   fetch directory information, and then SLEEP again.
+
+
+2.1. Relay operation
+
+   Relays and bridges should not automatically become IDLE on their
+   own.
+
+
+2.2. Onion service operation
+
+   When a Tor instance that is running an onion service is IDLE, it
+   does the minimum to try to remain responsive on the onion
+   service: It keeps its introduction points open if it can. Once a
+   day, it fetches new directory information and opens new
+   introduction points.
+
+
+3. Controller hibernation API
+
+3.1. Examining the current hibernation state
+
+   We define a new "GETINFO status/hibernation" to inspect the
+   current hibernation state.  Possible values are:
+     - "live"
+     - "idle:control"
+     - "idle:no-activity"
+     - "sleep:control"
+     - "sleep:accounting"
+     - "idle-update:control"
+     - "sleep-update:control"
+     - "shutdown:exiting"
+     - "shutdown:accounting"
+     - "shutdown:control"
+
+   The first part of each value indicates Tor's current state:
+      "live" -- completely awake
+      "idle" -- waiting to see if anything happens
+      "idle-update" -- waiting to see if anything happens; probing
+         for directory information
+      "sleep" -- completely unresponsive
+      "shutdown" -- unresponsive to new requests; still processing
+         existing requests.
+
+   The second part of each value indicates the reason that Tor
+   entered this state:
+      "control" -- a controller told us to do this.
+      "no-activity" -- Tor became idle on its own due to not
+         noticing any requests.
+      "accounting" -- the bandwidth system told us to enter this
+         state.
+      "exiting" -- Tor is in this state because it's getting ready
+         to exit.
+
+   We add a STATUS_GENERAL hibernation event as follows:
+
+      HIBERNATION
+      "STATUS=" (one of the status pairs above.)
+
+      Indicates that Tor's hibernation status has changed.
+
+   Note: Controllers MUST accept status values here that they don't
+   recognize.
+
+   The "GETINFO accounting/hibernating" value and the "STATUS_SERVER
+   HIBERANATION_STATUS" event keep their old meaning.
+
+3.2. Changing the hibernation state
+
+   We add the following new possible values to the SIGNAL controller
+   command:
+      "SLEEP" -- enter the sleep state, after an appropriate
+         shutdown interval.
+
+      "IDLE" -- enter the idle state
+
+      "SLEEPWALK" -- If in sleep or idle, start probing for
+         directory information in the sleep-update or idle-update
+         state respectively.  Remain in that state until we've
+         probed for directory information, or until we're told to
+         IDLE or SLEEP again, or (if we're idle) until we get client
+         activity. Has no effect if not in sleep or idle.
+
+      "WAKEUP" -- If in sleep, sleep-update, idle, idle-update, or
+         shutdown:sleep state, enter the live state.  Has no effect
+         in any other state.
+
+3.3. New configuration parameters
+
+   StartIdle -- Boolean.  If set to 1, Tor begins in IDLE mode.
+
+   
