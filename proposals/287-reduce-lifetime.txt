@@ -1,0 +1,105 @@
+Filename: 287-reduce-lifetime.txt
+Title: Reduce circuit lifetime without overloading the network
+Author: Fernando Fernandez Mancera
+Created: 30-Nov-2017
+Status: Open
+
+Motivation:
+
+Currently Tor users are reusing a given circuit for ten minutes (by default)
+after it's first used. This time is too long because a malicious Exit relay can
+trace a user's pseudonymous profile, especially if connections from multiple
+protocols are put on the same circuit.
+
+This time it is established on MaxCircuitDirtiness parameter and by default its
+value is ten minutes.
+
+I have been thinking in a way to fix this. The first idea that came to my mind
+was to use StreamIsolationByHost and StreamIsolationByPort on it, but I wasn't
+able to sort it out.
+
+One day, I thought "Why is time so important?" and later on I realized that
+maybe focusing on the amount of bytes running through the circuit could end up
+being a better approach on this problem.
+
+Design:
+
+I propose two options to reduce this problem, both based on taking into account
+the amount of bytes running through a circuit.
+
+MaxCircuitSizeDirtiness (temporal parameter name) will take an integer field
+that is contained on an interval and represents the maximum amount of bytes
+that can be written/read (we need to discuss about the use of one for both) by
+the circuit. If the circuit exceeds that amount, new streams won't use this
+circuit anymore.
+
+MaxCircuitSizeDirtinessByPort (temporal parameter name) will take an array of
+integers that are contained on an interval and represents the maximum amount of
+bytes that can be written/read (we need to discuss about the use of one for
+both) by the circuit per port (StreamIsolationByPort). This array is parallel
+to the array of ports from StreamIsolationByPort. If the circuit exceeds that
+amount, new streams won't use this circuit anymore.
+
+Regarding default values it would be useful to set up one a bit lower than the
+average amount of bytes per circuit. On MaxCircuitSizeDirtinessByPort after
+discuss it we shouldn't set up a default value because someone can identify the
+port used. About MaxCircuitDirtiness, if the others are set up by default it
+could be bigger, like thirty minutes, so if the user doesn't send/receive a
+significant amount of data the circuit will be changed anyway.
+
+Security Implications:
+
+It is believed that the proposed changes will improve the anonymity for end
+users. The end user won't reuse a given circuit if they have sent a
+considerable amount of bytes, thus making more difficult for malicious Exit
+relays to be able to trace a user's pseudonymous profile.
+
+Obviously this is a probability, of course it's possible that sensitive data
+will leak in a little amount of data but it's more even possible that sensitive
+data will leak in a large amount.
+
+Specification:
+
+In order to implement this feature we will need to add some new
+functionalities. We need to parse MaxCircuitSizeDirtiness and
+MaxCircuitSizeDirtinessByPort from the torrc config file. We need to create a
+function or improve one to check the amount of bytes that are running through
+the circuit and if this amount is higher than the established value, consider
+the circuit dirty.
+
+Compatibility:
+
+The proposed changes should not create any compatibility issues. New Tor
+clients will be able to take advantage of this without any modification to the
+network.
+
+Implementation:
+
+It is proposed that MaxCircuitSizeDirtiness will be enabled by default and also
+increase MaxCircuitDirtiness to thirty minutes. 
+
+It is proposed that MaxCircuitSizeDirtinessByPort won't be enabled by default
+for port 22, 53, and port 80 as StreamIsolationByPort.
+
+About TorBrowser or any other Tor application that is able to manage circuits
+by its own because of KeepAliveIsolateSOCKSAuth option being active by default
+shouldn't be affected by this new feature. As the same form that it currently
+ignores MaxCircuitDirtiness parameter.
+
+Performance and scalability notes: 
+
+The proposed changes will reduce Tor network stress as users who do not exceed
+the set amount will reduce circuit generation by three (if default
+MaxCircuitDirtinesss value is thirty minutes).
+
+I want to work on demonstrating that by a research but first it's nice to get the
+idea accepted.
+
+References:
+
+Tor project research ideas [https://research.torproject.org/ideas.html]
+
+Enhancing Tor's Performance using Real-time Traffic Classification
+[https://www.cypherpunks.ca/~iang/pubs/difftor-ccs.pdf] (It's not exactly about
+that, but they talk about circuit lifetime and the ten minutes problem a few
+times. Also it's an interesting paper.)
