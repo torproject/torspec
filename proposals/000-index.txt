@@ -207,6 +207,7 @@ Proposals by number:
 284  Hidden Service v3 Control Port [OPEN]
 285  Directory documents should be standardized as UTF-8 [OPEN]
 286  Controller APIs for hibernation access on mobile [OPEN]
+287  Reduce circuit lifetime without overloading the network [OPEN]
 
 
 Proposals by status:
@@ -267,6 +268,7 @@ Proposals by status:
    284  Hidden Service v3 Control Port
    285  Directory documents should be standardized as UTF-8
    286  Controller APIs for hibernation access on mobile
+   287  Reduce circuit lifetime without overloading the network
  ACCEPTED:
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
