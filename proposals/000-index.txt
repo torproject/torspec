@@ -200,7 +200,7 @@ Proposals by number:
 277  Detect multiple relay instances running with same ID [OPEN]
 278  Directory Compression Scheme Negotiation [FINISHED]
 279  A Name System API for Tor Onion Services [DRAFT]
-280  Privacy-Preserving Statistics with Privcount in Tor [DRAFT]
+280  Privacy-Preserving Statistics with Privcount in Tor [SUPERSEDED]
 281  Downloading microdescriptors in bulk [DRAFT]
 282  Remove "Named" and "Unnamed" handling from consensus voting [OPEN]
 283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [OPEN]
@@ -232,7 +232,6 @@ Proposals by status:
    270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope
    273  Exit relay pinning for web services [for n/a]
    279  A Name System API for Tor Onion Services
-   280  Privacy-Preserving Statistics with Privcount in Tor
    281  Downloading microdescriptors in bulk
    288  Privacy-Preserving Statistics with Privcount in Tor (Shamir version)
  NEEDS-REVISION:
@@ -390,6 +389,7 @@ Proposals by status:
    225  Strawman proposal: commit-and-reveal shared rng
    252  Single Onion Services
    266  Removing current obsolete clients from the Tor network
+   280  Privacy-Preserving Statistics with Privcount in Tor
  DEAD:
    100  Tor Unreliable Datagram Extension Proposal
    115  Two Hop Paths

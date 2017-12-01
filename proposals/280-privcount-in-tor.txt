@@ -2,7 +2,8 @@ Filename: 280-privcount-in-tor.txt
 Title: Privacy-Preserving Statistics with Privcount in Tor
 Author: Nick Mathewson, Tim Wilson-Brown
 Created: 02-Aug-2017
-Status: Draft
+Status: Superseded
+Superseded-By: 288
 
 0. Acknowledgments
 
