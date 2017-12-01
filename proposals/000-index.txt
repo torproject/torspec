@@ -208,6 +208,7 @@ Proposals by number:
 285  Directory documents should be standardized as UTF-8 [OPEN]
 286  Controller APIs for hibernation access on mobile [OPEN]
 287  Reduce circuit lifetime without overloading the network [OPEN]
+288  Privacy-Preserving Statistics with Privcount in Tor (Shamir version) [DRAFT]
 
 
 Proposals by status:
@@ -233,6 +234,7 @@ Proposals by status:
    279  A Name System API for Tor Onion Services
    280  Privacy-Preserving Statistics with Privcount in Tor
    281  Downloading microdescriptors in bulk
+   288  Privacy-Preserving Statistics with Privcount in Tor (Shamir version)
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  NEEDS-RESEARCH:

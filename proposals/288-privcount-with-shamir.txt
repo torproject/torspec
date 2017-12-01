@@ -1,0 +1,564 @@
+Filename: 288-privcount-with-shamir.txt
+Title: Privacy-Preserving Statistics with Privcount in Tor (Shamir version)
+Author: Nick Mathewson, Tim Wilson-Brown, Aaron Johnson
+Created: 1-Dec-2017
+Supercedes: 280
+Status: Draft
+
+0. Acknowledgments
+
+  Tariq Elahi, George Danezis, and Ian Goldberg designed and implemented
+  the PrivEx blinding scheme. Rob Jansen and Aaron Johnson extended
+  PrivEx's differential privacy guarantees to multiple counters in
+  PrivCount:
+
+  https://github.com/privcount/privcount/blob/master/README.markdown#research-background
+
+  Rob Jansen and Tim Wilson-Brown wrote the majority of the experimental
+  PrivCount code, based on the PrivEx secret-sharing variant. This
+  implementation includes contributions from the PrivEx authors, and
+  others:
+
+  https://github.com/privcount/privcount/blob/master/CONTRIBUTORS.markdown
+
+  This research was supported in part by NSF grants CNS-1111539,
+  CNS-1314637, CNS-1526306, CNS-1619454, and CNS-1640548.
+
+  The use of a Shamir secret-sharing-based approach is due to a
+  suggestion by Aaron Johnson (iirc); Carolin Zöbelein did some helpful
+  analysis here.
+
+  Aaron Johnson and Tim Wilson-Brown made improvements to the draft proposal.
+
+1. Introduction and scope
+
+  PrivCount is a privacy-preserving way to collect aggregate statistics
+  about the Tor network without exposing the statistics from any single
+  Tor relay.
+
+  This document describes the behavior of the in-Tor portion of the
+  PrivCount system.  It DOES NOT describe the counter configurations,
+  or any other parts of the system. (These will be covered in separate
+  proposals.)
+
+2. PrivCount overview
+
+  Here follows an oversimplified summary of PrivCount, with enough
+  information to explain the Tor side of things.  The actual operation
+  of the non-Tor components is trickier than described below.
+
+  In PrivCount, a Data Collector (DC, in this case a Tor relay) shares
+  numeric data with N different Tally Reporters (TRs). (A Tally Reporter
+  performs the summing and unblinding roles of the Tally Server and Share
+  Keeper from experimental PrivCount.)
+
+  All N Tally Reporters together can reconstruct the original data, but
+  no (N-1)-sized subset of the Tally Reporters can learn anything about
+  the data.
+
+  (In reality, the Tally Reporters don't reconstruct the original data
+  at all! Instead, they will reconstruct a _sum_ of the original data
+  across all participating relays.)
+
+  In brief, the system works as follow:
+
+  To share data, for each counter value V to be shared, the Data Collector
+  first adds Gaussian noise to V in order to produce V', uses (K,N) Shamir
+  secret-sharing to generate N shares of V' (K<=N, K being the
+  reconstruction threshold), encrypts each share to a different Tally
+  Reporter, and sends each encrypted share to the Tally Reporter it
+  is encrypted for.
+
+  The Tally Reporters then agree on the set S of Data Collectors that sent
+  data to all of them, and each Tally Reporter forms a share of the aggregate
+  value by decrypting the shares it received from the Data Collectors in S
+  and adding them together. The Tally Reporters then, collectively, perform
+  secret reconstruction, thereby learning the sum of all the different
+  values V'.
+
+  The use of Shamir secret sharing lets us survive up to N-K crashing TRs.
+  Waiting until the end to agree on a set S of surviving relays lets us
+  survive an arbitrary number of crashing DCs. In order to prevent bogus
+  data from corrupting the tally, the Tally Reporters can perform the
+  aggregation step multiple times, each time proceeding with a different
+  subset of S and taking the median of the resulting values.
+
+  Relay subsets should be chosen at random to avoid relays manipulating their
+  subset membership(s). If an shared random value is required, all relays must
+  submit their results, and then the next revealed shared random value can
+  be used to select relay subsets. (Tor's shared random value can be
+  calculated as soon as all commits have been revealed. So all relay results
+  must be received *before* any votes are cast in the reveal phase for that
+  shared random value.)
+
+  Below we describe the algorithm in more detail, and describe the data
+  format to use.
+
+3. The algorithm
+
+  All values below are B-bit integers modulo some prime P; we suggest
+  B=62 and P = 2**62 - 2**30 - 1 (hex 0x3fffffffbfffffff).  The size of
+  this field is an upper limit on the largest sum we can calculate; it
+  is not a security parameter.
+
+  There are N Tally Reporters: every participating relay must agree on
+  which N exist, and on their current public keys.  We suggest listing
+  them in the consensus networkstatus document.  All parties must also
+  agree on some ordering the Tally Reporters.  Similarly, all parties
+  must also agree on some value K<=N.
+
+  There are a number of well-known "counters", identified known by ASCII
+  identifiers.  Each counter is a value that the participating relays
+  will know how to count.  Let C be the number of counters.
+
+3.1. Data Collector (DC) side
+
+  At the start of each period, every Data Collector ("client" below)
+  initializes their state as follows
+
+      1. For every Tally Reporter with index i, the client constructs a
+         random 32-byte random value SEED_i.  The client then generates
+         a pseudorandom bitstream of C*B bits using the SHAKE-256
+         XOF with SEED_i as its input, and divides this stream into
+         C values, with the c'th value denoted by MASK(i, c).
+
+         [Because P is very close to a power of 2, nearly all seeds will
+         produce MASK values in range 0...(P-1).  If any does not, the
+         client picks a new seed.]
+
+      2. The client encrypts SEED_i using the public key of Tally
+         Reporter i, and remembers this encrypted value.  It discards
+         SEED_i.
+
+      3. For every counter c, the client generates a noise value Z_c
+         from an appropriate Gaussian distribution. If the noise value is
+         negative, the client adds P to bring Z_c into the range 0...(P-1).
+         (The noise MUST be sampled using the procedure in Appendix C.)
+
+         The client then uses Shamir secret sharing to generate
+         N shares (x,y) of Z_c, 1 <= x <= N, with the x'th share to be used by
+         the x'th Tally Reporter.  See Appendix A for more on Shamir secret
+         sharing.  See Appendix B for another idea about X coordinates.
+
+         The client picks a random value CTR_c and stores it in the counter,
+         which serves to locally blind the counter.
+
+         The client then subtracts (MASK(x, c)+CTR_c) from y, giving
+         "encrypted shares" of (x, y0) where y0 = y-CTR_c.
+
+         The client then discards all MASK values, all CTR values, and all
+         original shares (x,y), all CTR and the noise value Z_c. For each
+         counter c, it remembers CTR_c, and N shares of the form (x, y).
+
+  To increment a counter by some value "inc":
+
+      1. The client adds "inc" to counter value, modulo P.
+
+         (This step is chosen to be optimal, since it will happen more
+         frequently than any other step in the computation.)
+
+         Aggregate counter values that are close to P/2 MUST be scaled to
+         avoid overflow. See Appendix D for more information. (We do not think
+         that any counters on the current Tor network will require scaling.)
+
+  To publish the counter values:
+
+      1. The client publishes, in the format described below:
+
+         The list of counters it knows about
+         The list of TRs it knows about
+         For each TR:
+            For each counter c:
+                A list of (i, y-CTR_c-MASK(x,c)), which corresponds
+                to the share for the i'th TR of counter c.
+            SEED_i as encrypted earlier to the i'th TR's public key.
+
+3.2. Tally Reporter (TR) side
+
+  This section is less completely specified than the Data Collector's
+  behavior: I expect that the TRs will be easier to update as we proceed.
+
+  (Each TR has a long-term identity key (ed25519).  It also has a
+  sequence of short-term curve25519 keys, each associated with a single
+  round of data collection.)
+
+   1. When a group of TRs receives information from the Data Collectors,
+      they collectively chose a set S of DCs and a set of counters such
+      that every TR in the group has a valid entry for every counter,
+      from every DC in the set.
+
+      To be valid, an entry must not only be well-formed, but must also
+      have the x coordinate in its shares corresponding to the
+      TR's position in the list of TRs.
+
+   2. For each Data Collector's report, the i'th TR decrypts its part of
+      the client's report using its curve25519 key.  It uses SEED_i and
+      SHAKE-256 to regenerate MASK(0) through MASK(C-1).  Then for each
+      share (x, y-CTR_c-MASK(x,c)) (note that x=i), the TR reconstructs the
+      true share of the value for that DC and counter c by adding
+      V+MASK(x,c) to the y coordinate to yield the share (x, y_final).
+
+   3. For every counter in the set, each TR computes the sum of the
+      y_final values from all clients.
+
+   4. For every counter in the set, each TR publishes its a share of
+      the sum as (x, SUM(y_final)).
+
+   5. If at least K TRs publish correctly, then the sum can be
+      reconstructed using Lagrange polynomial interpolation. (See
+      Appendix A).
+
+   6. If the reconstructed sum is greater than P/2, it is probably a negative
+      value. The value can be obtained by subtracting P from the sum.
+      (Negative values are generated when negative noise is added to small
+      signals.)
+
+   7. If scaling has been applied, the sum is scaled by the scaling factor.
+      (See Appendix D.)
+
+4. The document format
+
+4.1. The counters document.
+
+  This document format builds on the line-based directory format used
+  for other tor documents, described in Tor's dir-spec.txt.
+
+  Using this format, we describe a "counters" document that publishes
+  the shares collected by a given DC, for a single TR.
+
+  The "counters" document has these elements:
+
+    "privctr-dump-format" SP VERSION SP SigningKey
+
+       [At start, exactly once]
+
+       Describes the version of the dump format, and provides an ed25519
+       signing key to identify the relay. The signing key is encoded in
+       base64 with padding stripped. VERSION is "alpha" now, but should
+       be "1" once this document is finalized.
+
+    "starting-at" SP IsoTime
+
+       [Exactly once]
+
+       The start of the time period when the statistics here were
+       collected.
+
+    "ending-at" SP IsoTime
+
+       [Exactly once]
+
+       The end of the time period when the statistics here were
+       collected.
+
+    "share-parameters" SP Number SP Number
+
+       [Exactly once]
+
+       The number of shares needed to reconstruct the client's
+       measurements (K), and the number of shares produced (N),
+       respectively.
+
+    "tally-reporter" SP Identifier SP Integer SP Key
+
+       [At least twice]
+
+       The curve25519 public key of each Tally Reporter that the relay
+       believes in.  (If the list does not match the list of
+       participating Tally Reporters, they won't be able to find the
+       relay's values correctly.)  The identifiers are non-space,
+       non-nul character sequences.  The Key values are encoded in
+       base64 with padding stripped; they must be unique within each
+       counters document.  The Integer values are the X coordinate of
+       the shares associated with each Tally Reporter.
+
+    "encrypted-to-key" SP Key
+
+       [Exactly once]
+
+       The curve25519 public key to which the report below is encrypted.
+       Note that it must match one of the Tally Reporter options above.
+
+
+    "report" NL
+      "----- BEGIN ENCRYPTED MESSAGE-----" NL
+      Base64Data
+      "----- END ENCRYPTED MESSAGE-----" NL
+
+      [Exactly once]
+
+      An encrypted document, encoded in base64. The plaintext format is
+      described in section 4.2. below. The encryption is as specified in
+      section 5 below, with STRING_CONSTANT set to "privctr-shares-v1".
+
+    "signature" SP Signature
+
+       [At end, exactly once]
+
+       The Ed25519 signature of all the fields in the document, from the
+       first byte, up to but not including the "signature" keyword here.
+       The signature is encoded in base64 with padding stripped.
+
+4.2. The encrypted "shares" document.
+
+  The shares document is sent, encrypted, in the "report" element above.
+  Its plaintext contents include these fields:
+
+   "encrypted-seed" NL
+      "----- BEGIN ENCRYPTED MESSAGE-----" NL
+      Base64Data
+      "----- END ENCRYPTED MESSAGE-----" NL
+
+      [At start, exactly once.]
+
+      An encrypted document, encoded in base64. The plaintext value is
+      the 32-byte value SEED_i for this TR. The encryption is as
+      specified in section 5 below, with STRING_CONSTANT set to
+      "privctr-seed-v1".
+
+   "d" SP Keyword SP Integer
+
+      [Any number of times]
+
+      For each counter, the name of the counter, and the obfuscated Y
+      coordinate of this TR's share for that counter.  (The Y coordinate
+      is calculated as y-CTR_c as in 3.1 above.)  The order of counters
+      must correspond to the order used when generating the MASK() values;
+      different clients do not need to choose the same order.
+
+5. Hybrid encryption
+
+   This scheme is taken from rend-spec-v3.txt, section 2.5.3, replacing
+   "secret_input" and "STRING_CONSTANT".  It is a hybrid encryption
+   method for encrypting a message to a curve25519 public key PK.
+
+     We generate a new curve25519 keypair (sk,pk).
+
+     We run the algorithm of rend-spec-v3.txt 2.5.3, replacing
+     "secret_input" with Curve25519(sk,PK) | SigningKey, where
+     SigningKey is the DC's signing key.  (Including the DC's SigningKey
+     here prevents one DC from replaying another one's data.)
+
+     We transmit the encrypted data as in rend-spec-v3.txt 2.5.3,
+     prepending pk.
+
+
+Appendix A. Shamir secret sharing for the impatient
+
+   In Shamir secret sharing, you want to split a value in a finite
+   field into N shares, such that any K of the N shares can
+   reconstruct the original value, but K-1 shares give you no
+   information at all.
+
+   The key insight here is that you can reconstruct a K-degree
+   polynomial given K+1 distinct points on its curve, but not given
+   K points.
+
+   So, to split a secret, we going to generate a (K-1)-degree
+   polynomial.  We'll make the Y intercept of the polynomial be our
+   secret, and choose all the other coefficients at random from our
+   field.
+
+   Then we compute the (x,y) coordinates for x in [1, N].  Now we
+   have N points, any K of which can be used to find the original
+   polynomial.
+
+   Moreover, we can do what PrivCount wants here, because adding the
+   y coordinates of N shares gives us shares of the sum:  If P1 is
+   the polynomial made to share secret A and P2 is the polynomial
+   made to share secret B, and if (x,y1) is on P1 and (x,y2) is on
+   P2, then (x,y1+y2) will be on P1+P2 ... and moreover, the y
+   intercept of P1+P2 will be A+B.
+
+   To reconstruct a secret from a set of shares, you have to either
+   go learn about Lagrange polynomials, or just blindly copy a
+   formula from your favorite source.
+
+   Here is such a formula, as pseudocode^Wpython, assuming that
+   each share is an object with a _x field and a _y field.
+
+     def interpolate(shares):
+        for sh in shares:
+           product_num = FE(1)
+           product_denom = FE(1)
+           for sh2 in shares:
+               if sh2 is sh:
+                   continue
+               product_num *= sh2._x
+               product_denom *= (sh2._x - sh._x)
+
+           accumulator += (sh._y * product_num) / product_denom
+
+       return accumulator
+
+
+Appendix B. An alternative way to pick X coordinates
+
+   Above we describe a system where everybody knows the same TRs and
+   puts them in the same order, and then does Shamir secret sharing
+   using "x" as the x coordinate for the x'th TR.
+
+   But what if we remove that requirement by having x be based on a hash
+   of the public key of the TR?  Everything would still work, so long as
+   all users chose the same K value.  It would also let us migrate TR
+   sets a little more gracefully.
+
+
+Appendix C. Sampling floating-point Gaussian noise for differential privacy
+
+   Background:
+
+   When we add noise to a counter value (signal), we want the added noise to
+   protect all of the bits in the signal, to ensure differential privacy.
+
+   But because noise values are generated from random double(s) using
+   floating-point calculations, the resulting low bits are not distributed
+   evenly enough to ensure differential privacy.
+
+   As implemented in the C "double" type, IEEE 754 double-precision
+   floating-point numbers contain 53 significant bits in their mantissa. This
+   means that noise calculated using doubles can not ensure differential
+   privacy for client activity larger than 2**53:
+     * if the noise is scaled to the magnitude of the signal using
+       multiplication, then the low bits are unprotected,
+     * if the noise is not scaled, then the high bits are unprotected.
+
+   But the operations in the noise transform also suffer from floating-point
+   inaccuracy, further affecting the low bits in the mantissa. So we can only
+   protect client activity up to 2**46 with Laplacian noise. (We assume that
+   the limit for Gaussian noise is similar.)
+
+   Our noise generation procedure further reduces this limit to 2**42. For
+   byte counters, 2**42 is 4 Terabytes, or the observed bandwidth of a 1 Gbps
+   relay running at full speed for 9 hours. It may be several years before we
+   want to protect this much client activity. However, since the mitigation is
+   relatively simple, we specify that it MUST be implemented.
+
+   Procedure:
+
+   Data collectors MUST sample noise as follows:
+     1. Generate random double(s) in [0, 1] that are integer multiples of
+        2**-53.
+        TODO: the Gaussian transform in step 2 may require open intervals
+     2. Generate a Gaussian floating-point noise value at random with sigma 1,
+        using the random double(s) generated in step 1.
+     3. Multiply the floating-point noise by the floating-point sigma value.
+     4. Truncate the scaled noise to an integer to remove the fractional bits.
+        (These bits can never correspond to signal bits, because PrivCount only
+        collects integer counters.)
+     5. If the floating-point sigma value from step 3 is large enough that any
+        noise value could be greater than or equal to 2**46, we need to
+        randomise the low bits of the integer scaled noise value. (This ensures
+        that the low bits of the signal are always hidden by the noise.)
+
+        If we use the sample_unit_gaussian() transform in nickm/privcount_nm:
+        A. The maximum r value is sqrt(-2.0*ln(2**-53)) ~=  8.57, and the
+           maximal sin(theta) values are +/- 1.0. Therefore, the generated
+           noise values can be greater than or equal to 2**46 when the sigma
+           value is greater than 2**42.
+        B. Therefore, the number of low bits that need to be randomised is:
+               N = floor(sigma / 2**42)
+        C. We randomise the lowest N bits of the integer noise by replacing them
+           with a uniformly distributed N-bit integer value in 0...(2**N)-1.
+     6. Add the integer noise to the integer counter, before the counter is
+        incremented in response to events. (This ensures that the signal value
+        is always protected.)
+
+   This procedure is security-sensitive: changing the order of
+   multiplications, truncations, or bit replacements can expose the low or
+   high bits of the signal or noise.
+
+   As long as the noise is sampled using this procedure, the low bits of the
+   signal are protected. So we do not need to "bin" any signals.
+
+   The impact of randomising more bits than necessary is minor, but if we fail
+   to randomise an unevenly distributed bit, client activity can be exposed.
+   Therefore, we choose to randomise all bits that could potentially be affected
+   by floating-point inaccuracy.
+
+   Justification:
+
+   Although this analysis applies to Laplacian noise, we assume a similar
+   analysis applies to Gaussian noise. (If we add Laplacian noise on DCs,
+   the total ends up with a Gaussian distribution anyway.)
+
+   TODO: check that the 2**46 limit applies to Gaussian noise.
+
+   This procedure results in a Gaussian distribution for the higher ~42 bits
+   of the noise. We can safely ignore the value of the lower bits of the noise,
+   because they are insignificant for our reporting.
+
+   This procedure is based on section 5.2 of:
+   "On Significance of the Least Significant Bits For Differential Privacy"
+   Ilya Mironov, ACM CCS 2012
+   https://www.microsoft.com/en-us/research/wp-content/uploads/2012/10/lsbs.pdf
+
+   We believe that this procedure is safe, because we neither round nor smooth
+   the noise values. The truncation in step 4 has the same effect as Mironov's
+   "safe snapping" procedure. Randomising the low bits removes the 2**46 limit
+   on the sigma value, at the cost of departing slightly from the ideal
+   infinite-precision Gaussian distribution. (But we already know that these
+   bits are distributed poorly, due to floating-point inaccuracy.)
+
+   Mironov's analysis assumes that a clamp() function is available to clamp
+   large signal and noise values to an infinite floating-point value.
+   Instead of clamping, PrivCount's arithmetic wraps modulo P. We believe that
+   this is safe, because any reported values this large will be meaningless
+   modulo P. And they will not expose any client activity, because "modulo P"
+   is an arithmetic transform of the summed noised signal value.
+
+   Alternatives:
+
+   We could round the encrypted value to the nearest multiple of the
+   unprotected bits. But this relies on the MASK() value being a uniformly
+   distributed random value, and it is less generic.
+
+   We could also simply fail when we reach the 2**42 limit on the sigma value,
+   but we do not want to design a system with a limit that low.
+
+   We could use a pure-integer transform to create Gaussian noise, and avoid
+   floating-point issues entirely. But we have not been able to find an
+   efficient pure-integer Gaussian or Laplacian noise transform. Nor do we
+   know if such a transform can be used to ensure differential privacy.
+
+
+Appendix D. Scaling large counters
+
+   We do not believe that scaling will be necessary to collect PrivCount
+   statistics in Tor. As of November 2017, the Tor network advertises a
+   capacity of 200 Gbps, or 2**51 bytes per day. We can measure counters as
+   large as ~2**61 before reaching the P/2 counter limit.
+
+   If scaling becomes necessary, we can scale event values (and noise sigmas)
+   by a scaling factor before adding them to the counter. Scaling may introduce
+   a bias in the final result, but this should be insignificant for reporting.
+
+
+Appendix Z. Remaining client-side uncertainties
+
+   [These are the uncertainties at the client side. I'm not considering
+    TR-only operations here unless they affect clients.]
+
+   Should we do a multi-level thing for the signing keys?  That is, have
+   an identity key for each TR and each DC, and use those to sign
+   short-term keys?
+
+   How to tell the DCs the parameters of the system, including:
+      - who the TRs are, and what their keys are?
+      - what the counters are, and how much noise to add to each?
+      - how do we impose a delay when the noise parameters change?
+        (this delay ensures differential privacy even when the old and new
+        counters are compared)
+        - or should we try to monotonically increase counter noise?
+      - when the collection intervals start and end?
+      - what happens in networks where some relays report some counters, and
+        other relays report other counters?
+        - do we just pick the latest counter version, as long as enough relays
+          support it?
+          (it's not safe to report multiple copies of counters)
+
+   How the TRs agree on which DCs' counters to collect?
+
+   How data is uploaded to DCs?
+
+   What to say about persistence on the DC side?
