@@ -73,7 +73,24 @@ Status: Open
 
 3.1.5. HSPOST
 
-   No change. This command can support v3 hidden service without changes.
+   To support version 3, the command needs an extra parameter that is the
+   onion address of the given descriptor. With v2, the address could have been
+   deduced from the given descriptor but with v3, this is not possible.  In
+   order to fire up the HS_DESC event correctly, we need the address so the
+   request can be linked on the control port.
+
+   Furthermore, the given descriptor will be validated with the given address
+   and an error will be returned if they are not matching.
+
+   The syntax becomes:
+
+     "+HSPOST" *[SP "SERVER=" Server] [SP "HSADDRESS=" HSAddress]
+               CRLF Descriptor CRLF "." CRLF
+
+     HSAddress = 56*Base32Character
+
+   The "HSAddress" key is optional and only applies for v3 descriptors. A 513
+   error is returned if used with v2.
 
 3.1.3. ADD_ONION
 
