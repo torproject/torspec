@@ -2,7 +2,7 @@ Filename: 284-hsv3-control-port.txt
 Title: Hidden Service v3 Control Port
 Author: David Goulet
 Created: 02-November-2017
-Status: Open
+Status: Finished
 
 1. Summary
 

@@ -204,7 +204,7 @@ Proposals by number:
 281  Downloading microdescriptors in bulk [DRAFT]
 282  Remove "Named" and "Unnamed" handling from consensus voting [OPEN]
 283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [OPEN]
-284  Hidden Service v3 Control Port [OPEN]
+284  Hidden Service v3 Control Port [FINISHED]
 285  Directory documents should be standardized as UTF-8 [OPEN]
 286  Controller APIs for hibernation access on mobile [OPEN]
 287  Reduce circuit lifetime without overloading the network [OPEN]
@@ -266,7 +266,6 @@ Proposals by status:
    277  Detect multiple relay instances running with same ID [for 0.3.??]
    282  Remove "Named" and "Unnamed" handling from consensus voting [for 0.3.3.x]
    283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [for 0.3.3.x]
-   284  Hidden Service v3 Control Port
    285  Directory documents should be standardized as UTF-8
    286  Controller APIs for hibernation access on mobile
    287  Reduce circuit lifetime without overloading the network
@@ -289,6 +288,7 @@ Proposals by status:
    232  Pluggable Transport through SOCKS proxy [in 0.2.6]
    260  Rendezvous Single Onion Services [in 0.2.9.3-alpha]
    278  Directory Compression Scheme Negotiation [in 0.3.1.1-alpha]
+   284  Hidden Service v3 Control Port
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]
