@@ -46,11 +46,11 @@ Status: Open
      };
 
    The 'ignored' fields, which extend to the end of the variable-length
-   cells, are reserved.  Initiators MAY set them to any length, but MUST
-   fill them with zero-valued bytes.  Responders MUST ignore them,
-   regardless of what they contain.  When a CREATE2V cell is generated
-   in response to a set of EXTEND2 cells, these fields are set by the
-   relay that receives the EXTEND2 cells.
+   cells, are reserved.  Initiators MAY set them to any length, and MUST
+   fill them with either zero-valued bytes or pseudo-random bytes.
+   Responders MUST ignore them, regardless of what they contain.  When a
+   CREATE2V cell is generated in response to a set of EXTEND2 cells, these
+   fields are set by the relay that receives the EXTEND2 cells.
 
    (The purpose of the 'ignored' fields here is future-proofing and
    padding.)
