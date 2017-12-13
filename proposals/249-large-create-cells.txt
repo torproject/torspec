@@ -88,7 +88,12 @@ Status: Open
 4. Interacting with RELAY_EARLY cells
 
    The first EXTEND2 cell in a batch must arrive in a RELAY_EARLY cell.
-   The others MAY arrive in RELAY_EARLY cells.
+   The others MAY arrive in RELAY_EARLY cells.  For many handshakes, for
+   the possible lengths of many types of circuits, sending all EXTEND2 cells
+   inside RELAY_EARLY cells will not be possible.  For example, for a
+   fragmented EXTEND2 cell with parts A B C D E, A is the only fragment that
+   MUST be sent within a RELAY_EARLY.  For parts B C D E, these are merely
+   sent as EXTEND2{CREATE2V} cells.
 
    Note that this change leaks the size of the handshake being used to
    intermediate relays.  We should analyze this and see whether it matters.
