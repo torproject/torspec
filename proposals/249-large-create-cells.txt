@@ -77,6 +77,14 @@ Status: Open
    If any intervening cells are received, the receiver SHOULD destroy
    the circuit.
 
+   Protocols which make use of CREATE(D)2V cells SHOULD send an equal number
+   of cells in either direction, to avoid trivially disclosing information
+   about the direction of the circuit: for example a relay might use the
+   fact that it saw five EXTEND2 cells in one direction and three in the
+   other to easily determine whether it is the middle relay on the onion
+   service-side or the middle relay on the client-side of a rendezvous
+   circuit.
+
 4. Interacting with RELAY_EARLY cells
 
    The first EXTEND2 cell in a batch must arrive in a RELAY_EARLY cell.
