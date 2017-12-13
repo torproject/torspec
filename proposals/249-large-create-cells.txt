@@ -146,7 +146,7 @@ Status: Open
    before it's needed, we can use the new handshake types whenever both
    of the involved relays support this proposal.
 
-   Clients MUST NOT sent fragmented EXTEND2 cells to relays that don't
+   Clients MUST NOT send fragmented EXTEND2 cells to relays that don't
    support them, since this would cause them to close the circuit.
 
    Relays MAY send CREATE2V and CREATED2V cells to relays that don't

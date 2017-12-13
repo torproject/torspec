@@ -53,7 +53,7 @@ Status: Draft
                       idnxcnkne4qt76tg.onion
                       vwakviie2ienjx6t.onion
 
-   When Proposal 224 get deployed, onion addresses will become even
+   When Proposal 224 gets deployed, onion addresses will become even
    bigger: 53 base32 characters. That's:
 
         llamanymityx4fi3l6x2gyzmtmgxjyqyorj9qsb5r543izcwymle.onion
