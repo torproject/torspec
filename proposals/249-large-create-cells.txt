@@ -165,6 +165,9 @@ Status: Open
    the buffers allocated for this data need to be counted against the
    total data usage of the circuit.
 
+   Further, circuits which receive and buffer CREATE(D)2V cells MUST store
+   the time the first buffer chunk was allocated, and use it to inform the
+   OOM manager w.r.t. the amount of data used and its staleness.
 
 
 Appendix A. A rejected idea for migration
