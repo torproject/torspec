@@ -230,6 +230,14 @@ Status: Open
       required-client-protocols    […] Link=4-5 Relay=2-3 Handshake=1-2
       required-relay-protocols     […] Link=3-5 Relay=1-3 Handshake=1-2
 
+6.2. New Consensus Parameters
+
+   We introduce the following new consensus parameters:
+
+     Create2VMaximumData SP int
+        The maximum amount of "hlen" data, in bytes, which may carried in
+        either direction within a set of CREATE(D)2V cells.  (default: 10240)
+
 7. Resource management issues
 
    This feature requires relays and clients to buffer EXTEND2 cell
