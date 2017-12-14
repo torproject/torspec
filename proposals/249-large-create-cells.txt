@@ -55,6 +55,10 @@ Status: Open
    (The purpose of the 'ignored' fields here is future-proofing and
    padding.)
 
+   Protocols MAY wish to pad to a certain multiple of bytes, or wish to pad
+   the initiator/receiver payloads to be of equal length.  This is
+   encouraged but NOT REQUIRED.
+
 3. Fragmented EXTEND2 cells
 
    Without changing the current EXTEND2 cell format, we change its
