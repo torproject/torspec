@@ -203,6 +203,12 @@
   ; The tokens that implement the above follow:
 
   ServerSpec = LongName / Nickname
+  LongName   = Fingerprint [ "~" Nickname ]
+
+  ; For tors older than 0.3.1.3-alpha, LongName may have included an equal
+  ; sign ("=") in lieu of a tilde ("~").  The presence of an equal sign
+  ; denoted that the OR posessed the "Named" flag:
+
   LongName   = Fingerprint [ ( "=" / "~" ) Nickname ]
 
   Fingerprint = "$" 40*HEXDIG
