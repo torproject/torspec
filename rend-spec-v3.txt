@@ -772,7 +772,8 @@ Table of contents:
 
         hsdir_n_replicas = an integer in range [1,16] with default value 2.
         hsdir_spread_fetch = an integer in range [1,128] with default value 3.
-        hsdir_spread_store = an integer in range [1,128] with default value 3.
+        hsdir_spread_store = an integer in range [1,128] with default value 4.
+           (Until 0.3.2.8-rc, the default was 3.)
 
    To determine where a given hidden service descriptor will be stored
    in a given period, after the blinded public key for that period is
