@@ -203,7 +203,7 @@ Proposals by number:
 280  Privacy-Preserving Statistics with Privcount in Tor [SUPERSEDED]
 281  Downloading microdescriptors in bulk [DRAFT]
 282  Remove "Named" and "Unnamed" handling from consensus voting [OPEN]
-283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [OPEN]
+283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [ACCEPTED]
 284  Hidden Service v3 Control Port [FINISHED]
 285  Directory documents should be standardized as UTF-8 [OPEN]
 286  Controller APIs for hibernation access on mobile [OPEN]
@@ -265,7 +265,6 @@ Proposals by status:
    276  Report bandwidth with lower granularity in consensus documents [for 0.3.1.x-alpha]
    277  Detect multiple relay instances running with same ID [for 0.3.??]
    282  Remove "Named" and "Unnamed" handling from consensus voting [for 0.3.3.x]
-   283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [for 0.3.3.x]
    285  Directory documents should be standardized as UTF-8
    286  Controller APIs for hibernation access on mobile
    287  Reduce circuit lifetime without overloading the network
@@ -275,6 +274,7 @@ Proposals by status:
    188  Bridge Guards and other anti-enumeration defenses
    258  Denial-of-service resistance for directory authorities
    265  Load Balancing with Overhead Parameters [for 0.2.9.x]
+   283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [for 0.3.3.x] [in 0.3.3.1-alpha]
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process
