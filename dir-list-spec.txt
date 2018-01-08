@@ -1,0 +1,451 @@
+                        Tor Directory List Format
+                         Tim Wilson-Brown (teor)
+
+1. Scope and Preliminaries
+
+   This document describes the format of Tor's directory lists, which are
+   compiled and hard-coded into the tor binary. There is currently one
+   list: the fallback directory mirrors. This list is also parsed by other
+   libraries, like stem and metrics-lib. Alternate Tor implementations can
+   use this list to bootstrap from the latest public Tor directory
+   information.
+
+   The FallbackDir feature was introduced by proposal 210, and was first
+   supported by Tor in Tor version 0.2.4.7-alpha. The first hard-coded
+   list was shipped in 0.2.8.1-alpha.
+
+   The hard-coded fallback directory list is located in the tor source
+   repository at:
+
+       src/or/fallback_dirs.inc
+
+   This document describes version 2.0.0 and later of the directory list
+   format.
+
+   Legacy, semi-structured versions of the fallback list were released with
+   Tor 0.2.8.1-alpha through Tor 0.3.1.9. We call this format version 1.
+   Stem and Relay Search have parsers for this legacy format.
+
+1.1. Format Overview
+
+   A directory list is a C code fragment containing an array of C string
+   constants. Each double-quoted C string constant is a valid torrc
+   FallbackDir entry. Each entry contains various data fields.
+
+   Directory lists do not include the C array's declaration, or the array's
+   terminating NULL. Entries in directory lists do not include the
+   FallbackDir torrc option. These are handled by the including C code.
+
+   Directlry lists also include C-style comments and whitespace. The
+   presence of whitespace may be significant, but the amount of whitespace
+   is never significant. The type of whitespace is not significant to the
+   C compiler or Tor C string parser. However, other parsers MAY rely on
+   the distinction between newlines and spaces. (And that the only
+   whitespace characters in the list are newlines and spaces.)
+
+   The directory entry C string constants are split over multiple lines for
+   readability. Structured C-style comments are used to provide additional
+   data fields. This information is not used by Tor, but may be of interest
+   to other libraries.
+
+   The order of directory entries and data fields is not significant,
+   except where noted below.
+
+1.2. Acknowledgements
+
+   The original fallback directory script and format was created by
+   weasel. The current script uses code written by gsathya & karsten.
+
+   This specification was revised after feedback from:
+
+     Damian Johnson ("atagar")
+     Iain R. Learmonth ("irl")
+
+1.3. Format Versions
+
+   1.0.0 - The legacy fallback directory list format
+
+   2.0.0 - Adds name and extrainfo structured comments, and section separator
+           comments to make the list easier to parse.
+
+2. Format Details
+
+   Directory lists contain the following sections:
+     - List Header (exactly once)
+     - List Generation (exactly once, may be empty)
+     - Directory Entry (zero or more times)
+
+   Each section (or entry) ends with a separator.
+
+2.1. Nonterminals
+
+   The following nonterminals are defined in the Onionoo details document
+   specification:
+
+     dir_address
+     fingerprint
+     nickname
+
+   See https://metrics.torproject.org/onionoo.html#details
+
+   The following nonterminals are defined in the "Tor directory protocol"
+   specification in dir-spec.txt:
+
+     Keyword
+     ArgumentChar
+     NL      (newline)
+     SP      (space)
+     bool    (must not be confused with Onionoo's JSON "boolean")
+
+   We derive the following nonterminals from Onionoo and dir-spec.txt:
+
+     ipv4_or_port ::= port from an IPv4 or_addresses item
+
+       The ipv4_or_port is the port part of an IPv4 address from the
+       Onionoo or_addresses list.
+
+     ipv6_or_address ::= an IPv6 or_addresses item
+
+       The ipv6_or_address is an IPv6 address and port from the Onionoo
+       or_addresses list. The address MAY be in the canonical RFC 5952
+       IPv6 address format.
+
+   A key-value pair:
+
+     value ::= Zero or more ArgumentChar, excluding the following strings:
+                 * a double quotation mark (DQUOTE), and
+                 * the C comment terminators ("/*" and "*/").
+
+               Note that the C++ comment ("//") and equals sign ("=") are
+               not excluded, because they are reserved for future use in
+               base64 values.
+
+     key_value ::= Keyword "=" value
+
+   We also define these additional nonterminals:
+
+     number ::= An optional negative sign ("-"), followed by one or more
+                numeric characters ([0-9]), with an optional decimal part
+                (".", followed by one or more numeric characters).
+
+     separator ::= "/*" SP+ "=====" SP+ "*/"
+
+2.2. List Header
+
+   The list header consists of a number of key-value pairs, embedded in
+   C-style comments.
+
+2.2.1 List Header Format
+
+     "/*" SP+ "type=" Keyword SP+ "*/" SP* NL
+
+       [At start, exactly once.]
+
+       The type of directory entries in the list. Parsers SHOULD exit with
+       an error if this is not the first line of the list, or if the value
+       is anything other than "fallback".
+
+     "/*" SP+ "version=" version_number SP+ "*/" SP* NL
+
+       [In second position, exactly once.]
+
+       The version of the directory list format. version_number uses
+       semantic versioning: https://semver.org
+
+       In particular:
+         * major versions are used for incompatible changes, like
+           removing non-optional fields
+         * minor versions are used for compatible changes, like adding
+           fields
+         * patch versions are for bug fixes, like fixing an
+           incorrectly-formatted Summary item
+
+       Version 1.0.0 represents the undocumented, legacy fallback list
+       format(s). Version 2.0.0 and later are documented by this
+       specification.
+
+     "/*" SP+ "timestamp=" number SP+ "*/" SP* NL
+
+       [Exactly once.]
+
+       A positive integer that indicates when this directory list was
+       generated. This timestamp is guaranteed to increase for every
+       version 2.0.0 and later directory list.
+
+       The current timestamp format is YYYYMMDDHHMMSS, as an integer.
+
+     "/*" SP+ key_value SP+ "*/" SP* NL
+
+       [Zero or more times.]
+
+       Future releases may include additional header fields. Parsers MUST NOT
+       rely on the order of these additional fields. Additional header fields
+       will be accompanied by a minor version increment.
+
+     separator SP* NL
+
+       The list header ends with the section separator.
+
+2.3. List Generation
+
+   The list generation information consists of human-readable prose
+   describing the content and origin of this directory list. It is contained
+   in zero or more C-style comments, and may contain multi-line comments and
+   uncommented C code.
+
+   In particular, this section may contain C-style comments that contain
+   an equals ("=") character. It may also be entirely empty.
+
+   Future releases may arbitrarily change the content of this section.
+   Parsers MUST NOT rely on a version increment when the format changes.
+
+2.3.1 List Generation Format
+
+   In general, parsers MUST NOT rely on the format of this section.
+
+   Parsers MAY rely on the following details:
+
+   The list generation section MUST NOT be a valid directory entry.
+
+   The list generation summary MUST end with a section separator:
+
+     separator SP* NL
+
+   There MUST NOT be any section separators in the list generation
+   section, other than the terminating section separator.
+
+2.4. Directory Entry
+
+   A directory entry consists of a C string constant, and one or more
+   C-style comments. The C string constant is a valid argument to the
+   DirAuthority or FallbackDir torrc option. The section also contains
+   additional key-value fields in C-style comments.
+
+   The list of fallback entries does not include the directory
+   authorities: they are in a separate list. (The Tor implementation combines
+   these lists after parsing them, and applies the DirAuthorityFallbackRate
+   to their weights.)
+
+2.4.1 Directory Entry Format
+
+     If a directory entry does not conform to this format, the entry SHOULD
+     be ignored by parsers.
+
+     DQUOTE dir_address SP+ "orport=" ipv4_or_port SP+
+       "id=" fingerprint DQUOTE SP* NL
+
+       [At start, exactly once, on a single line.]
+
+       This line consists of the following fields:
+
+       dir_address
+
+         An IPv4 address and DirPort for this directory, as defined by
+         Onionoo. In this format version, all IPv4 addresses and DirPorts
+         are guaranteed to be non-zero. (For IPv4 addresses, this means
+         that they are not equal to "0.0.0.0".)
+
+       ipv4_or_port
+
+         An IPv4 ORPort for this directory, derived from Onionoo. In this
+         format version, all IPv4 ORPorts are guaranteed to be non-zero.
+
+       fingerprint
+
+         The relay fingerprint of this directory, as defined by Onionoo.
+         All relay fingerprints are guaranteed to have one or more non-zero
+         digits.
+
+     Note:
+
+       Each double-quoted C string line that occurs after the first line,
+       starts with space inside the quotes. This is a requirement of the
+       Tor implementation.
+
+     DQUOTE SP+ "ipv6=" ipv6_or_address DQUOTE SP* NL
+
+       [Zero or one time.]
+
+       The IPv6 address and ORPort for this directory, as defined by
+       Onionoo. If present, IPv6 addresses and ORPorts are guaranteed to be
+       non-zero. (For IPv6 addresses, this means that they are not equal to
+       "[::]".)
+
+     DQUOTE SP+ "weight=" number DQUOTE SP* NL
+
+       [Zero or one time.]
+
+       A non-negative, real-numbered weight for this directory.
+       The default fallback weight is 1.0, and the default
+       DirAuthorityFallbackRate is 1.0 in legacy Tor versions, and 0.1 in
+       recent Tor versions.
+
+       weight was removed in version 2.0.0, but is documented because it
+       may be of interest to libraries implementing Tor's fallaback
+       behaviour.
+
+     DQUOTE SP+ key_value DQUOTE SP* NL
+
+       [Zero or more times.]
+
+       Future releases may include additional data fields in double-quoted
+       C string constants. Parsers MUST NOT rely on the order of these
+       additional fields. Additional data fields will be accompanied by a
+       minor version increment.
+
+     "/*" SP+ "nickname=" nickname* SP+ "*/" SP* NL
+
+       [Exactly once.]
+
+       The nickname for this directory, as defined by Onionoo. An
+       empty nickname indicates that the nickname is unknown.
+
+       The first fallback list in the 2.0.0 format had nickname lines, but
+       they were all empty.
+
+     "/*" SP+ "extrainfo=" bool SP+ "*/" SP* NL
+
+       [Exactly once.]
+
+       An integer flag that indicates whether this directory caches
+       extra-info documents. Set to 1 if the directory claimed that it
+       cached extra-info documents in its descriptor when the list was
+       created. 0 indicates that it did not, or its descriptor was not
+       available.
+
+       The first fallback list in the 2.0.0 format had extrainfo lines, but
+       they were all zero.
+
+     "/*" SP+ key_value SP+ "*/" SP* NL
+
+       [Zero or more times.]
+
+       Future releases may include additional data fields in C-style
+       comments. Parsers MUST NOT rely on the order of these additional
+       fields. Additional data fields will be accompanied by a minor version
+       increment.
+
+     separator SP* NL
+
+       [Exactly once.]
+
+       Each directory entry ends with the section separator.
+
+     "," SP* NL
+
+       [Exactly once.]
+
+       The comma terminates the C string constant. (Multiple C string
+       constants separated by whitespace or comments are coalesced by
+       the C compiler.)
+
+3. Usage Considerations
+
+   This section contains recommended library behaviours. It does not affect
+   the format of directory lists.
+
+3.1. Caching
+
+   The fallback list typically changes once every 6-12 months. The data in
+   the list represents the state of the fallback directory entries when the
+   list was created. Fallbacks can and do change their details over time.
+
+   Libraries SHOULD parse and cache the most recent version of these lists
+   during their build or release processes. Libraries MUST NOT retrieve the
+   lists by default every time they are deployed or executed.
+
+   The latest fallback list can be retrieved from:
+
+     https://gitweb.torproject.org/tor.git/plain/src/or/fallback_dirs.inc
+
+   Libraries MUST NOT rely on the availability of the server that hosts
+   these lists.
+
+   The list can also be retrieved using:
+
+     git clone https://git.torproject.org/tor.git
+
+   If you just want the latest list, you may wish to perform a shallow
+   clone.
+
+3.2. Retrieving Directory Information
+
+   Some libraries retrieve directory documents directly from the Tor
+   Directory Authorities. The directory authorities are designed to support
+   Tor relay and client bootstrap, and MAY choose to rate-limit library
+   access. Libraries MAY provide a user-agent in their requests, if they
+   are not intended to support anonymous operation. (User agents are a
+   fingerprinting vector.)
+
+   Libraries SHOULD consider the potential load on the authorities, and
+   whether other sources can meet their needs.
+
+   Libraries that require high-uptime availablility of Tor directory
+   information should investigate the following options:
+     * OnionOO: https://metrics.torproject.org/onionoo.html
+       * Third-party OnionOO mirrors are also available
+     * CollecTor: https://collector.torproject.org/
+     * Fallback Directory Mirrors
+
+   Onionoo and CollecTor are typically updated every hour on a regular
+   schedule. Fallbacks update their own directory information at random
+   intervals, see dir-spec for details.
+
+3.3. Fallback Reliability
+
+   The fallback list is typically regenerated when the fallback failure
+   rate exceeds 25%. Libraries SHOULD NOT rely on any particular fallback
+   being available, or some proportion of fallbacks being available.
+
+   Libraries that use fallbacks MAY wish to query an authority after a
+   few fallback queries fail. For example, Tor clients try 3-4 fallbacks
+   before trying an authority.
+
+A.1. Sample Data
+
+   A sample version 2.0.0 fallback list is available here:
+
+     https://trac.torproject.org/projects/tor/raw-attachment/ticket/22759/fallback_dirs_new_format_version.4.inc
+
+   A sample transitional version 2.0.0 fallback list is available here:
+
+     https://raw.githubusercontent.com/teor2345/tor/fallback-format-2-v4/src/or/fallback_dirs.inc
+
+A.1.1. Sample Fallback List Header
+
+/* type=fallback */
+/* version=2.0.0 */
+/* ===== */
+
+A.1.2. Sample Fallback List Generation
+
+/* Whitelist & blacklist excluded 1326 of 1513 candidates. */
+/* Checked IPv4 DirPorts served a consensus within 15.0s. */
+/*
+Final Count: 151 (Eligible 187, Target 392 (1963 * 0.20), Max 200)
+Excluded: 36 (Same Operator 27, Failed/Skipped Download 9, Excess 0)
+Bandwidth Range: 1.3 - 40.0 MByte/s
+*/
+/*
+Onionoo Source: details Date: 2017-05-16 07:00:00 Version: 4.0
+URL: https:onionoo.torproject.orgdetails?fields=fingerprint%2Cnickname%2Ccontact%2Clast_changed_address_or_port%2Cconsensus_weight%2Cadvertised_bandwidth%2Cor_addresses%2Cdir_address%2Crecommended_version%2Cflags%2Ceffective_family%2Cplatform&flag=V2Dir&type=relay&last_seen_days=-0&first_seen_days=30-
+*/
+/*
+Onionoo Source: uptime Date: 2017-05-16 07:00:00 Version: 4.0
+URL: https:onionoo.torproject.orguptime?first_seen_days=30-&flag=V2Dir&type=relay&last_seen_days=-0
+*/
+/* ===== */
+
+A.1.3. Sample Fallback Entries
+
+"176.10.104.240:80 orport=443 id=0111BA9B604669E636FFD5B503F382A4B7AD6E80"
+/* nickname=foo */
+/* extrainfo=1 */
+/* ===== */
+,
+"5.9.110.236:9030 orport=9001 id=0756B7CD4DFC8182BE23143FAC0642F515182CEB"
+" ipv6=[2a01:4f8:162:51e2::2]:9001"
+/* nickname= */
+/* extrainfo=0 */
+/* ===== */
+,
