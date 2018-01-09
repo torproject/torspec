@@ -22,6 +22,8 @@ Status: Open
    So, in this proposal, we describe a migration path to having all
    directory documents be fully UTF-8.
 
+   (See 2.3 below for a discussion of what exactly we mean by "non-UTF-8".)
+
 2. Proposal
 
    First, we should have Tor relays reject ContactInfo lines (and any
@@ -58,12 +60,21 @@ Status: Open
    the "reject-encrypted-non-utf-8" parameter, that parameter can be set
    to 1.
 
-2.2. Which UTF-8 exactly?
+2.2. Bridge descriptors
+
+   Since clients download bridge descriptors directly from the bridges, they
+   also need a two-phase plan as for hidden service descriptors above.  Here
+   we take the same approach as in section 2.1 above, except using the
+   parameter "reject-bridge-descriptor-non-utf-8".
+
+2.3. Which UTF-8 exactly?
 
    We define the allowable set of UTF-8 as:
       * Encoding the codepoints U+01 through U+10FFFF,
       * but excluding the codepoints U+D800 through U+DFFF,
       * each encoded with the shortest possible encoding.
+      * without any BOM.
+
 
 
 
