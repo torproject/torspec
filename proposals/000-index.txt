@@ -169,7 +169,7 @@ Proposals by number:
 246  Merging Hidden Service Directories and Introduction Points [NEEDS-RESEARCH]
 247  Defending Against Guard Discovery Attacks using Vanguards [DRAFT]
 248  Remove all RSA identity keys [DRAFT]
-249  Allow CREATE cells with >505 bytes of handshake data [OPEN]
+249  Allow CREATE cells with >505 bytes of handshake data [ACCEPTED]
 250  Random Number Generation  During Tor Voting [CLOSED]
 251  Padding for netflow record resolution reduction [DRAFT]
 252  Single Onion Services [SUPERSEDED]
@@ -257,7 +257,6 @@ Proposals by status:
    233  Making Tor2Web mode faster
    234  Adding remittance field to directory specification
    242  Better performance and usability for the MyFamily option
-   249  Allow CREATE cells with >505 bytes of handshake data
    256  Key revocation for relays and authorities
    261  AEZ for relay cryptography
    262  Re-keying live circuits with new cryptographic material
@@ -272,6 +271,7 @@ Proposals by status:
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
    188  Bridge Guards and other anti-enumeration defenses
+   249  Allow CREATE cells with >505 bytes of handshake data
    258  Denial-of-service resistance for directory authorities
    265  Load Balancing with Overhead Parameters [for 0.2.9.x]
    283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [for 0.3.3.x] [in 0.3.3.1-alpha]

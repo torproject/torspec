@@ -3,7 +3,7 @@ Title: Allow CREATE cells with >505 bytes of handshake data
 Authors: Nick Mathewson, Isis Lovecruft
 Created: 23 July 15
 Updated: 13 December 2017
-Status: Open
+Status: Accepted
 
 1. Summary
 
