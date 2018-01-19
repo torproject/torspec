@@ -1986,6 +1986,11 @@
                                       will upload its descriptor to.
          "HSV3MaxDescriptorSize"   -- Maximum descriptor size (in bytes).
 
+        "hs_service_max_rdv_failures" -- This parameter determines the maximum
+        number of rendezvous attempt an HS service can make per introduction.
+        Min 1. Max 10. Default 2.
+        First-appeared: 0.3.3.0-alpha.
+
     "shared-rand-previous-value" SP NumReveals SP Value NL
 
         [At most once]
