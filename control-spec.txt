@@ -3194,8 +3194,9 @@
 5.4. Tor config options for use by controllers
 
   Tor provides a few special configuration options for use by controllers.
-  These options can be set and examined by the SETCONF and GETCONF commands,
-  but are not saved to disk by SAVECONF.
+  These options are not saved to disk by SAVECONF.  Most can be set and
+  examined by the SETCONF and GETCONF commands, but some (noted below) can
+  only be given in a torrc file or on the command line.
 
   Generally, these options make Tor unusable by disabling a portion of Tor's
   normal operations.  Unless a controller provides replacement functionality
