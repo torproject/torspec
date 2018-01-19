@@ -3259,6 +3259,9 @@
     TAKEOWNERSHIP.  It will be automatically authenticated.  This option
     should only be used by other programs that are starting Tor.
 
+    This option cannot be changed via SETCONF; it must be set in a torrc or
+    via the command line.
+
     (Integer. Default: -1.)
 
   __DisableSignalHandlers
