@@ -198,7 +198,7 @@ Proposals by number:
 275  Stop including meaningful "published" time in microdescriptor consensus [OPEN]
 276  Report bandwidth with lower granularity in consensus documents [OPEN]
 277  Detect multiple relay instances running with same ID [OPEN]
-278  Directory Compression Scheme Negotiation [FINISHED]
+278  Directory Compression Scheme Negotiation [CLOSED]
 279  A Name System API for Tor Onion Services [DRAFT]
 280  Privacy-Preserving Statistics with Privcount in Tor [SUPERSEDED]
 281  Downloading microdescriptors in bulk [DRAFT]
@@ -287,7 +287,6 @@ Proposals by status:
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
    232  Pluggable Transport through SOCKS proxy [in 0.2.6]
    260  Rendezvous Single Onion Services [in 0.2.9.3-alpha]
-   278  Directory Compression Scheme Negotiation [in 0.3.1.1-alpha]
    284  Hidden Service v3 Control Port
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
@@ -368,6 +367,7 @@ Proposals by status:
    271  Another algorithm for guard selection [in 0.3.0.1-alpha]
    272  Listed routers should be Valid, Running, and treated as such [in 0.2.9.3-alpha, 0.2.9.4-alpha]
    274  Rotate onion keys less frequently [in 0.3.1.1-alpha]
+   278  Directory Compression Scheme Negotiation [in 0.3.1.1-alpha]
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration

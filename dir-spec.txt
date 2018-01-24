@@ -3623,8 +3623,27 @@
 
 6.1. HTTP headers
 
-  Servers MAY set the Content-Length: header.  Servers SHOULD set
-  Content-Encoding to "deflate" or "identity".
+  Servers SHOULD set Content-Encoding to the algorithm used to compress the
+  document(s) being served.  Recognized algorithms are:
+     - "identity"     -- RFC2616 section 3.5
+     - "deflate"      -- RFC2616 section 3.5
+     - "gzip"         -- RFC2616 section 3.5
+     - "x-zstd"       -- The zstandard compression algorithm (www.zstd.net)
+     - "x-tor-lzma"   -- The lzma compression algorithm, with a "preset"
+                         value no higher than 6.
+
+  Clients SHOULD use Accept-Encoding to indicate which of the above
+  compression algorithms they support.  If they omit it (as Tor clients
+  did before 0.3.1.1-alpha), then the server should serve only "deflate"
+  or "identity" encoded documents, based on the presence or absence of
+  the ".z" suffix on the requested URL.
+
+  When receiving multiple documents, clients MUST accept compressed
+  concatenated documents and concatenated compressed documents as
+  equivalent.
+
+  Servers MAY set the Content-Length: header.  When they do, it should
+  match the number of compressed bytes that they are sending.
 
   Servers MAY include an X-Your-Address-Is: header, whose value is the
   apparent IP address of the client connecting to them (as a dotted quad).
@@ -3780,13 +3799,10 @@ B. General-use HTTP URLs
          three classes of URLs.  Caches may support them, and MUST
          support them if they have advertised "caches-extra-info".)
 
-   For debugging, directories SHOULD expose non-compressed objects at URLs like
-   the above, but without the final ".z".
-   Clients MUST handle compressed concatenated information in two forms:
-     - A concatenated list of zlib-compressed objects.
-     - A zlib-compressed concatenated list of objects.
-   Directory servers MAY generate either format: the former requires less
-   CPU, but the latter requires less bandwidth.
+   For debugging, directories SHOULD expose non-compressed objects at
+   URLs like the above, but without the final ".z".  If the client uses
+   Accept-Encodings header, it should override the presence or absence
+   of the ".z" (see section 6.1).
 
    Clients SHOULD use upper case letters (A-F) when base16-encoding
    fingerprints.  Servers MUST accept both upper and lower case fingerprints
