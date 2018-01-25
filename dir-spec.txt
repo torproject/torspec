@@ -773,7 +773,7 @@
 
    "proto" SP Entries NL
 
-       [At most one.]
+       [At most one.] [Will become mandatory.]
 
        Entries =
        Entries = Entry
@@ -796,6 +796,9 @@
        entry.  (This implies that there should be no overlapping ranges.)
        Ranges should be represented as compactly as possible. Ints must be no
        more than 2^32 - 1.
+
+       This field was first added in Tor 0.2.9.x. Some time after all earlier
+       Tor relay versions are obsolete, it will become mandatory.
 
 2.1.2. Extra-info document format
 
