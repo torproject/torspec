@@ -50,3 +50,29 @@
  0.1.1.1-alpha comes 0.1.1.1-alpha-cvs, and so on. But starting with
  0.1.2.1-alpha-dev, we switched to SVN and started using the "-dev"
  suffix instead of the "-cvs" suffix.
+
+3. Version status.
+
+  Sometimes we need to determine whether a Tor version is obsolete,
+  experimental, or neither, based on a list of recommended versions.  The
+  logic is as follows:
+
+   * If a version is listed on the recommended list, then it is
+     "recommended".
+
+   * If a version is newer than every recommended version, that version
+     is "experimental" or "new".
+
+   * If a version is older than every recommended version, it is
+     "obsolete" or "old".
+
+   * The first three components (major,minor,micro) of a version number
+     are its "release series".  If a version has other recommended
+     versions with the same release series, and the version is newer
+     than all such recommended versions, but it is not newer than
+     _every_ recommended version, then the version is "new in series".
+
+   * Finally, if none of the above conditions hold, then the version is
+     "un-recommended."
+
+
