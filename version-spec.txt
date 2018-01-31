@@ -74,5 +74,3 @@
 
    * Finally, if none of the above conditions hold, then the version is
      "un-recommended."
-
-
