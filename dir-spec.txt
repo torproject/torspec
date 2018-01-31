@@ -773,7 +773,8 @@
 
    "proto" SP Entries NL
 
-       [At most one.] [Will become mandatory.]
+       [At most one.]
+       [Will become mandatory at some point after May 2018.]
 
        Entries =
        Entries = Entry
