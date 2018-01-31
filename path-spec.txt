@@ -546,6 +546,19 @@ of their choices.
         Effect: This is the timeout value to use before computing a timeout,
                 in milliseconds.
 
+      cbtlearntimeout
+        Default: 360
+        Min: 10
+        Max: 60000
+        Effect: This is how long idle circuits will be kept open while cbt is
+                learning a new timeout value.
+
+      cbtmaxopencircs
+        Default: 10
+        Min: 0
+        Max: 14
+        Effect: This is the maximum number of circuits that can be open at
+                at the same time during the circuit build time learning phase.
 
 2.5. Handling failure
 

@@ -1871,9 +1871,10 @@
 
         "cbtdisabled", "cbtnummodes", "cbtrecentcount", "cbtmaxtimeouts",
         "cbtmincircs", "cbtquantile", "cbtclosequantile", "cbttestfreq",
-        "cbtmintimeout", and "cbtinitialtimeout" -- see "2.4.5. Consensus
-        parameters governing behavior" in path-spec.txt for a series of
-        circuit build time related consensus params.
+        "cbtmintimeout", "cbtlearntimeout", "cbtmaxopencircs", and
+        "cbtinitialtimeout" -- see "2.4.5. Consensus parameters governing
+        behavior" in path-spec.txt for a series of circuit build time related
+        consensus params.
 
         "UseOptimisticData" -- If set to zero, clients by default
         shouldn't try to send optimistic data to servers until they have
