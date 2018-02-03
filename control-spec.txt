@@ -718,6 +718,8 @@
 
     "traffic/written" -- Total bytes written (uploaded).
 
+    "uptime" -- Uptime of the Tor daemon (in seconds).
+
     "accounting/enabled"
     "accounting/hibernating"
     "accounting/bytes"
