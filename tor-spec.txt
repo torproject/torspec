@@ -1446,8 +1446,9 @@ see tor-design.pdf.
    The 'recognized' field is used for a simple indication for if the
    cell still encrypted or not. When sending cells the unencrypted
    'recognized' MUST be set to zero. When receiving and decrypting
-   cells the 'recognized' will be zero if we're the endpoint the cell
-   is destined for, and non-zero otherwise.
+   cells the 'recognized' MAY be zero if we're the endpoint the cell
+   is destined for (there's a 1/2^32 chance of encrypted bytes
+   coincidently being zero), and non-zero otherwise.
 
    When 'recognized' in an unencrypted relay payload is zero the
    'digest' field is computed as the first four bytes of the running
