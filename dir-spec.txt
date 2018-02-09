@@ -3636,11 +3636,16 @@
      - "x-tor-lzma"   -- The lzma compression algorithm, with a "preset"
                          value no higher than 6.
 
-  Clients SHOULD use Accept-Encoding to indicate which of the above
-  compression algorithms they support.  If they omit it (as Tor clients
-  did before 0.3.1.1-alpha), then the server should serve only "deflate"
-  or "identity" encoded documents, based on the presence or absence of
-  the ".z" suffix on the requested URL.
+  Clients SHOULD use Accept-Encoding on most directory requests to indicate
+  which of the above compression algorithms they support.  If they omit it
+  (as Tor clients did before 0.3.1.1-alpha), then the server should serve
+  only "deflate" or "identity" encoded documents, based on the presence or
+  absence of the ".z" suffix on the requested URL.
+
+  Note that for anonymous directory requests (that is, requests made over
+  multi-hop circuits, like those for onion service lookups) implementations
+  SHOULD NOT advertise any Accept-Encoding values other than deflate.  To do
+  so would be to create a fingerprinting opportunity.
 
   When receiving multiple documents, clients MUST accept compressed
   concatenated documents and concatenated compressed documents as
