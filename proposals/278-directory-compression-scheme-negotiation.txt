@@ -2,7 +2,7 @@ Filename: 278-directory-compression-scheme-negotiation.txt
 Title: Directory Compression Scheme Negotiation
 Author: Alexander Færøy
 Created: 2017-03-06
-Status: Finished
+Status: Closed
 Implemented-In: 0.3.1.1-alpha
 
 0. Overview
