@@ -1443,22 +1443,22 @@ see tor-design.pdf.
    other nodes in the circuit back to the originator. Commands marked
    as either can be sent either by the originator or other nodes.
 
-   The 'recognized' field is used for a simple indication for if the
-   cell still encrypted or not. When sending cells the unencrypted
-   'recognized' MUST be set to zero. When receiving and decrypting
-   cells the 'recognized' MAY be zero if we're the endpoint the cell
-   is destined for (there's a 1/2^32 chance of encrypted bytes
-   coincidently being zero), and non-zero otherwise.
+   The 'recognized' field is used for a simple indication for if the cell
+   still encrypted or not. When sending cells, the unencrypted 'recognized'
+   MUST be set to zero.
 
-   When 'recognized' in an unencrypted relay payload is zero the
-   'digest' field is computed as the first four bytes of the running
-   digest of all the bytes that have been destined for this hop of
-   the circuit or originated from this hop of the circuit, seeded from
-   Df or Db respectively (obtained in section 5.2 above), and including
-   this RELAY cell's entire payload (taken with the digest field set to
-   zero).
+   When receiving and decrypting cells the 'recognized' will always be
+   zero if we're the endpoint that the cell is destined for.  For cells
+   that we should relay, the 'recognized' field will usually be nonzero,
+   but will accidentally be zero with P=2^-32.
 
-   When the 'recognized' field of a RELAY cell is zero, and the digest
+   When handling a relay cell, if the 'recognized' in field in a
+   decrypted relay payload is zero, the 'digest' field is computed as
+   the first four bytes of the running digest of all the bytes that have
+   been destined for this hop of the circuit or originated from this hop
+   of the circuit, seeded from Df or Db respectively (obtained in
+   section 5.2 above), and including this RELAY cell's entire payload
+   (taken with the digest field set to zero).  If the digest
    is correct, the cell is considered "recognized" for the purposes of
    decryption (see section 5.5 above).
 
