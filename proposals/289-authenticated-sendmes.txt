@@ -1,0 +1,397 @@
+Filename: 289-authenticated-sendmes.txt
+Title: Authenticating sendme cells to mitigate bandwidth attacks
+Author: Rob Jansen, Roger Dingledine
+Created: 2016-12-01
+Status: Open
+
+1. Overview and Motivation
+
+   In Rob's "Sniper attack", a malicious Tor client builds a circuit,
+   fetches a large file from some website, and then refuses to read any
+   of the cells from the entry guard, yet sends "sendme" (flow control
+   acknowledgement) cells down the circuit to encourage the exit relay
+   to keep sending more cells. Eventually enough cells queue at the
+   entry guard that it runs out of memory and exits [0, 1].
+
+   We resolved the "runs out of memory and exits" part of the attack with
+   our Out-Of-Memory (OOM) manager introduced in Tor 0.2.4.18-rc. But
+   the earlier part remains unresolved: a malicious client can launch
+   an asymmetric bandwidth attack by creating circuits and streams and
+   sending a small number of sendme cells on each to cause the target
+   relay to receive a large number of data cells.
+
+   This attack could be used for general mischief in the network (e.g.,
+   consume Tor network bandwidth resources or prevent access to relays),
+   and it could probably also be leveraged to harm anonymity a la the
+   "congestion attack" designs [2, 3].
+
+   This proposal describes a way to verify that the client has seen all
+   of the cells that its sendme cell is acknowledging, based on the
+   authenticated sendmes design from [1].
+
+2. Sniper Attack Variations
+
+   There are some variations on the attack involving the number and
+   length of the circuits and the number of Tor clients used. We explain
+   them here to help understand which of them this proposal attempts to
+   defend against.
+
+   We compare the efficiency of these attacks in terms of the number of
+   cells transferred by the adversary and by the network, where receiving
+   and sending a cell counts as two transfers of that cell.
+
+2.1 Single Circuit, without Sendmes
+
+   The simplest attack is where the adversary starts a single Tor client,
+   creates one circuit and two streams to some website, and stops
+   reading from the TCP connection to the entry guard. The adversary
+   gets 1000 "attack" cells "for free" (until the stream and circuit
+   windows close). The attack data cells are both received and sent by the
+   exit and the middle, while being received and queued by the guard.
+
+   Adversary:
+   6 transfers to create the circuit
+   2 to begin the two exit connections
+   2 to send the two GET requests
+   ---
+   10 total
+
+   Network:
+   18 transfers to create the circuit
+   22 to begin the two exit connections (assumes two for the exit TCP connect)
+   12 to send the two GET requests to the website
+   5000 for requested data (until the stream and circuit windows close)
+   ---
+   5052 total
+
+2.2 Single Circuit, with Sendmes
+
+   A slightly more complex version of the attack in 2.1 is where the
+   adversary continues to send sendme cells to the guard (toward the exit),
+   and then gets another 100 attack data cells sent across the network for every
+   three additional exitward sendme cells that it sends (two stream-level
+   sendmes and one circuit-level sendme). The adversary also gets another
+   three clientward sendme cells sent by the exit for every 100 exitward
+   sendme cells it sends.
+
+   If the adversary sends N sendmes, then we have:
+
+   Adversary:
+   10 for circuit and stream setup
+   N for circuit and stream sendmes
+   ---
+   10+N
+
+   Network:
+   5052 for circuit and stream setup and initial depletion of circuit windows
+   N*100/3*5 for transferring additional data cells from the website
+   N*3/100*4 for transferring sendmes from exit to client
+   ---
+   5052 + N*166.79
+
+   It is important to note that once the adversary stops reading from the
+   guard, it will no longer get feedback on the speed at which the data
+   cells are able to be transferred through the circuit from the exit
+   to the guard. It needs to approximate when it should send sendmes
+   to the exit; if too many sendmes are sent such that the circuit
+   window would open farther than 1000 cells (500 for streams), then the
+   circuit may be closed by the exit. In practice, the adversary could
+   take measurements during the circuit setup process and use them to
+   estimate a conservative sendme sending rate.
+
+2.3 Multiple Circuits
+
+   The adversary could parallelize the above attacks using multiple
+   circuits. Because the adversary needs to stop reading from the TCP
+   connection to the guard, they would need to do a pre-attack setup
+   phase during which they construct the attack circuits. Then, they
+   would stop reading from the guard and send all of the GET requests
+   across all of the circuits they created.
+
+   The number of cells from 2.1 and 2.2 would then be multiplied by the
+   number of circuits C that the adversary is able to build and sustain
+   during the attack.
+
+2.4 Multiple Guards
+
+   The adversary could use the "UseEntryGuards 0" torrc option, or build
+   custom circuits with stem to parallelize the attack across multiple
+   guard nodes. This would slightly increase the bandwidth usage of the
+   adversary, since it would be creating additional TCP connections to
+   guard nodes.
+
+2.5 Multiple Clients
+
+   The adversary could run multiple attack clients, each of which would
+   choose its own guard. This would slightly increase the bandwidth
+   usage of the adversary, since it would be creating additional TCP
+   connections to guard nodes and would also be downloading directory
+   info, creating testing circuits, etc.
+
+2.6 Short Two-hop Circuits
+
+   If the adversary uses two-hop circuits, there is less overhead
+   involved with the circuit setup process.
+
+   Adversary:
+   4 transfers to create the circuit
+   2 to begin the two exit connections
+   2 to send the two GET requests
+   ---
+   8
+
+   Network:
+   8 transfers to create the circuit
+   14 to begin the two exit connections (assumes two for the exit TCP connect)
+   8 to send the two GET requests to the website
+   5000 for requested data (until the stream and circuit windows close)
+   ---
+   5030
+
+2.7 Long >3-hop Circuits
+
+   The adversary could use a circuit longer than three hops to cause more
+   bandwidth usage across the network. Let's use an 8 hop circuit as an
+   example.
+
+   Adversary:
+   16 transfers to create the circuit
+   2 to begin the two exit connections
+   2 to send the two GET requests
+   ---
+   20
+
+   Network:
+   128 transfers to create the circuit
+   62 to begin the two exit connections (assumes two for the exit TCP connect)
+   32 to send the two GET requests to the website
+   15000 for requested data (until the stream and circuit windows close)
+   ---
+   15222
+
+   The adversary could also target a specific relay, and use it multiple
+   times as part of the long circuit, e.g., as hop 1, 4, and 7.
+
+   Target:
+   54 transfers to create the circuit
+   22 to begin the two exit connections (assumes two for the exit TCP connect)
+   12 to send the two GET requests to the website
+   5000 for requested data (until the stream and circuit windows close)
+   ---
+   5088
+
+3. Design
+
+   This proposal aims to defend against the versions of the attack that
+   utilize sendme cells without reading. It does not attempt to handle
+   the case of multiple circuits per guard, or try to restrict the number
+   of guards used by a client, or prevent a sybil attack across multiple
+   client instances.
+
+   The proposal involves three components: first, the client needs to add
+   a token to the sendme payload, to prove that it knows the contents
+   of the cells that it has received. Second, the exit relay needs to
+   verify this token. Third, to resolve the case where the client already
+   knows the contents of the file so it only pretends to read the cells,
+   the exit relay needs to be able to add unexpected randomness to the
+   circuit.
+
+   (Note: this proposal talks about clients and exit relays, but since
+   sendmes go in both directions, both sides of the circuit should do
+   these changes.)
+
+3.1. Changing the sendme payload to prove receipt of cells
+
+   In short: clients put the latest received relay cell digest in the
+   payload of their circuit-level sendme cells.
+
+   Each relay cell header includes a 4-byte digest which represents
+   the rolling hash of all bytes received on that circuit. So knowledge
+   of that digest is an indication that you've seen the bytes that go
+   into it.
+
+   We pick circuit-level sendme cells, as opposed to stream-level sendme
+   cells, because we think modifying just circuit-level sendmes is
+   sufficient to accomplish the properties we need, and modifying just
+   stream-level sendmes is not sufficient: a client could send a bunch
+   of begin cells and fake their circuit-level sendmes, but never send
+   any stream-level sendmes, attracting 500*n queued cells to the entry
+   guard for the n streams that it opens.
+
+   Which digest should the client put in the sendme payload? Right now
+   circuit-level sendmes are sent whenever one window worth of relay cells
+   (100) has arrived. So the client should use the digest from the cell
+   that triggers the sendme.
+
+   How shall we version the sendme payload so we can change the format of
+   it later? Right now sendme payloads are empty. Here's a simple design:
+   we use five bytes in the payload, where the first byte indicates the
+   sendme payload version (0 in the original design, and 1 once we've
+   implemented this proposal), and the rest of the payload is formatted
+   based on the payload version number: in this case, it's simply the
+   four bytes of digest.
+
+   Is there a better way to version the payload, e.g. a way that is
+   already standard in other parts of the design, so we aren't adding
+   a new paint color to keep track of on the bike shed?
+
+3.2. Verifying the sendme payload
+
+   In the current Tor, the exit relay keeps no memory of the cells it
+   has sent down the circuit, so it won't be in a position to verify
+   the digest that it gets back.
+
+   But fortunately, the exit relay can count also, so it knows which cell
+   is going to trigger the sendme response. Each circuit can have at most
+   10 sendmes worth of data outstanding. So the exit relay will keep
+   a per-circuit fifo queue of the digests from the appropriate cells,
+   and when a new sendme arrives, it pulls off the next digest in line,
+   and verifies that it matches.
+
+   If a sendme payload has a payload version of 1 yet its digest
+   doesn't match the expected digest, or if the sendme payload has
+   an unexpected payload version (see below about deployment phases),
+   the exit relay must tear down the circuit. (If we later find that
+   we need to introduce a newer payload version in an incompatible way,
+   we would do that by bumping the circuit protocol version.)
+
+3.3. Making sure there are enough unpredictable bytes in the circuit
+
+   So far, the design as described fails to a very simple attacker:
+   the client fetches a file whose contents it already knows, and it
+   uses that knowledge to calculate the correct digests and fake its
+   sendmes just like in the original attack.
+
+   The fix is that the exit relay needs to be able to add some randomness
+   into its cells. It can add this randomness, in a way that's completely
+   orthogonal to the rest of this design, simply by choosing one relay
+   cell every so often and not using the entire relay cell payload for
+   actual data (i.e. using a Length field of less than 498), and putting
+   some random bytes in the remainder of the payload.
+
+   How many random bytes should the exit relay use, and how often should
+   it use them? There is a tradeoff between security when under attack,
+   and efficiency when not under attack. We think 1 byte of randomness
+   every 1000 cells is a good starting plan, and we can always improve
+   it later without needing to change any of the rest of this design.
+
+   (Note that the spec currently says "The remainder of the payload
+   is padded with NUL bytes." We think "is" doesn't mean MUST, so we
+   should just be sure to update that part of the spec to reflect our
+   new plans here.)
+
+4. Deployment Plan
+
+   In phase one, both sides begin remembering their expected digests,
+   and they learn how to parse sendme payloads. When they receive a
+   sendme with payload version 1, they verify its digest and tear down
+   the circuit if it's wrong. But they continue to send and accept
+   payload version 0 sendmes.
+
+   In phase two, we flip a switch in the consensus, and everybody starts
+   sending payload version 1 sendmes. Payload version 0 sendmes are
+   still accepted.
+
+   In phase three, we flip a different switch in the consensus, and
+   everybody starts refusing payload version 0 sendmes.
+
+   (It has to be two separate switches, not one unified one, because
+   otherwise we'd have a race where relays learn about the update before
+   clients know to start the new behavior.)
+
+   We'll want to do a bunch of testing in chutney before flipping the
+   switches in the real network: I've long suspected we still have bugs
+   in our sendme timing, and this proposal might expose some of them.
+
+   Alas, this deployment plan leaves a pretty large window until relays
+   are protected from attack. It's not all bad news though, since we
+   could flip the switches earlier than intended if we encounter a
+   network-wide attack.
+
+5. Security Discussion
+
+   Does our design enable any new adversarial capabilities?
+
+   An adversarial middle relay could attempt to trick the exit into
+   killing an otherwise valid circuit.
+
+   An adversarial relay can already kill a circuit, but here it could make
+   it appear that the circuit was killed for a legitimate reason (invalid
+   or missing sendme), and make someone else (the exit) do the killing.
+
+   There are two ways it might do this: by trying to make a valid sendme
+   appear invalid; and by blocking the delivery of a valid sendme. Both of
+   these depend on the ability for the adversary to guess which exitward
+   cell is a sendme cell, which it could do by counting clientward cells.
+
+   * Making a valid sendme appear invalid
+
+   A malicious middle could stomp bits in the exitward sendme so
+   that the exit sendme validation fails. However, bit stomping would
+   be detected at the protocol layer orthogonal to this design, and
+   unrecognized exitward cells would currently cause the circuit to be
+   torn down. Therefore, this attack has the same end result as blocking
+   the delivery of a valid sendme.
+
+   (Note that, currently, clientward unrecognized cells are dropped but
+   the circuit is not torn down.)
+
+   * Blocking delivery of a valid sendme
+
+   A malicious middle could simply drop a exitward sendme, so that
+   the exit is unable to verify the digest in the sendme payload. The
+   following exitward sendme cell would then be misaligned with the
+   sendme that the exit is expecting to verify. The exit would kill the
+   circuit because the client failed to prove it has read all of the
+   clientward cells.
+
+   The benefits of such an attack over just directly killing the circuit
+   seem low, and we feel that the added benefits of the defense outweigh
+   the risks.
+
+6. Open problems
+
+   With the proposed defenses in place, an adversary will be unable to
+   successfully use the "continue sending sendmes" part of these attacks.
+
+   But this proposal won't resolve the "build up many circuits over time,
+   and then use them to attack all at once" issue, nor will it stop
+   sybil attacks like if an attacker makes many parallel connections to
+   a single target relay, or reaches out to many guards in parallel.
+
+   We spent a while trying to figure out if we can enforce some
+   upper bound on how many circuits a given connection is allowed
+   to have open at once, to limit every connection's potential for
+   launching a bandwidth attack. But there are plausible situations
+   where well-behaving clients accumulate many circuits over time:
+   Ricochet clients with many friends, popular onion services, or even
+   Tor Browser users with a bunch of tabs open.
+
+   Even though a per-conn circuit limit would produce many false
+   positives, it might still be useful to have it deployed and available
+   as a consensus parameter, as another tool for combatting a wide-scale
+   attack on the network: a parameter to limit the total number of
+   open circuits per conn (viewing each open circuit as a threat) would
+   complement the current work in #24902 to rate limit circuit creates
+   per client address.
+
+   But we think the threat of parallel attacks might be best handled by
+   teaching relays to react to actual attacks, like we've done in #24902:
+   we should teach Tor relays to recognize when somebody is *doing* this
+   attack on them, and to squeeze down or outright block the client IP
+   addresses that have tried it recently.
+
+   An alternative direction would be to await research ideas on how guards
+   might coordinate to defend against attacks while still preserving
+   user privacy.
+
+   In summary, we think authenticating the sendme cells is a useful
+   building block for these future solutions, and it can be (and should
+   be) done orthogonally to whatever sybil defenses we pick later.
+
+7. References
+
+   [0] https://blog.torproject.org/blog/new-tor-denial-service-attacks-and-defenses
+   [1] https://www.freehaven.net/anonbib/#sniper14
+   [2] https://www.freehaven.net/anonbib/#torta05
+   [3] https://www.freehaven.net/anonbib/#congestion-longpaths

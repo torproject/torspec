@@ -209,6 +209,7 @@ Proposals by number:
 286  Controller APIs for hibernation access on mobile [OPEN]
 287  Reduce circuit lifetime without overloading the network [OPEN]
 288  Privacy-Preserving Statistics with Privcount in Tor (Shamir version) [DRAFT]
+289  Authenticating sendme cells to mitigate bandwidth attacks [OPEN]
 
 
 Proposals by status:
@@ -267,6 +268,7 @@ Proposals by status:
    285  Directory documents should be standardized as UTF-8
    286  Controller APIs for hibernation access on mobile
    287  Reduce circuit lifetime without overloading the network
+   289  Authenticating sendme cells to mitigate bandwidth attacks
  ACCEPTED:
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
