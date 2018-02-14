@@ -547,7 +547,7 @@ of their choices.
                 in milliseconds.
 
       cbtlearntimeout
-        Default: 360
+        Default: 180
         Min: 10
         Max: 60000
         Effect: This is how long idle circuits will be kept open while cbt is
