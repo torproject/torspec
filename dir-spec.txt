@@ -782,6 +782,7 @@
 
        Entry = Keyword "=" Values
 
+       Values =
        Values = Value
        Values = Value "," Values
 
@@ -796,7 +797,7 @@
        sorted by keyword.  Values should be numerically ascending within each
        entry.  (This implies that there should be no overlapping ranges.)
        Ranges should be represented as compactly as possible. Ints must be no
-       more than 2^32 - 1.
+       more than 2^32 - 2. (Yes, 2.)
 
        This field was first added in Tor 0.2.9.x. Some time after all earlier
        Tor relay versions are obsolete, it will become mandatory.
