@@ -1,0 +1,77 @@
+Filename: 290-deprecate-consensus-methods.txt
+Title: Continuously update consensus methods
+Author: Nick Mathewson
+Created: 2018-02-21
+Status: Open
+
+1. Background
+
+   Directory authorities use the "consensus method" mechanism to achieve
+   forward compatibility during voting.  When each authority publishes
+   its vote, it includes a list of numbered consensus methods that it
+   supports.  Each authority chooses to calculate the consensus
+   according to the highest consensus method it knows supported by more
+   than 2/3 of the voting authorities.  So long as all the authorities
+   have a method in common, they will all reach the same consensus.
+
+   Consensus method 1 was first introduced in the Tor 0.2.0 series
+   around 2008. But by 2012, we realized that we had a problem: we were
+   stuck documenting and supporting old consensus methods indefinitely.
+
+   With proposal 215, we deprecated and removed support for all
+   consensus methods before method 13.  That was good as far as it went,
+   but it didn't solve the problem going forward: the latest consensus
+   methods is now 28.
+
+   This proposal describes a policy for removing older consensus methods
+   going forward, so we won't have to keep supporting them forever.
+
+2. Proposal
+
+   I propose that from time to time, old consensus methods should be
+   deprecated.
+
+   Specifically, I propose that we deprecate all methods older than the
+   highest method supported in first stable release of the oldest LTS
+   (long-term support) release series.
+
+   For example, the current oldest LTS series is 0.2.5.x.  The first
+   stable release in that series was 0.2.5.10.  The highest consensus
+   method listed by 0.2.5.10 is 18.  Therefore, we should currently
+   consider ourselves free to deprecate all methods before 18.
+
+   Once 0.2.5.x is deprecated, 0.2.9.x will become the oldest LTS
+   series.  The first stable release in that series was 0.2.9.8.  The
+   highest consensus method listed by 0.2.9.8 is 25.  Therefore, once
+   0.2.5.x is deprecated (in May 2018), we may deprecate all methods
+   before 25.
+
+   When a consensus method is deprecated, it should no longer be listed
+   or implemented by the latest Tor releases.  (It's okay for older
+   authorities to keep advertising it.)
+
+   Most consensus methods add a feature that is used in "method M or
+   later". Deprecating method M-1 means that the feature is used in all
+   supported consensus methods. Therefore, we can remove any code that
+   makes the feature conditional on a consensus method, and any code for
+   previous implementations of the feature.
+
+   Some consensus methods remove a feature that was used up to method
+   N. Deprecating method M means that the feature is no longer used by
+   any supported consensus methods. Therefore, we can remove any code
+   that implements the feature.
+
+A. Acknowledgments
+
+   Thanks to isis and teor for the discussion that led to this proposal.
+   I believe that teor first suggested the policy described in section 2
+   above.
+
+B. Client and relay compatibility notes
+
+   Dear reader: you may be worrying that this proposal will cause old
+   clients or relays to stop working prematurely.  That is not the case.
+   Consensus methods determine how the authorities behave, but they do
+   not represent backward-incompatible changes in how they generate
+   their consensuses.
+

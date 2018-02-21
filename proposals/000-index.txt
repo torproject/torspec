@@ -210,6 +210,7 @@ Proposals by number:
 287  Reduce circuit lifetime without overloading the network [OPEN]
 288  Privacy-Preserving Statistics with Privcount in Tor (Shamir version) [DRAFT]
 289  Authenticating sendme cells to mitigate bandwidth attacks [OPEN]
+290  Continuously update consensus methods [OPEN]
 
 
 Proposals by status:
@@ -269,6 +270,7 @@ Proposals by status:
    286  Controller APIs for hibernation access on mobile
    287  Reduce circuit lifetime without overloading the network
    289  Authenticating sendme cells to mitigate bandwidth attacks
+   290  Continuously update consensus methods
  ACCEPTED:
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
