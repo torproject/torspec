@@ -1730,7 +1730,6 @@
      S: 250 OK
 
   [HSPOST was added in Tor 0.2.7.1-alpha]
-  [HS v3 support added 0.3.3.1-alpha]
 
 4. Replies
 
