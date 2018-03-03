@@ -1997,6 +1997,47 @@
         Min 1. Max 10. Default 2.
         First-appeared: 0.3.3.0-alpha.
 
+        Denial of Service mitigation parameters. Introduced in 0.3.3.2-alpha:
+
+         "DoSCircuitCreationEnabled" -- Enable the circuit creation DoS
+         mitigation.
+
+         "DoSCircuitCreationMinConnections" -- Minimum threshold of concurrent
+         connections before a client address can be flagged as executing a
+         circuit creation DoS
+
+         "DoSCircuitCreationRate" -- Allowed circuit creation rate per second
+         per client IP address once the minimum concurrent connection
+         threshold is reached.
+
+         "DoSCircuitCreationBurst" -- The allowed circuit creation burst per
+         client IP address once the minimum concurrent connection threshold is
+         reached.
+
+         "DoSCircuitCreationDefenseType" -- Defense type applied to a detected
+         client address for the circuit creation mitigation.
+
+            1: No defense.
+            2: Refuse circuit creation for the
+               DoSCircuitCreationDefenseTimePeriod period.
+
+         "DoSCircuitCreationDefenseTimePeriod" -- The base time period that
+         the DoS defense is activated for.
+
+         "DoSConnectionEnabled" -- Enable the connection DoS mitigation.
+
+         "DoSConnectionMaxConcurrentCount" -- The maximum threshold of
+         concurrent connection from a client IP address.
+
+         "DoSConnectionDefenseType" -- Defense type applied to a detected
+         client address for the connection mitigation. Possible values are:
+
+            1: No defense.
+            2: Immediately close new connections.
+
+         "DoSRefuseSingleHopClientRendezvous" -- Refuse establishment of
+         rendezvous points for single hop clients.
+
     "shared-rand-previous-value" SP NumReveals SP Value NL
 
         [At most once]
