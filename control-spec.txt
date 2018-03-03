@@ -3299,7 +3299,7 @@
   __OwningControllerFD
 
     If this option is a valid socket, Tor will start with an open control
-    connection on this socket.  Added in Tor 0.3.3.xxxx.
+    connection on this socket.  Added in Tor 0.3.3.1-alpha.
 
     This socket will be an owning controller, as if it had already called
     TAKEOWNERSHIP.  It will be automatically authenticated.  This option
