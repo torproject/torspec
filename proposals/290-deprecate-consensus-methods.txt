@@ -21,7 +21,7 @@ Status: Open
    With proposal 215, we deprecated and removed support for all
    consensus methods before method 13.  That was good as far as it went,
    but it didn't solve the problem going forward: the latest consensus
-   methods is now 28.
+   method is now 28.
 
    This proposal describes a policy for removing older consensus methods
    going forward, so we won't have to keep supporting them forever.
@@ -32,7 +32,7 @@ Status: Open
    deprecated.
 
    Specifically, I propose that we deprecate all methods older than the
-   highest method supported in first stable release of the oldest LTS
+   highest method supported in the first stable release of the oldest LTS
    (long-term support) release series.
 
    For example, the current oldest LTS series is 0.2.5.x.  The first
@@ -57,7 +57,7 @@ Status: Open
    previous implementations of the feature.
 
    Some consensus methods remove a feature that was used up to method
-   N. Deprecating method M means that the feature is no longer used by
+   M. Deprecating method M means that the feature is no longer used by
    any supported consensus methods. Therefore, we can remove any code
    that implements the feature.
 
