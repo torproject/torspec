@@ -222,6 +222,8 @@
     BeginLine ::= "-----BEGIN " Keyword "-----" NL
     EndLine ::= "-----END " Keyword "-----" NL
 
+    A Keyword may not be "-----BEGIN".
+
     The BeginLine and EndLine of an Object must use the same keyword.
 
   When interpreting a Document, software MUST ignore any KeywordLine that
