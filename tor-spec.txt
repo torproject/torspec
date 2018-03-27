@@ -938,7 +938,7 @@ see tor-design.pdf.
 
 5.1.2. EXTEND and EXTENDED cells
 
-   To extend an existing circuit, the client sends a EXTEND or EXTENDED2
+   To extend an existing circuit, the client sends an EXTEND or EXTEND2
    relay cell to the last node in the circuit.
 
    An EXTEND2 cell's relay payload contains:
