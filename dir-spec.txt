@@ -287,11 +287,13 @@
      <signature item keyword> [arguments] NL SIGNATURE NL
 
    The "SIGNATURE" Object contains a signature (using the signing key) of
-   the PKCS1-padded digest of the entire document, taken from the
+   the PKCS#1 1.5 padded digest of the entire document, taken from the
    beginning of the Initial item, through the newline after the Signature
    Item's keyword and its arguments.
 
-   Unless otherwise, the digest algorithm is SHA-1.
+   The signature does not include the algorithmIdentifier specified in PKCS #1.
+
+   Unless specified otherwise, the digest algorithm is SHA-1.
 
    All documents are invalid unless signed with the correct signing key.
 
@@ -2156,7 +2158,7 @@
 
         See shared-rand-current-value decription above.
 
-   The authority section of a consensus contains groups the following items,
+   The authority section of a consensus contains groups of the following items,
    in the order given, with one group for each authority that contributed to
    the consensus, with groups sorted by authority identity digest:
 
@@ -2198,7 +2200,8 @@
         "Nickname" is the OR's nickname.  "Identity" is a hash of its
         identity key, encoded in base64, with trailing equals sign(s)
         removed.  "Digest" is a hash of its most recent descriptor as
-        signed (that is, not including the signature), encoded in base64.
+        signed (that is, not including the signature) by the RSA identity
+        key (see section 1.3.), encoded in base64.
 
         "Publication" is the publication time of its most recent descriptor,
         in the form YYYY-MM-DD HH:MM:SS, in UTC.  Implementations MAY base
@@ -3466,7 +3469,7 @@
    prefer fallbacks to authorities, trying them earlier and more frequently.
    In all other cases, the client downloads from caches randomly chosen from
    among those believed to be V3 directory servers.  (This information comes
-   from the network-status documents; see 6 below.)
+   from the network-status documents.)
 
    After receiving any response client MUST discard any network-status
    documents that it did not request.
@@ -3552,8 +3555,8 @@
    After choosing mirrors, the client divides the descriptors among them
    randomly.
 
-   After receiving any response client MUST discard any descriptors that it
-   did not request.
+   After receiving any response the client MUST discard any descriptors that
+   it did not request.
 
    When a descriptor download fails, the client notes it, and does not
    consider the descriptor downloadable again until a certain amount of time
@@ -3652,18 +3655,7 @@
 
 5.4.4. Warning about a router's status.
 
-   If a router tries to publish its descriptor to a Naming authority
-   that has its nickname mapped to another key, the router SHOULD
-   warn the operator that it is either using the wrong key or is using
-   an already claimed nickname.
-
-   If a router has fetched a consensus document,, and the
-   authorities do not publish a binding for the router's nickname, the
-   router MAY remind the operator that the chosen nickname is not
-   bound to this key at the authorities, and suggest contacting the
-   authority operators.
-
-   ...
+   (This section is removed; authorities no longer assign the 'Named' flag.)
 
 6. Standards compliance
 
@@ -3936,11 +3928,8 @@ D. Inferring missing proto lines.
      Cons=1-2 Desc=1-2 DirCache=1 HSDir=1 HSIntro=3 HSRend=1-2 Link=1-4
      LinkAuth=1 Microdesc=1-2 Relay=1-2
 
-   For Desc, Tor versions before 0.2.7.stable should be taken to have Desc=1
-   and versions 0.2.7.stable or later should have Desc=1-2.
-
-   For Microdesc and Cons, Tor versions before 0.2.7.stable should be taken to
-   support version 1; 0.2.7.stable and later should have 1-2.
+   For Desc, Microdesc and Cons, Tor versions before 0.2.7.stable should be
+   taken to only support version 1.
 
 E. Limited ed diff format
 
