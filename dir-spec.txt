@@ -2492,13 +2492,16 @@
    the top 7/8ths for known active routers or at least 100KB/s.
 
    "Guard" -- A router is a possible Guard if all of the following apply:
-       - It is Fast.
-       - It is Stable.
+       - It is Fast,
+       - It is Stable,
        - Its Weighted Fractional Uptime is at least the median for "familiar"
          active routers,
        - It is "familiar",
        - Its bandwidth is at least AuthDirGuardBWGuarantee (if set, 2 MB by
-         default), OR its bandwidth is among the 25% fastest relays.
+         default), OR its bandwidth is among the 25% fastest relays,
+       - It qualifies for the V2Dir flag as described below (this
+         constraint was added in 0.3.3.x, because in 0.3.0.x clients
+         started avoiding guards that didn't also have the V2Dir flag).
 
         To calculate weighted fractional uptime, compute the fraction
         of time that the router is up in any given day, weighting so that
@@ -2513,8 +2516,11 @@
    "V2Dir" -- A router supports the v2 directory protocol or higher if it has
    an open directory port OR a tunnelled-dir-server line in its router
    descriptor, and it is running a version of the directory
-   protocol that supports the functionality clients need.  (Currently, this
-   is every supported version of Tor.)
+   protocol that supports the functionality clients need.  (Currently, every
+   supported version of Tor supports the functionality that clients need,
+   but some relays might set "DirCache 0" or set really low rate limiting,
+   making them unqualified to be a directory mirror, i.e. they will omit
+   the tunnelled-dir-server line from their descriptor.)
 
    "HSDir" -- A router is a v2 hidden service directory if it stores and
    serves v2 hidden service descriptors, has the Stable and Fast flag, and the
