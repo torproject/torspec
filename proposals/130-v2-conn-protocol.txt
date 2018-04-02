@@ -171,7 +171,7 @@ Proposal:
 
      The Data in the cell is a series of big-endian two-byte integers.
 
-   * It is not allowed to negotiate V1 conections once the v2 protocol
+   * It is not allowed to negotiate V1 connections once the v2 protocol
      has been used.  If this happens, Tor instances should close the
      connection.
 
