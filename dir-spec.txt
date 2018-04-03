@@ -713,14 +713,14 @@
        [Versions before 0.2.7.2-alpha did not include a SHA256 digest.]
        [Versions before 0.2.0.1-alpha don't recognize this field at all.]
 
-   "hidden-service-dir" *(SP VersionNum) NL
+   "hidden-service-dir" NL
 
        [At most once.]
 
        Present only if this router stores and serves hidden service
-       descriptors. If any VersionNum(s) are specified, this router
-       supports those descriptor versions. If none are specified, it
-       defaults to version 2 descriptors.
+       descriptors. This router supports the descriptor versions declared
+       in the HSDir "proto" entry. If there is no "proto" entry, this
+       router supports version 2 descriptors.
 
    "protocols" SP "Link" SP LINK-VERSION-LIST SP "Circuit" SP
           CIRCUIT-VERSION-LIST NL
