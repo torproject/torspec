@@ -1,0 +1,251 @@
+Filename: 291-two-guard-nodes.txt
+Title: The move to two guard nodes
+Author: Mike Perry
+Created: 2018-03-22
+Supersedes: Proposal 236
+Status: Open
+
+0. Background
+
+  Back in 2014, Tor moved from three guard nodes to one guard node[1,2,3].
+
+  We made this change primarily to limit points of observability of entry
+  into the Tor network for clients and onion services, as well as to
+  reduce the ability of an adversary to track clients as they move from
+  one internet connection to another by their choice of guards.
+
+
+1. Proposed changes
+
+1.1. Switch to two guards per client
+
+  When this proposal becomes effective, clients will switch to using
+  two guard nodes. The guard node selection algorithms of Proposal 271
+  will remain unchanged. Instead of having one primary guard "in use",
+  Tor clients will always use two.
+
+  This will be accomplished by setting the guard-n-primary-guards-to-use
+  consensus parameter to 2, as well as guard-n-primary-guards to 2.
+  (Section 3.1 covers the reason for both parameters). This is equivalent
+  to using the torrc option NumEntryGuards=3D2, which can be used for
+  testing behavior prior to the consensus update.
+
+1.2. Enforce Tor's path restrictions across this guard layer
+
+  In order to ensure that Tor can always build circuits using two guards
+  without resorting to a third, they must be chosen such that Tor's path
+  restrictions could still build a path with at least one of them,
+  regardless of the other nodes in the path.
+
+  In other words, we must ensure that both guards are not chosen from the
+  same /16 or the same node family. In this way, Tor will always be able to
+  build a path using these guards, preventing the use of a third guard.
+
+
+2. Discussion
+
+2.1. Why two guards?
+
+  The main argument for switching to two guards is that because of Tor's
+  path restrictions, we're already using two guards, but we're using them
+  in a suboptimal and potentially dangerous way.
+
+  Tor's path restrictions enforce the condition that the same node cannot
+  appear twice in the same circuit, nor can nodes from the same /16 subnet
+  or node family be used in the same circuit.
+
+  Tor's paths are also built such that the exit node is chosen first and
+  held fixed during guard node choice, as are the IP, HSDIR, and RPs for
+  onion services. This means that whenever one of these nodes happens to
+  be the guard[4], or be in the same /16 or node family as the guard, Tor
+  will build that circuit using a second "primary" guard, as per proposal
+  271[7].
+
+  Worse still, the choice of RP, IP, and exit can all be controlled by an
+  adversary (to varying degrees), enabling them to force the use of a
+  second guard at will.
+
+  Because this happens somewhat infrequently in normal operation, a fresh
+  TLS connection will typically be created to the second "primary" guard,
+  and that TLS connection will be used only for the circuit for that
+  particular request. This property makes all sorts of traffic analysis
+  attacks easier, because this TLS connection will not benefit from any
+  multiplexing.
+
+  This is more serious than traffic injection via an already in-use
+  guard because the lack of multiplexing means that the data retention
+  level required to gain information from this activity is very low, and
+  may exist for other reasons. To gain information from this behavior, an
+  adversary needs only connection 5-tuples + timestamps, as opposed to
+  detailed timeseries data that is polluted by other concurrent activity
+  and padding.
+
+  In the most severe form of this attack, the adversary can take a suspect
+  list of Tor client IP addresses (or the list of all Guard node IP addresses)
+  and observe when secondary Tor connections are made to them at the time when
+  they cycle through all guards as RPs for connections to an onion
+  service. This adversary does not require collusion on the part of observers
+  beyond the ability to provide 5-tuple connection logs (which ISPs may retain
+  for reasons such as netflow accounting, IDS, or DoS protection systems).
+
+  A fully passive adversary can also make use of this behavior. Clients
+  unlucky enough to pick guard nodes in heavily used /16s or in large node
+  families will tend to make use of a second guard more frequently even
+  without effort from the adversary. In these cases, the lack of
+  multiplexing also means that observers along the path to this secondary
+  guard gain more information per observation.
+
+2.2. Why not MOAR guards?
+
+  We do not want to increase the number of observation points for client
+  activity into the Tor network[1]. We merely want better multiplexing for
+  the cases where this already happens.
+
+2.3. Can you put some numbers on that?
+
+  The Changing of the Guards[13] paper studies this from a few different
+  angles, but one of the crucially missing graphs is how long a client
+  can expect to run with N guards before it chooses a malicious guard.
+
+  However, we do have tables in section 3.2.1 of proposal 247 that cover
+  this[14]. There are three tables there: one for a 1% adversary, one for
+  a 5% adversary, and one for a 10% adversary. You can see the probability
+  of adversary success for one and two guards in terms of the number of
+  rotations needed before the adversary's node is chosen. Not surprisingly,
+  the two guard adversary gets to compromise clients roughly twice as
+  quickly, but the timescales are still rather large even for the 10%
+  adversary: they only have 50% chance of success after 4 rotations, which
+  will take about 14 months with Tor's 3.5 month guard rotation.
+
+2.4. What about guard fingerprinting?
+
+  More guards also means more fingerprinting[8]. However, even one guard
+  may be enough to fingerprint a user who moves around in the same area,
+  if that guard is low bandwidth or there are not many Tor users in that
+  area.
+
+  Furthermore, our use of separate directory guards (and three of them)
+  means that we're not really changing the situation much with the
+  addition of another regular guard. Right now, directory guard use alone
+  is enough to track all Tor users across the entire world.
+
+  While the directory guard problem could be fixed[12] (and should be
+  fixed), it is still the case that another mechanism should be used for
+  the general problem of guard-vs-location management[9].
+
+
+3. Alternatives
+
+  There are two other solutions that also avoid the use of secondary guard
+  in the path restriction case.
+
+3.1. Eliminate path restrictions entirely
+
+  If Tor decided to stop enforcing /16, node family, and also allowed the
+  guard node to be chosen twice in the path, then under normal conditions,
+  it should retain the use of its primary guard.
+
+  This approach is not as extreme as it seems on face. In fact, it is hard
+  to come up with arguments against removing these restrictions. Tor's
+  /16 restriction is of questionable utility against monitoring, and it can
+  be argued that since only good actors use node family, it gives influence
+  over path selection to bad actors in ways that are worse than the benefit
+  it provides to paths through good actors[10,11].
+
+  However, while removing path restrictions will solve the immediate
+  problem, it will not address other instances where Tor temporarily opts
+  use a second guard due to congestion, OOM, or failure of its primary
+  guard, and we're still running into bugs where this can be adversarially
+  controlled or just happen randomly[5].
+
+  While using two guards means twice the surface area for these types of
+  bugs, it also means that instances where they happen simultaneously on
+  both guards (thus forcing a third guard) are much less likely than with
+  just one guard. (In the passive adversary model, consider that one guard
+  fails at any point with probability P1. If we assume that such passive
+  failures are independent events, both guards would fail concurrently
+  with probability P1*P2. Even if the events are correlated, the maximum
+  chance of concurrent failure is still MIN(P1,P2)).
+
+  Note that for this analysis to hold, we have to ensure that nodes that
+  are at RESOURCELIMIT or otherwise temporarily unresponsive do not cause
+  us to consider other primary guards beyond than the two we have chosen.
+  This is accomplished by setting guard-n-primary-guards to 2 (in addition
+  to setting guard-n-primary-guards-to-use to 2). With this parameter
+  set, the proposal 271 algorithm will avoid considering more than our two
+  guards, unless *both* are down at once.
+
+3.2. No Guard-flagged nodes as exit, RP, IP, or HSDIRs
+
+  Similar to 3.1, we could instead forbid the use of Guard-flagged nodes
+  for the exit, IP, RP, and HSDIR positions.
+
+  This solution has two problems: First, like 3.1, it also does not handle
+  the case where resource exhaustion could force the use of a second
+  guard. Second, it requires clients to upgrade to the new behavior and
+  stop using Guard flagged nodes before it can be deployed.
+
+
+4. The future is confluxed
+
+  An additional benefit of using a second guard is that it enables us to
+  eventually use conflux[6].
+
+  Conflux works by giving circuits a 256bit cookie that is sent to the
+  exit/RP, and circuits that are then built to the same exit/RP with the
+  same cookie can then be fused together. Throughput estimates are used to
+  balance traffic between these circuits, depending on their performance.
+
+  We have unfortunately signaled to the research community that conflux is
+  not worth pursuing, because of our insistence on a single guard. While
+  not relevant to this proposal (indeed, conflux requires its own proposal
+  and also concurrent research), it is worth noting that whichever way we
+  go here, the door remains open to conflux because of its utility against
+  similar issues.
+
+  If our conflux implementation includes packet acking, then circuits can
+  still survive the loss of one guard node due to DoS, OOM, or other
+  failures because the second half of the path will remain open and
+  usable (see the probability of concurrent failure arguments in Section
+  3.1).
+
+  If exits remember this cookie for a short period of time after the last
+  circuit is closed, the technique can be used to protect against
+  DoS/OOM/guard downtime conditions that take down both guard nodes or
+  destroy many circuits to confirm both guard node choices. In these
+  cases, circuits could be rebuilt along an alternate path and resumed
+  without end-to-end circuit connectivity loss. This same technique will
+  also make things like ephemeral bridges (ie Snowflake/Flashproxy) more
+  usable, because bridge uptime will no longer be so crucial to usability.
+  It will also improve mobile usability by allowing us to resume
+  connections after mobile Tor apps are briefly suspended, or if the user
+  switches between cell and wifi networks.
+
+  Furthermore, it is likely that conflux will also be useful against traffic
+  analysis and congestion attacks. Since the load balancing is dynamic and
+  hard to predict by an external observer and also increases overall
+  traffic multiplexing, traffic correlation and website traffic
+  fingerprinting attacks will become harder, because the adversary can no
+  longer be sure what percentage of the traffic they have seen (depending
+  on their position and other potential concurrent activity).  Similarly,
+  it should also help dampen congestion attacks, since traffic will
+  automatically shift away from a congested guard.
+
+
+
+References:
+
+1. https://blog.torproject.org/improving-tors-anonymity-changing-guard-parameters
+2. https://trac.torproject.org/projects/tor/ticket/12206
+3. https://gitweb.torproject.org/torspec.git/tree/proposals/236-single-guard-node.txt
+4. https://trac.torproject.org/projects/tor/ticket/14917
+5. https://trac.torproject.org/projects/tor/ticket/25347#comment:14
+6. https://www.cypherpunks.ca/~iang/pubs/conflux-pets.pdf
+7. https://gitweb.torproject.org/torspec.git/tree/proposals/271-another-guard-selection.txt
+8. https://trac.torproject.org/projects/tor/ticket/9273#comment:3
+9. https://tails.boum.org/blueprint/persistent_Tor_state/
+10. https://trac.torproject.org/projects/tor/ticket/6676#comment:3
+11. https://bugs.torproject.org/15060
+12. https://trac.torproject.org/projects/tor/ticket/10969
+13. https://www.freehaven.net/anonbib/cache/wpes12-cogs.pdf
+14. https://gitweb.torproject.org/torspec.git/tree/proposals/247-hs-guard-discovery.txt

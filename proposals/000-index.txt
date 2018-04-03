@@ -170,7 +170,7 @@ Proposals by number:
 247  Defending Against Guard Discovery Attacks using Vanguards [DRAFT]
 248  Remove all RSA identity keys [DRAFT]
 249  Allow CREATE cells with >505 bytes of handshake data [ACCEPTED]
-250  Random Number Generation  During Tor Voting [CLOSED]
+250  Random Number Generation During Tor Voting [CLOSED]
 251  Padding for netflow record resolution reduction [DRAFT]
 252  Single Onion Services [SUPERSEDED]
 253  Out of Band Circuit HMACs [DRAFT]
@@ -211,6 +211,7 @@ Proposals by number:
 288  Privacy-Preserving Statistics with Privcount in Tor (Shamir version) [DRAFT]
 289  Authenticating sendme cells to mitigate bandwidth attacks [OPEN]
 290  Continuously update consensus methods [OPEN]
+291  The move to two guard nodes [OPEN]
 
 
 Proposals by status:
@@ -271,6 +272,7 @@ Proposals by status:
    287  Reduce circuit lifetime without overloading the network
    289  Authenticating sendme cells to mitigate bandwidth attacks
    290  Continuously update consensus methods
+   291  The move to two guard nodes
  ACCEPTED:
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
@@ -365,7 +367,7 @@ Proposals by status:
    238  Better hidden service stats from Tor relays
    243  Give out HSDir flag only to relays with Stable flag
    244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [in 0.3.0.1-alpha]
-   250  Random Number Generation  During Tor Voting
+   250  Random Number Generation During Tor Voting
    264  Putting version numbers on the Tor subprotocols [in 0.2.9.4-alpha]
    271  Another algorithm for guard selection [in 0.3.0.1-alpha]
    272  Listed routers should be Valid, Running, and treated as such [in 0.2.9.3-alpha, 0.2.9.4-alpha]
