@@ -1094,7 +1094,8 @@ Table of contents:
 
        An encrypted blob, whose format is discussed in [HS-DESC-ENC] below. The
        blob is base64 encoded and enclosed in -----BEGIN MESSAGE---- and
-       ----END MESSAGE---- wrappers.
+       ----END MESSAGE---- wrappers. (The resulting document does not end with
+       a newline character.)
 
      "signature" SP signature NL
 
@@ -2168,7 +2169,7 @@ A.2. Tor's key derivation scheme
   then clamp the blinding factor 'h' according to the ed25519 spec:
 
            h[0] &= 248;
-           h[31] &= 127;
+           h[31] &= 63;
            h[31] |= 64;
 
   and do the key derivation as follows:

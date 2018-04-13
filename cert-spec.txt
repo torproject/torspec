@@ -72,8 +72,7 @@
    Before processing any certificate, parties SHOULD know which
    identity key it is supposed to be signed by, and then check the
    signature.  The signature is formed by signing the first N-64
-   bytes of the certificate prefixed with the string "Tor node
-   signing key certificate v1".
+   bytes of the certificate.
 
 2.2. Basic extensions
 
@@ -159,7 +158,6 @@ A.3. List of signature prefixes
    We describe various documents as being signed with a prefix. Here
    are those prefixes:
 
-   "Tor node signing key certificate v1" (section 2.1)
    "Tor router descriptor signature v1" (see dir-spec.txt)
 
 A.4. List of certified key types
@@ -167,4 +165,9 @@ A.4. List of certified key types
    [01] ed25519 key
    [02] SHA256 hash of an RSA key
    [03] SHA256 hash of an X.509 certificate
+   [08] short-term HS descriptor signing key, signed with blinded public key (rend-spec-v3.txt)
+   [09] intro point authentication key, cross-certifying the HS descriptor
+        signing key  (rend-spec-v3.txt)
+   [0B] ed25519 key derived from the curve25519 intro point encryption key,
+        cross-certifying the HS descriptor signing key  (rend-spec-v3.txt)
 
