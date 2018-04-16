@@ -95,7 +95,7 @@ Status: Open
   multiplexing also means that observers along the path to this secondary
   guard gain more information per observation.
 
-2.2. Why not MOAR guards?
+2.2. Why not MORE guards?
 
   We do not want to increase the number of observation points for client
   activity into the Tor network[1]. We merely want better multiplexing for
