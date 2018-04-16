@@ -2042,6 +2042,11 @@
          "DoSRefuseSingleHopClientRendezvous" -- Refuse establishment of
          rendezvous points for single hop clients.
 
+        "circ_max_cell_queue_size" -- This parameter determines the maximum
+        number of cells allowed per circuit queue.
+        Min 1000. Max 4294967295. Default 50000.
+        First-appeared: 0.3.3.6-rc.
+
     "shared-rand-previous-value" SP NumReveals SP Value NL
 
         [At most once]
