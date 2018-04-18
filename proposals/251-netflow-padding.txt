@@ -2,8 +2,10 @@ Filename: 251-netflow-padding.txt
 Title: Padding for netflow record resolution reduction
 Authors: Mike Perry
 Created: 20 August 2015
-Status: Draft
+Status: Closed
+Implemented-In: 0.3.1.1-alpha
 
+NOTE: Please look at padding-spec.txt now, not this document.
 
 0. Motivation
 
