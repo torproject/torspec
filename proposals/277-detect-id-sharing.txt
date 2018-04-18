@@ -1,5 +1,5 @@
 Filename: 277-detect-id-sharing.txt
-Title: Detect multiple relay instances running with same ID.
+Title: Detect multiple relay instances running with same ID
 Author: Nick Mathewson
 Created: 20-Feb-2017
 Status: Open

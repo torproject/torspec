@@ -1,5 +1,5 @@
 Filename: 274-rotate-onion-keys-less.txt
-Title: Rotate onion keys less frequently.
+Title: Rotate onion keys less frequently
 Author: Nick Mathewson
 Created: 20-Feb-2017
 Status: Closed

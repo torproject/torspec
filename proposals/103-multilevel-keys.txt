@@ -1,5 +1,5 @@
 Filename: 103-multilevel-keys.txt
-Title: Splitting identity key from regularly used signing key.
+Title: Splitting identity key from regularly used signing key
 Author: Nick Mathewson
 Created: Jan 2007
 Status: Closed
