@@ -171,7 +171,7 @@ Proposals by number:
 248  Remove all RSA identity keys [DRAFT]
 249  Allow CREATE cells with >505 bytes of handshake data [ACCEPTED]
 250  Random Number Generation During Tor Voting [CLOSED]
-251  Padding for netflow record resolution reduction [DRAFT]
+251  Padding for netflow record resolution reduction [CLOSED]
 252  Single Onion Services [SUPERSEDED]
 253  Out of Band Circuit HMACs [DRAFT]
 254  Padding Negotiation [DRAFT]
@@ -226,7 +226,6 @@ Proposals by status:
    245  Deprecating and removing the TAP circuit extension protocol
    247  Defending Against Guard Discovery Attacks using Vanguards
    248  Remove all RSA identity keys
-   251  Padding for netflow record resolution reduction
    253  Out of Band Circuit HMACs
    254  Padding Negotiation
    255  Controller features to allow for load-balancing hidden services
@@ -368,6 +367,7 @@ Proposals by status:
    243  Give out HSDir flag only to relays with Stable flag
    244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [in 0.3.0.1-alpha]
    250  Random Number Generation During Tor Voting
+   251  Padding for netflow record resolution reduction [in 0.3.1.1-alpha]
    264  Putting version numbers on the Tor subprotocols [in 0.2.9.4-alpha]
    271  Another algorithm for guard selection [in 0.3.0.1-alpha]
    272  Listed routers should be Valid, Running, and treated as such [in 0.2.9.3-alpha, 0.2.9.4-alpha]
