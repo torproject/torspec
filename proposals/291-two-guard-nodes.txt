@@ -27,7 +27,7 @@ Status: Open
   This will be accomplished by setting the guard-n-primary-guards-to-use
   consensus parameter to 2, as well as guard-n-primary-guards to 2.
   (Section 3.1 covers the reason for both parameters). This is equivalent
-  to using the torrc option NumEntryGuards=3D2, which can be used for
+  to using the torrc option NumEntryGuards=2, which can be used for
   testing behavior prior to the consensus update.
 
 1.2. Enforce Tor's path restrictions across this guard layer
