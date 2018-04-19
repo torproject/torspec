@@ -1,0 +1,169 @@
+          Tor Bandwidth Measurements Document Format
+              juga
+
+1. Scope and preliminaries
+
+  This document describes the format of Tor's bandwidth measurements
+  document, version 1.1.0 and later.
+
+  Since Tor version 0.2.4.12-alpha the directory
+  authorities use the bandwidth measurements document called
+  "V3BandwidthsFile" and produced by Torflow [1]
+  (format described in README.spec.txt [2]).
+
+    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+    NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+    "OPTIONAL" in this document are to be interpreted as described in
+    RFC 2119.
+
+1.2. Acknowledgements
+
+  The original bandwidth measurement scanner (Torflow) and format was
+  created by mike. Teor suggested to write this specification while
+  contributing on pastly's new bandwidth scanner implementation.
+
+  This specification was revised after feedback from:
+
+    Teor
+
+1.3 Outline
+
+  The bandwidth measurements mentioned in sections 3.4.1 and 3.4.2
+  of "Tor directory protocol" (dir-spec.txt) [3] are obtained
+  by bandwidth authorities, which generate a file storing information
+  on relays' measured bandwidth capacities.
+
+2. Format details
+
+  Bandwidth measurements MUST contain the following sections:
+  - Header (exactly once)
+  - Relays measurements (zero or more times)
+
+2.1. Nonterminals
+
+  The following nonterminals are defined in dir-spec.txt, sections
+  1.2., 2.1.1., 2.1.3. :
+
+    Int
+    SP (space)
+    NL (newline)
+    Keyword
+    ArgumentChar
+    fingerprint (hexdigest)
+    nickname
+
+  Nonterminals defined in "Tor Directory List Format" (dir-list-spec.txt),
+  section 2.2.1.:
+
+    version_number
+
+[juga: this needed?
+  We define the following nonterminals:
+
+    value ::= ArgumentChar+
+    key_value ::= Keyword "=" value
+    line := ArgumentChar* NL
+]
+
+2.2. Header format
+
+It consists of:
+
+  timestamp NL
+
+    [At start, exactly once.]
+
+    timestamp = Int
+
+    The Unix Epoch time when the file was created.
+
+  "version="version_number NL
+
+    [In second position, zero or one time.]
+
+    The specification document format version.
+
+    New implementations SHOULD include this line.
+    For documents generated following this specification,
+    the version_number MUST be "1.1.0".
+    Documents generated before this specification do not contain this line,
+    and the version_number is considered to be "1.0.0".
+    This line is ignored by any Tor version released before this specification,
+    April 2018.
+
+  Future releases may include additional header lines.
+  Parsers MUST NOT rely on the order of these additional lines.
+  Additional header lines will be accompanied by a minor version increment.
+  If a header line does conform to this format, the line SHOULD be ignored by
+  parsers.
+
+  [juga: how the header ends?, just when a relay measurement is found?]
+
+2.3. Relay measurements format
+
+  It consists of zero or more lines that contain the measurement results
+  of relays in arbitrary order.
+  There can be at most one such line per relay identity (fingerprint).
+  Each line MUST consists of the following fields in arbitrary order:
+
+    "node_id=" fingerprint SP
+    "bw=" bandwidth SP
+
+  Where:
+
+    bandwidth = Int
+
+    The aggregated measured bandwidth of this relay, in kilobytes
+    per second.
+
+  Each line MUST accept additional Arguments as stated in the dir-spec.txt
+  Document meta format.[juga: should we use the commented definitions instead?]
+  If additional Arguments are included, they MUST have the equal sign ("=")
+  in it.
+  Each line MUST end with NL.
+
+  For instance, every relay measurement in sbws version 0.1.0 consist of:
+
+    "node_id=" fingerprint SP
+    "bw=" bandwidth SP
+    "nick=" nickname SP
+    "rtt=" rtt SP
+    "time=" timestamp NL
+
+  Where:
+
+    timestamp = Int
+
+    The Unix Epoch time when the measurement was performed.
+
+    rtt = Int
+
+    The Round Trip Time to obtain 1 Byte of data.
+
+  [juga: which arguments should be include from torflow?]
+
+References:
+
+1. https://gitweb.torproject.org/torflow.git
+2. https://gitweb.torproject.org/torflow.git/tree/NetworkScanners/BwAuthority/README.spec.txt#n332
+3. https://gitweb.torproject.org/torspec.git/tree/dir-spec.txt
+4. https://metrics.torproject.org/onionoo.html#details
+
+
+A. Sample data
+
+The following has not been obtained from any real measurement.
+
+A.1. Torflow
+
+1523911758
+node_id=$68A483E05A2ABDCA6DA5A3EF8DB5177638A27F80 bw=392760 nick=Test measured_at=1523911725 updated_at=1523911725 pid_error=4.11374090719 pid_error_sum=4.11374090719 pid_bw=57136645 pid_delta=2.12168374577 circ_fail=0.2 scanner=/filepath
+node_id=$96C15995F30895689291F455587BD94CA427B6FC bw=236189 nick=Test2 measured_at=1523911623 updated_at=1523911623 pid_error=3.96703337994 pid_error_sum=3.96703337994 pid_bw=47422125 pid_delta=2.65469736988 circ_fail=0.0 scanner=/filepath
+
+A.2. sbws
+
+1523911758
+version=1.1.0
+source=sbws 0.1.0
+node_id=$68A483E05A2ABDCA6DA5A3EF8DB5177638A27F80 bw=392760 nick=Test rtt=380 time=1523911725
+node_id=$96C15995F30895689291F455587BD94CA427B6FC bw=236189 nick=Test2 rtt=378 time=1523911623
