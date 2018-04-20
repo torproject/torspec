@@ -137,7 +137,7 @@ It consists of:
 
     The Round Trip Time in microseconds to obtain 1 Byte of data.
 
-  [juga: which arguments should be include from torflow?]
+  Torflow includes node_id and bw among others [2].
 
 References:
 
