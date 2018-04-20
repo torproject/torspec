@@ -63,6 +63,8 @@
     key_value ::= Keyword "=" value
     line := ArgumentChar* NL
     timestamp = Int
+    software = Keyword
+    software_version = version_number
 
 2.2. Header format
 
