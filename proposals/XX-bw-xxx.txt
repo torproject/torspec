@@ -88,25 +88,25 @@ It consists of:
     This line is ignored by any Tor version released before this specification.
     TODO: implement this feature in tor
 
-    "software="Keyword
+  "software="Keyword
 
-      [Zero or one time.]
+    [Zero or one time.]
 
-      The name of the software that created the document.
+    The name of the software that created the document.
 
-      New implementations SHOULD include this line.
-      Documents generated before this specification do not contain this line,
-      and the software is considered to be "Torflow".
-      This line is ignored by any Tor version released before this specification.
+    New implementations SHOULD include this line.
+    Documents generated before this specification do not contain this line,
+    and the software is considered to be "Torflow".
+    This line is ignored by any Tor version released before this specification.
 
-    "software_version="version_number
+  "software_version="version_number
 
-      [Zero or one time.]
+    [Zero or one time.]
 
-      The version of the software that created the document.
-      New implementations SHOULD include this line.
-      Documents generated before this specification do not contain this line.
-      This line is ignored by any Tor version released before this specification.
+    The version of the software that created the document.
+    New implementations SHOULD include this line.
+    Documents generated before this specification do not contain this line.
+    This line is ignored by any Tor version released before this specification.
 
   Future releases may include additional header lines.
   Parsers MUST NOT rely on the order of these additional lines.
