@@ -39,7 +39,7 @@
   - Header (exactly once)
   - Relays measurements (zero or more times)
 
-2.1. Nonterminals
+2.1. Definitions
 
   The following nonterminals are defined in dir-spec.txt, sections
   1.2., 2.1.1., 2.1.3. :
