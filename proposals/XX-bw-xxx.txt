@@ -85,8 +85,8 @@ It consists of:
     the version_number MUST be "1.1.0".
     Documents generated before this specification do not contain this line,
     and the version_number is considered to be "1.0.0".
-    This line is ignored by any Tor version released before this specification,
-    April 2018.
+    This line is ignored by any Tor version released before this specification.
+    TODO: implement this feature in tor
 
   Future releases may include additional header lines.
   Parsers MUST NOT rely on the order of these additional lines.
