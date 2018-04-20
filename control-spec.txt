@@ -1069,7 +1069,7 @@
     "current-time/local"
     "current-time/utc"
       The current system or UTC time, as returned by the system, in ISOTime2
-      format.
+      format.  (Introduced in 0.3.4.1-alpha.)
 
     "config-can-saveconf"
       0 or 1, depending on whether it is possile to use SAVECONF without the
