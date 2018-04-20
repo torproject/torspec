@@ -88,7 +88,7 @@ It consists of:
     This line is ignored by any Tor version released before this specification.
     TODO: implement this feature in tor
 
-  "software="Keyword
+  "software="Keyword NL
 
     [Zero or one time.]
 
@@ -99,7 +99,7 @@ It consists of:
     and the software is considered to be "Torflow".
     This line is ignored by any Tor version released before this specification.
 
-  "software_version="version_number
+  "software_version="version_number NL
 
     [Zero or one time.]
 
