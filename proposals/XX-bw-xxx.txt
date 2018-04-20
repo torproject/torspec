@@ -72,7 +72,7 @@ It consists of:
 
     [At start, exactly once.]
 
-    The Unix Epoch time when the file was created.
+    The Unix Epoch time in seconds when the file was created.
 
   "version="version_number NL
 
