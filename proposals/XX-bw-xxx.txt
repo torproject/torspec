@@ -135,7 +135,7 @@ It consists of:
 
     rtt = Int
 
-    The Round Trip Time to obtain 1 Byte of data.
+    The Round Trip Time in microseconds to obtain 1 Byte of data.
 
   [juga: which arguments should be include from torflow?]
 
