@@ -115,9 +115,8 @@ It consists of:
     per second.
 
   Each line MUST accept additional Arguments as stated in the dir-spec.txt
-  Document meta format.[juga: should we use the commented definitions instead?]
-  If additional Arguments are included, they MUST have the equal sign ("=")
-  in it.
+  Document meta format.
+  If additional Arguments are included, they MUST by key_value.
   Each line MUST end with NL.
 
   For instance, every relay measurement in sbws version 0.1.0 consist of:
