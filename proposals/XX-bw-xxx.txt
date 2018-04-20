@@ -63,6 +63,7 @@
     key_value ::= Keyword "=" value
     line := ArgumentChar* NL
     timestamp = Int
+    bandwidth = Int
 
 2.2. Header format
 
@@ -127,12 +128,8 @@ It consists of:
     "node_id=" fingerprint SP
     "bw=" bandwidth SP
 
-  Where:
-
-    bandwidth = Int
-
-    The aggregated measured bandwidth of this relay, in kilobytes
-    per second.
+  Where bandwidth is the aggregated measured bandwidth of this relay,
+  in kilobytes per second.
 
   Each line MUST accept additional Arguments as stated in the dir-spec.txt
   Document meta format.
