@@ -144,18 +144,12 @@ It consists of:
     "node_id=" fingerprint SP
     "bw=" bandwidth SP
     "nick=" nickname SP
-    "rtt=" rtt SP
+    "rtt=" Int SP
     "time=" timestamp NL
 
-  Where:
-
-    timestamp = Int
-
-    The Unix Epoch time in seconds when the measurement was performed.
-
-    rtt = Int
-
-    The Round Trip Time in microseconds to obtain 1 Byte of data.
+  Where timestamp is the Unix Epoch time in seconds when the measurement was
+  performed and rtt is the Round Trip Time in microseconds to obtain 1 Byte
+  of data.
 
   Torflow includes node_id and bw among others [2].
 
