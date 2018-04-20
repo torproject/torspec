@@ -1066,6 +1066,11 @@
       consensus, base-64 encoded.  An empty value means that either
       the consensus has no shared random value, or Tor has no consensus.
 
+    "current-time/local"
+    "current-time/utc"
+      The current system or UTC time, as returned by the system, in ISOTime2
+      format.
+
     "config-can-saveconf"
       0 or 1, depending on whether it is possile to use SAVECONF without the
       FORCE flag. (Introduced in 0.3.1.1-alpha.)
