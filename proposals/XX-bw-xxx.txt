@@ -131,7 +131,7 @@ It consists of:
 
     timestamp = Int
 
-    The Unix Epoch time when the measurement was performed.
+    The Unix Epoch time in seconds when the measurement was performed.
 
     rtt = Int
 
