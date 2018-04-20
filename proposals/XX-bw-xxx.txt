@@ -93,8 +93,9 @@ It consists of:
   Additional header lines will be accompanied by a minor version increment.
   If a header line does conform to this format, the line SHOULD be ignored by
   parsers.
-
-  [juga: how the header ends?, just when a relay measurement is found?]
+  This section ends when a relay measurement is found conforming to the next
+  section.
+  TODO: check that it is what tor does
 
 2.3. Relay measurements format
 
