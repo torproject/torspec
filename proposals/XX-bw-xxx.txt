@@ -57,13 +57,12 @@
 
     version_number
 
-[juga: this needed?
   We define the following nonterminals:
 
     value ::= ArgumentChar+
     key_value ::= Keyword "=" value
     line := ArgumentChar* NL
-]
+    timestamp = Int
 
 2.2. Header format
 
@@ -72,8 +71,6 @@ It consists of:
   timestamp NL
 
     [At start, exactly once.]
-
-    timestamp = Int
 
     The Unix Epoch time when the file was created.
 
