@@ -207,7 +207,7 @@
 
   ; For tors older than 0.3.1.3-alpha, LongName may have included an equal
   ; sign ("=") in lieu of a tilde ("~").  The presence of an equal sign
-  ; denoted that the OR posessed the "Named" flag:
+  ; denoted that the OR possessed the "Named" flag:
 
   LongName   = Fingerprint [ ( "=" / "~" ) Nickname ]
 
@@ -1069,10 +1069,10 @@
     "current-time/local"
     "current-time/utc"
       The current system or UTC time, as returned by the system, in ISOTime2
-      format.
+      format.  (Introduced in 0.3.4.1-alpha.)
 
     "config-can-saveconf"
-      0 or 1, depending on whether it is possile to use SAVECONF without the
+      0 or 1, depending on whether it is possible to use SAVECONF without the
       FORCE flag. (Introduced in 0.3.1.1-alpha.)
 
   Examples:
@@ -2796,7 +2796,7 @@
      Total = Integer count of timeouts stored
      Timeout = Integer timeout in milliseconds
      Xm = Estimated integer Pareto parameter Xm in milliseconds
-     Alpha = Estimated floating point Paredo paremter alpha
+     Alpha = Estimated floating point Paredo parameter alpha
      Quantile = Floating point CDF quantile cutoff point for this timeout
      TimeoutRate = Floating point ratio of circuits that timeout
      CloseTimeout = How long to keep measurement circs in milliseconds
@@ -3084,7 +3084,7 @@
     will be ignored and a "HS_DESC" event with "IGNORE" action will be
     generated.
 
-    For HsDir, LongName is always prefered. If HsDir cannot be found in node
+    For HsDir, LongName is always preferred. If HsDir cannot be found in node
     list at the time event is sent, Fingerprint will be used instead.
 
     If Action is "FAILED", Tor SHOULD send Reason field as well. Possible
