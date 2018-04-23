@@ -2926,14 +2926,31 @@
 
   The syntax is:
      "650" SP "CIRC_BW" SP "ID=" CircuitID SP "READ=" BytesRead SP
-              "WRITTEN=" BytesWritten SP "TIME=" Time CRLF
+              "WRITTEN=" BytesWritten SP "TIME=" Time SP
+              "DELIVERED_READ=" DeliveredBytesRead SP
+              "OVERHEAD_READ=" OverheadBytesRead SP
+              "DELIVERED_WRITTEN=" DeliveredBytesWritten CRLF
+              "OVERHEAD_WRITTEN=" OverheadBytesWritten SP
      BytesRead = 1*DIGIT
      BytesWritten = 1*DIGIT
+     OverheadBytesRead = 1*DIGIT
+     OverheadBytesWritten = 1*DIGIT
+     DeliveredBytesRead = 1*DIGIT
+     DeliveredBytesWritten = 1*DIGIT
      Time = ISOTime2Frac
 
-  BytesRead and BytesWritten are the number of bytes read and written by
-  all applications with streams attached to this circuit since the last
-  CIRC_BW event.
+  BytesRead and BytesWritten are the number of bytes read and written
+  on this circuit since the last CIRC_BW event.
+
+  DeliveredBytesRead and DeliveredBytesWritten are the total length of
+  all valid relay cell payloads read and written on this circuit since
+  the last CIRC_BW event. These fields are provided only in Tor
+  3.4.0-alpha and later.
+
+  OverheadBytesRead and OverheadBytesWritten are the total length of
+  the unused overhead portion of valid relay cells read and written on
+  this circuit since the last CIRC_BW event. These fields are provided
+  only in Tor 0.3.4.0-alpha and later.
 
   The Time field is provided only in versions 0.3.2.1-alpha and later. It
   records when Tor created the bandwidth event.
