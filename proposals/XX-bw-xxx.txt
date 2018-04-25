@@ -1,10 +1,11 @@
           Tor Bandwidth Measurements Document Format
                             juga
+                            teor
 
 1. Scope and preliminaries
 
   This document describes the format of Tor's bandwidth measurements
-  document, version 1.1.0 and later.
+  document, version 1.0.0 and later.
 
   Since Tor version 0.2.4.12-alpha the directory
   authorities use the bandwidth measurements document called
@@ -24,7 +25,7 @@
 
   This specification was revised after feedback from:
 
-    Teor
+    XXX
 
 1.3 Outline
 
@@ -61,9 +62,10 @@
 
     value ::= ArgumentChar+
     key_value ::= Keyword "=" value
-    line := ArgumentChar* NL
-    timestamp = Int
-    bandwidth = Int
+    line ::= ArgumentChar* NL
+    timestamp ::= Int
+    bandwidth ::= Int
+    relay_line ::= key_value (SP key_value)* NL
 
 2.2. Header format
 
@@ -80,61 +82,53 @@ It consists of:
     [In second position, zero or one time.]
 
     The specification document format version.
-
-    New implementations SHOULD include this line.
-    For documents generated following this specification,
-    the version_number MUST be "1.1.0".
-    Documents generated before this specification do not contain this line,
-    and the version_number is considered to be "1.0.0".
-    This line is ignored by any Tor version released before this specification.
+    It uses semantic versioning [5].
+    This line has been added in version 1.1.0 of this specification.
     TODO: implement this feature in tor
 
-  "software="Keyword NL
+  "software=" value NL
 
     [Zero or one time.]
 
     The name of the software that created the document.
 
-    New implementations SHOULD include this line.
-    Documents generated before this specification do not contain this line,
-    and the software is considered to be "Torflow".
-    This line is ignored by any Tor version released before this specification.
+    This line has been added in version 1.1.0 of this specification.
 
-  "software_version="version_number NL
+  "software_version=" version_number NL
 
     [Zero or one time.]
 
     The version of the software that created the document.
-    New implementations SHOULD include this line.
-    Documents generated before this specification do not contain this line.
-    This line is ignored by any Tor version released before this specification.
+    It uses semantic versioning.
+    This line has been added in version 1.1.0 of this specification.
 
-  Future releases may include additional header lines.
+  Future releases may include additional key_value header lines.
   Parsers MUST NOT rely on the order of these additional lines.
   Additional header lines will be accompanied by a minor version increment.
   If a header line does conform to this format, the line SHOULD be ignored by
   parsers.
   This section ends when a relay measurement is found conforming to the next
   section.
-  TODO: check that it is what tor does
+  TODO: tor seems to only read one line and assume that the rest are
+  relay measurements: https://gitweb.torproject.org/tor.git/tree/src/or/dirserv.c#n2818.
+  And if that line doesn't have the expected keys, return -1:
+  https://gitweb.torproject.org/tor.git/tree/src/or/dirserv.c#n2730
+
 
 2.3. Relay measurements format
 
-  It consists of zero or more lines that contain the measurement results
+  It consists of zero or more relay_line with the measurement results
   of relays in arbitrary order.
-  There can be at most one such line per relay identity (fingerprint).
-  Each line MUST consists of the following fields in arbitrary order:
+  There can be at most one relay_line per relay identity (fingerprint).
+  Each relay_line MUST include the following key_value in arbitrary order:
 
-    "node_id=" fingerprint SP
-    "bw=" bandwidth SP
+    "node_id=" fingerprint
+    "bw=" bandwidth
 
   Where bandwidth is the aggregated measured bandwidth of this relay,
   in kilobytes per second.
 
-  Each line MUST accept additional Arguments as stated in the dir-spec.txt
-  Document meta format.
-  If additional Arguments are included, they MUST by key_value.
-  Each line MUST end with NL.
+  A relay_line can have additional key_value.
 
   For instance, every relay measurement in sbws version 0.1.0 consist of:
 
@@ -145,7 +139,7 @@ It consists of:
     "time=" timestamp NL
 
   Where timestamp is the Unix Epoch time in seconds when the measurement was
-  performed and rtt is the Round Trip Time in microseconds to obtain 1 Byte
+  performed and rtt is the Round Trip Time in milliseconds to obtain 1 Byte
   of data.
 
   Torflow includes node_id and bw among others [2].
@@ -156,19 +150,21 @@ References:
 2. https://gitweb.torproject.org/torflow.git/tree/NetworkScanners/BwAuthority/README.spec.txt#n332
 3. https://gitweb.torproject.org/torspec.git/tree/dir-spec.txt
 4. https://metrics.torproject.org/onionoo.html#details
-
+5. https://semver.org/
 
 A. Sample data
 
 The following has not been obtained from any real measurement.
 
-A.1. Torflow
+A.1. Generated by Torflow
+
+This an example version 1.0.0 document:
 
 1523911758
 node_id=$68A483E05A2ABDCA6DA5A3EF8DB5177638A27F80 bw=392760 nick=Test measured_at=1523911725 updated_at=1523911725 pid_error=4.11374090719 pid_error_sum=4.11374090719 pid_bw=57136645 pid_delta=2.12168374577 circ_fail=0.2 scanner=/filepath
 node_id=$96C15995F30895689291F455587BD94CA427B6FC bw=236189 nick=Test2 measured_at=1523911623 updated_at=1523911623 pid_error=3.96703337994 pid_error_sum=3.96703337994 pid_bw=47422125 pid_delta=2.65469736988 circ_fail=0.0 scanner=/filepath
 
-A.2. sbws
+A.2. Generated by sbws version 0.1.0
 
 1523911758
 version=1.1.0
