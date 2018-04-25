@@ -2272,20 +2272,28 @@ Appendix F. Hidden service directory format [HIDSERVDIR-FORMAT]
    This file contains the private master ed25519 key of the onion service.
    [TODO: Offline keys]
 
-  - "client_authorized_pubkeys"                      [FILE]
+  - "basic_client_authorized_pubkeys"                      [FILE]
+    "intro_client_authorized_pubkeys"                      [FILE]
 
-   If client authorization is _enabled_, this is a newline-separated file of
+   If client authorization is _enabled_, these are newline-separated files of
    "<client name> <pubkeys> entries for authorized clients. You can think of it
    as the ~/.ssh/authorized_keys of onion services. See [CLIENT-AUTH-MGMT] for
    more details.
 
+   The difference of the two files is that the first one will store the public
+   keys of the auth type "basic", but the second one for the auth type "intro".
+
    (NOTE: client authorization is not implemented as of 0.3.2.1-alpha.)
 
 
-  - "./client_authorized_privkeys/"                  [DIRECTORY]
-    "./client_authorized_privkeys/alice.privkey"     [FILE]
-    "./client_authorized_privkeys/bob.privkey"       [FILE]
-    "./client_authorized_privkeys/charlie.privkey"   [FILE]
+  - "./basic_client_authorized_privkeys/"                  [DIRECTORY]
+    "./basic_client_authorized_privkeys/alice.privkey"     [FILE]
+    "./basic_client_authorized_privkeys/bob.privkey"       [FILE]
+    "./basic_client_authorized_privkeys/charlie.privkey"   [FILE]
+    "./intro_client_authorized_privkeys/"                  [DIRECTORY]
+    "./intro_client_authorized_privkeys/alice.privkey"     [FILE]
+    "./intro_client_authorized_privkeys/bob.privkey"       [FILE]
+    "./intro_client_authorized_privkeys/charlie.privkey"   [FILE]
 
    If client authorization is _enabled_ _AND_ if the hidden service is
    responsible for generating and distributing private keys for its clients,
@@ -2312,39 +2320,58 @@ Appendix E. Managing authorized client data [CLIENT-AUTH-MGMT]
 
         HiddenServiceAuthorizeClient auth-type client-name,client-name,...
 
-     The only recognized auth-type value is "basic" which describes the scheme in
-     section [CLIENT-AUTH]. The rest of the line is a comma-separated list of
-     human-readable authorized client names.
+     Two recognized auth-type values are "basic" and "intro" which describes
+     the scheme in section [CLIENT-AUTH]. The rest of the line is a
+     comma-separated list of human-readable authorized client names.
 
-     Let's consider that one of the listed client names is "alice". In this
-     case, Tor checks the "client_authorized_pubkeys" file for any entries
-     with client_name being "alice". If an "alice" entry is found, we use the
-     relevant pubkeys to authenticate Alice.
+     For the "basic" type, let's consider that one of the listed client names
+     is "alice". In this case, Tor checks the "basic_client_authorized_pubkeys"
+     file for any entries with client_name being "alice". If an "alice" entry
+     is found, we use the relevant pubkeys to authenticate Alice.
 
-     If no "alice" entry is found in the "client_authorized_pubkeys" file, Tor
-     is tasked with generating public/private keys for Alice. To do so, Tor
-     generates x25519 and ed25519 keypairs for Alice, then makes a
-     "client_authorized_privkeys/alice.privkey" file and writes the private
-     keys inside; it also adds an entry for alice to the
-     "client_authorized_pubkeys" file.
+     If no "alice" entry is found in the "basic_client_authorized_pubkeys"
+     file, Tor is tasked with generating public/private keys for Alice.
+     To do so, Tor generates x25519 for Alice, then makes a
+     "basic_client_authorized_privkeys/alice.privkey" file and writes
+     the private keys inside; it also adds an entry for alice to the
+     "basic_client_authorized_pubkeys" file.
 
      In this last case, the hidden service operator has the responsibility to
      pass the .key file to Alice in a secure out-of-band way. After the file
      is passed to Alice, it can be shredded from the filesystem, as only the
      public keys are required for the hidden service to function.
 
+     For the "intro" type, everything is the same as the "basic" type except
+     that the keys would be ed25519 keys instead x25519 and all the directory
+     and file names with "basic" substring will be replace by "intro".
+
+     As these two auth types are separate, the service can have two lines of
+     HiddenServiceAuthorizeClient, one for "basic", and the other for "intro".
+     And, the client list do not need to be the same.
+
+        HiddenServiceAuthorizeClient basic client-name,client-name,...
+        HiddenServiceAuthorizeClient intro client-name,client-name,...
+
   E.1.2. Client side
 
-     A client who wants to register client authorization data for a hidden service
-     needs to add the following line to their torrc:
+     A client who wants to register client authorization data for a hidden
+     service needs to add the following line to their torrc:
 
-           HidServAuth onion-address x25519-private-key ed25519-private-key
+           HidServAuth onion-address auth-type private-key
 
      The keys above are either generated by Alice using a key generation utility,
      or they are extracted from a .key file provided by the hidden service.
 
      In the former case, the client is also tasked with transfering the public
      keys to the hidden service in a secure out-of-band way.
+
+     Two recognized auth-type values are "basic" and "intro" which describes
+     the scheme in section [CLIENT-AUTH]. If it is "basic", the private-key will
+     be x25519 private key. If it is "intro", the private-key will be ed25519
+     private key.
+
+     Any client can have two lines of HidServAuth, one for "basic" and one for
+     "intro".
 
   E.2. Configuring client authorization using the control port
 
