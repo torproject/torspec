@@ -130,7 +130,9 @@ It consists of:
   Where bandwidth is the aggregated measured bandwidth of this relay,
   in kilobytes per second.
 
-  A relay_line can have additional key_value.
+  A relay_line can have additional key_value pairs.
+  Additional key_value pairs MUST NOT use any keywords specified in the
+  header format.
 
   For instance, every relay measurement in sbws version 0.1.0 consist of:
 
