@@ -105,6 +105,8 @@ It consists of:
   Future releases may include additional key_value header lines.
   Parsers MUST NOT rely on the order of these additional lines.
   Additional header lines will be accompanied by a minor version increment.
+  Additional header lines MUST NOT use any keywords specified in the
+  relay measurements format.
   If a header line does conform to this format, the line SHOULD be ignored by
   parsers.
   This section ends when a relay measurement is found conforming to the next
