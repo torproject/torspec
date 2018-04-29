@@ -256,7 +256,6 @@ Every relay measurement in sbws version 0.1.0 consistS of:
     [Exactly once.]
 
     The Unix Epoch time in seconds when the last measurement was performed.
-    TODO: which measurement? The first, last, or median?
     
 2.4.2. Torflow
 
