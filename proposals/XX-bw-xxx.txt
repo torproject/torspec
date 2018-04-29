@@ -50,7 +50,7 @@
 2.1. Definitions
 
   The following nonterminals are defined in dir-spec.txt, sections
-  1.2., 2.1.1., 2.1.3. :
+  1.2., 2.1.1., 2.1.3.:
 
     Int
     SP (space)
@@ -231,7 +231,7 @@ Each relay_line MUST include the following key_value in arbitrary order:
 
 2.4.1. Simple Bandwidth Scanner
 
-Every relay measurement in sbws version 0.1.0 consistS of:
+Every relay measurement in sbws version 0.1.0 consists of:
 
   "node_id=" fingerprint SP
   
