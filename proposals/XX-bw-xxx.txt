@@ -94,6 +94,8 @@ It consists of:
     The name of the software that created the document.
 
     This line has been added in version 1.1.0 of this specification.
+    Documents generated before this specification do not contain this line,
+    and the software is considered to be "torflow".
 
   "software_version=" version_number NL
 
@@ -103,11 +105,16 @@ It consists of:
     It uses semantic versioning.
     This line has been added in version 1.1.0 of this specification.
 
-  Future releases may include additional key_value header lines.
-  Parsers MUST NOT rely on the order of these additional lines.
-  Additional header lines will be accompanied by a minor version increment.
-  Additional header lines MUST NOT use any keywords specified in the
-  relay measurements format.
+  key_value NL
+
+    [Zero or more times.]
+
+    Future releases may include additional key_value header lines.
+    Parsers MUST NOT rely on the order of these additional lines.
+    Additional header lines will be accompanied by a minor version increment.
+    Additional header lines MUST NOT use any keywords specified in the
+    relay measurements format.
+
   If a header line does conform to this format, the line SHOULD be ignored by
   parsers.
   This section ends when a relay measurement is found conforming to the next
