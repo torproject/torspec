@@ -210,6 +210,8 @@ Each relay_line MUST include the following key_value in arbitrary order:
   
   key_value
 
+    [Zero or more times.]
+
     Future format versions may include additional key_value pairs on a relay_line.
     Additional key_value pairs will be accompanied by a minor version increment.
   
