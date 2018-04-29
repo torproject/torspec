@@ -116,7 +116,8 @@ It consists of:
 
     [Zero or one time.]
 
-    The Unix Epoch time in seconds when the file was created.
+    The Unix Epoch time in seconds when the first relay measurement
+    was obtained.
 
   key_value NL
 
