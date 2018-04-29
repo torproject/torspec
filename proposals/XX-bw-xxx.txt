@@ -84,6 +84,8 @@ It consists of:
     The specification document format version.
     It uses semantic versioning [5].
     This line has been added in version 1.1.0 of this specification.
+    Documents generated before this specification do not contain this line,
+    and the version_number is considered to be "1.0.0".
     TODO: implement this feature in tor
 
   "software=" value NL
