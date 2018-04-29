@@ -128,6 +128,8 @@ It consists of:
     Additional header lines will be accompanied by a minor version increment.
     Additional header lines MUST NOT use any keywords specified in the
     relay measurements format.
+    If a header line does conform to this format, the line SHOULD be
+    ignored by parsers.
 
   NL
 
@@ -136,9 +138,6 @@ It consists of:
     The header ends.
     For version 1.0.0 documents, the header ends when the first relay
     measurement line is found conforming to the next section.
-
-  If a header line does conform to this format, the line SHOULD be ignored by
-  parsers.
 
 2.3. Relay measurements format
 
