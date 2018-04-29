@@ -77,7 +77,7 @@ It consists of:
 
     The Unix Epoch time in seconds when the file was created.
 
-  "version="version_number NL
+  "version=" version_number NL
 
     [In second position, zero or one time.]
 
