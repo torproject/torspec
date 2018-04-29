@@ -111,6 +111,12 @@ It consists of:
 
     The Unix Epoch time in seconds when the file was created.
 
+  "earliest_measurement=" timestamp NL
+
+    [Zero or one time.]
+
+    The Unix Epoch time in seconds when the file was created.
+
   key_value NL
 
     [Zero or more times.]
