@@ -105,6 +105,12 @@ It consists of:
     It uses semantic versioning.
     This line has been added in version 1.1.0 of this specification.
 
+  "scanner_started=" timestamp NL
+
+    [Zero or one time.]
+
+    The Unix Epoch time in seconds when the file was created.
+
   key_value NL
 
     [Zero or more times.]
