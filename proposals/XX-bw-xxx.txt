@@ -76,6 +76,9 @@
 
 2.2. Header format
 
+Some header lines MUST appear in specific positions, as documented below.
+All other lines can appear in any order.
+
 It consists of:
 
   timestamp NL
@@ -90,9 +93,11 @@ It consists of:
 
     The specification document format version.
     It uses semantic versioning [5].
+    
     This line has been added in version 1.1.0 of this specification.
-    Documents generated before this specification do not contain this line,
-    and the version_number is considered to be "1.0.0".
+    
+    Version 1.0.0 documents do not contain this line, and the
+    version_number is considered to be "1.0.0".
 
   "software=" value NL
 
@@ -101,15 +106,18 @@ It consists of:
     The name of the software that created the document.
 
     This line has been added in version 1.1.0 of this specification.
-    Documents generated before this specification do not contain this line,
-    and the software is considered to be "torflow".
+    
+    Version 1.0.0 documents do not contain this line, and the software is
+    considered to be "torflow".
 
-  "software_version=" version_number NL
+  "software_version=" value NL
 
     [Zero or one time.]
 
     The version of the software that created the document.
-    It uses semantic versioning.
+    The version may be a version_number, a git commit, or some other
+    version scheme.
+    
     This line has been added in version 1.1.0 of this specification.
 
   "scanner_started=" timestamp NL
@@ -118,6 +126,8 @@ It consists of:
 
     The Unix Epoch time in seconds when the scanner that generates the
     measurements document started.
+    
+    This line has been added in version 1.1.0 of this specification.
 
   "earliest_measurement=" timestamp NL
 
@@ -125,24 +135,31 @@ It consists of:
 
     The Unix Epoch time in seconds when the first relay measurement
     was obtained.
+    
+    This line has been added in version 1.1.0 of this specification.
 
   key_value NL
 
     [Zero or more times.]
 
     Future format versions may include additional key_value header lines.
+    
     Parsers MUST NOT rely on the order of these additional lines.
     Additional header lines will be accompanied by a minor version increment.
     Additional header lines MUST NOT use any keywords specified in the
     relay measurements format.
-    If a header line does conform to this format, the line SHOULD be
+    
+    If a header line does not conform to this format, the line SHOULD be
     ignored by parsers.
 
   NL
 
-    [One time.]
+    [Zero or one time.]
 
     The header ends.
+    
+    This line has been added in version 1.1.0 of this specification.
+    
     For version 1.0.0 documents, the header ends when the first relay
     measurement line is found conforming to the next section.
 
@@ -172,10 +189,10 @@ It consists of:
     "time=" timestamp NL
 
   Where timestamp is the Unix Epoch time in seconds when the measurement was
-  performed and rtt is the Round Trip Time in milliseconds to obtain 1 Byte
+  performed and rtt is the Round Trip Time in milliseconds to obtain 1 byte
   of data.
 
-  Torflow includes node_id and bw among others [2].
+  Torflow relay lines include node_id and bw, and other key_value pairs [2].
 
 References:
 
