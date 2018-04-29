@@ -93,9 +93,9 @@ It consists of:
 
     The specification document format version.
     It uses semantic versioning [5].
-    
+
     This line has been added in version 1.1.0 of this specification.
-    
+
     Version 1.0.0 documents do not contain this line, and the
     version_number is considered to be "1.0.0".
 
@@ -106,7 +106,7 @@ It consists of:
     The name of the software that created the document.
 
     This line has been added in version 1.1.0 of this specification.
-    
+
     Version 1.0.0 documents do not contain this line, and the software is
     considered to be "torflow".
 
@@ -117,7 +117,7 @@ It consists of:
     The version of the software that created the document.
     The version may be a version_number, a git commit, or some other
     version scheme.
-    
+
     This line has been added in version 1.1.0 of this specification.
 
   "scanner_started=" timestamp NL
@@ -126,7 +126,7 @@ It consists of:
 
     The Unix Epoch time in seconds when the scanner that generates the
     measurements document started.
-    
+
     This line has been added in version 1.1.0 of this specification.
 
   "earliest_measurement=" timestamp NL
@@ -135,7 +135,7 @@ It consists of:
 
     The Unix Epoch time in seconds when the first relay measurement
     was obtained.
-    
+
     This line has been added in version 1.1.0 of this specification.
 
   key_value NL
@@ -143,12 +143,12 @@ It consists of:
     [Zero or more times.]
 
     Future format versions may include additional key_value header lines.
-    
+
     Parsers MUST NOT rely on the order of these additional lines.
     Additional header lines will be accompanied by a minor version increment.
     Additional header lines MUST NOT use any keywords specified in the
     relay measurements format.
-    
+
     If a header line does not conform to this format, the line SHOULD be
     ignored by parsers.
 
@@ -157,9 +157,9 @@ It consists of:
     [Zero or one time.]
 
     The header ends.
-    
+
     This line has been added in version 1.1.0 of this specification.
-    
+
     For version 1.0.0 documents, the header ends when the first relay
     measurement line is found conforming to the next section.
 
@@ -173,8 +173,10 @@ It consists of:
     "node_id=" fingerprint
     "bw=" bandwidth
 
-  Where bandwidth is the aggregated measured bandwidth of this relay,
-  in kilobytes per second.
+  Where bandwidth is the aggregated measured bandwidth of this relay.
+  Torflow scales bandwidths to kilobytes per second. If different
+  implementations or configurations are used in votes for the same
+  network, their measurements MAY need further scaling.
 
   A relay_line can have additional key_value pairs.
   Additional key_value pairs MUST NOT use any keywords specified in the
@@ -225,3 +227,20 @@ earliest_measurement=1523911757
 
 node_id=$68A483E05A2ABDCA6DA5A3EF8DB5177638A27F80 bw=760 nick=Test rtt=380 time=1523911725
 node_id=$96C15995F30895689291F455587BD94CA427B6FC bw=189 nick=Test2 rtt=378 time=1523911623
+
+B. Simple scaling method:
+
+    Calculate the measured bandwidth per relay by dividing the total
+    voted bandwidth by the number of relays voted for. In the public tor
+    network, this is approximately 7500 as of April 2018.
+    Calculate a quota for the bandwidth authority by multiplying the
+    per-relay average by the number of relays voted for.
+    Calculate a scaling factor by dividing the quota by the total
+    measured bandwidth in this bandwidth authority's upcoming vote.
+    Multiply each measured bandwidth by the scaling factor.
+
+Now, the total bandwidth in the upcoming vote is approximately
+equal to the quota.
+
+If the total bandwidth is zero, all relays should be given equal
+weights.
