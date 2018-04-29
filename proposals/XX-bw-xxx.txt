@@ -134,9 +134,8 @@ It consists of:
     [One time.]
 
     The header ends.
-    For documents generated before this specification, the header ends
-    when the first relay measurement line is found conforming to the
-    next section.
+    For version 1.0.0 documents, the header ends when the first relay
+    measurement line is found conforming to the next section.
 
   If a header line does conform to this format, the line SHOULD be ignored by
   parsers.
