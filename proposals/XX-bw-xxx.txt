@@ -34,6 +34,13 @@
   by bandwidth authorities, which generate a file storing information
   on relays' measured bandwidth capacities.
 
+1.4. Format Versions
+
+   1.0.0 - The legacy fallback bandwidth measurements document format
+
+   1.1.0 - Adds key_value lines to the header, format version,
+           optional ones and section separator.
+
 2. Format details
 
   Bandwidth measurements MUST contain the following sections:
