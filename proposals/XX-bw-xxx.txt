@@ -123,7 +123,7 @@ It consists of:
 
     [Zero or more times.]
 
-    Future releases may include additional key_value header lines.
+    Future format versions may include additional key_value header lines.
     Parsers MUST NOT rely on the order of these additional lines.
     Additional header lines will be accompanied by a minor version increment.
     Additional header lines MUST NOT use any keywords specified in the
