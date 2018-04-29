@@ -115,15 +115,16 @@ It consists of:
     Additional header lines MUST NOT use any keywords specified in the
     relay measurements format.
 
+  NL
+
+    [One time.]
+
+    The header ends.
+    For documents generated before this specification, the header ends
+    when a relay measurement is found conforming to the next section.
+
   If a header line does conform to this format, the line SHOULD be ignored by
   parsers.
-  This section ends when a relay measurement is found conforming to the next
-  section.
-  TODO: tor seems to only read one line and assume that the rest are
-  relay measurements: https://gitweb.torproject.org/tor.git/tree/src/or/dirserv.c#n2818.
-  And if that line doesn't have the expected keys, return -1:
-  https://gitweb.torproject.org/tor.git/tree/src/or/dirserv.c#n2730
-
 
 2.3. Relay measurements format
 
