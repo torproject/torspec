@@ -1063,7 +1063,8 @@ Table of contents:
        hidden service descriptor at least LifetimeMinutes after it was
        uploaded.
 
-       The LifetimeMinutes field can take values between 30 and 3000 (50 hours).
+       The LifetimeMinutes field can take values between 30 and 720 (12
+       hours).
 
     "descriptor-signing-key-cert" NL certificate NL
 
