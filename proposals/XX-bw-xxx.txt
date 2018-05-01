@@ -1,0 +1,345 @@
+          Tor Bandwidth Measurements Document Format
+                            juga
+                            teor
+
+1. Scope and preliminaries
+
+  This document describes the format of Tor's bandwidth measurements
+  document, version 1.0.0 and later.
+
+  Since Tor version 0.2.4.12-alpha the directory
+  authorities use the bandwidth measurements document called
+  "V3BandwidthsFile" and produced by Torflow [1]
+  (format described in README.spec.txt [2]).
+
+    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+    NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+    "OPTIONAL" in this document are to be interpreted as described in
+    RFC 2119.
+
+1.2. Acknowledgements
+
+  The original bandwidth measurement scanner (Torflow) and format was
+  created by mike. Teor suggested to write this specification while
+  contributing on pastly's new bandwidth scanner implementation.
+
+  This specification was revised after feedback from:
+
+    XXX
+
+1.3 Outline
+
+  The bandwidth measurements mentioned in sections 3.4.1 and 3.4.2
+  of "Tor directory protocol" (dir-spec.txt) [3] are obtained
+  by bandwidth authorities, which generate a file storing information
+  on relays' measured bandwidth capacities.
+
+1.4. Format Versions
+
+   1.0.0 - The legacy fallback bandwidth measurements document format
+
+   1.1.0 - Adds key_value lines to the header, format version,
+           optional ones and section separator.
+
+2. Format details
+
+  Bandwidth measurements MUST contain the following sections:
+  - Header (exactly once)
+  - Relays measurements (zero or more times)
+
+2.1. Definitions
+
+  The following nonterminals are defined in dir-spec.txt, sections
+  1.2., 2.1.1., 2.1.3.:
+
+    Int
+    SP (space)
+    NL (newline)
+    Keyword
+    ArgumentChar
+    fingerprint (hexdigest)
+    nickname
+
+  Nonterminals defined in "Tor Directory List Format" (dir-list-spec.txt),
+  section 2.2.1.:
+
+    version_number
+
+  We define the following nonterminals:
+
+    value ::= ArgumentChar+
+    key_value ::= Keyword "=" value
+    line ::= ArgumentChar* NL
+    timestamp ::= Int
+    bandwidth ::= Int
+    relay_line ::= key_value (SP key_value)* NL
+
+2.2. Header format
+
+Some header lines MUST appear in specific positions, as documented below.
+All other lines can appear in any order.
+
+There MUST NOT be multiple key_value header lines with the same key.
+
+It consists of:
+
+  timestamp NL
+
+    [At start, exactly once.]
+
+    The Unix Epoch time in seconds when the file was created.
+
+  "version=" version_number NL
+
+    [In second position, zero or one time.]
+
+    The specification document format version.
+    It uses semantic versioning [5].
+    
+    This line has been added in version 1.1.0 of this specification.
+    
+    Version 1.0.0 documents do not contain this line, and the
+    version_number is considered to be "1.0.0".
+
+  "software=" value NL
+
+    [Zero or one time.]
+
+    The name of the software that created the document.
+
+    This line has been added in version 1.1.0 of this specification.
+    
+    Version 1.0.0 documents do not contain this line, and the software is
+    considered to be "torflow".
+
+  "software_version=" value NL
+
+    [Zero or one time.]
+
+    The version of the software that created the document.
+    The version may be a version_number, a git commit, or some other
+    version scheme.
+    
+    This line has been added in version 1.1.0 of this specification.
+
+  "scanner_started=" timestamp NL
+
+    [Zero or one time.]
+
+    The Unix Epoch time in seconds when the scanner that generates the
+    measurements document started.
+    
+    This line has been added in version 1.1.0 of this specification.
+
+  "earliest_measurement=" timestamp NL
+
+    [Zero or one time.]
+
+    The Unix Epoch time in seconds when the first relay measurement
+    was obtained.
+    
+    This line has been added in version 1.1.0 of this specification.
+
+  key_value NL
+
+    [Zero or more times.]
+
+    Future format versions may include additional key_value header lines.
+    Additional header lines will be accompanied by a minor version increment.
+    
+    Implementations MAY add additional header lines as needed. This
+    specification SHOULD be updated to avoid conflicting meanings for the
+    same header keys.
+    
+    Parsers MUST NOT rely on the order of these additional lines.
+    
+    Additional header lines MUST NOT use any keywords specified in the
+    relay measurements format.
+    
+    If a header line does not conform to this format, the line SHOULD be
+    ignored by parsers.
+
+  NL
+
+    [Zero or one time.]
+
+    The header ends.
+    
+    This line has been added in version 1.1.0 of this specification.
+    
+    For version 1.0.0 documents, the header ends when the first relay
+    measurement line is found conforming to the next section.
+
+2.3. Relay measurements format
+
+It consists of zero or more relay_line with the measurement results
+of relays in arbitrary order.
+  
+There can be at most one relay_line per relay identity (fingerprint).
+
+There MUST NOT be multiple key_value pairs with the same key in the same
+relay_line.
+  
+Each relay_line MUST include the following key_value in arbitrary order:
+
+  "node_id=" fingerprint
+    
+    [Exactly once.]
+    
+    The fingerprint of the relay being measured.
+    
+  "bw=" bandwidth
+  
+    [Exactly once.]
+
+    The measured bandwidth of this relay.
+  
+    Tor accepts zero bandwidths, but they trigger bugs in older Tor
+    implementations. Therefore, implementations SHOULD NOT produce zero
+    bandwidths. Instead, they SHOULD use one as their minimum bandwidth.
+  
+    Multiple measurements can be aggregated using an averaging scheme, such
+    as a mean, median, or decaying average.
+  
+    Torflow scales bandwidths to kilobytes per second. Other implementations
+    SHOULD use kilobytes per second for their initial bandwidth scaling.
+  
+    If different implementations or configurations are used in votes for the
+    same network, their measurements MAY need further scaling. See Appendix B
+    for information about scaling, and one possible scaling method.
+  
+  key_value
+
+    [Zero or more times.]
+
+    Future format versions may include additional key_value pairs on a relay_line.
+    Additional key_value pairs will be accompanied by a minor version increment.
+  
+    Implementations MAY add additional relay key_value pairs as needed. This
+    specification SHOULD be updated to avoid conflicting meanings for the
+    same relay keys.
+  
+    Parsers MUST NOT rely on the order of these additional key_value pairs.
+  
+    Additional key_value pairs MUST NOT use any keywords specified in the
+    header format.
+  
+  If a relay line does not conform to this format, the line SHOULD be
+  ignored by parsers.
+  
+2.4. Implementation notes
+
+2.4.1. Simple Bandwidth Scanner
+
+Every relay measurement in sbws version 0.1.0 consists of:
+
+  "node_id=" fingerprint SP
+  
+    As above.
+  
+  "bw=" bandwidth SP
+  
+    As above.
+  
+  "nick=" nickname SP
+  
+    [Exactly once.]
+  
+    The relay nickname.
+  
+  "rtt=" Int SP
+  
+    [Exactly once.]
+    
+    The Round Trip Time in milliseconds to obtain 1 byte of data.
+  
+  "time=" timestamp NL
+  
+    [Exactly once.]
+
+    The Unix Epoch time in seconds when the last measurement was performed.
+    
+2.4.2. Torflow
+
+Torflow relay lines include node_id and bw, and other key_value pairs [2].
+
+References:
+
+1. https://gitweb.torproject.org/torflow.git
+2. https://gitweb.torproject.org/torflow.git/tree/NetworkScanners/BwAuthority/README.spec.txt#n332
+3. https://gitweb.torproject.org/torspec.git/tree/dir-spec.txt
+4. https://metrics.torproject.org/onionoo.html#details
+5. https://semver.org/
+
+A. Sample data
+
+The following has not been obtained from any real measurement.
+
+A.1. Generated by Torflow
+
+This an example version 1.0.0 document:
+
+1523911758
+node_id=$68A483E05A2ABDCA6DA5A3EF8DB5177638A27F80 bw=760 nick=Test measured_at=1523911725 updated_at=1523911725 pid_error=4.11374090719 pid_error_sum=4.11374090719 pid_bw=57136645 pid_delta=2.12168374577 circ_fail=0.2 scanner=/filepath
+node_id=$96C15995F30895689291F455587BD94CA427B6FC bw=189 nick=Test2 measured_at=1523911623 updated_at=1523911623 pid_error=3.96703337994 pid_error_sum=3.96703337994 pid_bw=47422125 pid_delta=2.65469736988 circ_fail=0.0 scanner=/filepath
+
+A.2. Generated by sbws version 0.1.0
+
+1523911758
+version=1.1.0
+software=sbws
+software_version=0.1.0
+scanner_started=1523911756
+earliest_measurement=1523911757
+
+node_id=$68A483E05A2ABDCA6DA5A3EF8DB5177638A27F80 bw=760 nick=Test rtt=380 time=1523911725
+node_id=$96C15995F30895689291F455587BD94CA427B6FC bw=189 nick=Test2 rtt=378 time=1523911623
+
+B. Scaling bandwidths
+
+B.1. Scaling requirements
+
+Tor accepts zero bandwidths, but they trigger bugs in older Tor
+implementations. Therefore, scaling methods SHOULD perform the
+following checks:
+ * If the total bandwidth is zero, all relays should be given equal
+   bandwidths.
+ * If the scaled bandwidth is zero, it should be rounded up to one.
+
+Initial experiments indicate that scaling may not be needed for
+torflow and sbws, because their measured bandwidths are similar
+enough already.
+
+B.2. A linear scaling method
+
+If scaling is required, here is a simple linear bandwith scaling
+method, which ensures that all bandwidth votes contain approximately
+the same total bandwidth:
+
+1. Calculate the relay quota by dividing the total measured bandwidth
+   in all votes, by the number of relays with measured bandwidth
+   votes. In the public tor network, this is approximately 7500 as of
+   April 2018. The quota should be a consensus parameter, so it can be
+   adjusted for all scanners on the network.
+   
+2. Calculate a vote quota by multiplying the relay quota by the number
+   of relays this bandwidth authority has measured
+   bandwidths for.
+   
+3. Calculate a scaling factor by dividing the vote quota by the
+   total unscaled measured bandwidth in this bandwidth
+   authority's upcoming vote.
+   
+4. Multiply each unscaled measured bandwidth by the scaling
+   factor.
+
+Now, the total scaled bandwidth in the upcoming vote is
+approximately equal to the quota.
+
+B.3. Quota changes
+
+If all scanners are using scaling, the quota can be gradually
+reduced or increased as needed. Smaller quotas decrease the size
+of uncompressed consensuses, and may decrease the size of
+consensus diffs and compressed consensuses. But if the relay
+quota is too small, some relays may be over- or under-weighted.
