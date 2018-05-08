@@ -339,6 +339,11 @@ of their choices.
      <target>, and the request is only supported by the exit whose nickname
      or fingerprint is <servername>.
 
+   - When set, "HSLayer2Nodes" and "HSLayer3Nodes" relax Tor's path
+     restrictions to allow nodes in the same /16 and node family to reappear
+     in the path. They also allow the guard node to be chosen as the RP, IP,
+     and HSDIR, and as the hop before those positions.
+
 2.3. Cannibalizing circuits
 
    If we need a circuit and have a clean one already established, in
