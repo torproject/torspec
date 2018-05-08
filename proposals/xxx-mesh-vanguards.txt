@@ -1,0 +1,528 @@
+Title: Mesh-based vanguards
+Authors: George Kadianakis and Mike Perry
+Created: 2018-05-08
+Status: Draft
+
+0. Motivation
+
+  A guard discovery attack allows attackers to determine the guard
+  node of a Tor client. The hidden service rendezvous protocol
+  provides an attack vector for a guard discovery attack since anyone
+  can force an HS to construct a 3-hop circuit to a relay (#9001).
+
+  Following the guard discovery attack with a compromise and/or
+  coercion of the guard node can lead to the deanonymization of a
+  hidden service.
+
+1. Overview
+
+  This document tries to make the above guard discovery + compromise
+  attack harder to launch. It introduces a configuration
+  option which makes the hidden service also pin the second and third
+  hops of its circuits for a longer duration.
+
+  With this new path selection, we force the adversary to perform a
+  Sybil attack and two compromise attacks before succeeding. This is
+  an improvement over the current state where the Sybil attack is
+  trivial to pull off, and only a single compromise attack is required.
+
+  With this new path selection, an attacker is forced to do a one or
+  more node compromise attacks before learning the guard node of a hidden
+  service. This increases the uncertainty of the attacker, since
+  compromise attacks are costly and potentially detectable, so an
+  attacker will have to think twice before beginning a chain of node
+  compromise attacks that they might not be able to complete.
+
+1.1. Tor integration
+
+  The mechanisms introduced in this proposal are currently implemented
+  partially in Tor and partially through an external Python script:
+            https://github.com/mikeperry-tor/vanguards
+
+  The Python script uses the new Tor configuration options HSLayer2Nodes and
+  HSLayer3Nodes to be able to select nodes for the guard layers. The Python
+  script is tasked with maintaining and rotating the guard nodes as needed
+  based on the lifetimes described in this proposal.
+
+  In the future, we are aiming to include the whole functionality into Tor,
+  with no need for external scripts.
+
+1.2. Visuals
+
+  Here is how a hidden service rendezvous circuit currently looks like:
+
+                     -> middle_1 -> middle_A
+                     -> middle_2 -> middle_B
+                     -> middle_3 -> middle_C
+                     -> middle_4 -> middle_D
+       HS -> guard   -> middle_5 -> middle_E
+                     -> middle_6 -> middle_F
+                     -> middle_7 -> middle_G
+                     -> middle_8 -> middle_H
+                     ->   ...    ->  ...
+                     -> middle_n -> middle_n
+
+  this proposal pins the two middle positions into a much more
+  restricted sets, as follows:
+
+                       -> guard_2A
+                                   -> guard_3A
+          -> guard_1A  -> guard_2B -> guard_3B
+       HS                          -> guard_3C
+          -> guard_1B  -> guard_2C -> guard_3D
+                                   -> guard_3E
+                       -> guard_2D -> guard_3F
+
+  Additionally, to avoid linkability, we insert an extra middle node
+  after the third layer guard for client side intro and hsdir circuits,
+  and service-side rendezvous circuits. This means that the set of
+  paths for Client (C) and Service (S) side look like this:
+
+     C - G - L2 - L3 - R
+     S - G - L2 - L3 - HSDIR
+     S - G - L2 - L3 - I
+     C - G - L2 - L3 - M - I
+     C - G - L2 - L3 - M - HSDIR
+     S - G - L2 - L3 - M - R
+
+1.3. Threat model, Assumptions, and Goals
+
+  Consider an adversary with the following powers:
+
+     - Can launch a Sybil guard discovery attack against any node of a
+       rendezvous circuit. The slower the rotation period of the node,
+       the longer the attack takes. Similarly, the higher the percentage
+       of the network is compromised, the faster the attack runs.
+
+     - Can compromise any node on the network, but this compromise takes
+       time and potentially even coercive action, and also carries risk
+       of discovery.
+
+  We also make the following assumptions about the types of attacks:
+
+  1. A Sybil attack is observable by both people monitoring the network
+     for large numbers of new nodes, as well as vigilant hidden service
+     operators. It will require either large amounts of traffic sent
+     towards the hidden service, multiple test circuits, or both.
+
+  2. A Sybil attack against the second or first layer Guards will be
+     more noisy than a Sybil attack against the third layer guard, since the
+     second and first layer Sybil attack requires a timing side channel in
+     order to determine success, whereas the Sybil success is almost
+     immediately obvious to third layer guard, since it will be instructed
+     to connect to a cooperating malicious rend point by the adversary.
+
+  3. As soon as the adversary is confident they have won the Sybil attack,
+     an even more aggressive circuit building attack will allow them to
+     determine the next node very fast (an hour or less).
+
+  4. The adversary is strongly disincentivized from compromising nodes that
+     may prove useless, as node compromise is even more risky for the
+     adversary than a Sybil attack in terms of being noticed.
+
+  Given this threat model, our security parameters were selected so that
+  the first two layers of guards should be hard to attack using a Sybil
+  guard discovery attack and hence require a node compromise attack. Ideally,
+  we want the node compromise attacks to carry a non-negligible probability of
+  being useless to the adversary by the time they complete.
+
+  On the other hand, the outermost layer of guards should rotate fast enough to
+  _require_ a Sybil attack.
+
+  See our vanguard simulator project for a simulation of the above adversary
+  model and a motivation for the parameters selected within this proposal:
+        https://github.com/asn-d6/vanguard_simulator
+        https://github.com/asn-d6/vanguard_simulator/wiki/Optimizing-vanguard-topologies
+
+
+2. Design
+
+  When a hidden service picks its guard nodes, it also picks an
+  additional NUM_LAYER2_GUARDS-sized set of middle nodes for its
+  `second_guard_set`, as well as a NUM_LAYER3_GUARDS-sized set of
+  middle nodes for its `third_guard_set`.
+
+  When a hidden service needs to establish a circuit to an HSDir,
+  introduction point or a rendezvous point, it uses nodes from
+  `second_guard_set` as the second hop of the circuit and nodes from
+  `third_guard_set` as third hop of the circuit.
+
+  A hidden service rotates nodes from the 'second_guard_set' at a random
+  time between MIN_SECOND_GUARD_LIFETIME hours and
+  MAX_SECOND_GUARD_LIFETIME hours.
+
+  A hidden service rotates nodes from the 'third_guard_set' at a random
+  time between MIN_THIRD_GUARD_LIFETIME and MAX_THIRD_GUARD_LIFETIME
+  hours.
+
+  Each node's rotation time is tracked independently, to avoid disclosing
+  the rotation times of the primary and second-level guards.
+
+2.1. Security parameters
+
+  We set NUM_LAYER2_GUARDS to 4 nodes and NUM_LAYER3_GUARDS to 6 nodes.
+
+  We set MIN_SECOND_GUARD_LIFETIME to 1 day, and MAX_SECOND_GUARD_LIFETIME
+  to 45 days inclusive, for an average rotation rate of 29.5 days, using
+  the max(X,X) distribution specified in Section 3.3.
+
+  We set MIN_THIRD_GUARD_LIFETIME to 1 hour, and MAX_THIRD_GUARD_LIFETIME
+  to 48 hours inclusive, for an average rotation rate of 31.5 hours, using
+  the max(X,X) distribution specified in Section 3.3.
+
+  See Section 3 for more analysis on these constants.
+
+2.2. Path restriction changes
+
+  In order to avoid information leaks and ensure paths can be built, path
+  restrictions must be loosened.
+
+  In particular, we allow the following:
+     1. Nodes from the same /16 and same family for any/all hops
+     2. Guard nodes can be chosen for RP/IP/HSDIR
+     3. Guard nodes can be chosen for hop before RP/IP/HSDIR.
+
+  The first change prevents the situation where paths cannot be built if two
+  layers all share the same subnet and/or node family. It also prevents the
+  the use of a different entry guard based on the family or subnet of the
+  IP, HSDIR, or RP.
+
+  The second change prevents an adversary from forcing the use of a different
+  entry guard by enumerating all guard-flaged nodes as the RP.
+
+  The third change prevents an adversary from learning the guard node by way
+  of noticing which nodes were not chosen for the hop before it.
+
+
+3. Rationale and Security Parameter Selection
+
+3.1. Sybil rotation counts for a given number of Guards
+
+  The probability of Sybil success for Guard discovery can be modeled as
+  the probability of choosing 1 or more malicious middle nodes for a
+  sensitive circuit over some period of time.
+
+  P(At least 1 bad middle) = 1 - P(All Good Middles)
+                           = 1 - P(One Good middle)^(num_middles)
+                           = 1 - (1 - c/n)^(num_middles)
+
+  c/n is the adversary compromise percentage
+
+  In the case of Vanguards, num_middles is the number of Guards you rotate
+  through in a given time period. This is a function of the number of vanguards
+  in that position (v), as well as the number of rotations (r).
+
+  P(At least one bad middle) = 1 - (1 - c/n)^(v*r)
+
+  Here's detailed tables in terms of the number of rotations required for
+  a given Sybil success rate for certain number of guards.
+
+  1.0% Network Compromise:
+   Sybil Success   One   Two  Three  Four  Five  Six  Eight  Nine  Ten  Twelve  Sixteen
+    10%            11     6     4     3     3     2     2     2     2     1       1
+    15%            17     9     6     5     4     3     3     2     2     2       2
+    25%            29    15    10     8     6     5     4     4     3     3       2
+    50%            69    35    23    18    14    12     9     8     7     6       5
+    60%            92    46    31    23    19    16    12    11    10     8       6
+    75%           138    69    46    35    28    23    18    16    14    12       9
+    85%           189    95    63    48    38    32    24    21    19    16      12
+    90%           230   115    77    58    46    39    29    26    23    20      15
+    95%           299   150   100    75    60    50    38    34    30    25      19
+    99%           459   230   153   115    92    77    58    51    46    39      29
+
+  5.0% Network Compromise:
+   Sybil Success   One   Two  Three  Four  Five  Six  Eight  Nine  Ten  Twelve  Sixteen
+    10%             3     2     1     1     1     1     1     1     1     1       1
+    15%             4     2     2     1     1     1     1     1     1     1       1
+    25%             6     3     2     2     2     1     1     1     1     1       1
+    50%            14     7     5     4     3     3     2     2     2     2       1
+    60%            18     9     6     5     4     3     3     2     2     2       2
+    75%            28    14    10     7     6     5     4     4     3     3       2
+    85%            37    19    13    10     8     7     5     5     4     4       3
+    90%            45    23    15    12     9     8     6     5     5     4       3
+    95%            59    30    20    15    12    10     8     7     6     5       4
+    99%            90    45    30    23    18    15    12    10     9     8       6
+
+  10.0% Network Compromise:
+   Sybil Success   One   Two  Three  Four  Five  Six  Eight  Nine  Ten  Twelve  Sixteen
+    10%             2     1     1     1     1     1     1     1     1     1       1
+    15%             2     1     1     1     1     1     1     1     1     1       1
+    25%             3     2     1     1     1     1     1     1     1     1       1
+    50%             7     4     3     2     2     2     1     1     1     1       1
+    60%             9     5     3     3     2     2     2     1     1     1       1
+    75%            14     7     5     4     3     3     2     2     2     2       1
+    85%            19    10     7     5     4     4     3     3     2     2       2
+    90%            22    11     8     6     5     4     3     3     3     2       2
+    95%            29    15    10     8     6     5     4     4     3     3       2
+    99%            44    22    15    11     9     8     6     5     5     4       3
+
+  The rotation counts in these tables were generated with:
+     def num_rotations(c, v, success):
+       r = 0
+       while 1-math.pow((1-c), v*r) < success: r += 1
+       return r
+
+3.2. Rotation Period
+
+  As specified in Section 1.2, the primary driving force for the third
+  layer selection was to ensure that these nodes rotate fast enough that
+  it is not worth trying to compromise them, because it is unlikely for
+  compromise to succeed and yield useful information before the nodes stop
+  being used.
+
+  From the table in Section 3.1, with NUM_LAYER2_GUARDS=4 and
+  NUM_LAYER3_GUARDS=6, it can be seen that this means that the Sybil attack
+  on layer3 will complete with 50% chance in 12*31.5 hours (15.75 days)
+  for the 1% adversary, ~4 days for the 5% adversary, and 2.62 days for the
+  10% adversary.
+
+  Since rotation of each node happens independently, the distribution of
+  when the adversary expects to win this Sybil attack in order to discover
+  the next node up is uniform. This means that on average, the adversary
+  should expect that half of the rotation period of the next node is already
+  over by the time that they win the Sybil.
+
+  With this fact, we choose our range and distribution for the second
+  layer rotation to be short enough to cause the adversary to risk
+  compromising nodes that are useless, yet long enough to require a
+  Sybil attack to be noticeable in terms of client activity. For this
+  reason, we choose a minimum second-layer guard lifetime of 1 day,
+  since this gives the adversary a minimum expected value of 12 hours for
+  during which they can compromise a guard before it might be rotated.
+  If the total expected rotation rate is 29.5 days, then the adversary can
+  expect overall to have 14.75 days remaining after completing their Sybil
+  attack before a second-layer guard rotates away.
+
+3.3. Rotation distributions
+
+  In order to skew the distribution of the third layer guard towards
+  higher values, we use max(X,X) for the distribution, where X is a
+  random variable that takes on values from the uniform distribution.
+
+  Here's a table of expectation (arithmetic means) for relevant
+  ranges of X (sampled from 0..N-1). The table was generated with the
+  following python functions:
+
+  def ProbMinXX(N, i): return (2.0*(N-i)-1)/(N*N)
+  def ProbMaxXX(N, i): return (2.0*i+1)/(N*N)
+
+  def ExpFn(N, ProbFunc):
+    exp = 0.0
+    for i in xrange(N): exp += i*ProbFunc(N, i)
+    return exp
+
+  The current choice for second-layer guards is noted with **, and
+  the current choice for third-layer guards is noted with ***.
+
+   Range  Min(X,X)   Max(X,X)
+   40      12.84       26.16
+   41      13.17       26.83
+   42      13.50       27.50
+   43      13.84       28.16
+   44      14.17       28.83
+   45      14.50       29.50**
+   46      14.84       30.16
+   47      15.17       30.83
+   48      15.50       31.50***
+
+  The Cumulative Density Function (CDF) tells us the probability that a
+  guard will no longer be in use after a given number of time units have
+  passed.
+
+  Because the Sybil attack on the third node is expected to complete at any
+  point in the second node's rotation period with uniform probability, if we
+  want to know the probability that a second-level Guard node will still be in
+  use after t days, we first need to compute the probability distribution of
+  the rotation duration of the second-level guard at a uniformly random point
+  in time. Let's call this P(R=r).
+
+  For P(R=r), the probability of the rotation duration depends on the selection
+  probability of a rotation duration, and the fraction of total time that
+  rotation is likely to be in use. This can be written as:
+
+  P(R=r) = ProbMaxXX(X=r)*r / \sum_{i=1}^N ProbMaxXX(X=i)*i
+
+  or in Python:
+
+  def ProbR(N, r, ProbFunc=ProbMaxXX):
+     return ProbFunc(N, r)*r/ExpFn(N, ProbFunc)
+
+  For the full CDF, we simply sum up the fractional probability density for
+  all rotation durations. For rotation durations less than t days, we add the
+  entire probability mass for that period to the density function. For
+  durations d greater than t days, we take the fraction of that rotation
+  period's selection probability and multiply it by t/d and add it to the
+  density. In other words:
+
+  def FullCDF(N, t, ProbFunc=ProbR):
+    density = 0.0
+    for d in xrange(N):
+      if t >= d: density += ProbFunc(N, d)
+      # The +1's below compensate for 0-indexed arrays:
+      else: density += ProbFunc(N, d)*(float(t+1))/(d+1)
+    return density
+
+  Computing this yields the following distribution for our current parameters:
+
+   t          P(SECOND_ROTATION <= t)
+   1               0.03247
+   2               0.06494
+   3               0.09738
+   4               0.12977
+   5               0.16207
+  10               0.32111
+  15               0.47298
+  20               0.61353
+  25               0.73856
+  30               0.84391
+  35               0.92539
+  40               0.97882
+  45               1.00000
+
+  This CDF tells us that for the second-level Guard rotation, the
+  adversary can expect that 3.3% of the time, their third-level Sybil
+  attack will provide them with a second-level guard node that has only
+  1 day remaining before it rotates. 6.5% of the time, there will
+  be only 2 day or less remaining, and 9.7% of the time, 3 days or less.
+
+  Note that this distribution is still a day-resolution approximation.
+
+
+4. Security concerns and mitigations
+
+4.1. Mitigating fingerprinting of new HS circuits
+
+  By pinning the middle nodes of rendezvous circuits, we make it
+  easier for all hops of the circuit to detect that they are part of a
+  special hidden service circuit with varying degrees of certainty.
+
+  The Guard node is able to recognize a Vanguard client with a high
+  degree of certainty because it will observe a client IP creating the
+  overwhelming majority of its circuits to just a few middle nodes in
+  any given 31.5 day time period.
+
+  The middle nodes will be able to tell with a variable certainty that
+  depends on both its traffic volume and upon the popularity of the
+  service, because they will see a large number of circuits that tend to
+  pick the same Guard and Exit.
+
+  The final nodes will be able to tell with a similar level of certainty
+  that depends on their capacity and the service popularity, because they
+  will see a lot of handshakes that all tend to have the same second
+  hops.
+
+  The most serious of these is the Guard fingerprinting issue. When
+  proposal 254-padding-negotiation is implemented, services that enable
+  this feature should use those padding primitives to create fake circuits
+  to random middle nodes that are not their guards, in an attempt to look
+  more like a client.
+
+  Additionally, if Tor Browser implements "virtual circuits" based on
+  SOCKS username+password isolation in order to enforce the re-use of
+  paths when SOCKS username+passwords are re-used, then the number of
+  middle nodes in use during a typical user's browsing session will be
+  proportional to the number of sites they are viewing at any one time.
+  This is likely to be much lower than one new middle node every ten
+  minutes, and for some users, may be close to the number of Vanguards
+  we're considering.
+
+  This same reasoning is also an argument for increasing the number of
+  second-level guards beyond just two, as it will spread the hidden
+  service's traffic over a wider set of middle nodes, making it both
+  easier to cover, and behave closer to a client using SOCKS virtual
+  circuit isolation.
+
+5. Default vs optional behavior
+
+  We suggest this torrc option to be optional because it changes path
+  selection in a way that may seriously impact hidden service performance,
+  especially for high traffic services that happen to pick slow guard
+  nodes.
+
+  However, by having this setting be disabled by default, we make hidden
+  services who use it stand out a lot. For this reason, we should in fact
+  enable this feature globally, but only after we verify its viability for
+  high-traffic hidden services, and ensure that it is free of second-order
+  load balancing effects.
+
+  Even after that point, until Single Onion Services are implemented,
+  there will likely still be classes of very high traffic hidden services
+  for whom some degree of location anonymity is desired, but for which
+  performance is much more important than the benefit of Vanguards, so there
+  should always remain a way to turn this option off.
+
+  In the meantime, a reference implementation is available at:
+  https://github.com/mikeperry-tor/vanguards/blob/master/vanguards/vanguards.py
+
+
+Appendix A: Full Python program for generating tables in this proposal
+
+#!/usr/bin/python
+import math
+
+############ Section 3.1 #################
+def num_rotations(c, v, success):
+  i = 0
+  while 1-math.pow((1-c), v*i) < success: i += 1
+  return i
+
+def rotation_line(c, pct):
+  print "    %2d%%        %6d%6d%6d%6d%6d%6d%6d%6d%6d%6d%8d" % \
+     (pct, num_rotations(c, 1, pct/100.0), num_rotations(c, 2, pct/100.0), \
+      num_rotations(c, 3, pct/100.0), num_rotations(c, 4, pct/100.0),
+      num_rotations(c, 5, pct/100.0), num_rotations(c, 6, pct/100.0),
+      num_rotations(c, 8, pct/100.0), num_rotations(c, 9, pct/100.0),
+      num_rotations(c, 10, pct/100.0), num_rotations(c, 12, pct/100.0),
+      num_rotations(c, 16, pct/100.0))
+
+def rotation_table_31():
+  for c in [1,5,10]:
+    print "\n  %2.1f%% Network Compromise: " % c
+    print "   Sybil Success   One   Two  Three  Four  Five  Six  Eight  Nine  Ten  Twelve  Sixteen"
+    for success in [10,15,25,50,60,75,85,90,95,99]:
+      rotation_line(c/100.0, success)
+
+############ Section 3.3 #################
+def ProbMinXX(N, i): return (2.0*(N-i)-1)/(N*N)
+def ProbMaxXX(N, i): return (2.0*i+1)/(N*N)
+
+def ExpFn(N, ProbFunc):
+  exp = 0.0
+  for i in xrange(N): exp += i*ProbFunc(N, i)
+  return exp
+
+def ProbUniformX(N, i): return 1.0/N
+
+def ProbR(N, r, ProbFunc=ProbMaxXX):
+  return ProbFunc(N, r)*r/ExpFn(N, ProbFunc)
+
+def FullCDF(N, t, ProbFunc=ProbR):
+  density = 0.0
+  for d in xrange(N):
+    if t >= d: density += ProbFunc(N, d)
+    # The +1's below compensate for 0-indexed arrays:
+    else: density += ProbFunc(N, d)*float(t+1)/(d+1)
+  return density
+
+def expectation_table_33():
+  print "\n   Range  Min(X,X)   Max(X,X)"
+  for i in xrange(10,49):
+    print "   %2d      %2.2f       %2.2f" % (i, ExpFn(i,ProbMinXX), ExpFn(i, ProbMaxXX))
+
+def CDF_table_33():
+  print "\n   t          P(SECOND_ROTATION <= t)"
+  for i in xrange(1,46):
+    print "  %2d               %2.5f" % (i, FullCDF(45, i-1))
+
+########### Output ############
+
+# Section 3.1
+rotation_table_31()
+
+# Section 3.3
+expectation_table_33()
+CDF_table_33()
+
+----------------------
+
+1. https://onionbalance.readthedocs.org/en/latest/design.html#overview
