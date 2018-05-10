@@ -51,13 +51,13 @@ Status: Draft
   this proposal pins the two middle positions into a much more
   restricted sets, as follows:
 
-                                  -> guard_3A
-                     -> guard_2_A -> guard_3B
-                                  -> guard_3C
-       HS -> guard_1              -> guard_3D
-                                  -> guard_3E
-                     -> guard_2_B -> guard_3F
-                                  -> guard_3G
+                       -> guard_2A
+                                   -> guard_3A
+          -> guard_1A  -> guard_2B -> guard_3B
+       HS                          -> guard_3C
+          -> guard_1B  -> guard_2C -> guard_3D
+                                   -> guard_3E
+                       -> guard_2D -> guard_3F
 
   Additionally, to avoid linkability, we insert an extra middle node
   after the third layer guard for client side intro and hsdir circuits,
@@ -144,7 +144,7 @@ Status: Draft
 
 2.1. Security parameters
 
-  We set NUM_LAYER2_GUARDS to 4 nodes and NUM_LAYER3_GUARDS to 8 nodes.
+  We set NUM_LAYER2_GUARDS to 4 nodes and NUM_LAYER3_GUARDS to 6 nodes.
 
   We set MIN_SECOND_GUARD_LIFETIME to 1 day, and MAX_SECOND_GUARD_LIFETIME
   to 45 days inclusive, for an average rotation rate of 29.5 days, using
@@ -165,7 +165,7 @@ Status: Draft
   restrictions must be loosened.
 
   In particular, we allow the following:
-     1. /16 restrictions and family restrictions
+     1. Nodes from the same /16 and same family for any/all hops
      2. Guard nodes can be chosen for RP/IP/HSDIR
      3. Guard nodes can be chosen for hop before RP/IP/HSDIR.
 
@@ -502,12 +502,6 @@ Status: Draft
 
   In the meantime, a reference implementation is available at:
   https://github.com/mikeperry-tor/vanguards/blob/master/vanguards/vanguards.py
-
-
-7. Acknowledgments
-
- Thanks to Aaron Johnson, John Brooks, Mike Perry and everyone else
- who helped with this idea.
 
 
 Appendix A: Full Python program for generating tables in this proposal
