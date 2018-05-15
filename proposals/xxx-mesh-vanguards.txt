@@ -5,7 +5,7 @@ Status: Draft
 
 0. Motivation
 
-  A guard discovery attack allow attackers to determine the guard
+  A guard discovery attack allows attackers to determine the guard
   node of a Tor client. The hidden service rendezvous protocol
   provides an attack vector for a guard discovery attack since anyone
   can force an HS to construct a 3-hop circuit to a relay (#9001).
