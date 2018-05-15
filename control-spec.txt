@@ -2945,15 +2945,13 @@
   BytesRead and BytesWritten are the number of bytes read and written
   on this circuit since the last CIRC_BW event.
 
-  DeliveredBytesRead and DeliveredBytesWritten are the total length of
-  all valid relay cell payloads read and written on this circuit since
-  the last CIRC_BW event. These fields are provided only in Tor
-  3.4.0-alpha and later.
+  Circuit data falls into two categories: delivered payloads and overhead.
+  DeliveredBytesRead and DeliveredBytesWritten are the total payloads
+  transmitted since the last CIRC_BW event, whereas OverheadBytesRead and
+  OverheadBytesWritten are the metadata size used for routing.
 
-  OverheadBytesRead and OverheadBytesWritten are the total length of
-  the unused overhead portion of valid relay cells read and written on
-  this circuit since the last CIRC_BW event. These fields are provided
-  only in Tor 0.3.4.0-alpha and later.
+  The sum of DeliveredBytesRead and OverheadBytesRead SHOULD match BytesRead,
+  and same for their written counterparts.
 
   The Time field is provided only in versions 0.3.2.1-alpha and later. It
   records when Tor created the bandwidth event.
@@ -2963,6 +2961,9 @@
   reading.
 
   [First added in 0.2.5.2-alpha]
+
+  [DELIVERED_READ, OVERHEAD_READ, DELIVERED_WRITTEN, and OVERHEAD_WRITTEN was
+  added in Tor 0.3.4.0-alpha]
 
 4.1.23. Per-circuit cell stats
 
