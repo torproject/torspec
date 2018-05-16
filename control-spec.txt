@@ -2943,15 +2943,23 @@
      Time = ISOTime2Frac
 
   BytesRead and BytesWritten are the number of bytes read and written
-  on this circuit since the last CIRC_BW event.
+  on this circuit since the last CIRC_BW event. These bytes have not
+  necessarily been validated by Tor, and can include invalid cells,
+  dropped cells, and ignored cells (such as padding cells).
 
-  Circuit data falls into two categories: delivered payloads and overhead.
+  Circuit data that has been validated and processed by Tor is further
+  broken down into two categories: delivered payloads and overhead.
   DeliveredBytesRead and DeliveredBytesWritten are the total payloads
   transmitted since the last CIRC_BW event, whereas OverheadBytesRead and
-  OverheadBytesWritten are the metadata size used for routing.
+  OverheadBytesWritten are the extra unused bytes at the end of each
+  cell in order for it to be the fixed CELL_LEN bytes long.
 
-  The sum of DeliveredBytesRead and OverheadBytesRead SHOULD match BytesRead,
-  and same for their written counterparts.
+  The sum of DeliveredBytesRead and OverheadBytesRead MUST be less than
+  or equal to BytesRead, and the same is true for their written
+  counterparts. This sum represents the total bytes on the circuit that
+  have been validated by Tor. Subtracting this sum from the BytesRead
+  (or BytesWritten) value gives the byte count that Tor has decided
+  to reject due to protocol errors, or has otherwise decided to ignore.
 
   The Time field is provided only in versions 0.3.2.1-alpha and later. It
   records when Tor created the bandwidth event.
@@ -2962,8 +2970,8 @@
 
   [First added in 0.2.5.2-alpha]
 
-  [DELIVERED_READ, OVERHEAD_READ, DELIVERED_WRITTEN, and OVERHEAD_WRITTEN was
-  added in Tor 0.3.4.0-alpha]
+  [DELIVERED_READ, OVERHEAD_READ, DELIVERED_WRITTEN, and OVERHEAD_WRITTEN
+  were added in Tor 0.3.4.0-alpha]
 
 4.1.23. Per-circuit cell stats
 
