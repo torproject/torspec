@@ -191,6 +191,20 @@ It consists of:
 
     This Line has been added in version 1.1.0 of this specification.
 
+  "latest_bandwidth=" DateTime NL
+
+    [Zero or one time.]
+
+    The date and time timestamp in ISO 8601 format and UTC time zone
+    of the most recent generator result.
+
+    This time MUST be identical to the initial Timestamp line.
+
+    This duplicate value is included to make the format easier for people
+    to read.
+
+    This Line has been added in version 1.1.0 of this specification.
+
   KeyValue NL
 
     [Zero or more times.]
