@@ -33,7 +33,21 @@ Status: Draft
   attacker will have to think twice before beginning a chain of node
   compromise attacks that they might not be able to complete.
 
-1.1. Visuals
+1.1. Tor integration
+
+  The mechanisms introduced in this proposal are currently implemented
+  partially in Tor and partially through an external Python script:
+            https://github.com/mikeperry-tor/vanguards
+
+  The Python script uses the new Tor configuration options HSLayer2Nodes and
+  HSLayer3Nodes to be able to select nodes for the guard layers. The Python
+  script is tasked with maintaining and rotating the guard nodes as needed
+  based on the lifetimes described in this proposal.
+
+  In the future, we are aiming to include the whole functionality into Tor,
+  with no need for external scripts.
+
+1.2. Visuals
 
   Here is how a hidden service rendezvous circuit currently looks like:
 
@@ -71,7 +85,7 @@ Status: Draft
      C - G - L2 - L3 - M - HSDIR
      S - G - L2 - L3 - M - R
 
-1.2. Threat model, Assumptions, and Goals
+1.3. Threat model, Assumptions, and Goals
 
   Consider an adversary with the following powers:
 
@@ -115,6 +129,11 @@ Status: Draft
   On the other hand, the outermost layer of guards should rotate fast enough to
   _require_ a Sybil attack.
 
+  See our vanguard simulator project for a simulation of the above adversary
+  model and a motivation for the parameters selected within this proposal:
+        https://github.com/asn-d6/vanguard_simulator
+        https://github.com/asn-d6/vanguard_simulator/wiki/Optimizing-vanguard-topologies
+
 
 2. Design
 
@@ -136,9 +155,6 @@ Status: Draft
   time between MIN_THIRD_GUARD_LIFETIME and MAX_THIRD_GUARD_LIFETIME
   hours.
 
-  These extra guard nodes should be picked with the same path selection
-  procedure that is used for regular middle nodes.
-
   Each node's rotation time is tracked independently, to avoid disclosing
   the rotation times of the primary and second-level guards.
 
@@ -153,9 +169,6 @@ Status: Draft
   We set MIN_THIRD_GUARD_LIFETIME to 1 hour, and MAX_THIRD_GUARD_LIFETIME
   to 48 hours inclusive, for an average rotation rate of 31.5 hours, using
   the max(X,X) distribution specified in Section 3.3.
-
-  The above parameters should be configurable in the Tor consensus and
-  torrc.
 
   See Section 3 for more analysis on these constants.
 
@@ -255,7 +268,7 @@ Status: Draft
   layer selection was to ensure that these nodes rotate fast enough that
   it is not worth trying to compromise them, because it is unlikely for
   compromise to succeed and yield useful information before the nodes stop
-  being used. 
+  being used.
 
   From the table in Section 3.1, with NUM_LAYER2_GUARDS=4 and
   NUM_LAYER3_GUARDS=6, it can be seen that this means that the Sybil attack
@@ -396,7 +409,7 @@ Status: Draft
   The final nodes will be able to tell with a similar level of certainty
   that depends on their capacity and the service popularity, because they
   will see a lot of handshakes that all tend to have the same second
-  hops. 
+  hops.
 
   The most serious of these is the Guard fingerprinting issue. When
   proposal 254-padding-negotiation is implemented, services that enable
