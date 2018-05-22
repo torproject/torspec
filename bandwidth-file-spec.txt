@@ -118,9 +118,18 @@ It consists of:
 
     [At start, exactly once.]
 
-    The Unix Epoch time in seconds when the file was created.
-    It does not follow the KeyValue format for backwards
-    compatibility with version 1.0.0.
+    The Unix Epoch time in seconds of the most recent generator result.
+
+    If there are multiple generators which can fail independently,
+    implementations SHOULD take the most recent timestamp from each
+    generator and use the oldest value. This ensures all the generators
+    continue running.
+
+    If there are scanners that do not run continuously, they SHOULD be
+    excluded from the timestamp calculation.
+
+    It does not follow the KeyValue format for backwards compatibility
+    with version 1.0.0.
 
   "version=" version_number NL
 
