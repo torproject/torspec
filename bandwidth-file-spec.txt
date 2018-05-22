@@ -164,6 +164,15 @@ It consists of:
 
     This Line has been added in version 1.1.0 of this specification.
 
+  "file_created=" DateTime NL
+
+    [Zero or one time.]
+
+    The date and time timestamp in ISO 8601 format and UTC time zone
+    when the file was created.
+
+    This Line has been added in version 1.1.0 of this specification.
+
   "generator_started=" DateTime NL
 
     [Zero or one time.]
