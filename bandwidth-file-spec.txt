@@ -118,14 +118,15 @@ It consists of:
 
     [At start, exactly once.]
 
-    The Unix Epoch time in seconds of the most recent generator result.
+    The Unix Epoch time in seconds of the most recent generator bandwidth
+    result.
 
-    If there are multiple generators which can fail independently,
-    implementations SHOULD take the most recent timestamp from each
-    generator and use the oldest value. This ensures all the generators
-    continue running.
+    If the generator implementation has multiple threads or
+    subprocesses which can fail independently, it SHOULD take the most
+    recent timestamp from each thread and use the oldest value. This
+    ensures all the threads continue running.
 
-    If there are scanners that do not run continuously, they SHOULD be
+    If there are generators that do not run continuously, they SHOULD be
     excluded from the timestamp calculation.
 
     If a generator does not have information about the most recent result,
@@ -199,7 +200,7 @@ It consists of:
     [Zero or one time.]
 
     The date and time timestamp in ISO 8601 format and UTC time zone
-    of the most recent generator result.
+    of the most recent generator bandwidth result.
 
     This time MUST be identical to the initial Timestamp line.
 
