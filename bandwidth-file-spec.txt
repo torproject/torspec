@@ -128,6 +128,9 @@ It consists of:
     If there are scanners that do not run continuously, they SHOULD be
     excluded from the timestamp calculation.
 
+    If a generator does not have information about the most recent result,
+    it MUST NOT generate the file.
+
     It does not follow the KeyValue format for backwards compatibility
     with version 1.0.0.
 
