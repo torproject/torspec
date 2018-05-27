@@ -167,7 +167,7 @@ Proposals by number:
 244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [CLOSED]
 245  Deprecating and removing the TAP circuit extension protocol [DRAFT]
 246  Merging Hidden Service Directories and Introduction Points [NEEDS-RESEARCH]
-247  Defending Against Guard Discovery Attacks using Vanguards [DRAFT]
+247  Defending Against Guard Discovery Attacks using Vanguards [SUPERSEDED]
 248  Remove all RSA identity keys [DRAFT]
 249  Allow CREATE cells with >505 bytes of handshake data [ACCEPTED]
 250  Random Number Generation During Tor Voting [CLOSED]
@@ -212,6 +212,7 @@ Proposals by number:
 289  Authenticating sendme cells to mitigate bandwidth attacks [OPEN]
 290  Continuously update consensus methods [OPEN]
 291  The move to two guard nodes [OPEN]
+292  Mesh-based vanguards [OPEN]
 
 
 Proposals by status:
@@ -224,7 +225,6 @@ Proposals by status:
    239  Consensus Hash Chaining
    240  Early signing key revocation for directory authorities
    245  Deprecating and removing the TAP circuit extension protocol
-   247  Defending Against Guard Discovery Attacks using Vanguards
    248  Remove all RSA identity keys
    253  Out of Band Circuit HMACs
    254  Padding Negotiation
@@ -272,6 +272,7 @@ Proposals by status:
    289  Authenticating sendme cells to mitigate bandwidth attacks
    290  Continuously update consensus methods
    291  The move to two guard nodes
+   292  Mesh-based vanguards
  ACCEPTED:
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
@@ -393,6 +394,7 @@ Proposals by status:
    194  Mnemonic .onion URLs
    210  Faster Headless Consensus Bootstrapping
    225  Strawman proposal: commit-and-reveal shared rng
+   247  Defending Against Guard Discovery Attacks using Vanguards
    252  Single Onion Services
    266  Removing current obsolete clients from the Tor network
    280  Privacy-Preserving Statistics with Privcount in Tor

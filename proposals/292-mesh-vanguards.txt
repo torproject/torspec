@@ -1,8 +1,8 @@
-Filename: xxx-mesh-vanguards.txt
+Filename: 292-mesh-vanguards.txt
 Title: Mesh-based vanguards
 Authors: George Kadianakis and Mike Perry
 Created: 2018-05-08
-Status: Draft
+Status: Open
 Supersedes: 247
 
 0. Motivation
