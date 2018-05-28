@@ -3,9 +3,9 @@ Title: Defending Against Guard Discovery Attacks using Vanguards
 Authors: George Kadianakis and Mike Perry
 Created: 2015-07-10
 Status: Superseded
-Superseded-by: xxx-mesh-vanguards.txt
+Superseded-by: 292-mesh-vanguards.txt
 
-[This proposal is superseded by proposal xxx-mesh-vanguards.txt based on our
+[This proposal is superseded by proposal 292-mesh-vanguards.txt based on our
 analysis and experiences while implementing and simulating the vanguard design.]
 
 0. Motivation
