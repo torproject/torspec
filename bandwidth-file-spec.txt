@@ -346,6 +346,13 @@ Every RelayLine in sbws version 0.1.0 consists of:
     The number of times that the bandwidth measurement for this relay
     failed because of stream failures.
 
+  "error_misc=" Int NL
+
+    [Zero or one time.]
+
+    The number of times that the bandwidth measurement for this relay
+    failed because of other reasons.
+
 2.4.2. Torflow
 
 Torflow RelayLines include node_id and bw, and other KeyValue pairs [2].
