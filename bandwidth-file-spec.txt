@@ -327,21 +327,21 @@ Every RelayLine in sbws version 0.1.0 consists of:
 
   "success=" Int NL
 
-    [Exactly once.]
+    [Zero or one time.]
 
     The number of times that the bandwidth measurements for this relay were
     successful.
 
   "error_circ=" Int NL
 
-    [Exactly once.]
+    [Zero or one time.]
 
     The number of times that the bandwidth measurement for this relay
     failed because of circuit failures.
 
   "error_stream=" Int NL
 
-    [Exactly once.]
+    [Zero or one time.]
 
     The number of times that the bandwidth measurement for this relay
     failed because of stream failures.
