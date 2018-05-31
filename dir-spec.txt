@@ -2093,7 +2093,7 @@
         KeyValues ::= KeyValue | KeyValues SP KeyValue
 
         The headers from the bandwidth file used to generate this vote.
-        The bandwidth file headers are described in bandwith-file-spec.txt.
+        The bandwidth file headers are described in bandwidth-file-spec.txt.
 
         Current Keywords:
         "timestamp" -- the Unix Epoch time in seconds when the latest generator
