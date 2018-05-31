@@ -2092,9 +2092,8 @@
         KeyValue ::= Keyword '=' Value
         KeyValues ::= KeyValue | KeyValues SP KeyValue
 
-        The Bandwidth List headers KeyValue pairs of the Bandwidth List file
-        specified in bandwith-file-spec.txt, used to obtain the Bandwidth
-        RelayLines, also called bandwidth measurements.
+        The headers from the bandwidth file used to generate this vote.
+        The bandwidth file headers are described in bandwith-file-spec.txt.
 
         Current Keywords:
         "timestamp" -- the Unix Epoch time in seconds when the latest generator
@@ -2107,7 +2106,7 @@
         and UTC time zone when the generator started.
         "earliest_bandwidth" -- the date and time timestamp in ISO 8601 format
         and UTC time zone when the first relay bandwidth was obtained.
-        First-appeared: Tor 0.3.5
+        First-appeared: Tor 0.3.5.1-alpha.
 
    The authority section of a vote contains the following items, followed
    in turn by the authority's current key certificate:
