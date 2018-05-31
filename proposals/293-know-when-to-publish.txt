@@ -1,0 +1,58 @@
+Filename: 293-know-when-to-publish.txt
+Title: Other ways for relays to know when to publish
+Author: Nick Mathewson
+Created: 30-May-2018
+Status: Open
+Target: 0.3.5
+
+
+1. Motivation
+
+   In proposal 275, we give reasons for dropping the published-on
+   field from consensus documents, to improve the performance of
+   consensus diffs.  We've already changed Tor (as of 0.2.9.11) to
+   allow us to set those fields far in the future -- but
+   unfortunately, there is still one use case that requires them:
+   relays use the published-on field to tell if they are about to fall
+   out of the consensus and need to make new descriptors.
+
+   Here we propose two alternative mechanisms for relays to know that
+   they should publish descriptors, so we can enact proposal 275 and
+   set the published-on field to some time in the distant future.
+
+
+2. Mechanism One: The StaleDesc flag
+
+   Authorities should begin voting aon a new StaleDesc flag.
+
+   When authorities vote, if the most recent published_on date for
+   a descriptor has over DESC_IS_STALE_INTERVAL in the past, the
+   authorities should vote to give the StaleDesc flag to that relay.
+
+   If any relay sees that it has the StaleDesc flag, it should upload
+   some time in the first half of the voting interval.  (Implementors
+   should take care not to re-upload over and over, though: Relays won't
+   lose the flag until the next voting interval is reached.)
+
+   (Define DESC_IS_STALE_INTERVAL as equal to
+   FORCE_REGENERATE_DESCRIPTOR_INTERVAL.)
+
+
+3. Mechanism Two: Uploading more frequently when rejected.
+
+   Tor relays should remember the last time at which they uploaded a
+   descriptor that was accepted by a majority of dirauths.  If this
+   time is more than FAST_RETRY_DESCRIPTOR_INTERVAL in the past, we
+   mark our descriptor as dirty from
+   mark_my_descriptor_dirty_if_too_old().
+
+
+4. Implications for proposal 275
+
+   Once most relays are running verions that support the features
+   above, and once authorities are generating consensuses with the
+   StaleDesc flag, there will no longer be a need to keep the
+   published time in consensus documents accurate -- we can start
+   setting it to some time in the distant future, per proposal 275.
+
+

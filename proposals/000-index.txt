@@ -213,6 +213,7 @@ Proposals by number:
 290  Continuously update consensus methods [OPEN]
 291  The move to two guard nodes [OPEN]
 292  Mesh-based vanguards [OPEN]
+293  Other ways for relays to know when to publish [OPEN]
 
 
 Proposals by status:
@@ -273,6 +274,7 @@ Proposals by status:
    290  Continuously update consensus methods
    291  The move to two guard nodes
    292  Mesh-based vanguards
+   293  Other ways for relays to know when to publish [for 0.3.5]
  ACCEPTED:
    172  GETINFO controller option for circuit information
    173  GETINFO Option Expansion
