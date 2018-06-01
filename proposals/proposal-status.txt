@@ -546,4 +546,10 @@ again to remind me!
      The proposal specifies a modular system for integrating naming systems
      (GNS, Namecoin, etc.) with Tor onion services.
 
+294  TLS 1.3 Migration [DRAFT]
+
+     A work-in-progress draft proposal detailing the process of
+     migrating to TLS 1.3 (which is not yet finalised at the time of
+     this writing) and which parts of our current, more idiosyncratic,
+     uses of TLS can be removed.
 

@@ -214,6 +214,7 @@ Proposals by number:
 291  The move to two guard nodes [OPEN]
 292  Mesh-based vanguards [OPEN]
 293  Other ways for relays to know when to publish [OPEN]
+294  TLS 1.3 Migration [DRAFT]
 
 
 Proposals by status:
@@ -237,6 +238,7 @@ Proposals by status:
    279  A Name System API for Tor Onion Services
    281  Downloading microdescriptors in bulk
    288  Privacy-Preserving Statistics with Privcount in Tor (Shamir version)
+   294  TLS 1.3 Migration
  NEEDS-REVISION:
    190  Bridge Client Authorization Based on a Shared Secret
  NEEDS-RESEARCH:

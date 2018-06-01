@@ -1,9 +1,13 @@
-Filename: xxx-tls-1.3.txt
+Filename: 294-tls-1.3.txt
 Title: TLS 1.3 Migration
 Authors: Isis Lovecruft
 Created: 11 December 2017
 Updated: 23 January 2018
-Status: Needs Research
+Status: Draft
+
+This proposal is currently in draft state and should be periodically
+revised as we research how much of our idiosyncratic older TLS uses
+can be removed.
 
 1. Motivation
 
