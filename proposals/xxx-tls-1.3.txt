@@ -1,0 +1,336 @@
+Filename: xxx-tls-1.3.txt
+Title: TLS 1.3 Migration
+Authors: Isis Lovecruft
+Created: 11 December 2017
+Updated: 23 January 2018
+Status: Needs Research
+
+1. Motivation
+
+   TLS 1.3 is a substantial redesign over previous versions of TLS, with several
+   significant protocol changes which should likely provide Tor implementations
+   with not only greater security but an improved ability to blend into "normal"
+   TLS traffic on the internet, due to its improvements in encrypting more
+   portions of the handshake.
+
+   Tor implementations may utilise the new TLS 1.3 EncryptedExtensions feature
+   to define arbitrary encrypted TLS extensions to encompass our less standard
+   (ab)uses of TLS.  Additionally, several new Elliptic Curve (EC) based
+   signature algorithms, including Ed25519 and Ed448, are included within the
+   base specification including a single specification for EC point compression
+   for each supported curve, further decreasing our reliance on
+   Tor-protocol-specific uses and extensions (and implementation details).
+
+   Other new features which Tor implementations might take advantage of include
+   improved (server-side) stateless session resumption, which might be usable
+   for OPs to resume sessions with their guards, for example after network
+   disconnection or router IP address reassignment.
+
+2. Summary
+
+   Everything that's currently TLS 1.2: make it use TLS 1.3.  KABLAM.  DONE.
+
+   For an excellent summary of differences between TLS 1.2 and TLS 1.3, see
+   [TLS-1.3-DIFFERENCES].
+
+3. Specification
+
+3.1. Link Subprotocol 4
+
+   (We call it "Link v4" here, but reserve whichever is the subsequently
+   available subprotocol version at the time.)
+
+3.2. TLS Session Resumption & Compression
+
+   As before, implementations MUST NOT allow TLS session resumption.  In the
+   event that it might be decided in the future that OR implementations would
+   benefit from 0-RTT, we can re-evaluate this decision and its security
+   considerations in a separate proposal.
+
+   Compression has been removed from TLS in version 1.3, so we no longer need to
+   make recommendations against its usage.
+
+3.3. Handshake Protocol
+
+3.3.1. Negotiation
+
+   The initiator sends the following four sets of options, as defined in §4.1.1
+   of [TLS-1.3-NEGOTIATION]:
+   >
+   >  - A list of cipher suites which indicates the AEAD algorithm/HKDF hash
+   >    pairs which the client supports.
+   >  - A “supported_groups” (Section 4.2.7) extension which indicates the
+   >    (EC)DHE groups which the client supports and a “key_share” (Section 4.2.8)
+   >    extension which contains (EC)DHE shares for some or all of these groups.
+   >  - A “signature_algorithms” (Section 4.2.3) extension which indicates the
+   >    signature algorithms which the client can accept.
+   >  - A “pre_shared_key” (Section 4.2.11) extension which contains a list of
+   >    symmetric key identities known to the client and a “psk_key_exchange_modes”
+   >    (Section 4.2.9) extension which indicates the key exchange modes that may be
+   >    used with PSKs.
+
+   In our case, the initiator MUST leaave the PSK section blank and MUST include
+   the "key_share" extension, and the responder proceeds to select a ECDHE
+   group, including its "key_share" in the response ServerHello.
+
+3.3.2. ClientHello
+
+   To initiate a v4 handshake, the client sends a TLS1.3 ClientHello with the
+   following options:
+
+     - The "legacy_version" field MUST be set to "TLS 1.2 (0x0303)".  TLS 1.3
+       REQUIRES this.  (Actual version negotiation is done via the
+       "supported_versions" extension.  See §5.1 of this proposal for details of
+       the case where a TLS-1.3 capable initiator finds themself talking to a
+       node which does not support TLS 1.3 and/or doesn't support v4.)
+
+     - The "random" field MUST be filled with 32 bytes of securely generated
+       randomness.
+
+     - The "legacy_session_id" MUST be set to a new pseudorandom value each
+       time, regardless of whether the initiator has previously opened either a
+       TLS1.2 or TLS1.3 connection to the other side.
+
+     - The "legacy_compression_methods" MUST be set to a single null byte,
+       indicating no compression is supported.  (This is the only valid setting
+       for this field in TLS1.3, since there is no longer any compression
+       support.)
+
+     - The "cipher_suites" should be set to 
+       "TLS13-CHACHA20-POLY1305-SHA256:TLS13-AES-128-GCM-SHA256:TLS13-AES-256-GCM-SHA384:"
+       This is the DEFAULT cipher suite list for OpenSSL 1.1.1.  While an
+       argument could be made for customisation to remove the AES-128 option, we
+       choose to attempt to blend in which the majority of other TLS-1.3
+       clients, since this portion of the handshake is unencrypted.
+       (If the initiator actually means to begin a v3 protocol connection, they
+       send these ciphersuites anyway, cf. §5.2 of this proposal.)
+
+     - The "supported_groups" MUST include "X25519" and SHOULD NOT include any
+       of the NIST P-* groups.
+
+     - The "signature_algorithms" MUST include "ed25519 (0x0807)".
+       Implementations MAY advertise support for other signature schemes,
+       including "ed448 (0x0808)", however they MUST NOT advertise support for
+       ECDSA schemes due to the perils of secure implementation.
+
+   The initiator MUST NOT send any "pre_shared_key" or "psk_key_exchange_modes"
+   extensions.
+
+   The details of the "signature_algorithms" choice depends upon the final
+   standardisation of PKIX. [IETF-PKIX]
+
+3.3.2.1. ClientHello Extensions
+
+   From [TLS-1.3_SIGNATURE_ALGOS]:
+   >
+   > The “signature_algorithms_cert” extension was added to allow implementatations
+   > which supported different sets of algorithms for certificates and in TLS itself
+   > to clearly signal their capabilities. TLS 1.2 implementations SHOULD also
+   > process this extension.
+
+   In order to support cross-certification, the initiator's ClientHello MUST
+   include the "signature_algorithms_cert" extension, in order to signal that
+   some certificate chains (one in particular) will include a certificate signed
+   using RSA-PKCSv1-SHA1:
+
+     - The "signature_algorithms_cert" MUST include the legacy algorithm
+       "rsa_pkcs1_sha1(0x0201)".
+
+3.3.3. ServerHello
+
+   To respond to a TLS 1.3 ClientHello which supports the v4 link handshake
+   protocol, the responder sends a ServerHello with the following options:
+
+     - The "legacy_version" field MUST be set to "TLS 1.2 (0x0303)".  TLS 1.3
+       REQUIRES this.  (Actual version negotiation is done via the
+       "supported_versions" extension.  See §5.1 of this proposal for details of
+       the case where a TLS-1.3 capable initiator finds themself talking to a
+       node which does not support TLS 1.3 and/or doesn't support v4.)
+
+     - The "random" field MUST be filled with 32 bytes of securely generated
+       randomness.
+
+     - The "legacy_session_id_echo" field MUST be filled with the contents of
+       the "legacy_session_id" from the initiator's ClientHello.
+
+     - The "cipher_suite" field MUST be set to "TLS13-CHACHA20-POLY1305-SHA256".
+
+     - The "legacy_compression_method" MUST be set to a single null byte,
+       indicating no compression is supported.  (This is the only valid setting
+       for this field in TLS1.3, since there is no longer any compression
+       support.)
+
+   XXX structure and "key_share" response (XXX can we pre-generate a cache of
+   XXX key_shares?)
+
+3.3.3.1 ServerHello Extensions
+
+   XXX what extensions do we need?
+
+4. Implementation Details
+
+4.1. Certificate Chains and Cross-Certifications
+
+   TLS 1.3 specifies that a certificate in a chain SHOULD be directly certified by
+   the preceding certificate in the chain.  This seems to imply that OR
+   implementations SHOULD NOT do the DAG-like construction normally implied by
+   cross-certification between the master Ed25519 identity key and the master
+   RSA-1024 identity key.
+
+   Instead, since certificate chains are expected to be linear, we'll need three
+   certificate chains included in the same handshake:
+
+     1. EdMaster->EdSigning, EdSigning->Link
+     2. EdMaster->RSALegacy
+     3. RSALegacy->EdMaster
+
+   where A->B denotes that the certificate containing B has been signed with key A.
+
+4.2. Removal of AUTHENTICATE, CLIENT_AUTHENTICATE, and CERTS cells
+
+   XXX see prop#224 and RFC5705 and compare
+
+   XXX when can we remove our "renegotiation" handshake completely?
+
+5. Compatibility
+
+5.1. TLS 1.2 version negotiation
+
+   From [TLS-1.3-DIFFERENCES]:
+   >
+   > The “supported_versions” ClientHello extension can be used to
+   > negotiate the version of TLS to use, in preference to the
+   > legacy_version field of the ClientHello.
+
+   If an OR does not receive a ClientHello with a "supported_versions"
+   extenstion, it MUST fallback to using the Tor Link subprotocols v3.  That is,
+   the OR MUST immediately fallback to TLS 1.2 (or v3 with TLS 1.3, cf. the next
+   section) and, following both Tor's "renegotiation" and "in-protocol" version
+   negotiation mechanisms, immediately send a VERSIONS cell.
+
+   Otherwise, upon seeing a "supported_versions" in the ClientHello set to
+   0x0304, the OR should procede with Tor's Link subprotocol 4.
+
+5.2. Preparing Tor's v3 Link Subprotocol for TLS 1.3
+
+   Some changes to the current v3 Link protocol are required, and these MUST
+   be backported, since implementations which are currently compiled against
+   TLS1.3-supporting OpenSSLs fail to establish any connections due to:
+
+     - failing to include any ciphersuite candidates which are TLS1.3 compatible
+
+   This is likely to be accomplished by:
+
+     1. Prefacing our v3 ciphersuite lists with
+        TLS13-CHACHA20-POLY1305-SHA256:TLS13-AES-128-GCM-SHA256:TLS13-AES-256-GCM-SHA384:
+        (We could also retroactively change our custom cipher suite list to be
+        the HIGH cipher suites, since this includes all TLS 1.3 suites.)
+     2. Calling SSL_CTX_set1_groups() to set the supported groups (should be set
+        to "X25519:P-256"). [TLS-1.3_SET1_GROUPS]
+     3. Taking care that older OpenSSLs, which instead have the concept of
+        "curves" not groups, should have their equivalent TLS context settings
+        in place.  [TLS-1.3_SET1_GROUPS] mentions that "The curve functions were
+        first added to OpenSSL 1.0.2. The equivalent group functions were first
+        added to OpenSSL 1.1.1".
+
+   However more steps may need to be taken.
+
+   [XXX are there any more steps necessary? —isis]
+
+6. Security Implications
+
+   XXX evaluate the static RSA attack and its effects on TLS1.2/TLS1.3
+   XXX dual-operable protocols and determine if they apply
+   XXX
+   XXX Jager, T., Schwenk, J. and J. Somorovsky, "On the Security
+   XXX of TLS 1.3 and QUIC Against Weaknesses in PKCS#1 v1.5 Encryption",
+   XXX Proceedings of ACM CCS 2015 , 2015.
+   XXX https://www.nds.rub.de/media/nds/veroeffentlichungen/2015/08/21/Tls13QuicAttacks.pdf
+
+7. Performance and Scalability
+
+8. Availability and External Deployment
+
+8.1. OpenSSL Availability and Interoperability
+
+   Implementation should be delayed until the stable release of OpenSSL 1.1.1.
+
+   OpenSSL 1.1.1 will be binary and API compatible with OpenSSL 1.1.0, so in
+   preparation we might wish to revise our current usage to OpenSSL 1.1.0 to be
+   prepared.
+
+   From Matt Caswell in [OPENSSL-BLOG-TLS-1.3]:
+   >
+   > OpenSSL 1.1.1 will not be released until (at least) TLSv1.3 is
+   > finalised. In the meantime the OpenSSL git master branch contains
+   > our development TLSv1.3 code which can be used for testing purposes
+   > (i.e. it is not for production use). You can check which draft
+   > TLSv1.3 version is implemented in any particular OpenSSL checkout
+   > by examining the value of the TLS1_3_VERSION_DRAFT_TXT macro in the
+   > tls1.h header file. This macro will be removed when the final
+   > version of the standard is released.
+   >
+   > In order to compile OpenSSL with TLSv1.3 support you must use the
+   > “enable-tls1_3” option to “config” or “Configure”.
+   >
+   > Currently OpenSSL has implemented the “draft-20” version of
+   > TLSv1.3. Many other libraries are still using older draft versions in
+   > their implementations. Notably many popular browsers are using
+   > “draft-18”. This is a common source of interoperability
+   > problems. Interoperability of the draft-18 version has been tested
+   > with BoringSSL, NSS and picotls.
+   >
+   > Within the OpenSSL git source code repository there are two branches:
+   > “tls1.3-draft-18” and “tls1.3-draft-19”, which implement the older
+   > TLSv1.3 draft versions. In order to test interoperability with other
+   > TLSv1.3 implementations you may need to use one of those
+   > branches. Note that those branches are considered temporary and are
+   > likely to be removed in the future when they are no longer needed.
+
+   At the time of its release, we may wish to test interoperability with other
+   implementation(s).
+
+9. Future Directions
+
+   The implementation of this proposal would greatly ease the
+   implementation difficulty and maintenance requirements for some
+   other possible future beneficial areas of work.
+
+9.1. TLS Handshake Composability
+
+   Handshake composition (i.e. hybrid handshakes) in TLS 1.3 is incredibly
+   straightforward.
+
+   For example, provided we had a Supersingular Isogeny Diffie-Hellman (SIDH)
+   based implementation with a sane API, composition of Elliptic Curve
+   Diffie-Hellman (ECDH) and SIDH handshakes would be a trivial codebase
+   addition (~10-20 lines of code, for others who have implemented this).
+
+   Our current circuit-layer protocol safeguards the majority of our security
+   and anonymity guarantees, while our TLS layer has historically been either a
+   stop-gap and/or an attempted (albeit usually not-so-successful) obfuscation
+   mechanism.  However, our TLS usage has, in many cases, successfully, through
+   combination with the circuit layer cryptography, prevented more then a few
+   otherwise horrendous bugs.  After our circuit-layer protocol is upgraded to a
+   hybrid post-quantum secure protocol (prop#269 and prop#XXX), and in order to
+   ensure that our TLS layer continues to act in this manner as a stop gap —
+   including within threat models which include adversaries capable of recording
+   traffic now and decrypting with a potential quantum computer in the future —
+   our TLS layer should also provide safety against such a quantum-capable
+   adversary.
+
+
+A. References
+
+[TLS-1.3-DIFFERENCES]:
+   https://tlswg.github.io/tls13-spec/draft-ietf-tls-tls13.html#rfc.section.1.3
+[OPENSSL-BLOG-TLS-1.3]:
+   https://www.openssl.org/blog/blog/2017/05/04/tlsv1.3/
+[TLS-1.3-NEGOTIATION]:
+   https://tlswg.github.io/tls13-spec/draft-ietf-tls-tls13.html#rfc.section.4.1.1
+[IETF-PKIX]:
+   https://datatracker.ietf.org/doc/draft-ietf-curdle-pkix/
+[TLS-1.3_SET1_GROUPS]:
+   https://www.openssl.org/docs/manmaster/man3/SSL_CTX_set1_groups.html
+[TLS-1.3_SIGNATURE_ALGOS]:
+   https://tlswg.github.io/tls13-spec/draft-ietf-tls-tls13.html#signature-algorithms
