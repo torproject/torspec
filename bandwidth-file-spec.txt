@@ -126,7 +126,7 @@ It consists of:
     recent timestamp from each thread and use the oldest value. This
     ensures all the threads continue running.
 
-    If there are generators that do not run continuously, they SHOULD be
+    If there are threads that do not run continuously, they SHOULD be
     excluded from the timestamp calculation.
 
     If a generator does not have information about the most recent result,
