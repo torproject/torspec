@@ -92,8 +92,8 @@ Proposals by number:
 169  Eliminate TLS renegotiation for the Tor connection handshake [SUPERSEDED]
 170  Configuration options regarding circuit building [SUPERSEDED]
 171  Separate streams across circuits by connection metadata [CLOSED]
-172  GETINFO controller option for circuit information [ACCEPTED]
-173  GETINFO Option Expansion [ACCEPTED]
+172  GETINFO controller option for circuit information [RESERVE]
+173  GETINFO Option Expansion [OBSOLETE]
 174  Optimistic Data for Tor: Server Side [CLOSED]
 175  Automatically promoting Tor clients to nodes [REJECTED]
 176  Proposed version-3 link handshake for Tor [CLOSED]
@@ -178,7 +178,7 @@ Proposals by number:
 255  Controller features to allow for load-balancing hidden services [DRAFT]
 256  Key revocation for relays and authorities [RESERVE]
 257  Refactoring authorities and making them more isolated from the net [META]
-258  Denial-of-service resistance for directory authorities [ACCEPTED]
+258  Denial-of-service resistance for directory authorities [DEAD]
 259  New Guard Selection Behaviour [OBSOLETE]
 260  Rendezvous Single Onion Services [FINISHED]
 261  AEZ for relay cryptography [OBSOLETE]
@@ -203,7 +203,7 @@ Proposals by number:
 280  Privacy-Preserving Statistics with Privcount in Tor [SUPERSEDED]
 281  Downloading microdescriptors in bulk [DRAFT]
 282  Remove "Named" and "Unnamed" handling from consensus voting [OPEN]
-283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [ACCEPTED]
+283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [CLOSED]
 284  Hidden Service v3 Control Port [CLOSED]
 285  Directory documents should be standardized as UTF-8 [OPEN]
 286  Controller APIs for hibernation access on mobile [REJECTED]
@@ -248,13 +248,9 @@ Proposals by status:
    291  The move to two guard nodes
    293  Other ways for relays to know when to publish [for 0.3.5]
  ACCEPTED:
-   172  GETINFO controller option for circuit information
-   173  GETINFO Option Expansion
    188  Bridge Guards and other anti-enumeration defenses
    249  Allow CREATE cells with >505 bytes of handshake data
-   258  Denial-of-service resistance for directory authorities
    265  Load Balancing with Overhead Parameters [for 0.2.9.x]
-   283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [for 0.3.3.x] [in 0.3.3.1-alpha]
    288  Privacy-Preserving Statistics with Privcount in Tor (Shamir version)
    292  Mesh-based vanguards
  META:
@@ -352,6 +348,7 @@ Proposals by status:
    272  Listed routers should be Valid, Running, and treated as such [in 0.2.9.3-alpha, 0.2.9.4-alpha]
    274  Rotate onion keys less frequently [in 0.3.1.1-alpha]
    278  Directory Compression Scheme Negotiation [in 0.3.1.1-alpha]
+   283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [for 0.3.3.x] [in 0.3.3.1-alpha]
    284  Hidden Service v3 Control Port
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
@@ -386,6 +383,7 @@ Proposals by status:
    195  TLS certificate normalization for Tor 0.2.4.x
    213  Remove stream-level sendmes from the design
    253  Out of Band Circuit HMACs
+   258  Denial-of-service resistance for directory authorities
  REJECTED:
    134  More robust consensus voting with diverse authority sets
    147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.4.x]
@@ -406,6 +404,7 @@ Proposals by status:
    141  Download server descriptors on demand
    144  Increase the diversity of circuits by detecting nodes belonging the same provider
    164  Reporting the status of server votes
+   173  GETINFO Option Expansion
    182  Credit Bucket
    189  AUTHORIZE and AUTHORIZED cells
    190  Bridge Client Authorization Based on a Shared Secret
@@ -423,6 +422,7 @@ Proposals by status:
    270  RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope
  RESERVE:
    133  Incorporate Unreachable ORs into the Tor Network
+   172  GETINFO controller option for circuit information
    177  Abstaining from votes on individual flags [for 0.2.4.x]
    211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]
    223  Ace: Improved circuit-creation key exchange

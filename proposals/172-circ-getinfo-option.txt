@@ -2,7 +2,7 @@ Filename: 172-circ-getinfo-option.txt
 Title: GETINFO controller option for circuit information
 Author: Damian Johnson
 Created: 03-June-2010
-Status: Accepted
+Status: Reserve
 
 Overview:
 

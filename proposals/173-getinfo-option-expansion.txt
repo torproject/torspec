@@ -2,7 +2,7 @@ Filename: 173-getinfo-option-expansion.txt
 Title: GETINFO Option Expansion
 Author: Damian Johnson
 Created: 02-June-2010
-Status: Accepted
+Status: Obsolete
 
 Overview:
 

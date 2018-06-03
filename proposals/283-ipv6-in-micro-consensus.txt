@@ -2,7 +2,7 @@ Filename: 283-ipv6-in-micro-consensus.txt
 Title: Move IPv6 ORPorts from microdescriptors to the microdesc consensus
 Author: Tim Wilson-Brown (teor), Nick Mathewson
 Created: 18-Oct-2017
-Status: Accepted
+Status: Closed
 Target: 0.3.3.x
 Implemented-In: 0.3.3.1-alpha
 Ticket: #20916
