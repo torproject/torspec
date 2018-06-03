@@ -209,7 +209,7 @@ Proposals by number:
 286  Controller APIs for hibernation access on mobile [REJECTED]
 287  Reduce circuit lifetime without overloading the network [OPEN]
 288  Privacy-Preserving Statistics with Privcount in Tor (Shamir version) [ACCEPTED]
-289  Authenticating sendme cells to mitigate bandwidth attacks [NEEDS-REVISION]
+289  Authenticating sendme cells to mitigate bandwidth attacks [OPEN]
 290  Continuously update consensus methods [META]
 291  The move to two guard nodes [NEEDS-REVISION]
 292  Mesh-based vanguards [ACCEPTED]
@@ -231,7 +231,6 @@ Proposals by status:
    254  Padding Negotiation
    269  Transitionally secure hybrid handshakes
    279  A Name System API for Tor Onion Services
-   289  Authenticating sendme cells to mitigate bandwidth attacks
    291  The move to two guard nodes
  OPEN:
    201  Make bridges report statistics on daily v3 network status requests [for 0.2.4.x]
@@ -243,6 +242,7 @@ Proposals by status:
    277  Detect multiple relay instances running with same ID [for 0.3.??]
    285  Directory documents should be standardized as UTF-8
    287  Reduce circuit lifetime without overloading the network
+   289  Authenticating sendme cells to mitigate bandwidth attacks
    293  Other ways for relays to know when to publish [for 0.3.5]
  ACCEPTED:
    188  Bridge Guards and other anti-enumeration defenses
