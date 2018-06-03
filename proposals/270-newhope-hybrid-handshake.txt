@@ -3,7 +3,7 @@ Title: RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope
 Author: Isis Lovecruft, Peter Schwabe
 Created: 16 Apr 2016
 Updated: 22 Jul 2016
-Status: Draft
+Status: Obsolete
 Depends: prop#220 prop#249 prop#264 prop#270
 
 §0. Introduction

@@ -4,7 +4,7 @@ Author: John Schanck, William Whyte, Zhenfei Zhang,
         Nick Mathewson, Isis Lovecruft, Peter Schwabe
 Created: 7 June 2016
 Updated: 2 Sept 2016
-Status: Draft
+Status: Needs-Revision
 
 
 1. Introduction
