@@ -3,7 +3,9 @@ Title: How to change RSA1024 relay identity keys
 Authors: Nick Mathewson
 Created: 7 April 2014
 Target: 0.2.?
-Status: Draft
+Status: Obsolete
+
+Note: Obsoleted by Ed25519 ID keys; superseded by 240 and 256.
 
 1. Intro and motivation
 
