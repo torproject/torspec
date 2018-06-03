@@ -2,7 +2,9 @@ Filename: 203-https-frontend.txt
 Title: Avoiding censorship by impersonating an HTTPS server
 Author: Nick Mathewson
 Created: 24 Jun 2012
-Status: Draft
+Status: Obsolete
+
+Note: Obsoleted-by pluggable transports.
 
 
 Overview:
