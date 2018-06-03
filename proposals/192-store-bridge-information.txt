@@ -2,7 +2,7 @@ Filename: 192-store-bridge-information.txt
 Title: Automatically retrieve and store information about bridges
 Author: Sebastian Hahn
 Created: 16-Nov-2011
-Status: Open
+Status: Obsolete
 Target: 0.2.[45].x
 
 Overview:
