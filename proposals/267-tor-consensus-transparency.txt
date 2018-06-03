@@ -2,7 +2,7 @@ Filename: 267-tor-consensus-transparency.txt
 Title: Tor Consensus Transparency
 Author: Linus Nordberg
 Created: 2014-06-28
-Status: Draft
+Status: Open
 
 0. Introduction
 

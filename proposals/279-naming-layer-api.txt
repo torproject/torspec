@@ -2,7 +2,7 @@ Filename: 279-naming-layer-api.txt
 Title: A Name System API for Tor Onion Services
 Author: George Kadianakis, Yawning Angel, David Goulet
 Created: 04-Oct-2016
-Status: Draft
+Status: Needs-Revision
 
   Table Of Contents:
 

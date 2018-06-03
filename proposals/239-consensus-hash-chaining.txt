@@ -2,7 +2,7 @@ Filename: 239-consensus-hash-chaining.txt
 Title: Consensus Hash Chaining
 Author: Nick Mathewson, Andrea Shepard
 Created: 06-Jan-2015
-Status: Draft
+Status: Open
 
 1. Introduction and overview
 

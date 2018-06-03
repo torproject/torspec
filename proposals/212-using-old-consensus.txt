@@ -2,7 +2,7 @@ Filename: 212-using-old-consensus.txt
 Title: Increase Acceptable Consensus Age
 Author: Mike Perry
 Created: 01-10-2012
-Status: Open
+Status: Needs-Revision
 Target: 0.2.4.x+
 
 Overview

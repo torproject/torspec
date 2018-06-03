@@ -3,7 +3,7 @@ Title: The move to two guard nodes
 Author: Mike Perry
 Created: 2018-03-22
 Supersedes: Proposal 236
-Status: Open
+Status: Needs-Revision
 
 0. Background
 

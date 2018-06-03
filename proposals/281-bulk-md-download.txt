@@ -2,7 +2,7 @@ Filename: 281-bulk-md-download.txt
 Title: Downloading microdescriptors in bulk
 Author: Nick Mathewson
 Created: 11-Aug-2017
-Status: Draft
+Status: Reserve
 
 1. Introduction
 

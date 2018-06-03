@@ -2,7 +2,7 @@ Filename: 245-tap-out.txt
 Title: Deprecating and removing the TAP circuit extension protocol
 Author: Nick Mathewson
 Created: 2015-06-02
-Status: Draft
+Status: Needs-Revision
 
 0. Introduction
 
