@@ -2,7 +2,9 @@ Filename: 182-creditbucket.txt
 Title: Credit Bucket
 Author: Florian Tschorsch and Björn Scheuermann
 Created: 22 Jun 2011
-Status: Open
+Status: Obsolete
+
+Note: Obsolete because we no longer have a once-per-second bucket refill.
 
 Overview:
 
