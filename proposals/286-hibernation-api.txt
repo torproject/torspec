@@ -2,7 +2,10 @@ Filename: 286-hibernation-api.txt
 Title: Controller APIs for hibernation access on mobile
 Author: Nick Mathewson
 Created: 30-November-2017
-Status: Open
+Status: Rejected
+
+Notes: This proposal was useful for our early thinking, but a simpler
+ solution (DisableNetwork) proved much more useful.
 
 
 1. Introduction
