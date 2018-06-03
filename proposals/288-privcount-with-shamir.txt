@@ -3,7 +3,7 @@ Title: Privacy-Preserving Statistics with Privcount in Tor (Shamir version)
 Author: Nick Mathewson, Tim Wilson-Brown, Aaron Johnson
 Created: 1-Dec-2017
 Supercedes: 280
-Status: Draft
+Status: Accepted
 
 0. Acknowledgments
 
