@@ -4,7 +4,7 @@ Title: "Scalability and Stability Improvements to BridgeDB: Switching to a
 Author: Isis Agora Lovecruft
 Created: 12 Oct 2013
 Related Proposals: XXX-social-bridge-distribution.txt
-Status: Open
+Status: Reserve
 
 *  I.     Overview
 
