@@ -3,7 +3,7 @@ Title: Migrating authority RSA1024 identity keys
 Authors: Nick Mathewson
 Created: 8 April 2014
 Target: 0.2.?
-Status: Obsolete:
+Status: Obsolete
 
 Note: Obsoleted by Ed25519 ID keys; superseded by 240 and 256.
 
