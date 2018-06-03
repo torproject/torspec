@@ -175,7 +175,7 @@ Proposals by number:
 252  Single Onion Services [SUPERSEDED]
 253  Out of Band Circuit HMACs [DEAD]
 254  Padding Negotiation [DRAFT]
-255  Controller features to allow for load-balancing hidden services [DRAFT]
+255  Controller features to allow for load-balancing hidden services [RESERVE]
 256  Key revocation for relays and authorities [RESERVE]
 257  Refactoring authorities and making them more isolated from the net [META]
 258  Denial-of-service resistance for directory authorities [DEAD]
@@ -225,7 +225,6 @@ Proposals by status:
    245  Deprecating and removing the TAP circuit extension protocol
    248  Remove all RSA identity keys
    254  Padding Negotiation
-   255  Controller features to allow for load-balancing hidden services
    267  Tor Consensus Transparency
    273  Exit relay pinning for web services [for n/a]
    279  A Name System API for Tor Onion Services
@@ -428,6 +427,7 @@ Proposals by status:
    223  Ace: Improved circuit-creation key exchange
    226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS"
    242  Better performance and usability for the MyFamily option
+   255  Controller features to allow for load-balancing hidden services
    256  Key revocation for relays and authorities
  INFORMATIONAL:
    159  Exit Scanning
