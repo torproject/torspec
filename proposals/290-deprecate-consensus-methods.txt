@@ -2,7 +2,7 @@ Filename: 290-deprecate-consensus-methods.txt
 Title: Continuously update consensus methods
 Author: Nick Mathewson
 Created: 2018-02-21
-Status: Open
+Status: Meta
 
 1. Background
 
