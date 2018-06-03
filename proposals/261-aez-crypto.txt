@@ -2,7 +2,7 @@ Filename: 261-aez-crypto.txt
 Title: AEZ for relay cryptography
 Author: Nick Mathewson
 Created: 28 Oct 2015
-Status: Open
+Status: Obsolete
 
 0. History
 

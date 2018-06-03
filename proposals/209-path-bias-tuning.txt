@@ -2,7 +2,7 @@ Filename: 209-path-bias-tuning.txt
 Title: Tuning the Parameters for the Path Bias Defense
 Author: Mike Perry
 Created: 01-10-2012
-Status: Open
+Status: Obsolete
 Target: 0.2.4.x+
 
 
