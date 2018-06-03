@@ -2,7 +2,7 @@ Filename: 189-authorize-cell.txt
 Title: AUTHORIZE and AUTHORIZED cells
 Author: George Kadianakis
 Created: 04 Nov 2011
-Status: Open
+Status: Obsolete
 
 1. Overview
 

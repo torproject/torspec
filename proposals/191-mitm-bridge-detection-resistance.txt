@@ -2,7 +2,7 @@ Filename: 191-mitm-bridge-detection-resistance.txt
 Title: Bridge Detection Resistance against MITM-capable Adversaries
 Author: George Kadianakis
 Created: 07 Nov 2011
-Status: Open
+Status: Obsolete
 
 1. Overview
 
