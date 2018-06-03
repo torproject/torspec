@@ -2,7 +2,7 @@ Filename: 255-hs-load-balancing.txt
 Title: Controller features to allow for load-balancing hidden services
 Author: Tom van der Woerdt
 Created: 2015-10-12
-Status: draft
+Status: Reserve
 
 1. Overview and motivation
 
