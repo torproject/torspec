@@ -2,7 +2,7 @@ Filename: 256-key-revocation.txt
 Title: Key revocation for relays and authorities
 Authors: Nick Mathewson
 Created: 27 October 2015
-Status: Open
+Status: Reserve
 
 1. Introduction
 
