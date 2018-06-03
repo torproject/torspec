@@ -2,7 +2,7 @@ Filename: 195-TLS-normalization-for-024.txt
 Title: TLS certificate normalization for Tor 0.2.4.x
 Author: Jacob Appelbaum, Gladys Shufflebottom, Nick Mathewson, Tim Wilde
 Created: 6-Mar-2012
-Status: Draft
+Status: Dead
 Target: 0.2.4.x
 
 
