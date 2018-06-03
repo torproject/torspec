@@ -2,7 +2,7 @@ Filename: 233-quicken-tor2web-mode.txt
 Title: Making Tor2Web mode faster
 Author: Virgil Griffith, Fabio Pietrosanti, Giovanni Pellerano
 Created: 2014-03-27
-Status: Open
+Status: Rejected
 
 
 1. Introduction
