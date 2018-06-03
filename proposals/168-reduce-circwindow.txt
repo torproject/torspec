@@ -2,7 +2,7 @@ Filename: 168-reduce-circwindow.txt
 Title: Reduce default circuit window
 Author: Roger Dingledine
 Created: 12-Aug-2009
-Status: Open
+Status: Rejected
 
 
 0. History
