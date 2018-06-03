@@ -2,7 +2,7 @@ Filename: 246-merge-hsdir-and-intro.txt
 Title: Merging Hidden Service Directories and Introduction Points
 Author: John Brooks, George Kadianakis
 Created: 2015-07-12
-Status: Needs-Research
+Status: Rejected
 
 Change history:
 
