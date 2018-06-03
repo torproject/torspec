@@ -2,8 +2,9 @@ Filename: 234-remittance-addresses.txt
 Title: Adding remittance field to directory specification
 Author: Virgil Griffith, Leif Ryge, Rob Jansen
 Created: 2014-03-27
-Status: Open
+Status: Rejected
 
+Note: Rejected. People are doing this with ContactInfo lines.
 
 1. Motivation
 
