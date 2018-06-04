@@ -352,9 +352,9 @@
 
       - A descriptor field other than bandwidth or uptime has changed.
 
-      - Bandwidth has changed by a factor of 2 from the last time a
-        descriptor was generated, and at least a given interval of time
-        (20 mins by default) has passed since then.
+      - Its uptime is less than 24h and bandwidth has changed by a factor of 2
+        from the last time a descriptor was generated, and at least a given
+        interval of time (20 mins by default) has passed since then.
 
       - Its uptime has been reset (by restarting).
 
@@ -364,6 +364,9 @@
    ORs SHOULD NOT publish a new server descriptor or extra-info document
    if none of the above events have occurred and not much time has passed
    (12 hours by default).
+
+   Tor versions older than 0.3.5.1-alpha ignore uptime when checking for
+   bandwidth changes.
 
    After generating a descriptor, ORs upload them to every directory
    authority they know, by posting them (in order) to the URL
