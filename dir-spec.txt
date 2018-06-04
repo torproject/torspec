@@ -354,7 +354,7 @@
 
       - Its uptime is less than 24h and bandwidth has changed by a factor of 2
         from the last time a descriptor was generated, and at least a given
-        interval of time (20 mins by default) has passed since then.
+        interval of time (3 hours by default) has passed since then.
 
       - Its uptime has been reset (by restarting).
 
