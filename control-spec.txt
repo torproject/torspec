@@ -580,6 +580,7 @@
       need to use "md" instead.)
 
     "md/all" -- all known microdescriptors for entire Tor network.
+      Each microdescriptor is terminated by a newline.
       [First implemented in 0.3.5.1-alpha] [XXX: we're not sure about
       version yet]
 
