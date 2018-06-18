@@ -325,6 +325,34 @@ Every RelayLine in sbws version 0.1.0 consists of:
     The date and time timestamp in ISO 8601 format and UTC time zone
     when the last bandwidth was obtained.
 
+  "success=" Int NL
+
+    [Zero or one time.]
+
+    The number of times that the bandwidth measurements for this relay were
+    successful.
+
+  "error_circ=" Int NL
+
+    [Zero or one time.]
+
+    The number of times that the bandwidth measurements for this relay
+    failed because of circuit failures.
+
+  "error_stream=" Int NL
+
+    [Zero or one time.]
+
+    The number of times that the bandwidth measurements for this relay
+    failed because of stream failures.
+
+  "error_misc=" Int NL
+
+    [Zero or one time.]
+
+    The number of times that the bandwidth measurements for this relay
+    failed because of other reasons.
+
 2.4.2. Torflow
 
 Torflow RelayLines include node_id and bw, and other KeyValue pairs [2].
@@ -359,8 +387,8 @@ software_version=0.1.0
 generator_started=2018-05-08T16:13:25
 earliest_bandwidth=2018-05-08T16:13:26
 ====
-node_id=$68A483E05A2ABDCA6DA5A3EF8DB5177638A27F80 master_key_ed25519=YaqV4vbvPYKucElk297eVdNArDz9HtIwUoIeo0+cVIpQ bw=760 nick=Test rtt=380 time=2018-05-08T16:13:26
-node_id=$96C15995F30895689291F455587BD94CA427B6FC master_key_ed25519=a6a+dZadrQBtfSbmQkP7j2ardCmLnm5NJ4ZzkvDxbo0I bw=189 nick=Test2 rtt=378 time=2018-05-08T16:13:36
+bw=380 error_circ=0 error_misc=0 error_stream=1 master_key_ed25519=YaqV4vbvPYKucElk297eVdNArDz9HtIwUoIeo0+cVIpQ nick=Test node_id=$68A483E05A2ABDCA6DA5A3EF8DB5177638A27F80 rtt=380 success=1 time=2018-05-08T16:13:26
+bw=189 error_circ=0 error_misc=0 error_stream=0 master_key_ed25519=a6a+dZadrQBtfSbmQkP7j2ardCmLnm5NJ4ZzkvDxbo0I nick=Test2 node_id=$96C15995F30895689291F455587BD94CA427B6FC rtt=378 success=1 time=2018-05-08T16:13:36
 
 B. Scaling bandwidths
 
