@@ -70,11 +70,46 @@ Status: Open
 2.3. Which UTF-8 exactly?
 
    We define the allowable set of UTF-8 as:
-      * Encoding the codepoints U+01 through U+10FFFF,
-      * but excluding the codepoints U+D800 through U+DFFF,
-      * each encoded with the shortest possible encoding.
-      * without any BOM.
+      * Zero or mode Unicode scalar values (as defined by The Unicode
+        Standard, Version 3.1 or later), that is:
+         * Unicode code points U+00 through U+10FFFF,
+         * but excluding the code points U+D800 through U+DFFF,
+      * Excluding the scalar value U+00 (for compatibility with NUL-terminated
+        C strings),
+      * Serialized using the UTF-8 encoding scheme (as defined by The Unicode
+        Standard, Version 3.1 or later), in particular:
+         * each code point is encoded with the shortest possible encoding,
+      * Without a Unicode byte order mark (BOM, U+FEFF) at the start of the
+        descriptor. (BOMs are optional and not recommended in UTF-8. Allowing
+        a BOM would break backwards compatibility with ASCII-only Tor
+        implementations.) Byte-swapped BOMs (U+FFFE) must also be rejected.
 
+   In order to remain compatible with future versions of The Unicode Standard,
+   we allow all possible code points, including Reserved code points.
 
+   For languages with a conforming UTF-8 implementation (as defined by The
+   Unicode Standard, Version 3.1 or later), this is equivalent to well-formed
+   UTF-8, with the following additional rules:
+      * reject a BOM (U+FEFF) or byte-swapped BOM (U+FFFE) at the start of the
+        descriptor,
+      * reject U+00 at any point in the descriptor,
+      * accept all code point types used in UTF-8, including Control,
+        Private-Use, Noncharacter, and Reserved. (The Surrogate code point type
+        is not used in UTF-8.)
 
+   For languages without a conforming UTF-8 implementation, we recommend
+   checking UTF-8 conformity based on the "Well-Formed UTF-8 Byte Sequences"
+   table from The Unicode Standard, Version 11 (or later).
 
+   Note that U+00 is serialized to 0x00, but U+FEFF is serialized to 0xEFBBBF,
+   and U+FFFE is serialized to 0xEFBFBE.
+
+3. References
+
+   The Unicode Standard, Version 11, Chapter 3.
+   In particular:
+      * Unicode scalar values: D76, page 120.
+      * UTF-8 encoding form: D92, pages 125-127.
+      * Well-Formed UTF-8 Byte Sequences: Table 3-7, page 126.
+      * Byte order mark: C11, page 83; D94, page 130.
+      * UTF-8 encoding scheme: D96, pages 130.
