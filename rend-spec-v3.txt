@@ -1124,8 +1124,8 @@ Table of contents:
 2.5.1. First layer of encryption [HS-DESC-FIRST-LAYER]
 
    The first layer of HS descriptor encryption is designed to protect
-   descriptor confidentiality against entities who don't know the blinded
-   public key of the hidden service.
+   descriptor confidentiality against entities who don't know the public
+   identity key of the hidden service.
 
 2.5.1.1. First layer encryption logic
 
@@ -1135,6 +1135,11 @@ Table of contents:
 
      SECRET_DATA = blinded-public-key
      STRING_CONSTANT = "hsdir-superencrypted-data"
+
+   The encryption scheme in [HS-DESC-ENCRYPTION-KEYS] uses the service
+   credential which is derived from the public identity key (see [SUBCRED]) to
+   ensure that only entities who know the public identity key can decrypt the
+   first descriptor layer.
 
    The ciphertext is placed on the "superencrypted" field of the descriptor.
 
