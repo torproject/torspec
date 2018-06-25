@@ -288,14 +288,17 @@ In version 1.1.0, the KeyValue can be in any arbitrary order.
 
     The measured bandwidth of this relay.
 
+    No Zero Bandwidths:
     Tor accepts zero bandwidths, but they trigger bugs in older Tor
     implementations. Therefore, implementations SHOULD NOT produce zero
     bandwidths. Instead, they SHOULD use one as their minimum bandwidth.
     If there are zero bandwidths, the parser MAY ignore them.
 
+    Bandwidth Aggregation:
     Multiple measurements can be aggregated using an averaging scheme,
     such as a mean, median, or decaying average.
 
+    Bandwidth Scaling:
     Torflow scales bandwidths to kilobytes per second. Other
     implementations SHOULD use kilobytes per second for their initial
     bandwidth scaling.
@@ -304,6 +307,36 @@ In version 1.1.0, the KeyValue can be in any arbitrary order.
     the same network, their measurements MAY need further scaling. See
     Appendix B for information about scaling, and one possible scaling
     method.
+
+    MaxAdvertisedBandwidth:
+    Bandwidth generators MUST limit the relays' measured bandwidth based
+    on the MaxAdvertisedBadwidth.
+    A relay's MaxAdvertisedBandwidth limits the bandwidth-avg in its
+    descriptor. bandwidth-avg is the minimum of MaxAdvertisedBandwidth,
+    BandwidthRate, RelayBandwidthRate, BandwidthBurst, and
+    RelayBandwidthBurst.
+    Therefore, generators MUST limit a relay's measured bandwidth to its
+    descriptor's bandwidth-avg. This limit needs to be implemented in the
+    generator, because generators may scale consensus weights before
+    sending them to Tor.
+    Generators SHOULD NOT limit measured bandwidths based on descriptors'
+    bandwidth-observed, because that penalises new relays.
+
+    sbws limits the relay's measured bandwidth to the bandwidth-avg
+    advertised.
+
+    Torflow partitions relays based on their bandwidth. For unmeasured
+    relays, Torflow uses the minimum of all descriptor bandwidths,
+    including bandwidth-avg (MaxAdvertisedBandwidth) and
+    bandwidth-observed. Then Torflow measures the relays in each partition
+    against each other, which implicitly limits a relay's measured
+    bandwidth to the bandwidths of similar relays.
+
+    Torflow also generates consensus weights based on the ratio between the
+    measured bandwidth and the minimum of all descriptor bandwidths (at the
+    time of the measurement). So when an operator reduces the
+    MaxAdvertisedBandwidth for a relay, Torflow reduces that relay's
+    measured bandwidth.
 
   KeyValue
 
