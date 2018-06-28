@@ -2089,7 +2089,7 @@
 
     "bandwidth-file" SP KeyValues NL
 
-        [At most once]
+        [At most once in votes; none in consensuses]
 
         Value ::= any printing ASCII character except NL and SP.
         KeyValue ::= Keyword '=' Value
