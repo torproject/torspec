@@ -2087,7 +2087,7 @@
         Value is the actual shared random value encoded in base64. NumReveals
         is the number of commits used to generate this SRV.
 
-    "bandwidth-file" SP KeyValues NL
+    "bandwidth-file-headers" SP KeyValues NL
 
         [At most once in votes; none in consensuses]
 
