@@ -2091,9 +2091,9 @@
 
         [At most once in votes; none in consensuses]
 
-        Value ::= any printing ASCII character except NL and SP.
-        KeyValue ::= Keyword '=' Value
         KeyValues ::= KeyValue | KeyValues SP KeyValue
+        KeyValue ::= Keyword '=' Value
+        Value ::= ArgumentCharValue+
 
         The headers from the bandwidth file used to generate this vote.
         The bandwidth file headers are described in bandwidth-file-spec.txt.
