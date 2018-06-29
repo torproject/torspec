@@ -2093,7 +2093,7 @@
 
         KeyValues ::= KeyValue | KeyValues SP KeyValue
         KeyValue ::= Keyword '=' Value
-        Value ::= ArgumentCharValue+
+        Value ::= ArgumentChar+
 
         The headers from the bandwidth file used to generate this vote.
         The bandwidth file headers are described in bandwidth-file-spec.txt.
