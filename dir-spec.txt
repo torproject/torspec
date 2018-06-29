@@ -2099,8 +2099,8 @@
         The bandwidth file headers are described in bandwidth-file-spec.txt.
 
         Current Keywords:
-        "timestamp" -- the Unix Epoch time in seconds when the latest generator
-        result was obtained.
+        "timestamp" -- the Unix Epoch time in seconds of the most recent
+        generator result.
         "version" -- the Bandwidth List format document specification version.
         "software" -- the name of the software that created the document.
         "software_version" -- the version of the software that created the
