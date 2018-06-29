@@ -2093,7 +2093,8 @@
 
         KeyValues ::= KeyValue | KeyValues SP KeyValue
         KeyValue ::= Keyword '=' Value
-        Value ::= ArgumentChar+
+        Value ::= ArgumentCharValue+
+        ArgumentCharValue ::= any printing ASCII character except NL and SP.
 
         The headers from the bandwidth file used to generate this vote.
         The bandwidth file headers are described in bandwidth-file-spec.txt.
