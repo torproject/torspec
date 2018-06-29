@@ -2113,6 +2113,9 @@
         and UTC time zone when the first relay bandwidth was obtained.
         "latest_bandwidth" -- the date and time timestamp in ISO 8601 format
         and UTC time zone of the most recent generator result.
+        This time MUST be identical to the initial Timestamp line.
+        This duplicate value is included to make the format easier for people
+        to read.
         First-appeared: Tor 0.3.5.1-alpha.
 
    The authority section of a vote contains the following items, followed
