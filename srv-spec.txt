@@ -73,10 +73,6 @@ Tor works. This text used to be proposal 250-commit-reveal-consensus.txt.
    Hence, this proposal aims to embed the commit-and-reveal idea in the Tor
    voting process which should make it smoother to deploy and maintain.
 
-   Another idea proposed specifically for Tor is Nick Hopper's "A threshold
-   signature-based proposal for a shared RNG" which was never turned into an
-   actual Tor proposal.
-
 2. Overview
 
    This proposal alters the Tor consensus protocol such that a random number is
@@ -514,8 +510,13 @@ Tor works. This text used to be proposal 250-commit-reveal-consensus.txt.
    crypto and more complex protocols so this seems like an acceptable solution
    for now.
 
-   For alternative approaches on collaborative random number generation also
-   see the discussion at [RNGMESSAGING].
+   Here are some examples of possible future directions:
+   - Schemes based on threshold signatures (e.g. see [HOPPER])
+   - Unicorn scheme by Lenstra et al. [UNICORN]
+   - Schemes based on Verifiable Delay Functions [VDFS]
+
+   For more alternative approaches on collaborative random number generation
+   also see the discussion at [RNGMESSAGING].
 
 5.2. Predicting the shared random value during reveal phase
 
@@ -637,3 +638,12 @@ References:
 
 [RNGMESSAGING]:
    https://moderncrypto.org/mail-archive/messaging/2015/002032.html
+
+[HOPPER]:
+   https://lists.torproject.org/pipermail/tor-dev/2014-January/006053.html
+
+[UNICORN]:
+   https://eprint.iacr.org/2015/366.pdf
+
+[VDFS]:
+   https://eprint.iacr.org/2018/601.pdf
