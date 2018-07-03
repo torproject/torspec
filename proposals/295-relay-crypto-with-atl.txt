@@ -1,0 +1,276 @@
+Filename: 295-relay-crypto-with-atl.txt
+Title: Using the ATL construction for relay cryptography (solving the crypto-tagging attack)
+Author: Tomer Ashur
+Created: 09 Apr 2018
+Status: Open
+
+
+0. Context
+
+   Although Crypto Tagging Attacks were identified already in the
+   original Tor design, it was not before the rise of the Procyonidae in
+   2012 that their severity was fully realized. In Proposal 202 (Two
+   improved relay encryption protocols for Tor cells) Nick Mathewson
+   discussed two approaches to stymie tagging attacks and generally
+   improve Tor's cryptography. In Proposal 261 (AEZ for relay
+   cryptography) Nick put forward a concrete approach which uses the
+   tweakable wide-block cipher AEZ.
+
+1. Motivation
+
+   For motivations, see proposal 202.
+
+2. Summary and preliminaries
+
+   This proposal suggests an alternative approach to Proposal 261 using
+   the notion of Release (of) Unverified Plaintexts (RUP-security). It
+   describes an improved algorithm for circuit encryption based on
+   CTR-mode which is already used in Tor, and an additional component
+   for hashing. When this additional component is GHash, a GCM-based
+   solution can be used from the OpenSSL library. If a solution that is
+   based solely on components that already exist in Tor is desirable,
+   SHA-1 can be used for hashing (however, this is highly discouraged as
+   SHA-1 is broken!).
+
+   Incidentally, and similar to Proposal 261, this proposal employs the
+   ENCODE-then-ENCIPHER approach thus it improves Tor's E2E integrity by
+   using (sufficiently enough) redundancy.
+
+    For more information about the scheme and a security proof for its
+    RUP-security see
+
+      Tomer Ashur, Orr Dunkelman, Atul Luykx: Boosting Authenticated
+      Encryption Robustness with Minimal Modifications. CRYPTO (3) 2017:
+      3-33 available online at https://eprint.iacr.org/2017/239 .
+
+2.1 An instructive 1-node circuit
+
+   Noting that in CTR-mode the nonce is essential for the
+   encryption/decryption operations, the proposed solution is based on
+   encrypting its value in such a way that any change to the ciphertext
+   or the tag (e.g., through a tagging attack) would randomize the nonce
+   and result in a random value as the output of CTR-mode.
+
+	The basic crypto components of the proposal are:
+		* a block cipher E(·)
+		* A universal hash function, H(·);
+
+   Using the block cipher E(·) and a non-repeating nonce N, one can
+   construct the CTR mode-of-operation:
+
+		CTR(N) = E(N)||E(N+1)||...||E(N+l)
+
+  For simplicity, let us for now consider normal encryption using
+  CTR-mode (This is akin to building a circuit with a single node. In
+  the sequel we will see what happens when this idea is used in a 3-node
+  circuit):
+
+		* Input: a nonce N, a message M = (m_0,...,m_l)
+		1. (z_0,...,z_l) = CTR(N)
+		2. (c_0,...,c_l) = (z_0 ^ m_0, ... z_l ^ m_l)
+
+   The client sends C = (c_0,...,c_l) to the receiver which repeats Step
+   (1) to generate the random stream Z = (z_0,...,z_l) and recovers the
+   message through M = C ^ Z. A protocol using this scheme is vulnerable
+   to the crypto tagging attack due to the malleability of
+   CTR-mode. Indeed, since Z depends only on N rather than on the
+   message M itself, a change to a ciphertext bit affects the respective
+   plaintext bit and nothing else.
+
+   Our solution is based on the idea that linking N and C makes it
+   impossible to change C without affecting N (and hence Z) in such a
+   way that it is impossible to recover M. This can be done by extending
+   the protocol in the following way:
+
+		3. X = H(C)
+		4. S = X ^ E(N ^ X)
+
+   Now, instead of sending C, the client sends C||S to the receiver. To
+   decrypt, the receiver first repeats Step (3) to obtain X, then
+   inverts Step (4) to obtain N: N = D(S ^ X) ^ X (where D(·) is the
+   inverse function of E(·)).  Then, having obtained N, the receiver
+   continues to decrypt C as before. If the receiver already knows N
+   (e.g., in the case of a synchronized nonce), they can authenticate C
+   by comparing N = D(S ^ X) ^ X to the nonce they expect.
+
+   Let us consider what happens when a change is made to C. Let C' be a
+   variant of C with one or more bits flipped. Since H(·) is a universal
+   hash function, X' = H(C' ≠ C) is random. Trying to execute D(S ^ X')
+   ^ X' would result in a random N' ≠ N which in turn would result in a
+   random Z' (and hence a random M'). Similarly for a change in S.
+
+2.2 Extending to a 3-node Tor circuit
+
+   The Tor protocol uses layered encryption to encapsulate the
+  message. Generally speaking, this can be written as:
+
+	* input: synchronized nonces (N^0, N^1, N^2), a message M = (m_0,...,m_l)
+	1. (z^2_0,...,z^2_l) = CTR(N^2)
+	2. (c^2_0,...,c^2_l) = (z^2_0 ^ m_0, ... z^2_l ^ m_l)
+	3. (z^1_0,...,z^1_l) = CTR(N^1)
+	4. (c^1_0,...,c^1_l) = (z^1_0 ^ c^2_0, ... z^1_l ^ c^2_l)
+	5. (z^0_0,...,z^0_l) = CTR(N^0)
+	6. (c^0_0,...,c^0_l) = (z^0_0 ^ c^1_0, ... z^0_l ^ c^0_l)
+
+   The crypto-tagging stems from the fact that a change to C affects M
+   directly since all z^j_i depend only on N^j rather than on C^j.
+
+   An extension of the 1-layer solution presented in Section 2.1 would
+   look like this:
+
+	* Input: a nonce N, a message M = (m_0,...,m_l)
+	1.  (z^2_0,...,z^2_l) = CTR(N)
+	2.  (c^2_0,...,c^2_l) = (z^2_0 ^ m_0, ... z^2_l ^ m_l)
+	3.  X^2 = H(C^2)
+	4.  S^2 = X^2 ^ E(N^2 ^ X^2)
+
+	5.  (z^1_0,...,z^1_l) = CTR(S^2)
+	6.  (c^1_0,...,c^1_l) = (z^1_0 ^ c^2_0, ... z^1_l ^ c^2_l)
+	7.  X^1 = H(C^1)
+	8.  S^1 = X^1 ^ E(S^2 ^ X^1)
+
+	9.  (z^0_0,...,z^0_l) = CTR(S^1)
+	10. (c^0_0,...,c^0_l) = (z^0_0 ^ c^1_0, ... z^1_l ^ c^0_l)
+	11. X^0 = H(C^0)
+	12. S^0 = X^0 ^ E(S^1 ^ X^0)
+
+   The client sends the message C^0||S^0 = ((c^0_0,...,c^0_l)||S^0) to
+   the guard. To decrypt, the guard repeats Step (11) and inverts Step
+   (12) to obtain S^1 which it uses to generate Z^0 and decrypt C^0 into
+   C^1. The guard then forwards C^1||S^1 to the middle node which
+   repeats this process and forwards C^2||S^2 to the exit. The exit
+   removes the final encryption layer and processes the cell as in the
+   old protocol.
+
+   Let us now consider what happens when the crypto tagging attack is
+   applied to this protocol. Without loss of generality, after inverting
+   Step (11) the guard tags either C^1 or S^1 and forwards C'^1||S'^1 to
+   the middle node. The middle node, unaware of the change follows the
+   protocol to decrypt C'^1||S'^1 which results in a random string as
+   per the explanation above. Since both CircID and CMD are not part of
+   the payload, the middle node can still forward the random string
+   (unaware of this fact) to the exit node. Upon receiving the random
+   string, the exit node decrypts it, sees that the 'Rec' field is not
+   all-zero and acts accordingly.
+
+
+3. Design considerations
+
+3.1 Choice of primitives
+
+   We stress that the proposed protocol is primitive agnostic.
+
+   Noting that Tor currently uses AES_CTR we tried to design a solution
+   that requires only minimal changes. Most importantly, the encryption
+   is still performed using CTR-mode, and can be instantiated using
+   AES_CTR (however, the solution works just as well with any other
+   block cipher).
+
+   The hashing of the ciphertext requires a universal hash function. The
+   GCM mode of operation uses CTR+GHash and is available from the
+   OpenSSL crypto library which is already used within Tor. Any
+   available universal hash function can be used instead of GHash if the
+   latter introduces an unacceptable latency.
+
+   The nonce-encryption step uses a tweakable block cipher. In the
+   example above we used the XEX trick to transform a "regular" block
+   cipher into a tweakable block cipher which allows reusing whatever
+   underlying primitive is used in CTR-mode. A tweakable block cipher
+   can be used directly (with X as the tweak) if one is available but
+   this is not required.
+
+3.2 Security requirements
+
+   In Proposal 202, Nick Mathewson outlined the security requirements
+   for any solution. We copy them here verbatim and discuss how each of
+   them is addressed in the proposed solution:
+
+      * " ... we'd like any attacker who controls a node on the circuit
+        not to have a good way to learn any other nodes, even if he/she
+        controls those nodes" - By construction, once processed by an
+        honest node the cell's payload is completely destroyed, thus
+        unlinking any relation between what is seen by nodes further
+        down the circuit and the original message. An adversary
+        controlling the exit node can still see that the circuit turned
+        into junk (borrowing the professional jargon of Proposal 202);
+        this seems unavoidable (if any of the other proposals somehow
+        solved this, we would like to know so we can see if it can
+        somehow be adapted here.
+
+     * "no relay should be able to alter a cell between an honest sender
+       and an honest recipient in a way that they cannot detect" - Any
+       alternation of a cell between a sender and a recipient will be
+       decrypted to junk and never delivered to the recipient. (**)
+
+     * "Relay cells should be secret: nobody but the sender and
+       recipient of a relay cell should be able to learn what it says."
+       - since the protocol is an extension of the existing one,
+       whatever secrecy was present before remains so.
+
+     * "... Circuits should resist transparent, recoverable tagging
+       attacks... " - that's the whole point. Once a change was injected
+       and passed to an adjacent honest node, no node further down the
+       circuit can recover the relay cell.
+
+    * "... The above properties should apply to sequences of cells
+      too... " - this one is more tricky. To the best of my
+      understanding this property is currently ensured through the
+      'Digest' field in the payload. Keeping this field, our solution
+      can provide the same functionality as before. However,
+      re-arranging the 'Rec' and 'Digest' fields in a way similar to
+      Proposal 261 would reduce the overhead but would require
+      developing a different solution. It seems possible though. (*)
+
+   In addition to supporting these security requirements, this proposal
+   improves Tor's E2E authentication by replacing the broken SHA-1 with
+   an ENCODE-then-ENCIPHER authentication. By introducing redundancy to
+   the cell (either through the 'Rec' and 'Digest' fields or otherwise)
+   the exit node can verify that the cell was not altered en route. This
+   is similar to what is done in Proposal 261 but without the trouble of
+   using a tweakable wide-block cipher.
+
+	(*) a possible solution would be to digest X as part of H(C) but
+	this requires further discussion.
+
+	(**) my understanding is that a single circuit can be used for
+	more than one TCP stream. If this is not the case, then the
+	recipient receives a random string and can identify that this is
+	not a valid message.
+
+
+3.3 Feature requirements
+
+
+   In addition to security requirements, Proposal 202 also discusses
+   some feature requirements. We discuss two of them here as the others
+   seems to be trivially supported (although this needs to be verified
+   by someone who understands Tor better than me).
+
+
+    * "Any new approach should be able to coexist on a circuit with the
+      old approach" - following the IRC discussion, we had an internal
+      discussion and we think that the proposed solution works even if
+      only the middle node supports the new protocol. This involves
+      encrypting the nonce only for the middle nonce. We came up with
+      two ways to achieve this, both have their pro's and con's and
+      should be discussed once we agree on the general idea.
+
+      Since the Crypto tagging attack requires a collusion between a
+      corrupted guard and a corrupted exit, it does not make sense to
+      discuss what happens when one of them runs the new protocol.
+
+    * "Cell length needs to be constant as cells move through the
+      network." - The solution was designed to allow for a fixed cell
+      size. this should be discussed though.
+
+4. Specifications
+	TBD
+
+5. Compatibility
+	See Section 3.3
+
+6. Implementation
+	TBD
+
+7. Performance and scalability notes
+	TBD
