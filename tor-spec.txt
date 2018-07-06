@@ -1377,7 +1377,7 @@ see tor-design.pdf.
    When a relay cell arrives at an OP, the OP decrypts the payload
    with the stream cipher as follows:
          OP receives data cell:
-            For I=N...1,
+            For I=1...N,
                 Decrypt with Kb_I.  If the payload is recognized (see
                 section 6..1), then stop and process the payload.
 
