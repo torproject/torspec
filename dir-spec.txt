@@ -1591,6 +1591,14 @@
    and sending it in an HTTP POST request to each other authority at the URL
      http://<hostname>/tor/post/vote
 
+   If an authority has used a Bandwidth List file to generate this vote it
+   SHOULD make it available at
+
+     http://<hostname>/tor/status-vote/next/bandwidth.z
+
+   If an authority makes this file available, its headers MUST correspond to
+   the ones in the "bandwidth-file-headers" item in the vote document.
+
    If, at the start of the voting period, minus DistSeconds, an authority
    does not have a current statement from another authority, the first
    authority downloads the other's statement.
