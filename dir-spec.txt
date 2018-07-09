@@ -2599,6 +2599,28 @@
    IPv4 addresses (two /8 networks) were blocked.  The list is encoded
    as described in section 3.8.2.
 
+3.4.3 Serving bandwidth list files
+
+   If an authority has used a bandwidth list file to generate a vote
+   document it SHOULD make it available at
+
+     http://<hostname>/tor/status-vote/next/bandwidth.z
+
+   at the start of each voting period.
+   If an authority makes this file available, it MUST be the bandwidth file
+   used to create the vote document available at
+
+     http://<hostname>/tor/status-vote/next/authority.z
+
+   Once the voting period starts, the bandwidth list file SHOULD be available
+   at
+
+     http://<hostname>/tor/status-vote/next/bandwidth.z
+
+   The bandwidth list file is described in bandwidth-file-spec.txt.
+
+   First-appeared in Tor 0.3.5.
+
 3.5. Downloading missing certificates from other directory authorities
 
    XXX when to download certificates.
@@ -4013,4 +4035,3 @@ E. Limited ed diff format
    just a period (".") ends the block (and is not part of the lines
    to add).  Note that it is impossible to insert a line with just
    a single dot.
-
