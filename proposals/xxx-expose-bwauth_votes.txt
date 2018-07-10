@@ -1,5 +1,5 @@
 Filename: xxx-expose-bwauth_votes.txt
-Title: Have Directory Authorities expose raw bwauth vote documents
+Title: Have Directory Authorities expose raw bandwidth list file documents
 Author: Tom Ritter
 Created: 11-December-2017
 Status: Open
@@ -8,8 +8,8 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/21377
 1. Introduction
 
 Bandwidth Authorities (bwauths) perform scanning of the Tor Network
-and calculate observed speeds for each relay. They produce a 'bwauth
-vote file' that is given to a Directory Authority. The Directory
+and calculate observed speeds for each relay. They produce a bandwidth
+list file that is given to a Directory Authority. The Directory
 Authority uses the speed value from this file in its vote file
 denoting its view of the speed of the relay.
 
@@ -18,18 +18,18 @@ is calculated, and the consensus's view of a relay's speed is
 determined by choosing the low-median value of all the authorities'
 values for each relay.
 
-Only a single metric from the bwauth vote file is exposed by a 
+Only a single metric from the bandwidth list file is exposed by a
 Directory Authority's vote, however the original file contains
 considerably more diagnostic information about how the bwauth arrives
 at that measurement for that relay.
 
 2. Motivation
 
-The bwauth vote file contains more information than is exposed in the
+The bandwidth list file contains more information than is exposed in the
 overall vote file. This information is useful to debug anomalies in
 relays' utilization and suspected bugs in the (decrepit) bwauth code.
 
-Currently, all bwauths expose the raw vote file through various (non-
+Currently, all bwauths expose the bandwidth list file through various (non-
 standard) means, and that file is downloaded (hourly) by a single person
 (as long as his home internet connection and home server is working)
 and archived (with a small amount of robustness.)  
@@ -42,15 +42,15 @@ parties.  We hope that Collector will begin archiving the files.
 
 3. Specification
 
-An authority SHOULD publish the bwauth vote used to calculate its
-current vote. It SHOULD make the bwauth vote file available at all
+An authority SHOULD publish the bandwidth list file used to calculate its
+current vote. It SHOULD make the bandwidth list file available at all
 times, and provide the file that it has most recently used for its
 vote (even if the vote is not currently published.) It SHOULD make
 the file available at
   http://<hostname>/tor/status-vote/next/bandwidth.z
 
-It MUST NOT attempt to send its bwauth vote file in a HTTP POST to
-other authorities and it SHOULD NOT make bwauth vote files from other
+It MUST NOT attempt to send its bandwidth list file in a HTTP POST to
+other authorities and it SHOULD NOT make bandwidth list files from other
 authorities available.
 
 Clients interested in consuming the document should download it when
@@ -59,7 +59,7 @@ or 50 minutes after each hour.)
 
 4. Security Implications
 
-The raw bwauth vote file does not [really: is not believed to] expose
+The raw bandwidth list file does not [really: is not believed to] expose
 any sensitive information.  All authorities currently make this
 document public already, an example is at
   https://bwauth.ritter.vg/bwauth/bwscan.V3BandwidthsFile
@@ -69,7 +69,7 @@ document public already, an example is at
 Exposing the document presents no compatibility concerns.
 
 The compatibility concern is with applications that want to consume
-the document. The bwauth vote file has no specification, and has been
+the document. The bandwidth list file has no specification, and has been
 extended in ad-hoc ways. Applications that merely wish to archive the
 document (e.g. Collector) won't have a problems. Applications that
 want to parse it may encounter errors if a new (unexpected) field is
