@@ -1588,14 +1588,6 @@
    and sending it in an HTTP POST request to each other authority at the URL
      http://<hostname>/tor/post/vote
 
-   If an authority has used a Bandwidth List file to generate this vote it
-   SHOULD make it available at
-
-     http://<hostname>/tor/status-vote/next/bandwidth.z
-
-   If an authority makes this file available, its headers MUST correspond to
-   the ones in the "bandwidth-file-headers" item in the vote document.
-
    If, at the start of the voting period, minus DistSeconds, an authority
    does not have a current statement from another authority, the first
    authority downloads the other's statement.
@@ -2579,6 +2571,28 @@
    netblocks.  "Most" addresses are permitted if no more than 2^25
    IPv4 addresses (two /8 networks) were blocked.  The list is encoded
    as described in section 3.8.2.
+
+3.4.3 Serving bandwidth list files
+
+   If an authority has used a bandwidth list file to generate a vote
+   document it SHOULD make it available at
+
+     http://<hostname>/tor/status-vote/next/bandwidth.z
+
+   at the start of each voting period.
+   If an authority makes this file available, it MUST be the bandwidth file
+   used to create the vote document available at
+
+     http://<hostname>/tor/status-vote/next/authority.z
+
+   Once the voting period starts, the bandwidth list file SHOULD be available
+   at
+
+     http://<hostname>/tor/status-vote/next/bandwidth.z
+
+   The bandwidth list file is described in bandwidth-file-spec.txt.
+
+   First-appeared in Tor 0.3.5.
 
 3.5. Downloading missing certificates from other directory authorities
 
@@ -3994,4 +4008,3 @@ E. Limited ed diff format
    just a period (".") ends the block (and is not part of the lines
    to add).  Note that it is impossible to insert a line with just
    a single dot.
-
