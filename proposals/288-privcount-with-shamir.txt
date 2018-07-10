@@ -118,13 +118,16 @@ Status: Accepted
 
       1. For every Tally Reporter with index i, the client constructs a
          random 32-byte random value SEED_i.  The client then generates
-         a pseudorandom bitstream of C*B bits using the SHAKE-256
+         a pseudorandom bitstream of using the SHAKE-256
          XOF with SEED_i as its input, and divides this stream into
          C values, with the c'th value denoted by MASK(i, c).
 
-         [Because P is very close to a power of 2, nearly all seeds will
-         produce MASK values in range 0...(P-1).  If any does not, the
-         client picks a new seed.]
+         [To divide the stream into values, consider the stream 8 bytes at a
+         time as unsigned integers in network (big-endian) order. For each
+         such integer, clear the top (64-B) bits.  If the result is less than
+         P, then include the integer as one of the MASK(i, .) values.
+         Otherwise, discard this 8-byte segment and proceed to the next
+         value.]
 
       2. The client encrypts SEED_i using the public key of Tally
          Reporter i, and remembers this encrypted value.  It discards
