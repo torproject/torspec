@@ -68,11 +68,7 @@ document public already, an example is at
 
 Exposing the document presents no compatibility concerns.
 
-The compatibility concern is with applications that want to consume
-the document. The bandwidth list file has no specification, and has been
-extended in ad-hoc ways. Applications that merely wish to archive the
-document (e.g. Collector) won't have a problems. Applications that
-want to parse it may encounter errors if a new (unexpected) field is
-added, if a new format is specified and fields are removed, or
-assumptions are made about the text encoding or formatting of the
-document. 
+Applications that parse the document should follow the bandwidth list file
+specification in bandwidth-file-spec.txt.
+If a new bandwidth list format version is added, the applications might need
+upgrade to that version.
