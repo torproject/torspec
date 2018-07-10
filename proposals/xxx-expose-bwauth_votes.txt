@@ -70,5 +70,5 @@ Exposing the document presents no compatibility concerns.
 
 Applications that parse the document should follow the bandwidth list file
 specification in bandwidth-file-spec.txt.
-If a new bandwidth list format version is added, the applications might need
-upgrade to that version.
+If a new bandwidth list format version is added, the applications MAY need
+to upgrade to that version.
