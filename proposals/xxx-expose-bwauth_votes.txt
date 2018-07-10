@@ -47,7 +47,7 @@ current vote. It SHOULD make the bwauth vote file available at all
 times, and provide the file that it has most recently used for its
 vote (even if the vote is not currently published.) It SHOULD make
 the file available at
-  http://<hostname>/tor/status-vote/now/bwauth-legacy.z
+  http://<hostname>/tor/status-vote/next/bandwidth.z
 
 It MUST NOT attempt to send its bwauth vote file in a HTTP POST to
 other authorities and it SHOULD NOT make bwauth vote files from other
