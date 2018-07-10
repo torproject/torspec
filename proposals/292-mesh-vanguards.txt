@@ -67,13 +67,15 @@ Supersedes: 247
   this proposal pins the two middle positions into a much more
   restricted sets, as follows:
 
-                       -> guard_2A
                                    -> guard_3A
-          -> guard_1A  -> guard_2B -> guard_3B
-       HS                          -> guard_3C
-          -> guard_1B  -> guard_2C -> guard_3D
-                                   -> guard_3E
-                       -> guard_2D -> guard_3F
+                       -> guard_2A -> guard_3B
+                                   -> guard_3C
+          -> guard_1A              -> guard_3D
+       HS              -> guard_2B -> guard_3E
+          -> guard_1B              -> guard_3F
+                       -> guard_2C -> guard_3G
+                                   -> guard_3H
+
 
   Additionally, to avoid linkability, we insert an extra middle node
   after the third layer guard for client side intro and hsdir circuits,
@@ -162,7 +164,7 @@ Supersedes: 247
 
 2.1. Security parameters
 
-  We set NUM_LAYER2_GUARDS to 4 nodes and NUM_LAYER3_GUARDS to 6 nodes.
+  We set NUM_LAYER2_GUARDS to 3 nodes and NUM_LAYER3_GUARDS to 8 nodes.
 
   We set MIN_SECOND_GUARD_LIFETIME to 1 day, and MAX_SECOND_GUARD_LIFETIME
   to 45 days inclusive, for an average rotation rate of 29.5 days, using
@@ -272,11 +274,10 @@ Supersedes: 247
   compromise to succeed and yield useful information before the nodes stop
   being used.
 
-  From the table in Section 3.1, with NUM_LAYER2_GUARDS=4 and
-  NUM_LAYER3_GUARDS=6, it can be seen that this means that the Sybil attack
-  on layer3 will complete with 50% chance in 12*31.5 hours (15.75 days)
-  for the 1% adversary, ~4 days for the 5% adversary, and 2.62 days for the
-  10% adversary.
+  From the table in Section 3.1, with NUM_LAYER3_GUARDS=8, it can be seenthat
+  this means that the Sybil attack on layer3 will complete with 50% chance in
+  9*31.5 hours (11.8 days) for the 1% adversary, 2.6 days for the 5% adversary,
+  and 1.3 days for the 10% adversary.
 
   Since rotation of each node happens independently, the distribution of
   when the adversary expects to win this Sybil attack in order to discover
