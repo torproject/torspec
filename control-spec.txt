@@ -871,6 +871,8 @@
     "net/listeners/natd"
     "net/listeners/dns"
     "net/listeners/control"
+    "net/listeners/extor"
+    "net/listeners/httptunnel"
       A quoted, space-separated list of the locations where Tor is listening
       for connections of the specified type. These can contain IPv4
       network address...
@@ -886,6 +888,9 @@
         "[2001:0db8:7000:0000:0000:dead:beef:1234]:9050"
 
       [New in Tor 0.2.2.26-beta.]
+
+      [The extor and httptunnel lists were added in 0.3.2.12, 0.3.3.10, and
+      0.3.4.6-rc.]
 
     "dir-usage"
       A newline-separated list of how many bytes we've served to answer
