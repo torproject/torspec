@@ -1,6 +1,6 @@
 Filename: 295-relay-crypto-with-atl.txt
 Title: Using ADL-GCM for relay cryptography (solving the crypto-tagging attack)
-Author: Tomer Ashur
+Author: Tomer Ashur, Orr Dunkelman, Atul Lyukx
 Created: 09 Apr 2018
 Status: Open
 
