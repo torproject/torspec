@@ -100,7 +100,7 @@ Implemented-In: 0.2.5.2-alpha
   pluggable transport proxy. A Tor bridge SHOULD use that address to
   collect statistics about its clients.  Recognized formats are:
     1.2.3.4:5678
-    [1:2::3:4]::5678
+    [1:2::3:4]:5678
 
   (Current Tor versions may accept other formats, but this is a bug:
   transports MUST NOT send them.)
