@@ -2289,14 +2289,14 @@ Appendix F. Hidden service directory format [HIDSERVDIR-FORMAT]
    This file contains the private master ed25519 key of the onion service.
    [TODO: Offline keys]
 
-  - "./authorized_client/"                  [DIRECTORY]
-    "./authorized_client/alice"             [FILE]
-    "./authorized_client/bob"               [FILE]
-    "./authorized_client/charlie"           [FILE]
+  - "./authorized_clients/"                  [DIRECTORY]
+    "./authorized_clients/alice"             [FILE]
+    "./authorized_clients/bob"               [FILE]
+    "./authorized_clients/charlie"           [FILE]
 
    If client authorization is _enabled_, this directory MUST contain a file
    for each authorized client. Each such file contains the public key of the
-   configured "client-name" transmitted to the service operator by the client.
+   configured <client-name> transmitted to the service operator by the client.
    See [CLIENT-AUTH-MGMT] for more details.
 
    See section E.1.2 [CLIENT-AUTH-MGMT] for the format of a client file.
@@ -2326,16 +2326,16 @@ Appendix E. Managing authorized client data [CLIENT-AUTH-MGMT]
      comma-separated list of human-readable authorized client names.
 
      Let's consider that one of the listed client names is "alice". In this
-     case, Tor checks whether the "./authorized_client/alice" file is present
+     case, Tor checks whether the "./authorized_clients/alice" file is present
      on the filesystem and if found, we use the included keys to authenticate.
 
   E.1.2. Service-side bookkeeping
 
      This section contains more details on how onion services should be
-     keeping track of the ".keys" file.
+     keeping track of the client files.
 
-     The file contains an ed25519 and x25519 public key for a specific client.
-     The suggested format is as follow:
+     The file contains an x25519 public key for a specific client.  The
+     suggested format is as follow:
 
         <auth-type>:<key-type>:<encoded-public-key>
 
@@ -2347,7 +2347,7 @@ Appendix E. Managing authorized client data [CLIENT-AUTH-MGMT]
 
      A client who wants to register client authorization data for a hidden
      service needs to add the following line to their torrc to indicate which
-     "client-name" is configured to use client authorization.
+     <client-name> is configured to use client authorization.
 
          HiddenServiceClientAuth <auth-type> <client-name>,...
 
@@ -2355,20 +2355,19 @@ Appendix E. Managing authorized client data [CLIENT-AUTH-MGMT]
 
          HiddenServiceClientAuthDir <DIR>
 
-     The "DIR" contains a file named "client-name" which should be one per
+     The <DIR> contains a file named <client-name> which should be one per
      onion address configured with client authorization.
 
-     If "auth-type" is set to "descriptor", the file contains the private key
+     If <auth-type> is set to "descriptor", the file contains the private key
      in binary format:
 
-        <onion-address>:x25519:<binary private key>
+        <onion-address>:descriptor:x25519:<base64-encoded-privkey>
 
-     The reason to use a binary representation of the key is to discourage the
-     user (a human) to try to copy it around or edit the file.
-
-     The keypair used for client authorization is created by a third part tool
+     The keypair used for client authorization is created by a third party tool
      for which the public key needs to be transferred to the service operator
-     in a secure out-of-band way.
+     in a secure out-of-band way. The third party tool SHOULD add appropriate
+     headers to the private key file to ensure that users won't accidentally
+     give out their private key.
 
   E.2. Configuring client authorization using the control port
 
