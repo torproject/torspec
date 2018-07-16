@@ -2607,19 +2607,19 @@
      http://<hostname>/tor/status-vote/next/bandwidth.z
 
    at the start of each voting period.
+
+   It MUST NOT attempt to send its bandwidth list file in a HTTP POST to
+   other authorities and it SHOULD NOT make bandwidth list files from other
+   authorities available.
+
    If an authority makes this file available, it MUST be the bandwidth file
    used to create the vote document available at
 
      http://<hostname>/tor/status-vote/next/authority.z
 
-   Once the voting period starts, the bandwidth list file SHOULD be available
-   at
+   The bandwidth list format is described in bandwidth-file-spec.txt.
 
-     http://<hostname>/tor/status-vote/next/bandwidth.z
-
-   The bandwidth list file is described in bandwidth-file-spec.txt.
-
-   First-appeared in Tor 0.3.5.
+   The standard URLs for bandwidth list files first-appeared in Tor 0.3.5.
 
 3.5. Downloading missing certificates from other directory authorities
 
@@ -3343,16 +3343,14 @@
 
 3.11. Publishing the signed consensus
 
-   Once there are enough signatures, or once the voting period starts,
-   these documents are available at
+   The voting period ends at the valid-after time. If the consensus has
+   been signed by a majority of authorities, these documents are made
+   available at
       http://<hostname>/tor/status-vote/current/consensus.z
    and
       http://<hostname>/tor/status-vote/current/consensus-signatures.z
    [XXX current/consensus-signatures is not currently implemented, as it
     is not used in the voting protocol.]
-   [XXX It's actually false that the first document is available as soon
-    as there are enough signatures. It's only available as soon as the
-    voting period starts. -KL]
 
    [XXX possible future features include support for downloading old
     consensuses.]
@@ -3361,13 +3359,15 @@
      http://<hostname>/tor/status-vote/current/authority.z
      http://<hostname>/tor/status-vote/current/<fp>.z
      http://<hostname>/tor/status-vote/current/d/<d>.z
-   once the consensus is complete.
+     http://<hostname>/tor/status-vote/current/bandwidth.z
+   once the voting period ends, regardless of the number of signatures.
 
    The authorities serve another consensus of each flavor "F" from the
    locations
       /tor/status-vote/(current|next)/consensus-F.z. and
       /tor/status-vote/(current|next)/consensus-F/<FP1>+....z.
 
+   The standard URLs for bandwidth list files first-appeared in Tor 0.3.5.
 
 4. Directory cache operation
 
