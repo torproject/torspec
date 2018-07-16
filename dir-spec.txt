@@ -2580,6 +2580,11 @@
      http://<hostname>/tor/status-vote/next/bandwidth.z
 
    at the start of each voting period.
+
+   It MUST NOT attempt to send its bandwidth list file in a HTTP POST to
+   other authorities and it SHOULD NOT make bandwidth list files from other
+   authorities available.
+
    If an authority makes this file available, it MUST be the bandwidth file
    used to create the vote document available at
 
