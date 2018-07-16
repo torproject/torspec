@@ -2299,11 +2299,11 @@ Appendix F. Hidden service directory format [HIDSERVDIR-FORMAT]
    configured <client-name> transmitted to the service operator by the client.
    See [CLIENT-AUTH-MGMT] for more details.
 
-   See section E.1.2 [CLIENT-AUTH-MGMT] for the format of a client file.
+   See section [CLIENT-AUTH-MGMT] for the format of a client file.
 
    (NOTE: client authorization is not implemented as of 0.3.2.1-alpha.)
 
-Appendix E. Managing authorized client data [CLIENT-AUTH-MGMT]
+Appendix G. Managing authorized client data [CLIENT-AUTH-MGMT]
 
   Hidden services and clients can configure their authorized client data either
   using the torrc, or using the control port. This section presents a suggested
@@ -2312,9 +2312,9 @@ Appendix E. Managing authorized client data [CLIENT-AUTH-MGMT]
 
   (NOTE: client authorization is not implemented as of 0.3.2.1-alpha.)
 
-  E.1. Configuring client authorization using torrc
+  G.1. Configuring client authorization using torrc
 
-  E.1.1. Hidden Service side
+  G.1.1. Hidden Service side
 
      A hidden service that wants to perform client authorization, adds the
      option HiddenServiceAuthorizeClient to its torrc file:
@@ -2329,7 +2329,7 @@ Appendix E. Managing authorized client data [CLIENT-AUTH-MGMT]
      case, Tor checks whether the "./authorized_clients/alice" file is present
      on the filesystem and if found, we use the included keys to authenticate.
 
-  E.1.2. Service-side bookkeeping
+  G.1.2. Service-side bookkeeping
 
      This section contains more details on how onion services should be
      keeping track of the client files.
@@ -2343,7 +2343,7 @@ Appendix E. Managing authorized client data [CLIENT-AUTH-MGMT]
 
         descriptor:x25519:<base64-encoded-pubkey>
 
-  E.1.3. Client side
+  G.1.3. Client side
 
      A client who wants to register client authorization data for a hidden
      service needs to add the following line to their torrc to indicate which
@@ -2369,9 +2369,9 @@ Appendix E. Managing authorized client data [CLIENT-AUTH-MGMT]
      headers to the private key file to ensure that users won't accidentally
      give out their private key.
 
-  E.2. Configuring client authorization using the control port
+  G.2. Configuring client authorization using the control port
 
-  E.2.1. Service side
+  G.2.1. Service side
 
      A hidden service also has the option to configure authorized clients
      using the control port. The idea is that hidden service operators can use
@@ -2386,7 +2386,7 @@ Appendix E. Managing authorized client data [CLIENT-AUTH-MGMT]
      Hidden services who use the control port interface for client auth need
      to perform their own key management.
 
-  E.2.2. Client side
+  G.2.2. Client side
 
      There should also be a control port interface for clients to register
      authorization data for hidden services without having to use the
