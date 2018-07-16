@@ -2091,13 +2091,19 @@
 
         [At most once for votes; does not occur in consensuses.]
 
-        KeyValues ::= KeyValue | KeyValues SP KeyValue
+        KeyValues ::= "" | KeyValue | KeyValues SP KeyValue
         KeyValue ::= Keyword '=' Value
         Value ::= ArgumentCharValue+
         ArgumentCharValue ::= any printing ASCII character except NL and SP.
 
         The headers from the bandwidth file used to generate this vote.
         The bandwidth file headers are described in bandwidth-file-spec.txt.
+
+        If an authority is not configured with a V3BandwidthsFile, this line
+        SHOULD NOT appear in its vote.
+
+        If an authority is configured with a V3BandwidthsFile, but parsing
+        fails, this line SHOULD appear in its vote, but without any headers.
 
         Current Keywords:
         "timestamp" -- the Unix Epoch time in seconds of the most recent
