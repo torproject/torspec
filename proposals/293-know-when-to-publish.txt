@@ -23,10 +23,10 @@ Target: 0.3.5
 
 2. Mechanism One: The StaleDesc flag
 
-   Authorities should begin voting aon a new StaleDesc flag.
+   Authorities should begin voting on a new StaleDesc flag.
 
    When authorities vote, if the most recent published_on date for
-   a descriptor has over DESC_IS_STALE_INTERVAL in the past, the
+   a descriptor is over DESC_IS_STALE_INTERVAL in the past, the
    authorities should vote to give the StaleDesc flag to that relay.
 
    If any relay sees that it has the StaleDesc flag, it should upload
@@ -54,5 +54,4 @@ Target: 0.3.5
    StaleDesc flag, there will no longer be a need to keep the
    published time in consensus documents accurate -- we can start
    setting it to some time in the distant future, per proposal 275.
-
 
