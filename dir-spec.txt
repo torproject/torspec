@@ -2585,14 +2585,9 @@
 
      http://<hostname>/tor/status-vote/next/authority.z
 
-   Once the voting period starts, the bandwidth list file SHOULD be available
-   at
+   The bandwidth list format is described in bandwidth-file-spec.txt.
 
-     http://<hostname>/tor/status-vote/next/bandwidth.z
-
-   The bandwidth list file is described in bandwidth-file-spec.txt.
-
-   First-appeared in Tor 0.3.5.
+   The standard URLs for bandwidth list files first-appeared in Tor 0.3.5.
 
 3.5. Downloading missing certificates from other directory authorities
 
