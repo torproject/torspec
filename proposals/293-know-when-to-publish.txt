@@ -49,7 +49,7 @@ Target: 0.3.5
 
 4. Implications for proposal 275
 
-   Once most relays are running verions that support the features
+   Once most relays are running versions that support the features
    above, and once authorities are generating consensuses with the
    StaleDesc flag, there will no longer be a need to keep the
    published time in consensus documents accurate -- we can start
