@@ -1,0 +1,85 @@
+Filename: xxx-expose-bandwidth-files.txt
+Title: Have Directory Authorities expose raw bandwidth list files
+Author: Tom Ritter
+Created: 11-December-2017
+Status: Open
+Ticket: https://trac.torproject.org/projects/tor/ticket/21377
+
+1. Introduction
+
+Bandwidth Authorities (bwauths) perform scanning of the Tor Network
+and calculate observed bandwidths for each relay. They produce a bandwidth
+list file that is given to a Directory Authority. The Directory
+Authority uses the bw (bandwidth) value from this file in its vote file
+denoting its view of the bandwidth of the relay.
+
+After collecting all of the votes from other Authorities, a consensus
+is calculated, and the consensus's view of a relay's speed is
+determined by choosing the low-median value of all the authorities'
+values for each relay.
+
+Only a single metric from the bandwidth list file is exposed by a
+Directory Authority's vote, however the original file contains
+considerably more diagnostic information about how the bwauth arrives
+at that measurement for that relay.
+
+For more details, see the bandwidth list file specification in
+bandwidth-file-spec.txt.
+
+2. Motivation
+
+The bandwidth list file contains more information than is exposed in the
+overall vote file. This information is useful to debug:
+  * anomalies in relays' utilization,
+  * suspected bugs in the (decrepit) bwauth code, and
+  * the transition to a replacement bwauth implementation.
+
+Currently, all bwauths expose the bandwidth list file through various (non-
+standard) means, and that file is downloaded (hourly) by a single person
+(as long as his home internet connection and home server is working)
+and archived (with a small amount of robustness.)
+
+It would be preferable to have this exposed in a standard manner.
+Doing so would no longer require bwauths to run HTTP servers to expose
+the file, no longer require them to take additional manual steps to
+provide it, and would enable public consumption by any interested
+parties.  We hope that Collector will begin archiving the files.
+
+3. Specification
+
+An authority SHOULD publish the bandwidth list file used to calculate its
+next vote. It SHOULD make the bandwidth list file available whenever the
+corresponding vote is available, at the corresponding URL. (See
+dir-spec for the exact details.)
+
+It SHOULD make the file available at
+  http://<hostname>/tor/status-vote/next/bandwidth.z
+  http://<hostname>/tor/status-vote/current/bandwidth.z
+
+It MUST NOT attempt to send its bandwidth list file in a HTTP POST to
+other authorities and it SHOULD NOT make bandwidth list files from other
+authorities available.
+
+Clients interested in consuming these documents should download them from
+each authority's:
+  * next URL when votes are created. (In the public Tor network, this is
+    after HH:50 during normal operation, and after HH:20 during a
+    consensus failure.)
+  * current URL after the valid-after time in the consensus.
+    (After HH:00, and HH:30 during consensus failure.)
+
+4. Security Implications
+
+The raw bandwidth list file does not [really: is not believed to] expose
+any sensitive information.  All authorities currently make this
+document public already, an example is at
+  https://bwauth.ritter.vg/bwauth/bwscan.V3BandwidthsFile
+
+5. Compatibility
+
+Exposing the document presents no compatibility concerns.
+
+Applications that parse the document should follow the bandwidth list file
+specification in bandwidth-file-spec.txt.
+If a new bandwidth list format version is added, the applications MAY need
+to upgrade to that version.
