@@ -1,4 +1,4 @@
-Filename: xxx-expose-bandwidth-files.txt
+Filename: 296-expose-bandwidth-files.txt
 Title: Have Directory Authorities expose raw bandwidth list files
 Author: Tom Ritter
 Created: 11-December-2017

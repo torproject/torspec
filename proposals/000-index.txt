@@ -216,6 +216,7 @@ Proposals by number:
 293  Other ways for relays to know when to publish [OPEN]
 294  TLS 1.3 Migration [DRAFT]
 295  Using ADL-GCM for relay cryptography (solving the crypto-tagging attack) [OPEN]
+296  Have Directory Authorities expose raw bandwidth list files [OPEN]
 
 
 Proposals by status:
@@ -246,6 +247,7 @@ Proposals by status:
    289  Authenticating sendme cells to mitigate bandwidth attacks
    293  Other ways for relays to know when to publish [for 0.3.5]
    295  Using ADL-GCM for relay cryptography (solving the crypto-tagging attack)
+   296  Have Directory Authorities expose raw bandwidth list files
  ACCEPTED:
    188  Bridge Guards and other anti-enumeration defenses
    249  Allow CREATE cells with >505 bytes of handshake data
