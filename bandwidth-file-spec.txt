@@ -358,11 +358,25 @@ In version 1.1.0, the KeyValue can be in any arbitrary order.
     header format.
     If there are, the parser MAY ignore conflicting keywords.
 
-2.4. Implementation notes
+2.4. Implementation details
+
+2.4.1 Writing bandwidth files atomically
+
+To avoid inconsistent reads, implementations SHOULD write bandwidth files
+atomically. If the file is transferred from another host, it SHOULD be
+written to a temporary path, then renamed to the V3BandwidthsFile path.
+
+sbws versions 0.7.0 and later write the bandwidth file to an archival location,
+create a temporary symlink to that location, then atomically rename the symlink
+to the configured V3BandwidthsFile path.
+
+Torflow does not write bandwidth files atomically.
+
+2.4.2. Additional KeyValue pair definitions
 
 KeyValue pairs in RelayLines that current implementations generate.
 
-2.4.1. Simple Bandwidth Scanner
+2.4.2.1. Simple Bandwidth Scanner
 
 Every RelayLine in sbws version 0.1.0 consists of:
 
@@ -421,7 +435,7 @@ Every RelayLine in sbws version 0.1.0 consists of:
     The number of times that the bandwidth measurements for this relay
     failed because of other reasons.
 
-2.4.2. Torflow
+2.4.2.2. Torflow
 
 Torflow RelayLines include node_id and bw, and other KeyValue pairs [2].
 
