@@ -477,7 +477,9 @@ see tor-design.pdf.
    drop the cell.  Since more cell types may be added in the future, ORs
    should generally not warn when encountering unrecognized commands.
 
-   The payload is padded with 0 bytes.
+   The cell is padded up to the cell length with padding bytes. Senders
+   SHOULD set padding bytes to NUL and receivers MUST ignore their
+   value.
 
    PADDING cells are currently used to implement connection keepalive.
    If there is no other traffic, ORs and OPs send one another a PADDING
@@ -1479,7 +1481,9 @@ see tor-design.pdf.
 
    The 'Length' field of a relay cell contains the number of bytes in
    the relay payload which contain real payload data. The remainder of
-   the payload is padded with NUL bytes.
+   the unencrypted payload is padded with padding bytes. Implementations
+   handle padding bytes of unencrypted relay cells as they do padding
+   bytes for other cell types; see Section 3.
 
    If the RELAY cell is recognized but the relay command is not
    understood, the cell must be dropped and ignored. Its contents
