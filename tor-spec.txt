@@ -889,7 +889,7 @@ see tor-design.pdf.
    The first format is equivalent to a CREATE2 cell with HTYPE of 'tap'
    and length of TAP_C_HANDSHAKE_LEN.  The second format is a way to
    encapsulate new handshake types into the old CREATE cell format for
-   migration. See 5.1.2.1 below. Recognized HTAG values are:
+   migration. See 5.1.2 below. Recognized HTAG values are:
 
        ntor -- 'ntorNTORntorNTOR'
 
@@ -1249,7 +1249,7 @@ see tor-design.pdf.
       1. Create an onion skin, encrypted to R_M's public onion key.
 
       2. Send the onion skin in a relay EXTEND cell along
-         the circuit (see section 5).
+         the circuit (see sections 5.1.2 and 5.5).
 
       3. When a relay EXTENDED cell is received, verify KH, and
          calculate the shared keys.  The circuit is now extended.
