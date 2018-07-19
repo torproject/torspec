@@ -1267,7 +1267,7 @@ see tor-design.pdf.
    cell, the circuit will fail and be torn down. The initiating onion
    router chooses some circID not yet used on the connection between the
    two onion routers.  (But see section 5.1.1 above, concerning choosing
-   circIDs based on lexicographic order of nicknames.)
+   circIDs.)
 
    When an onion router receives a CREATE[2] cell, if it already has a
    circuit on the given connection with the given circID, it drops the
