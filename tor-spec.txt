@@ -420,7 +420,7 @@ see tor-design.pdf.
 
         CircID                                [CIRCID_LEN bytes]
         Command                               [1 byte]
-        Payload (padded with 0 bytes)         [PAYLOAD_LEN bytes]
+        Payload (padded with padding bytes)   [PAYLOAD_LEN bytes]
 
    On a version 2 or higher connection, all cells are as in version 1
    connections, except for variable-length cells, whose format is:
@@ -429,6 +429,10 @@ see tor-design.pdf.
         Command                               [1 octet]
         Length                                [2 octets; big-endian integer]
         Payload                               [Length bytes]
+
+   In variable-length cells, padding bytes are optional. Most variable-length
+   cells have a mininal Length, and contain no padding bytes. VPADDING cells
+   contain Length padding bytes as their Payload.
 
    On a version 2 connection, variable-length cells are indicated by a
    command byte equal to 7 ("VERSIONS").  On a version 3 or
@@ -467,7 +471,7 @@ see tor-design.pdf.
          132 -- AUTHORIZE (Client authorization)    (Not yet used)
 
    The interpretation of 'Payload' depends on the type of the cell.
-      PADDING: Payload is unused.
+      [V]PADDING: Payload contains padding bytes.
       CREATE:  Payload contains the handshake challenge.
       CREATED: Payload contains the handshake response.
       RELAY:   Payload contains the relay header and relay body.
@@ -1725,8 +1729,8 @@ see tor-design.pdf.
 
    Link padding can be created by sending PADDING or VPADDING cells
    along the connection; relay cells of type "DROP" can be used for
-   long-range padding.  The contents of a PADDING, VPADDING, or DROP
-   cell SHOULD be chosen randomly, and MUST be ignored.
+   long-range padding.  The payloads of PADDING, VPADDING, or DROP
+   cells are all padding bytes. See Section 3.
 
    If the link protocol is version 5 or higher, link level padding is
    enabled as per padding-spec.txt. On these connections, clients may
