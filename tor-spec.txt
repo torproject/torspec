@@ -992,13 +992,17 @@ see tor-design.pdf.
    different RSA identity, it SHOULD NOT attempt to make another
    connection: it should just fail and DESTROY the circuit.
 
+   After checking relay identities, extending ORs generate a
+   CREATE/CREATE2 cell from the contents of the EXTEND/EXTEND2 cell.
+   See section 5.3 for details.
+
    The payload of an EXTENDED cell is the same as the payload of a
    CREATED cell.
 
    The payload of an EXTENDED2 cell is the same as the payload of a
    CREATED2 cell.
 
-   [Support for EXTEND2 was added in Tor 0.2.4.8-alpha.]
+   [Support for EXTEND2/EXTENDED2 was added in Tor 0.2.4.8-alpha.]
 
    Clients SHOULD use the EXTEND format whenever sending a TAP
    handshake, and MUST use it whenever the EXTEND cell will be handled
@@ -1252,20 +1256,28 @@ see tor-design.pdf.
 
    When an onion router receives an EXTEND relay cell, it sends a CREATE
    cell to the next onion router, with the enclosed onion skin as its
-   payload.  As special cases, if the extend cell includes a digest of
+   payload.
+
+   When an onion router receives an EXTEND2 relay cell, it sends a CREATE2
+   cell to the next onion router, with the enclosed HLEN, HTYPE, and HDATA
+   as its payload.
+
+   As special cases, if the extend cell includes a digest of
    all zeroes, or asks to extend back to the relay that sent the extend
    cell, the circuit will fail and be torn down. The initiating onion
    router chooses some circID not yet used on the connection between the
    two onion routers.  (But see section 5.1.1 above, concerning choosing
    circIDs based on lexicographic order of nicknames.)
 
-   When an onion router receives a CREATE cell, if it already has a
+   When an onion router receives a CREATE/CREATE2 cell, if it already has a
    circuit on the given connection with the given circID, it drops the
-   cell.  Otherwise, after receiving the CREATE cell, it completes the
-   DH handshake, and replies with a CREATED cell.  Upon receiving a
-   CREATED cell, an onion router packs it payload into an EXTENDED relay
-   cell (see section 5), and sends that cell up the circuit.  Upon
-   receiving the EXTENDED relay cell, the OP can retrieve g^y.
+   cell. Otherwise, after receiving the CREATE/CREATE2 cell, it completes
+   the specified handshake, and replies with a CREATED/CREATED2 cell.
+
+   Upon receiving a CREATED/CREATED2 cell, an onion router packs it payload
+   into an EXTENDED/EXTENDED2 relay cell (see section 5.1.2), and sends
+   that cell up the circuit. Upon receiving the EXTENDED/EXTENDED2 relay
+   cell, the OP can retrieve the handshake material.
 
    (As an optimization, OR implementations may delay processing onions
    until a break in traffic allows time to do so without harming
