@@ -1443,14 +1443,15 @@ see tor-design.pdf.
    other nodes in the circuit back to the originator. Commands marked
    as either can be sent either by the originator or other nodes.
 
-   The 'recognized' field is used for a simple indication for if the cell
-   still encrypted or not. When sending cells, the unencrypted 'recognized'
-   MUST be set to zero.
+   The 'recognized' field is used as a simple indication that the cell
+   is still encrypted. It is an optimization to avoid calculating
+   expensive digests for every cell. When sending cells, the unencrypted
+   'recognized' MUST be set to zero.
 
    When receiving and decrypting cells the 'recognized' will always be
    zero if we're the endpoint that the cell is destined for.  For cells
    that we should relay, the 'recognized' field will usually be nonzero,
-   but will accidentally be zero with P=2^-32.
+   but will accidentally be zero with P=2^-16.
 
    When handling a relay cell, if the 'recognized' in field in a
    decrypted relay payload is zero, the 'digest' field is computed as
