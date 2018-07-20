@@ -482,9 +482,24 @@ see tor-design.pdf.
    drop the cell.  Since more cell types may be added in the future, ORs
    should generally not warn when encountering unrecognized commands.
 
-   The cell is padded up to the cell length with padding bytes. Senders
-   SHOULD set padding bytes to NUL and receivers MUST ignore their
-   value.
+   The cell is padded up to the cell length with padding bytes.
+
+   Senders set padding bytes depending on the cell's command:
+      VERSIONS:  Payload MUST NOT contain padding bytes.
+      AUTHORIZE: Payload is unspecified and reserved for future use.
+      Other variable-length cells:
+                 Payload MAY contain padding bytes at the end of the cell.
+                 Padding bytes SHOULD be set to NUL.
+      RELAY:     Payload MUST be padded to PAYLOAD_LEN with padding bytes.
+                 Padding bytes SHOULD be set to random values.
+      Other fixed-length cells:
+                 Payload MUST be padded to PAYLOAD_LEN with padding bytes.
+                 Padding bytes SHOULD be set to NUL.
+   We recommend random padding in RELAY cells, so that cell content is
+   unpredictable. See proposal 289 for details. For non-RELAY cells, TLS
+   authenticates cell content, so randomised padding bytes are redundant.
+
+   Receivers MUST ignore padding bytes.
 
    PADDING cells are currently used to implement connection keepalive.
    If there is no other traffic, ORs and OPs send one another a PADDING
