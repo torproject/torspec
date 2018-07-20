@@ -1264,11 +1264,12 @@ see tor-design.pdf.
    cell to the next onion router, with the enclosed HLEN, HTYPE, and HDATA
    as its payload.
 
-   As special cases, if the extend cell includes a digest of
-   all zeroes, or asks to extend back to the relay that sent the extend
-   cell, the circuit will fail and be torn down. The initiating onion
-   router chooses some circID not yet used on the connection between the
-   two onion routers.  (But see section 5.1.1 above, concerning choosing
+   As special cases, if the EXTEND/EXTEND2 cell includes a legacy
+   identity, identity fingerprint, or Ed25519 identity of all zeroes, or
+   asks to extend back to the relay that sent the extend cell, the
+   circuit will fail and be torn down. The initiating onion router
+   chooses some circID not yet used on the connection between the two
+   onion routers.  (But see section 5.1.1 above, concerning choosing
    circIDs.)
 
    When an onion router receives a CREATE/CREATE2 cell, if it already has a
