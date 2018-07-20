@@ -309,9 +309,10 @@ see tor-design.pdf.
    (When initiating a connection, if a reasonably live consensus is
    available, then the expected identity key is taken from that
    consensus. But when initiating a connection otherwise, the expected
-   identity key is the one given in the hard-coded authority or fallback
-   list.  Finally, when creating a connection because of an EXTEND cell, the
-   expected identity key is the one given in the cell.)
+   identity key is the one given in the hard-coded authority or
+   fallback list.  Finally, when creating a connection because of an
+   EXTEND/EXTEND2 cell, the expected identity key is the one given in
+   the cell.)
 
    When connecting to an OR, all parties SHOULD reject the connection if that
    OR has a malformed or missing certificate.  When accepting an incoming
@@ -468,8 +469,8 @@ see tor-design.pdf.
 
    The interpretation of 'Payload' depends on the type of the cell.
       PADDING: Payload is unused.
-      CREATE:  Payload contains the handshake challenge.
-      CREATED: Payload contains the handshake response.
+      CREATE/CREATE2:  Payload contains the handshake challenge.
+      CREATED/CREATED2: Payload contains the handshake response.
       RELAY:   Payload contains the relay header and relay body.
       DESTROY: Payload contains a reason for closing the circuit.
                (see 5.4)
@@ -483,8 +484,8 @@ see tor-design.pdf.
    If there is no other traffic, ORs and OPs send one another a PADDING
    cell every few minutes.
 
-   CREATE, CREATED, and DESTROY cells are used to manage circuits;
-   see section 5 below.
+   CREATE, CREATE2, CREATED, CREATED2, and DESTROY cells are used to
+   manage circuits; see section 5 below.
 
    RELAY cells are used to send commands and data along a circuit; see
    section 6 below.
@@ -854,12 +855,12 @@ see tor-design.pdf.
 5.1. CREATE and CREATED cells
 
    Users set up circuits incrementally, one hop at a time. To create a
-   new circuit, OPs send a CREATE cell to the first node, with the first
-   half of an authenticated handshake; that node responds with a CREATED
-   cell with the second half of the handshake. To extend a circuit past
-   the first hop, the OP sends an EXTEND relay cell (see section 5.1.2)
-   which instructs the last node in the circuit to send a CREATE cell to
-   extend the circuit.
+   new circuit, OPs send a CREATE/CREATE2 cell to the first node, with
+   the first half of an authenticated handshake; that node responds with
+   a CREATED/CREATED2 cell with the second half of the handshake. To
+   extend a circuit past the first hop, the OP sends an EXTEND/EXTEND2
+   relay cell (see section 5.1.2) which instructs the last node in the
+   circuit to send a CREATE/CREATE2 cell to extend the circuit.
 
    There are two kinds of CREATE and CREATED cells: The older
    "CREATE/CREATED" format, and the newer "CREATE2/CREATED2" format.  The
@@ -912,21 +913,21 @@ see tor-design.pdf.
 
 5.1.1. Choosing circuit IDs in create cells
 
-   The CircID for a CREATE cell is an arbitrarily chosen nonzero integer,
-   selected by the node (OP or OR) that sends the CREATE cell.  In link
-   protocol 3 or lower, CircIDs are 2 bytes long; in protocol 4 or
-   higher, CircIDs are 4 bytes long.
+   The CircID for a CREATE/CREATE2 cell is an arbitrarily chosen
+   nonzero integer, selected by the node (OP or OR) that sends the
+   CREATE/CREATE2 cell.  In link protocol 3 or lower, CircIDs are 2
+   bytes long; in protocol 4 or higher, CircIDs are 4 bytes long.
 
-   To prevent CircID collisions, when one node sends a CREATE cell to
-   another, it chooses from only one half of the possible values based
-   on the ORs' public identity keys.
+   To prevent CircID collisions, when one node sends a CREATE/CREATE2
+   cell to another, it chooses from only one half of the possible
+   values based on the ORs' public identity keys.
 
    In link protocol version 3 or lower, if the sending node has a lower
    key, it chooses a CircID with an MSB of 0; otherwise, it chooses a
    CircID with an MSB of 1. (Public keys are compared numerically by
    modulus.)  With protocol version 3 or lower, a client with no public key
    MAY choose any CircID it wishes, since clients never need to process a
-   CREATE cell.
+   CREATE/CREATE2 cell.
 
    In link protocol version 4 or higher, whichever node initiated the
    connection sets its MSB to 1, and whichever node didn't initiate the
@@ -1234,11 +1235,12 @@ see tor-design.pdf.
          open a new connection to that router.
 
       4. Choose a circID not already in use on the connection with the
-         first router in the chain; send a CREATE cell along the
-         connection, to be received by the first onion router.
+         first router in the chain; send a CREATE/CREATE2 cell along
+         the connection, to be received by the first onion router.
 
-      5. Wait until a CREATED cell is received; finish the handshake
-         and extract the forward key Kf_1 and the backward key Kb_1.
+      5. Wait until a CREATED/CREATED2 cell is received; finish the
+         handshake and extract the forward key Kf_1 and the backward
+         key Kb_1.
 
       6. For each subsequent onion router R (R_2 through R_N), extend
          the circuit to R.
@@ -1248,11 +1250,11 @@ see tor-design.pdf.
 
       1. Create an onion skin, encrypted to R_M's public onion key.
 
-      2. Send the onion skin in a relay EXTEND cell along
+      2. Send the onion skin in a relay EXTEND/EXTEND2 cell along
          the circuit (see sections 5.1.2 and 5.5).
 
-      3. When a relay EXTENDED cell is received, verify KH, and
-         calculate the shared keys.  The circuit is now extended.
+      3. When a relay EXTENDED/EXTENDED2 cell is received, verify KH,
+         and calculate the shared keys.  The circuit is now extended.
 
    When an onion router receives an EXTEND relay cell, it sends a CREATE
    cell to the next onion router, with the enclosed onion skin as its
@@ -1377,7 +1379,8 @@ see tor-design.pdf.
 
 5.5.2. Forward Direction
 
-   The forward direction is the direction that CREATE cells are sent.
+   The forward direction is the direction that CREATE/CREATE2 cells
+   are sent.
 
 5.5.2.1. Routing from the Origin
 
@@ -1407,7 +1410,8 @@ see tor-design.pdf.
 
 5.5.3. Backward Direction
 
-   The backward direction is the opposite direction from CREATE cells.
+   The backward direction is the opposite direction from
+   CREATE/CREATE2 cells.
 
 5.5.3.1. Relaying Backward at Onion Routers
 
@@ -1439,12 +1443,12 @@ see tor-design.pdf.
    inbound RELAY_EARLY cells, it MUST close the circuit immediately.
 
    When speaking v2 of the link protocol or later, clients MUST only send
-   EXTEND cells inside RELAY_EARLY cells.  Clients SHOULD send the first ~8
+   EXTEND/EXTEND2 cells inside RELAY_EARLY cells.  Clients SHOULD send the first ~8
    RELAY cells that are not targeted at the first hop of any circuit as
    RELAY_EARLY cells too, in order to partially conceal the circuit length.
 
-   [Starting with Tor 0.2.3.11-alpha, relays should
-   reject any EXTEND cell not received in a RELAY_EARLY cell.]
+   [Starting with Tor 0.2.3.11-alpha, relays should reject any
+   EXTEND/EXTEND2 cell not received in a RELAY_EARLY cell.]
 
 6. Application connections and stream management
 
@@ -1935,10 +1939,11 @@ see tor-design.pdf.
 
 9.3. "Relay"
 
-   The "relay" protocols are those used to handle CREATE cells, and those that
-   handle the various RELAY cell types received after a CREATE cell.  (Except,
-   relay cells used to manage introduction and rendezvous points are managed
-   with the "HSIntro" and "HSRend" protocols respectively.)
+   The "relay" protocols are those used to handle CREATE/CREATE2
+   cells, and those that handle the various RELAY cell types received
+   after a CREATE/CREATE2 cell.  (Except, relay cells used to manage
+   introduction and rendezvous points are managed with the "HSIntro"
+   and "HSRend" protocols respectively.)
 
    Current versions are:
 
