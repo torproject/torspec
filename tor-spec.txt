@@ -889,7 +889,7 @@ see tor-design.pdf.
    The first format is equivalent to a CREATE2 cell with HTYPE of 'tap'
    and length of TAP_C_HANDSHAKE_LEN.  The second format is a way to
    encapsulate new handshake types into the old CREATE cell format for
-   migration. See 5.1.2.1 below. Recognized HTAG values are:
+   migration. See 5.1.2 below. Recognized HTAG values are:
 
        ntor -- 'ntorNTORntorNTOR'
 
@@ -992,13 +992,17 @@ see tor-design.pdf.
    different RSA identity, it SHOULD NOT attempt to make another
    connection: it should just fail and DESTROY the circuit.
 
+   After checking relay identities, extending ORs generate a
+   CREATE/CREATE2 cell from the contents of the EXTEND/EXTEND2 cell.
+   See section 5.3 for details.
+
    The payload of an EXTENDED cell is the same as the payload of a
    CREATED cell.
 
    The payload of an EXTENDED2 cell is the same as the payload of a
    CREATED2 cell.
 
-   [Support for EXTEND2 was added in Tor 0.2.4.8-alpha.]
+   [Support for EXTEND2/EXTENDED2 was added in Tor 0.2.4.8-alpha.]
 
    Clients SHOULD use the EXTEND format whenever sending a TAP
    handshake, and MUST use it whenever the EXTEND cell will be handled
@@ -1245,27 +1249,35 @@ see tor-design.pdf.
       1. Create an onion skin, encrypted to R_M's public onion key.
 
       2. Send the onion skin in a relay EXTEND cell along
-         the circuit (see section 5).
+         the circuit (see sections 5.1.2 and 5.5).
 
       3. When a relay EXTENDED cell is received, verify KH, and
          calculate the shared keys.  The circuit is now extended.
 
    When an onion router receives an EXTEND relay cell, it sends a CREATE
    cell to the next onion router, with the enclosed onion skin as its
-   payload.  As special cases, if the extend cell includes a digest of
+   payload.
+
+   When an onion router receives an EXTEND2 relay cell, it sends a CREATE2
+   cell to the next onion router, with the enclosed HLEN, HTYPE, and HDATA
+   as its payload.
+
+   As special cases, if the extend cell includes a digest of
    all zeroes, or asks to extend back to the relay that sent the extend
    cell, the circuit will fail and be torn down. The initiating onion
    router chooses some circID not yet used on the connection between the
    two onion routers.  (But see section 5.1.1 above, concerning choosing
-   circIDs based on lexicographic order of nicknames.)
+   circIDs.)
 
-   When an onion router receives a CREATE cell, if it already has a
+   When an onion router receives a CREATE/CREATE2 cell, if it already has a
    circuit on the given connection with the given circID, it drops the
-   cell.  Otherwise, after receiving the CREATE cell, it completes the
-   DH handshake, and replies with a CREATED cell.  Upon receiving a
-   CREATED cell, an onion router packs it payload into an EXTENDED relay
-   cell (see section 5), and sends that cell up the circuit.  Upon
-   receiving the EXTENDED relay cell, the OP can retrieve g^y.
+   cell. Otherwise, after receiving the CREATE/CREATE2 cell, it completes
+   the specified handshake, and replies with a CREATED/CREATED2 cell.
+
+   Upon receiving a CREATED/CREATED2 cell, an onion router packs it payload
+   into an EXTENDED/EXTENDED2 relay cell (see section 5.1.2), and sends
+   that cell up the circuit. Upon receiving the EXTENDED/EXTENDED2 relay
+   cell, the OP can retrieve the handshake material.
 
    (As an optimization, OR implementations may delay processing onions
    until a break in traffic allows time to do so without harming
@@ -1353,18 +1365,35 @@ see tor-design.pdf.
 
 5.5. Routing relay cells
 
-   When an OR receives a RELAY or RELAY_EARLY cell, it checks the cell's
-   circID and determines whether it has a corresponding circuit along that
-   connection.  If not, the OR drops the cell.
+5.5.1. Circuit ID Checks
 
-   Otherwise, if the OR is not at the OP edge of the circuit (that is,
-   either an 'exit node' or a non-edge node), it de/encrypts the payload
+   When a node wants to send a RELAY or RELAY_EARLY cell, it checks the cell's
+   circID and determines whether the corresponding circuit along that
+   connection is still open. If not, the node drops the cell.
+
+   When a node receives a RELAY or RELAY_EARLY cell, it checks the cell's
+   circID and determines whether it has a corresponding circuit along
+   that connection. If not, the node drops the cell.
+
+5.5.2. Forward Direction
+
+   The forward direction is the direction that CREATE cells are sent.
+
+5.5.2.1. Routing from the Origin
+
+   When a relay cell is sent from an OP, the OP encrypts the payload
+   with the stream cipher as follows:
+      OP sends relay cell:
+         For I=N...1, where N is the destination node:
+            Encrypt with Kf_I.
+         Transmit the encrypted cell to node 1.
+
+5.5.2.2. Relaying Forward at Onion Routers
+
+   When a forward relay cell is received by an OR, it decrypts the payload
    with the stream cipher, as follows:
-        'Forward' relay cell (same direction as CREATE):
-            Use Kf as key; decrypt.
-        'Back' relay cell (opposite direction from CREATE):
-            Use Kb as key; encrypt.
-   Note that in counter mode, decrypt and encrypt are the same operation.
+      'Forward' relay cell:
+         Use Kf as key; decrypt.
 
    The OR then decides whether it recognizes the relay cell, by
    inspecting the payload as described in section 6.1 below.  If the OR
@@ -1374,14 +1403,29 @@ see tor-design.pdf.
    encounters an unrecognized relay cell, an error has occurred: the OR
    sends a DESTROY cell to tear down the circuit.
 
+   For more information, see section 6 below.
+
+5.5.3. Backward Direction
+
+   The backward direction is the opposite direction from CREATE cells.
+
+5.5.3.1. Relaying Backward at Onion Routers
+
+   When a backward relay cell is received by an OR, it encrypts the payload
+   with the stream cipher, as follows:
+      'Backward' relay cell:
+         Use Kb as key; encrypt.
+
+5.5.3. Routing to the Origin
+
    When a relay cell arrives at an OP, the OP decrypts the payload
    with the stream cipher as follows:
-         OP receives data cell:
-            For I=N...1,
-                Decrypt with Kb_I.  If the payload is recognized (see
-                section 6..1), then stop and process the payload.
-
-   For more information, see section 6 below.
+         OP receives relay cell from node 1:
+            For I=1...N, where N is the final node on the circuit:
+                Decrypt with Kb_I.
+                If the payload is recognized (see section 6.1), then:
+                    The sending node is I.
+                    Stop and process the payload.
 
 5.6. Handling relay_early cells
 
