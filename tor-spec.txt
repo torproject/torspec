@@ -420,7 +420,7 @@ see tor-design.pdf.
 
         CircID                                [CIRCID_LEN bytes]
         Command                               [1 byte]
-        Payload (padded with 0 bytes)         [PAYLOAD_LEN bytes]
+        Payload (padded with padding bytes)   [PAYLOAD_LEN bytes]
 
    On a version 2 or higher connection, all cells are as in version 1
    connections, except for variable-length cells, whose format is:
@@ -428,7 +428,11 @@ see tor-design.pdf.
         CircID                                [CIRCID_LEN octets]
         Command                               [1 octet]
         Length                                [2 octets; big-endian integer]
-        Payload                               [Length bytes]
+        Payload (some commands MAY pad)       [Length bytes]
+
+   Most variable-length cells MAY be padded with padding bytes, except
+   for VERSIONS cells, which MUST NOT contain any additional bytes.
+   (The payload of VPADDING cells consists of padding bytes.)
 
    On a version 2 connection, variable-length cells are indicated by a
    command byte equal to 7 ("VERSIONS").  On a version 3 or
@@ -467,7 +471,8 @@ see tor-design.pdf.
          132 -- AUTHORIZE (Client authorization)    (Not yet used)
 
    The interpretation of 'Payload' depends on the type of the cell.
-      PADDING: Payload is unused.
+      VPADDING/PADDING:
+               Payload contains padding bytes.
       CREATE:  Payload contains the handshake challenge.
       CREATED: Payload contains the handshake response.
       RELAY:   Payload contains the relay header and relay body.
@@ -477,7 +482,24 @@ see tor-design.pdf.
    drop the cell.  Since more cell types may be added in the future, ORs
    should generally not warn when encountering unrecognized commands.
 
-   The payload is padded with 0 bytes.
+   The cell is padded up to the cell length with padding bytes.
+
+   Senders set padding bytes depending on the cell's command:
+      VERSIONS:  Payload MUST NOT contain padding bytes.
+      AUTHORIZE: Payload is unspecified and reserved for future use.
+      Other variable-length cells:
+                 Payload MAY contain padding bytes at the end of the cell.
+                 Padding bytes SHOULD be set to NUL.
+      RELAY:     Payload MUST be padded to PAYLOAD_LEN with padding bytes.
+                 Padding bytes SHOULD be set to random values.
+      Other fixed-length cells:
+                 Payload MUST be padded to PAYLOAD_LEN with padding bytes.
+                 Padding bytes SHOULD be set to NUL.
+   We recommend random padding in RELAY cells, so that cell content is
+   unpredictable. See proposal 289 for details. For non-RELAY cells, TLS
+   authenticates cell content, so randomised padding bytes are redundant.
+
+   Receivers MUST ignore padding bytes.
 
    PADDING cells are currently used to implement connection keepalive.
    If there is no other traffic, ORs and OPs send one another a PADDING
@@ -836,6 +858,7 @@ see tor-design.pdf.
    The address format is a type/length/value sequence as given in
    section 6.4 below, without the final TTL.  The timestamp is a
    big-endian unsigned integer number of seconds since the Unix epoch.
+   Implementations MUST ignore unexpected bytes at the end of the cell.
 
    Implementations MAY use the timestamp value to help decide if their
    clocks are skewed.  Initiators MAY use "other OR's address" to help
@@ -1524,7 +1547,9 @@ see tor-design.pdf.
 
    The 'Length' field of a relay cell contains the number of bytes in
    the relay payload which contain real payload data. The remainder of
-   the payload is padded with NUL bytes.
+   the unencrypted payload is padded with padding bytes. Implementations
+   handle padding bytes of unencrypted relay cells as they do padding
+   bytes for other cell types; see Section 3.
 
    If the RELAY cell is recognized but the relay command is not
    understood, the cell must be dropped and ignored. Its contents
@@ -1766,8 +1791,8 @@ see tor-design.pdf.
 
    Link padding can be created by sending PADDING or VPADDING cells
    along the connection; relay cells of type "DROP" can be used for
-   long-range padding.  The contents of a PADDING, VPADDING, or DROP
-   cell SHOULD be chosen randomly, and MUST be ignored.
+   long-range padding.  The payloads of PADDING, VPADDING, or DROP
+   cells are filled with padding bytes. See Section 3.
 
    If the link protocol is version 5 or higher, link level padding is
    enabled as per padding-spec.txt. On these connections, clients may
