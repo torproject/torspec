@@ -1343,6 +1343,15 @@ Table of contents:
           The link-specifiers is a base64 encoding of a link specifier
           block in the format described in BUILDING-BLOCKS.
 
+          The client SHOULD NOT reject any LSTYPE fields which it doesn't
+          recognize; instead, it should use them verbatim in its EXTEND
+          request to the introduction point.
+
+          The client MAY perform basic validity checks on the link
+          specifiers in the descriptor. These checks SHOULD NOT leak
+          detailed information about the client's version, configuration,
+          or consensus. (See 3.3 for service link specifier handling.)
+
         "onion-key" SP "ntor" SP key NL
 
           [Exactly once per introduction point]
@@ -1702,9 +1711,10 @@ Table of contents:
    in [BUILDING-BLOCKS], the "TLS-over-TCP, IPv4" and "Legacy node
    identity" specifiers must be present.
 
-   The hidden service SHOULD NOT reject any LSTYPE fields which it
-   doesn't recognize; instead, it should use them verbatim in its EXTEND
-   request to the rendezvous point.
+   The hidden service should handle invalid or unrecognised link specifiers
+   the same way as clients do in section 2.5.2.2. In particular, services
+   MAY perform basic validity checks on link specifiers, and SHOULD NOT
+   reject unrecognised link specifiers, to avoid information leaks.
 
    The ONION_KEY_TYPE field is:
 
