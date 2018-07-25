@@ -1402,7 +1402,7 @@ Table of contents:
           legacy protocol (v2) that is <= 0.2.9 or the protocol version value
           "HSIntro 3".
 
-        "legacy-key-cert NL certificate NL
+        "legacy-key-cert" NL certificate NL
 
           [None or at most once per introduction point]
 
