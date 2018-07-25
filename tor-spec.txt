@@ -1219,13 +1219,15 @@ see tor-design.pdf.
    When creating a circuit through the network, the circuit creator
    (OP) performs the following steps:
 
-      1. Choose an onion router as an exit node (R_N), such that the onion
-         router's exit policy includes at least one pending stream that
-         needs a circuit (if there are any).
+      1. Choose an onion router as an end node (R_N):
+         * N MAY be 1 for non-anonymous directory mirror, introduction point,
+           or service rendezvous connections.
+         * N SHOULD be 3 or more for anonymous connections.
+         Some end nodes accept streams (see 6.1), others are introduction
+         or rendezvous points (see rend-spec-{v2,v3}.txt).
 
-      2. Choose a chain of (N-1) onion routers
-         (R_1...R_N-1) to constitute the path, such that no router
-         appears in the path twice.
+      2. Choose a chain of (N-1) onion routers (R_1...R_N-1) to constitute
+         the path, such that no router appears in the path twice.
 
       3. If not already connected to the first router in the chain,
          open a new connection to that router.
@@ -1463,10 +1465,15 @@ see tor-design.pdf.
 
 6.1. Relay cells
 
-   Within a circuit, the OP and the exit node use the contents of
+   Within a circuit, the OP and the end node use the contents of
    RELAY packets to tunnel end-to-end commands and TCP connections
    ("Streams") across circuits.  End-to-end commands can be initiated
    by either edge; streams are initiated by the OP.
+
+   End nodes that accept streams may be:
+   * exit relays (RELAY_BEGIN, anonymous),
+   * directory servers (RELAY_BEGIN_DIR, anonymous or non-anonymous),
+   * onion services (RELAY_BEGIN, anonymous via a rendezvous point).
 
    The payload of each unencrypted RELAY cell consists of:
          Relay command           [1 byte]
@@ -1493,7 +1500,7 @@ see tor-design.pdf.
         14 -- RELAY_EXTEND2   [forward]             [control]
         15 -- RELAY_EXTENDED2 [backward]            [control]
 
-        32..40 -- Used for hidden services; see rend-spec.txt.
+        32..40 -- Used for hidden services; see rend-spec-{v2,v3}.txt.
 
    Commands labelled as "forward" must only be sent by the originator
    of the circuit. Commands labelled as "backward" must only be sent by
@@ -1626,6 +1633,12 @@ see tor-design.pdf.
    connection to its directory port.  RELAY_BEGIN_DIR cells ignore exit
    policy, since the stream is local to the Tor process.
 
+   Directory servers may be:
+   * authoritative directories (RELAY_BEGIN_DIR, usually non-anonymous),
+   * bridge authoritative directories (RELAY_BEGIN_DIR, anonymous),
+   * directory mirrors (RELAY_BEGIN_DIR, usually non-anonymous),
+   * onion service directories (RELAY_BEGIN_DIR, anonymous).
+
    If the Tor relay is not running a directory service, it should respond
    with a REASON_NOTDIRECTORY RELAY_END cell.
 
@@ -1690,9 +1703,9 @@ see tor-design.pdf.
    Because TCP connections can be half-open, we follow an equivalent
    to TCP's FIN/FIN-ACK/ACK protocol to close streams.
 
-   An exit connection can have a TCP stream in one of three states:
-   'OPEN', 'DONE_PACKAGING', and 'DONE_DELIVERING'.  For the purposes
-   of modeling transitions, we treat 'CLOSED' as a fourth state,
+   An exit (or onion service) connection can have a TCP stream in one of
+   three states: 'OPEN', 'DONE_PACKAGING', and 'DONE_DELIVERING'.  For the
+   purposes of modeling transitions, we treat 'CLOSED' as a fourth state,
    although connections in this state are not, in fact, tracked by the
    onion router.
 
