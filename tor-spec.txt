@@ -1154,14 +1154,11 @@ see tor-design.pdf.
    Once both parties have X and Y, they derive their shared circuit keys
    and 'derivative key data' value via the KDF-TOR function in 5.2.1.
 
-   If an OR sees a circuit created with CREATE_FAST, the OR is sure to be the
-   first hop of a circuit.  ORs SHOULD reject attempts to create streams with
-   RELAY_BEGIN exiting the circuit at the first hop: letting Tor be used as a
-   single hop proxy makes exit nodes a more attractive target for compromise.
-
    The CREATE_FAST handshake is currently deprecated whenever it is not
    necessary; the migration is controlled by the "usecreatefast"
    networkstatus parameter as described in dir-spec.txt.
+
+   [Tor 0.3.1.1-alpha and later disable CREATE_FAST by default.]
 
 5.2. Setting circuit keys
 
@@ -1305,8 +1302,24 @@ see tor-design.pdf.
 
    Circuits are torn down when an unrecoverable error occurs along
    the circuit, or when all streams on a circuit are closed and the
-   circuit's intended lifetime is over.  Circuits may be torn down
-   either completely or hop-by-hop.
+   circuit's intended lifetime is over.
+
+   ORs SHOULD also tear down circuits which attempt to create:
+   * streams with RELAY_BEGIN, or
+   * rendezvous points with ESTABLISH_RENDEZVOUS,
+   ending at the first hop. Letting Tor be used as a single hop proxy makes
+   exit and rendezvous nodes a more attractive target for compromise.
+
+   ORs MAY use multiple methods to check if they are the first hop:
+   * If an OR sees a circuit created with CREATE_FAST, the OR is sure to be
+     the first hop of a circuit.
+   * If an OR is the responder, and the initiator:
+     * did not authenticate the link, or
+     * authenticated with a key that is not in the consensus,
+     then the OR is probably the first hop of a circuit (or the second hop of
+     a circuit via a bridge relay).
+
+   Circuits may be torn down either completely or hop-by-hop.
 
    To tear down a circuit completely, an OR or OP sends a DESTROY
    cell to the adjacent nodes on that circuit, using the appropriate
