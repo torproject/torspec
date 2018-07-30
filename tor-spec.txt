@@ -476,7 +476,7 @@ see tor-design.pdf.
                Payload contains padding bytes.
       CREATE/CREATE2:  Payload contains the handshake challenge.
       CREATED/CREATED2: Payload contains the handshake response.
-      RELAY:   Payload contains the relay header and relay body.
+      RELAY/RELAY_EARLY: Payload contains the relay header and relay body.
       DESTROY: Payload contains a reason for closing the circuit.
                (see 5.4)
    Upon receiving any other value for the command field, an OR must
@@ -491,14 +491,15 @@ see tor-design.pdf.
       Other variable-length cells:
                  Payload MAY contain padding bytes at the end of the cell.
                  Padding bytes SHOULD be set to NUL.
-      RELAY:     Payload MUST be padded to PAYLOAD_LEN with padding bytes.
-                 Padding bytes SHOULD be set to random values.
+      RELAY/RELAY_EARLY: Payload MUST be padded to PAYLOAD_LEN with padding
+                  bytes. Padding bytes SHOULD be set to random values.
       Other fixed-length cells:
                  Payload MUST be padded to PAYLOAD_LEN with padding bytes.
                  Padding bytes SHOULD be set to NUL.
-   We recommend random padding in RELAY cells, so that cell content is
-   unpredictable. See proposal 289 for details. For non-RELAY cells, TLS
-   authenticates cell content, so randomised padding bytes are redundant.
+   We recommend random padding in RELAY/RELAY_EARLY cells, so that the cell
+   content is unpredictable. See proposal 289 for details. For other
+   cells, TLS authenticates cell content, so randomised padding bytes are
+   redundant.
 
    Receivers MUST ignore padding bytes.
 
