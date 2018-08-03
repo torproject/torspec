@@ -864,15 +864,8 @@
       this is *not* the latest descriptors we've published, but rather what we
       would generate if we needed to make a new descriptor right now.
 
-    "net/listeners/or"
-    "net/listeners/dir"
-    "net/listeners/socks"
-    "net/listeners/trans"
-    "net/listeners/natd"
-    "net/listeners/dns"
-    "net/listeners/control"
-    "net/listeners/extor"
-    "net/listeners/httptunnel"
+    "net/listeners/*"
+
       A quoted, space-separated list of the locations where Tor is listening
       for connections of the specified type. These can contain IPv4
       network address...
@@ -888,6 +881,46 @@
         "[2001:0db8:7000:0000:0000:dead:beef:1234]:9050"
 
       [New in Tor 0.2.2.26-beta.]
+
+    "net/listeners/or"
+
+      Listeners for OR connections. Talks Tor protocol as described in
+      tor-spec.txt.
+
+    "net/listeners/dir"
+
+      Listeners for Tor directory protocol, as decribed in dir-spec.txt.
+
+    "net/listeners/socks"
+
+      Listeners for onion proxy connections that talk SOCKS4/4a/5 protocol.
+
+    "net/listeners/trans"
+
+      Listeners for transparent connections redirected by firewall, such as
+      pf or netfilter.
+
+    "net/listeners/natd"
+
+      Listeners for transparent connections redirected by natd.
+
+    "net/listeners/dns"
+
+      Listeners for a subset of DNS protocol that Tor network supports.
+
+    "net/listeners/control"
+
+      Listeners for Tor control protocol, described herein.
+
+    "net/listeners/extor"
+
+      Listeners corresponding to Extended ORPorts for integration with
+      pluggable transports. See proposals 180 and 196.
+
+    "net/listeners/httptunnel"
+
+      Listeners for onion proxy connections that leverage HTTP CONNECT
+      tunnelling.
 
       [The extor and httptunnel lists were added in 0.3.2.12, 0.3.3.10, and
       0.3.4.6-rc.]
