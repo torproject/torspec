@@ -564,8 +564,7 @@
       ExitPolicyRejectLocalInterfaces. These lines are based on the public
       addresses configured in the torrc and present on the relay's
       interfaces. Will send 552 error if the server is not running as
-      onion router or if there's non-transient internal error. Will send
-      551 on transient internal error.
+      onion router. Will send 551 on internal error which may be transient.
 
     "exit-policy/ipv4"
     "exit-policy/ipv6"
