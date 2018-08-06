@@ -1655,7 +1655,7 @@ Table of contents:
    If the cell is not a replay, it decrypts the ENCRYPTED field,
    establishes a shared key with the client, and authenticates the whole
    contents of the cell as having been unmodified since they left the
-   client. There may be multiple ways of decrypting the ENCRYTPED field,
+   client. There may be multiple ways of decrypting the ENCRYPTED field,
    depending on the chosen type of the encryption key. Requirements for
    an introduction handshake protocol are described in
    [INTRO-HANDSHAKE-REQS]. We specify one below in section
