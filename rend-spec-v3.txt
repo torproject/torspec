@@ -2349,7 +2349,7 @@ Appendix G. Managing authorized client data [CLIENT-AUTH-MGMT]
      directory which hosts ".auth_private" files containing client-side
      credentials for onion services:
 
-         ClientOnionAuth <DIR>
+         ClientOnionAuthDir <DIR>
 
      The <DIR> contains a file with the suffix ".auth_private" for each onion
      service the client is authorized with. Tor should scan the directory for
