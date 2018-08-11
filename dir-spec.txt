@@ -2631,6 +2631,10 @@
 
      http://<hostname>/tor/status-vote/next/authority.z
 
+   To avoid inconsistent reads, authorities SHOULD only read the bandwidth
+   file once per voting period. Further processing and serving SHOULD use a
+   cached copy.
+
    The bandwidth list format is described in bandwidth-file-spec.txt.
 
    The standard URLs for bandwidth list files first-appeared in Tor 0.3.5.
