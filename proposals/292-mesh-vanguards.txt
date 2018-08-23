@@ -457,6 +457,12 @@ Supersedes: 247
   https://github.com/mikeperry-tor/vanguards/blob/master/vanguards/vanguards.py
 
 
+6. Acknowledgements
+
+  This research was supported in part by NSF grants CNS-1111539,
+  CNS-1314637, CNS-1526306, CNS-1619454, and CNS-1640548.
+
+
 Appendix A: Full Python program for generating tables in this proposal
 
 #!/usr/bin/python

@@ -683,6 +683,9 @@ XXX: Re-use Prop#259 here.
  Thanks to Aaron Johnson, John Brooks, Mike Perry and everyone else
  who helped with this idea.
 
+ This research was supported in part by NSF grants CNS-1111539,
+ CNS-1314637, CNS-1526306, CNS-1619454, and CNS-1640548.
+
 
 Appendix A: Full Python program for generating tables in this proposal
 
