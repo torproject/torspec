@@ -120,7 +120,7 @@
   "\0" ... "\377" represent newline, tab, carriage return, and the
   256 possible octet values respectively.
 
-  The use of CString in this document reflect a bug in Tor;
+  The use of CString in this document reflects a bug in Tor;
   they should have been QuotedString instead.  In the future, they
   may migrate to use QuotedString instead.  If they do, the
   QuotedString implementation will never place a backslash before a
