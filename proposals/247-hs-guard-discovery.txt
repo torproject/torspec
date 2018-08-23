@@ -31,8 +31,8 @@ analysis and experiences while implementing and simulating the vanguard design.]
   an improvement over the current state where the Sybil attack is
   trivial to pull off, and only a single compromise attack is required.
 
-  With this new path selection, an attacker is forced to do a one or
-  more node compromise attacks before learning the guard node of a hidden
+  With this new path selection, an attacker is forced to
+  compromise one or more nodes before learning the guard node of a hidden
   service. This increases the uncertainty of the attacker, since
   compromise attacks are costly and potentially detectable, so an
   attacker will have to think twice before beginning a chain of node
