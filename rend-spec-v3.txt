@@ -1214,7 +1214,7 @@ Table of contents:
       And here is what the hidden service computes:
 
           SECRET_SEED = x25519(hs_y, client_X)
-          KEYS = KDF(SECRET_SEED, 40)
+          KEYS = KDF(subcredential | SECRET_SEED, 40)
           CLIENT-ID = fist 8 bytes of KEYS
           COOKIE-KEY = last 32 bytes of KEYS
 
