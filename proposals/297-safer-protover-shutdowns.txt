@@ -1,0 +1,98 @@
+Filename: 297-safer-protover-shutdowns.txt
+Title: Relaxing the protover-based shutdown rules
+Author: Nick Mathewson
+Created: 19-Sep-2018
+Status: Open
+Target: 0.3.5.x
+
+1. Introduction
+
+   In proposal 264 (now implemented) we introduced the subprotocol
+   versioning mechanism to better handle forward-compatibility in
+   the Tor network.  Included was a mechanism for safely disabling
+   obsolete versions of Tor that no longer ran any supported
+   protocols.  If a version of Tor receives a consensus that lists
+   as "required" any protocol version that it cannot speak, Tor will
+   not start--even if the consensus is in its cache.
+
+   The intended use case for this is that once some protocol has
+   been provided by all supported versions for a long time, the
+   authorities can mark it as "required".  We had thought about the
+   "adding a requirement" case mostly.
+
+   This past weekend, though, we found an unwanted side-effect: it
+   is hard to safely *un*-require a currently required protocol.
+
+   Here's what happened:
+
+      - Long ago, we created the LinkAuth=1 protocol, which required
+        direct access to the ClientRandom and ServerRandom fields.
+        (0.2.3.6-alpha)
+
+      - Later, once we implemented Ed25519 identity keys, we added
+        an improved LinkAuth=3 protocol, which uses the RFC5705 "key
+        export" mechanism. (0.3.0.1-alpha)
+
+      - When we added the subprotocols mechanism, we listed
+        LinkAuth=1 as required. (backported to 0.2.9.x)
+
+      - While porting Tor to NSS, we found that LinkAuth=1 couldn't
+        be supported, because NSS wisely declines to expose the TLS
+        fields it uses.  So we removed "LinkAuth=1" from the
+        required list (backported to 0.3.2.x), and got a bunch of
+        authorities to upgrade.
+
+      - In 0.3.5.1-alpha, once enough authorities had upgraded, we
+        removed "LinkAuth=1" from the supported subprotocols list
+        when Tor is running with NSS. [*]
+
+      - We found, however, that this change could cause a bug when
+        Tor+NSS started with a cached consensus that was created before
+        LinkAuth=1 was removed from the requirements.  Tor would
+        decline to start, because the (old) consensus told it that
+        LinkAuth=1 was required.
+
+   This proposal discusses two alternatives for making it safe to
+   remove required subprotocol versions in the future.
+
+
+   [*] There was actually a bug here where OpenSSL removed LinkAuth=1
+       too, but that's mostly beside the point for this timeline, other
+       than the fact it would have made things waaay worse if people
+       hadn't caught it.
+
+2. Recommended change: consider the consensus date.
+
+   I propose that when deciding whether to shut down because of
+   subprotocol requirements, a Tor implementation should only shut
+   down if the consensus is dated to some time after the
+   implementation's release date.
+
+   With this change, an old cached consensus cannot cause the
+   implementation to shut down, but a newer one can.  This makes it
+   safe to put out a release that does not support a formerly
+   required protocol, so long as the authorities have upgraded to
+   stop requiring that protocol.
+
+   (It is safe to use the *scheduled* release date for the
+   implementation, plus a few months -- just so long as we don't
+   plan to start requiring a subprotocol that's not supported by the
+   latest version of Tor.)
+
+3. Not-recommended change: ignore the cached consensus.
+
+   Was it a mistake to have Tor consider a cached consensus when
+   deciding whether to shut down?
+
+   The rationale for considering the cached consensus was that when
+   a Tor implementation is obsolete, we don't want it hammering on
+   the network, probing for new consensuses, and possibly
+   reconnecting aggressively as its handshakes fail.  That still
+   seems compelling to me, though it's possible that if we find some
+   problem with the methodology from section 2 above, we'll need to
+   find some other way to achieve this goal.
+
+
+
+
+
