@@ -395,3 +395,8 @@ Status: Open
    [1] https://www.freehaven.net/anonbib/#sniper14
    [2] https://www.freehaven.net/anonbib/#torta05
    [3] https://www.freehaven.net/anonbib/#congestion-longpaths
+
+8. Acknowledgements
+
+  This research was supported in part by NSF grants CNS-1111539,
+  CNS-1314637, CNS-1526306, CNS-1619454, and CNS-1640548.
