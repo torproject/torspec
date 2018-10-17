@@ -4,7 +4,7 @@
 
 0. Preface
 
- This document describes GetTor and how to properly implementation GetTor.
+ This document describes GetTor and how to properly implement GetTor.
 
 1. Overview
 
@@ -15,7 +15,7 @@
  filtering of the possible download sites is sometimes easy to bypass by using
  our TLS enabled website. In other cases the website and all of the mirrors are
  entirely blocked; this is a situation where a user seems to actually need Tor
- to fetch Tor. We discovered that it is feasible to use alternate transport
+ to fetch Tor. We discovered that it is feasible to use alternative transport
  methods such as SMTP between a non-trusted third party or with IRC and XDCC.
 
 2. Implementation
@@ -60,7 +60,7 @@
 
  GetTor may optionally collect anonymized usage statistics to better understand
  how GetTor[1] is in use. This must not include any personally identifying
- information about any of the requester beyond language selection.
+ information about any of the requesters beyond language selection.
 
 4. Other transports
 
