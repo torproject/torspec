@@ -2347,7 +2347,7 @@ Appendix G. Managing authorized client data [CLIENT-AUTH-MGMT]
 
      Here is an an example:
 
-        descriptor:x25519:5c8eac469bb3f1b85bc7cd893f52dc42a9ab66f1b02b5ce6a68e9b175d3bb433
+        descriptor:x25519:OM7TGIVRYMY6PFX6GAC6ATRTA5U6WW6U7A4ZNHQDI6OVL52XVV2Q
 
      Tor SHOULD ignore lines it does not recognize.
      Tor SHOULD ignore files that don't use the ".auth" suffix.
