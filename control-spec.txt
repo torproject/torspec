@@ -1671,8 +1671,18 @@
 
   (The KeyBlob format is left intentionally opaque, however for "RSA1024"
   keys it is currently the Base64 encoded DER representation of a PKCS#1
-  RSAPrivateKey, with all newlines removed. For a "ED25519-V3" key is a Base64
-  encoded ed25519 private key.)
+  RSAPrivateKey, with all newlines removed. For a "ED25519-V3" key is
+  the Base64 encoding of the concatenation of the 32-byte ed25519 secret
+  scalar in little-endian and the 32-byte ed25519 PRF secret.)
+
+  [Note: The ED25519-V3 format is not the same as, e.g., SUPERCOP
+  ed25519/ref, which stores the concatenation of the 32-byte ed25519
+  hash seed concatenated with the 32-byte public key, and which derives
+  the secret scalar and PRF secret by expanding the hash seed with
+  SHA-512.  Our key blinding scheme is incompatible with storing
+  private keys as seeds, so we store the secret scalar alongside the
+  PRF secret, and just pay the cost of recomputing the public key when
+  importing an ED25519-V3 key.]
 
   (The "NEW:BEST" option obeys the HiddenServiceVersion torrc option default
   value. Currently it is 2.)
