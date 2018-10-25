@@ -3260,6 +3260,29 @@
 
   [NETWORK_LIVENESS was added in Tor 0.2.7.2-alpha]
 
+4.1.28. Pluggable Transport Logs
+
+   Syntax:
+      "650" SP "PT_LOG" SP PT=Program SP Message
+
+      Program = The program path as defined in the *TransportPlugin
+                configuration option. Tor accepts relative and full path.
+      Message = The log message that the PT sends back to the tor parent
+                process minus the "LOG" string prefix. Formatted as
+                specified in pt-spec.txt section 3.3.4.
+
+   This event is triggered when tor receives a log message from the PT.
+
+   Example:
+
+      PT (obfs4): LOG SEVERITY=debug MESSAGE="Connected to bridge A"
+
+    the resulting control port event would be:
+
+      Tor: 650 PT_LOG PT=/usr/bin/obfs4proxy SEVERITY=debug MESSAGE="Connected to bridge A"
+
+   [PT_LOG was added in Tor 0.4.0.1-alpha]
+
 5. Implementation notes
 
 5.1. Authentication
