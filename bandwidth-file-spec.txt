@@ -208,6 +208,66 @@ It consists of:
 
     This Line has been added in version 1.1.0 of this specification.
 
+  "percent_eligible_relays=" Int NL
+
+    [Zero or one time.]
+
+    The minimum percentage of eligible measured relays with respect
+    to the number of relays in the consensus to include in this file.
+
+    Implementations SHOULD include this KeyValue when
+    "minimum_percent_eligible_relays" is minor than
+    "percent_eligible_relays" and MAY not include any RelayLine.
+
+    This Line has been added in version 1.2.0 of this specification.
+
+  "minimum_number_eligible_relays=" Int NL
+
+    [Zero or one time.]
+
+    The minimum number of relays to include in the bandwidth file.
+
+    Implementations SHOULD include this KeyValue when
+    "minimum_percent_eligible_relays" is minor than
+    "percent_eligible_relays" and MAY not include any RelayLine.
+
+    This Line has been added in version 1.2.0 of this specification.
+
+  "number_consensus_relays=" Int NL
+
+    [Zero or one time.]
+
+    The number of relays in the consensus.
+
+    Implementations SHOULD include this KeyValue when
+    "minimum_percent_eligible_relays" is minor than
+    "percent_eligible_relays" and MAY not include any RelayLine.
+
+    This Line has been added in version 1.2.0 of this specification.
+
+  "number_eligible_relays=" Int NL
+
+    [Zero or one time.]
+
+    The number of relays that has been measured and are eligible to
+    include in the bandwidth file.
+
+    Implementations SHOULD include this KeyValue when
+    "minimum_percent_eligible_relays" is minor than
+    "percent_eligible_relays" and MAY not include any RelayLine.
+
+    This Line has been added in version 1.2.0 of this specification.
+
+  "minimum_percent_eligible_relays=" Int NL
+
+    [Zero or one time.]
+
+    Implementations SHOULD include this KeyValue when
+    "minimum_percent_eligible_relays" is minor than
+    "percent_eligible_relays" and MAY not include any RelayLine.
+
+    This Line has been added in version 1.2.0 of this specification.
+
   KeyValue NL
 
     [Zero or more times.]
