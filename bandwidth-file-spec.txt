@@ -495,6 +495,36 @@ Every RelayLine in sbws version 0.1.0 consists of:
     The number of times that the bandwidth measurements for this relay
     failed because of other reasons.
 
+  "bw_mean=" Int NL
+
+    [Zero or one time.]
+
+    The measured bandwidth mean for this relay.
+
+  "bw_median=" Int NL
+
+    [Zero or one time.]
+
+    The measured bandwidth median for this relay.
+
+  "desc_bw_average=" Int NL
+
+    [Zero or one time.]
+
+    The descriptor average bandwidth for this relay.
+
+  "desc_bw_obs_last=" Int NL
+
+    [Zero or one time.]
+
+    The last descriptor observed bandwidth for this relay.
+
+  "desc_bw_obs_mean=" Int NL
+
+    [Zero or one time.]
+
+    The descriptor observed bandwidth mean for this relay.
+
 2.4.2.2. Torflow
 
 Torflow RelayLines include node_id and bw, and other KeyValue pairs [2].
