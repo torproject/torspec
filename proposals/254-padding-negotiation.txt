@@ -305,21 +305,15 @@ We recommend that three consensus parameters be used in the event that
 the network is being overloaded from padding to such a degree that
 padding requests should be ignored:
 
-  * circpad_max_machine_padding_pct
-    - The maximum ratio of sent padding traffic to sent non-padding traffic
-      (expressed as a percent) to allow on a padding machine before ceasing
-      to pad. Ex: 75 means 75 padding packets for every 100
-      non-padding+padding packets. This definition is consistent with the
-      overhead values in Proposal #265.
-  * circpad_machine_allowed_cells
+  * circpad_global_max_padding_pct
+    - The maximum percent of sent padding traffic out of total traffic
+      to allow in a tor process before ceasing to pad. Ex: 75 means
+      75 padding packets for every 100 non-padding+padding packets.
+      This definition is consistent with the overhead values in Proposal
+      #265, though it does not take node position into account.
+  * circpad_global_allowed_cells
     - The number of padding cells that must be transmitted before the
-      per-machine ratio limit is applied.
-  * circpad_max_global_padding_pct
-    - The maximum ratio of sent padding traffic to sent non-padding traffic
-      (expressed as a percent) to allow globally at a client or relay
-      before ceasing to pad. Ex: 75 means 75 padding packets for every 100
-      non-padding+padding packets. This definition is consistent with the
-      overhead values in Proposal #265.
+      global ratio limit is applied.
 
 Additionally, each machine can specify its own per-machine limits for
 the allowed cell counters and padding overhead percentages.
