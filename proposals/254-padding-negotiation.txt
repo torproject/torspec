@@ -63,6 +63,12 @@ parameters:
     u16 ito_high_ms;
   };
 
+After the above cell is received, the guard should use the 'ito_low_ms' and
+'ito_high_ms' values as the minimum and maximum values (respectively) for
+inactivity before it decides to pad the channel. The actual timeout value is
+randomly chosen between those two values through an appropriate probability
+distribution (see proposal251 for the netflow padding protocol).
+
 More complicated forms of link-level padding can still be specified
 using the primitives in Section 3, by using "leaky pipe" topology to
 send the RELAY commands to the Guard node instead of to later nodes in
@@ -89,10 +95,11 @@ Each state machine can contain up to three states ("Start", "Burst" and
 
 Each state of a padding machine specifies either:
   * A histogram describing inter-arrival cell delays; OR
-  * A parameterized distribution for inter-arrival cell delays
+  * A parameterized delay probability distribution for inter-arrival cell delays
 
-In either case, the lower bound of the delay distribution can be specified as
-a parameter, or it can be learned by measuring the RTT of the circuit.
+In either case, the lower bound of the delay probability distribution can be
+specified as a parameter, or it can be learned by measuring the RTT of the
+circuit.
 
 If the histogram is used, it has an additional special "infinity" bin that
 means "infinite delay".
@@ -196,7 +203,7 @@ are defined:
 When all bins are empty in a histogram, the padding machine emits the internal
 "bins empty" event to itself.
 
-3.2. Machine Selection
+3.2. State Machine Selection
 
 Clients will select which of the defined available padding machines to use
 based on the conditions that these machines specify. These conditions include:
@@ -209,7 +216,16 @@ based on the conditions that these machines specify. These conditions include:
 
 Clients will only select machines whose conditions fully match given circuits.
 
-3.3. Machine Neogitation
+A machine is represented by a positive number that can be thought of as a "menu
+option" through the list of padding machines. The currently supported padding
+state machines are:
+
+        [1]: CIRCPAD_MACHINE_CIRC_SETUP
+
+             A padding machine that obscures the initial circuit setup in an
+             attempt to hide onion services.
+
+3.3. Machine Negotiation
 
 When a machine is selected, the client uses leaky-pipe delivery to send a
 RELAY_COMMAND_PADDING_NEGOTIATE to the target hop of the machine, using the
@@ -222,7 +238,7 @@ following trunnel relay cell payload format:
   struct circpad_negotiate {
     u8 version IN [0];
     u8 command IN [CIRCPAD_COMMAND_START, CIRCPAD_COMMAND_STOP];
-  
+
     /** Machine type is left unbounded because we can specify
      * new machines in the consensus */
     u8 machine_type;
@@ -230,6 +246,7 @@ following trunnel relay cell payload format:
 
 Upon receipt of a RELAY_COMMAND_PADDING_NEGOTIATE cell, the middle node sends
 a RELAY_COMMAND_PADDING_NEGOTIATED with the following format:
+
   /**
    * This command tells the relay to alter its min and max netflow
    * timeout range values, and send padding at that rate (resuming
@@ -238,11 +255,14 @@ a RELAY_COMMAND_PADDING_NEGOTIATED with the following format:
     u8 version IN [0];
     u8 command IN [CIRCPAD_COMMAND_START, CIRCPAD_COMMAND_STOP];
     u8 response IN [CIRCPAD_RESPONSE_OK, CIRCPAD_RESPONSE_ERR];
-  
+
     /** Machine type is left unbounded because we can specify
      * new machines in the consensus */
     u8 machine_type;
   };
+
+The 'machine_type' field should be the same as the one from the
+PADDING_NEGOTIATE cell.
 
 If the response field is CIRCPAD_RESPONSE_OK, padding was successfully
 negotiated. If it is CIRCPAD_RESPONSE_ERR, the machine is torn down and we do
