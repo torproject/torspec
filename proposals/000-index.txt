@@ -218,6 +218,7 @@ Proposals by number:
 295  Using ADL-GCM for relay cryptography (solving the crypto-tagging attack) [OPEN]
 296  Have Directory Authorities expose raw bandwidth list files [OPEN]
 297  Relaxing the protover-based shutdown rules [OPEN]
+298  Putting family lines in canonical form [OPEN]
 
 
 Proposals by status:
@@ -250,6 +251,7 @@ Proposals by status:
    295  Using ADL-GCM for relay cryptography (solving the crypto-tagging attack)
    296  Have Directory Authorities expose raw bandwidth list files
    297  Relaxing the protover-based shutdown rules [for 0.3.5.x]
+   298  Putting family lines in canonical form [for 0.3.6.x]
  ACCEPTED:
    188  Bridge Guards and other anti-enumeration defenses
    249  Allow CREATE cells with >505 bytes of handshake data

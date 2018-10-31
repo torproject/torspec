@@ -1,0 +1,62 @@
+Filename: 298-canonical-families.txt
+Title: Putting family lines in canonical form
+Author: Nick Mathewson
+Created: 31-Oct-2018
+Status: Open
+Target: 0.3.6.x
+
+1. Introduction
+
+   With ticket #27359, we begin encoding microdescriptor families in
+   memory in a reference-counted form, so that if 10 relays all list the
+   same family, their family only needs to be stored once.  For large
+   families, this has the potential to save a lot of RAM -- but only if
+   the families are the same across those relays.
+
+   Right now, family lines are often encoded in different ways, and
+   placed into consensuses and microdescriptor lines in whatever format
+   the relay reported.
+
+   This proposal describes an algorithm that authorities should use
+   while voting to place families into a canonical format.
+
+   This algorithm is forward-compatible, so that new family line formats
+   can be supported in the future.
+
+2. The canonicalizing algorithm
+
+   To make a the family listed in a router descriptor canonical:
+
+      For all entries of the form $hexid=name or $hexid~name, remove
+      the =name or ~name portion.
+
+      Remove all entries of the form $hexid, where hexid is not 40
+      hexadecimal characters long.
+
+      If an entry is a valid nickname, put it into lower case.
+
+      If an entry is a valid $hexid, put it into upper case.
+
+      If there are any entries, add a single $hexid entry for the relay
+      in question, so that it is a member of its own family.
+
+      Sort all entries in lexical order.
+
+      Remove duplicate entries.
+
+   Note that if an entry is not of the form "nickname", "$hexid",
+   "$hexid=nickname" or "$hexid~nickname", then it will be unchanged:
+   this is what makes the algorithm forward-compatible.
+
+3. When to apply this algorithm
+
+   We allocate a new consensus method number.  When building a consensus
+   using this method or later, before encoding a family entry into a
+   microdescriptor, the authorities should apply the algorithm above.
+
+   Relay MAY apply this algorithm to their own families before
+   publishing them.  Unlike authorities, relays SHOULD warn about
+   unrecognized family items.
+
+
+
