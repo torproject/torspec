@@ -74,6 +74,10 @@ using the primitives in Section 3, by using "leaky pipe" topology to
 send the RELAY commands to the Guard node instead of to later nodes in
 the circuit.
 
+Because the above link-level padding only sends padding cells if the link is
+idle, it can be used in combination with the more complicated circuit-level
+padding below, without compounding overhead effects.
+
 
 3. End-to-end circuit padding
 
@@ -90,16 +94,27 @@ consensus, and custom research machines can be listed in Torrc.
 Circuits can have either one or two state machines at both the origin and at a
 specified middle hop.
 
-Each state machine can contain up to three states ("Start", "Burst" and
-"Gap") governing their behavior. Not all states need to be used.
+Each state machine can contain up to three states ("Start", "Burst" and "Gap")
+governing their behavior, as well as an "END" state. Not all states need to be
+used.
 
 Each state of a padding machine specifies either:
   * A histogram describing inter-arrival cell delays; OR
   * A parameterized delay probability distribution for inter-arrival cell delays
 
 In either case, the lower bound of the delay probability distribution can be
-specified as a parameter, or it can be learned by measuring the RTT of the
-circuit.
+specified as the start_usec parameter, and/or it can be learned by measuring
+the RTT of the circuit at the middle node. For client-side machines, RTT
+measurement is always set to 0. RTT measurement at the middle node is
+calculated by measuring the difference between the time of arrival of an
+received cell (ie: away from origin) and the time of arrival of a sent cell
+(ie: towards origin). The RTT is continually updated so long as two cells do
+not arrive back-to-back in either direction. If the most recent measured RTT
+value is larger than our measured value so far, this larger value is used. If
+the most recent measured RTT value is lower than our measured value so far, it
+is averaged with our current measured value. (We favor longer RTTs slightly in
+this way, because circuits are growing away from the middle node and becoming
+longer).
 
 If the histogram is used, it has an additional special "infinity" bin that
 means "infinite delay".
@@ -128,54 +143,39 @@ When an event causes a transition to a state (or back to the same state), a
 delay is sampled from the histogram or delay distribution, and padding cell is
 scheduled to be sent after that delay.
 
-If a non-padding cell is sent before the timer, the timer is cancelled and a
+If a non-padding cell is sent before the timer, the timer is canceled and a
 new padding delay is chosen.
 
 3.1.1. Histogram Specification
 
 If a histogram is used by a state (as opposed to a fixed parameterized
 distribution), then each of the histograms' fields represent a probability
-distribution that is expanded into bins representing time periods a[i]..b[i]
-as follows:
+distribution that is encoded into bins of exponentially increasing width.
 
-start_usec,max_sec,histogram_len initialized from appropriate histogram
-body.
+The first bin of the histogram (bin 0) has 0 width, with a delay value of
+start_usec+rtt_estimate (from the machine definition, and rtt estimate above).
 
-n = histogram_len-1
-INFINITY_BIN = n
+The bin before the "infinity bin" has a time value of
+start_usec+rtt_estimate+range_sec*USEC_PER_SEC.
 
-a[0] = start_usec;
-b[0] = start_usec + max_sec*USEC_PER_SEC/2^(n-1);
-for(i=1; i < n; i++) {
-  a[i] = start_usec + max_sec*USEC_PER_SEC/2^(n-i)
-  b[i] = start_usec + max_sec*USEC_PER_SEC/2^(n-i-1)
-}
+The bins between these two points are exponentially spaced, so that smaller
+bin indexes represent narrower time ranges, doubling up until the last bin
+range of [(start_usec+rtt_estimate+range_sec*USEC_PER_SEC)/2,
+start_usec+rtt_estimate+range_sec*USEC_PER_SEC).
+
+This exponentially increasing bin width allows the histograms to most
+accurately represent small interpacket delay (where accuracy is needed), and
+devote less accuracy to larger timescales (where accuracy is not as
+important).
 
 To sample the delay time to send a padding packet, perform the
 following:
-
-  i = 0;
-  curr_weight = histogram[0];
-
-  tot_weight = sum(histogram);
-  bin_choice = crypto_rand_int(tot_weight);
-
-  while (curr_weight < bin_choice) {
-    curr_weight += histogram[i];
-    i++;
-  }
-
-  if (i == INFINITY_BIN)
-    return; // Don't send a padding packet
-
-  // Sample uniformly between a[i] and b[i]
-  send_padding_packet_at = a[i] + crypto_rand_int(b[i] - a[i]);
-
-In this way, the bin widths are exponentially increasing in width, where
-the width is set at max_sec/2^(n-i) seconds. This exponentially
-increasing bin width allows the histograms to most accurately represent
-small interpacket delay (where accuracy is needed), and devote less
-accuracy to larger timescales (where accuracy is not as important).
+  * Select a bin weighted by the number of tokens in its index compared to
+    the total.
+  * If the infinity bin is selected, do not schedule padding.
+  * If bin 0 is selected, schedule padding at exactly its time value.
+  * For other bins, uniformly sample a time value between this bin and
+    the next bin, and schedule padding then.
 
 3.1.2 Histogram Token Removal
 
@@ -262,7 +262,10 @@ a RELAY_COMMAND_PADDING_NEGOTIATED with the following format:
   };
 
 The 'machine_type' field should be the same as the one from the
-PADDING_NEGOTIATE cell.
+PADDING_NEGOTIATE cell. This is because, as an optimization, new machines can
+be installed at the client side immediately after tearing down an old machine.
+If the response machine type does not match the current machine type, the
+response was for a previous machine, and can be ignored.
 
 If the response field is CIRCPAD_RESPONSE_OK, padding was successfully
 negotiated. If it is CIRCPAD_RESPONSE_ERR, the machine is torn down and we do
