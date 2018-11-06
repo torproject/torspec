@@ -156,13 +156,12 @@ The first bin of the histogram (bin 0) has 0 width, with a delay value of
 start_usec+rtt_estimate (from the machine definition, and rtt estimate above).
 
 The remaining bins are exponentially spaced, starting at this offset and
-covering the range of the histogram, which is range_sec*USEC_PER_SEC.
+covering the range of the histogram, which is range_usec.
 
-The intermediate bins thus divide the timespan range_sec*USEC_PER_SEC with
-offset start_usec+rtt_estimate, so that smaller bin indexes represent narrower
-time ranges, doubling up until the last bin. The last bin before the "infinity
-bin" thus covers [start_usec+rtt_estimate+range_sec*USEC_PER_SEC/2,
-CIRCPAD_DELAY_INFINITE).
+The intermediate bins thus divide the timespan range_usec with offset
+start_usec+rtt_estimate, so that smaller bin indexes represent narrower time
+ranges, doubling up until the last bin. The last bin before the "infinity bin"
+thus covers [start_usec+rtt_estimate+range_usec/2, CIRCPAD_DELAY_INFINITE).
 
 This exponentially increasing bin width allows the histograms to most
 accurately represent small interpacket delay (where accuracy is needed), and
