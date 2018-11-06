@@ -201,14 +201,15 @@ are defined:
   * Closest -- Remove from the closest non-empty bin by index
   * Closest_time -- Remove from the closest non-empty bin by index, by time
 
-When all bins are empty in a histogram, the padding machine emits the internal
-"bins empty" event to itself.
+When all bins exept the infinity bin are empty in a histogram, the padding
+machine emits the internal "bins empty" event to itself.
 
 Bin 0 and the bin before the infinity bin both have special rules for purposes
 of token removal. While removing tokens, all values less than bin 0 are
 treated as part of bin 0, and all values greater than
 start_usec+rtt_estimate+range_sec are treated as part of the bin before the
-infinity bin.
+infinity bin. Tokens are not removed from the infinity bin when non-padding is
+sent. (They are only removed when an "infinite" delay is chosen).
 
 3.2. State Machine Selection
 
