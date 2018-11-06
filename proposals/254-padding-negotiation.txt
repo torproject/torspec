@@ -161,7 +161,8 @@ covering the range of the histogram, which is range_usec.
 The intermediate bins thus divide the timespan range_usec with offset
 start_usec+rtt_estimate, so that smaller bin indexes represent narrower time
 ranges, doubling up until the last bin. The last bin before the "infinity bin"
-thus covers [start_usec+rtt_estimate+range_usec/2, CIRCPAD_DELAY_INFINITE).
+thus covers [start_usec+rtt_estimate+range_usec/2,
+start_usec+rtt_estimate+range_usec).
 
 This exponentially increasing bin width allows the histograms to most
 accurately represent small interpacket delay (where accuracy is needed), and
@@ -202,6 +203,12 @@ are defined:
 
 When all bins are empty in a histogram, the padding machine emits the internal
 "bins empty" event to itself.
+
+Bin 0 and the bin before the infinity bin both have special rules for purposes
+of token removal. While removing tokens, all values less than bin 0 are
+treated as part of bin 0, and all values greater than
+start_usec+rtt_estimate+range_sec are treated as part of the bin before the
+infinity bin.
 
 3.2. State Machine Selection
 
