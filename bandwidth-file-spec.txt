@@ -258,7 +258,6 @@ It consists of:
 
     The number of relays that have enough measurements to be
     included in the bandwidth file.
-    include in the bandwidth file.
 
     Implementations SHOULD include this KeyValue when
     "minimum_percent_eligible_relays" is minor than
