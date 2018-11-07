@@ -535,7 +535,7 @@ ones that this bandwidth authority has measured for the relays that
 would be included in the next bandwidth authority's upcoming vote.
 
 1. Calculate the filtered bandwidth for each relay:
-   - choose the relay's measurements that are equal or greater than the
+   - choose the relay's measurements (`bw_j`) that are equal or greater than the
      mean of the measurements for this relay
    - calculate the mean of those measurements
 
