@@ -550,7 +550,7 @@ would be included in the next bandwidth authority's upcoming vote.
      bandwidth.
    - calculate the stream average by dividing the sum of all the
      relays' filtered bandwidth by the number of relays that have been
-     measured, ie, calculate the mean average or the relays' measured
+     measured (`n`), ie, calculate the mean average or the relays' measured
      bandwidth.
 
     In pseudocode:
