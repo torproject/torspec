@@ -47,6 +47,11 @@
    1.1.0 - Adds KeyValue Lines to the Header List section, add KeyValues
            to RelayLines and format versions.
 
+   1.2.0 - Adds new KeyValue Lines to the Header List section with
+           statistics about the number of relays included in the file.
+           Add new KeyValue Lines to the Relays' Bandwidth List section
+           with different bandwidth values.
+
   All Tor versions can consume format version 1.0.0.
   All Tor versions can consume format version 1.1.0,
   but they warn on additional header Lines.
