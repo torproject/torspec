@@ -578,7 +578,7 @@ would be included in the next bandwidth authority's upcoming vote.
     r_i = max(r_filt_i, r_strm_i)
 
 5. Calculate the scaled bandwidth for each relay:
-   The most recent descriptor observed bandwidth is multiplied by the ratio
+   The most recent descriptor observed bandwidth (`bw_obs_i`) is multiplied by the ratio
 
    In pseudocode:
 
