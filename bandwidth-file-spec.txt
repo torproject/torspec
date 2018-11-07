@@ -215,10 +215,6 @@ It consists of:
     The number of relays that have enough measurements to be
     included in the bandwidth file.
 
-    Implementations SHOULD include this KeyValue when
-    "minimum_percent_eligible_relays" is minor than
-    "percent_eligible_relays" and MAY not include any RelayLine.
-
     This Line has been added in version 1.2.0 of this specification.
 
   "minimum_percent_eligible_relays=" Int NL
@@ -233,10 +229,6 @@ It consists of:
     The minimum percentage is 60% in Torflow, so sbws uses
     60% as the default.
 
-    Implementations SHOULD include this KeyValue when
-    "minimum_percent_eligible_relays" is minor than
-    "percent_eligible_relays" and MAY not include any RelayLine.
-
     This Line has been added in version 1.2.0 of this specification.
 
   "number_consensus_relays=" Int NL
@@ -244,10 +236,6 @@ It consists of:
     [Zero or one time.]
 
     The number of relays in the consensus.
-
-    Implementations SHOULD include this KeyValue when
-    "minimum_percent_eligible_relays" is minor than
-    "percent_eligible_relays" and MAY not include any RelayLine.
 
     This Line has been added in version 1.2.0 of this specification.
 
@@ -262,10 +250,6 @@ It consists of:
         (number_eligible_relays * 100.0) / number_consensus_relays
     to the number of relays in the consensus to include in this file.
 
-    Implementations SHOULD include this KeyValue when
-    "minimum_percent_eligible_relays" is minor than
-    "percent_eligible_relays" and MAY not include any RelayLine.
-
     This Line has been added in version 1.2.0 of this specification.
 
   "minimum_number_eligible_relays=" Int NL
@@ -276,10 +260,6 @@ It consists of:
 
     This line SHOULD be equal to:
         number_consensus_relays * (minimum_percent_eligible_relays / 100.0)
-
-    Implementations SHOULD include this KeyValue when
-    "minimum_percent_eligible_relays" is minor than
-    "percent_eligible_relays" and MAY not include any RelayLine.
 
     This Line has been added in version 1.2.0 of this specification.
 
