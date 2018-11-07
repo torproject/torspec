@@ -231,6 +231,9 @@ It consists of:
 
     The minimum number of relays to include in the bandwidth file.
 
+    This line SHOULD be equal to:
+        number_consensus_relays * (minimum_percent_eligible_relays / 100.0)
+
     Implementations SHOULD include this KeyValue when
     "minimum_percent_eligible_relays" is minor than
     "percent_eligible_relays" and MAY not include any RelayLine.
