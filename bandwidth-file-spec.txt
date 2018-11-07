@@ -546,7 +546,7 @@ would be included in the next bandwidth authority's upcoming vote.
 2. Calculate network averages:
    - calculate the filtered average by dividing the sum of all the
      relays' filtered bandwidth by the number of relays that have been
-     measured, ie, calculate the mean average of the relays' filtered
+     measured (`n_filt`), ie, calculate the mean average of the relays' filtered
      bandwidth.
    - calculate the stream average by dividing the sum of all the
      relays' filtered bandwidth by the number of relays that have been
