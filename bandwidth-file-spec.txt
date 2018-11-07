@@ -212,7 +212,11 @@ It consists of:
 
     [Zero or one time.]
 
-    The minimum percentage of eligible measured relays with respect
+    The number of eligible relays, as a percentage of the number
+    of relays in the consensus.
+    
+    This line SHOULD be equal to:
+        (number_eligible_relays * 100.0) / number_consensus_relays
     to the number of relays in the consensus to include in this file.
 
     Implementations SHOULD include this KeyValue when
