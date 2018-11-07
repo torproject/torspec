@@ -567,7 +567,7 @@ would be included in the next bandwidth authority's upcoming vote.
    In pseudocode:
 
     r_filt_i = bw_filt_i / bw_avg_filt
-    r_strm_i = bw_avg_strm / bw_avg_strm
+    r_strm_i = bw_i / bw_avg_strm
 
 4. Calculate the final ratio for each relay:
    The final ratio is the larger between the filtered bandwidth and the
