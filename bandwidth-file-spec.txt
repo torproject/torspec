@@ -527,7 +527,7 @@ B.4. Torflow aggreation
 
 Torflow implements two methods to compute the bandwidth values from the
 (stream) bandwidth measurements: with and without PID control feedback.
-The method described here is the later (see Torflow specification,
+The method described here is without PID control (see Torflow specification,
 section 2.2).
 
 In the following sections, the relays' measured bandwidth refer to the
