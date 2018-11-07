@@ -256,7 +256,8 @@ It consists of:
 
     [Zero or one time.]
 
-    The number of relays that has been measured and are eligible to
+    The number of relays that have enough measurements to be
+    included in the bandwidth file.
     include in the bandwidth file.
 
     Implementations SHOULD include this KeyValue when
