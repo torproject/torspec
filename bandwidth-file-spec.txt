@@ -527,16 +527,16 @@ B.4. Torflow aggreation
 
 Torflow implements two methods to compute the bandwidth values from the
 (stream) bandwidth measurements: with and without PID control feedback.
-The method described here is without PID control (see Torflow specification,
-section 2.2).
+The method described here is without PID control (see Torflow
+specification, section 2.2).
 
 In the following sections, the relays' measured bandwidth refer to the
 ones that this bandwidth authority has measured for the relays that
 would be included in the next bandwidth authority's upcoming vote.
 
 1. Calculate the filtered bandwidth for each relay:
-   - choose the relay's measurements (`bw_j`) that are equal or greater than the
-     mean of the measurements for this relay
+   - choose the relay's measurements (`bw_j`) that are equal or greater
+     than the mean of the measurements for this relay
    - calculate the mean of those measurements
 
    In pseudocode:
@@ -546,12 +546,12 @@ would be included in the next bandwidth authority's upcoming vote.
 2. Calculate network averages:
    - calculate the filtered average by dividing the sum of all the
      relays' filtered bandwidth by the number of relays that have been
-     measured (`n`), ie, calculate the mean average of the relays' filtered
-     bandwidth.
+     measured (`n`), ie, calculate the mean average of the relays'
+     filtered bandwidth.
    - calculate the stream average by dividing the sum of all the
      relays' filtered bandwidth by the number of relays that have been
-     measured (`n`), ie, calculate the mean average or the relays' measured
-     bandwidth.
+     measured (`n`), ie, calculate the mean average or the relays'
+     measured bandwidth.
 
     In pseudocode:
 
@@ -559,10 +559,10 @@ would be included in the next bandwidth authority's upcoming vote.
       bw_avg_strm = bw_i / n
 
 3. Calculate ratios for each relay:
-   - calculate the filtered ratio by dividing each relay filtered bandwidth
-     by the filtered average
-   - calculate the stream ratio by dividing each relay measured bandwidth
-     by the stream average
+   - calculate the filtered ratio by dividing each relay filtered
+     bandwidth by the filtered average
+   - calculate the stream ratio by dividing each relay measured
+     bandwidth by the stream average
 
    In pseudocode:
 
@@ -578,12 +578,13 @@ would be included in the next bandwidth authority's upcoming vote.
     r_i = max(r_filt_i, r_strm_i)
 
 5. Calculate the scaled bandwidth for each relay:
-   The most recent descriptor observed bandwidth (`bw_obs_i`) is multiplied by the ratio
+   The most recent descriptor observed bandwidth (`bw_obs_i`) is
+   multiplied by the ratio
 
    In pseudocode:
 
    bw_new_i = r_i * bw_obs_i
 
-   <<In this way, the resulting network status consensus bandwidth values
-   are effectively re-weighted proportional to how much faster the node
-   was as compared to the rest of the network.>>
+   <<In this way, the resulting network status consensus bandwidth
+   values are effectively re-weighted proportional to how much faster
+   the node was as compared to the rest of the network.>>
