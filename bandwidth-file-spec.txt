@@ -208,50 +208,6 @@ It consists of:
 
     This Line has been added in version 1.1.0 of this specification.
 
-  "percent_eligible_relays=" Int NL
-
-    [Zero or one time.]
-
-    The number of eligible relays, as a percentage of the number
-    of relays in the consensus.
-    
-    This line SHOULD be equal to:
-        (number_eligible_relays * 100.0) / number_consensus_relays
-    to the number of relays in the consensus to include in this file.
-
-    Implementations SHOULD include this KeyValue when
-    "minimum_percent_eligible_relays" is minor than
-    "percent_eligible_relays" and MAY not include any RelayLine.
-
-    This Line has been added in version 1.2.0 of this specification.
-
-  "minimum_number_eligible_relays=" Int NL
-
-    [Zero or one time.]
-
-    The minimum number of relays to include in the bandwidth file.
-
-    This line SHOULD be equal to:
-        number_consensus_relays * (minimum_percent_eligible_relays / 100.0)
-
-    Implementations SHOULD include this KeyValue when
-    "minimum_percent_eligible_relays" is minor than
-    "percent_eligible_relays" and MAY not include any RelayLine.
-
-    This Line has been added in version 1.2.0 of this specification.
-
-  "number_consensus_relays=" Int NL
-
-    [Zero or one time.]
-
-    The number of relays in the consensus.
-
-    Implementations SHOULD include this KeyValue when
-    "minimum_percent_eligible_relays" is minor than
-    "percent_eligible_relays" and MAY not include any RelayLine.
-
-    This Line has been added in version 1.2.0 of this specification.
-
   "number_eligible_relays=" Int NL
 
     [Zero or one time.]
@@ -273,10 +229,54 @@ It consists of:
     included in every generated bandwidth file.  If there are not
     enough eligible relays, the bandwidth file SHOULD contain a
     header, but no relays.
-    
+
     The minimum percentage is 60% in Torflow, so sbws uses
     60% as the default.
-    
+
+    Implementations SHOULD include this KeyValue when
+    "minimum_percent_eligible_relays" is minor than
+    "percent_eligible_relays" and MAY not include any RelayLine.
+
+    This Line has been added in version 1.2.0 of this specification.
+
+  "number_consensus_relays=" Int NL
+
+    [Zero or one time.]
+
+    The number of relays in the consensus.
+
+    Implementations SHOULD include this KeyValue when
+    "minimum_percent_eligible_relays" is minor than
+    "percent_eligible_relays" and MAY not include any RelayLine.
+
+    This Line has been added in version 1.2.0 of this specification.
+
+  "percent_eligible_relays=" Int NL
+
+    [Zero or one time.]
+
+    The number of eligible relays, as a percentage of the number
+    of relays in the consensus.
+
+    This line SHOULD be equal to:
+        (number_eligible_relays * 100.0) / number_consensus_relays
+    to the number of relays in the consensus to include in this file.
+
+    Implementations SHOULD include this KeyValue when
+    "minimum_percent_eligible_relays" is minor than
+    "percent_eligible_relays" and MAY not include any RelayLine.
+
+    This Line has been added in version 1.2.0 of this specification.
+
+  "minimum_number_eligible_relays=" Int NL
+
+    [Zero or one time.]
+
+    The minimum number of relays to include in the bandwidth file.
+
+    This line SHOULD be equal to:
+        number_consensus_relays * (minimum_percent_eligible_relays / 100.0)
+
     Implementations SHOULD include this KeyValue when
     "minimum_percent_eligible_relays" is minor than
     "percent_eligible_relays" and MAY not include any RelayLine.
