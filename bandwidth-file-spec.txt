@@ -53,7 +53,7 @@
            with different bandwidth values.
 
   All Tor versions can consume format version 1.0.0.
-  All Tor versions can consume format version 1.1.0,
+  All Tor versions can consume format version 1.1.0 and later,
   but they warn on additional header Lines.
   [TODO: this might be fixed, and if it is fixed should be said which
   version of Tor]
