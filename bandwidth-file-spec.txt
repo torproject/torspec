@@ -597,6 +597,7 @@ perc_measured_relays=46
 perc_measured_targed=60
 software=sbws
 software_version=1.X.X
+=====
 
 B. Scaling bandwidths
 
