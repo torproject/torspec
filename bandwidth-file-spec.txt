@@ -46,7 +46,6 @@
 
     1.1.0 - Add a header containing information about the bandwidth file.
             Document the sbws and Torflow relay line keys.
-           to RelayLines and format versions.
 
    1.2.0 - If there are not enough eligible relays, the bandwidth file
            SHOULD contain a header, but no relays. (To match
