@@ -44,13 +44,13 @@
 
    1.0.0 - The legacy fallback Bandwidth List format
 
-    1.1.0 - Add a header containing information about the bandwidth file.
-            Document the sbws and Torflow relay line keys.
+   1.1.0 - Add a header containing information about the bandwidth
+           file. Document the sbws and Torflow relay line keys.
 
    1.2.0 - If there are not enough eligible relays, the bandwidth file
-           SHOULD contain a header, but no relays. (To match
-           Torflow's existing behaviour.) Adds new
-           KeyValue Lines to the Header List section with
+           SHOULD contain a header, but no relays. (To match Torflow's
+           existing behaviour.)
+           Adds new KeyValue Lines to the Header List section with
            statistics about the number of relays included in the file.
            Add new KeyValue Lines to the Relays' Bandwidth List section
            with different bandwidth values.
