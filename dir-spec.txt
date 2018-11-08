@@ -2125,6 +2125,24 @@
         to read.
         First-appeared: Tor 0.3.5.1-alpha.
 
+    "bandwidth-file-digest" 1*(SP algorithm "=" digest) NL
+
+        [At most once for votes; does not occur in consensuses.]
+
+        A digest of the bandwidth file used to generate this vote.
+        "algorithm" is the name of the hash algorithm producing "digest",
+        which can be "sha256" or another algorithm.  "digest" is the
+        base64 encoding of the hash of the bandwidth file, with trailing =s
+        omitted.
+
+        If an authority is not configured with a V3BandwidthsFile, this line
+        SHOULD NOT appear in its vote.
+
+        If an authority is configured with a V3BandwidthsFile, but parsing
+        fails, this line SHOULD appear in its vote, with the digest(s) of the
+        unparseable file.
+        First-appeared: Tor 0.4.0.1-alpha
+
    The authority section of a vote contains the following items, followed
    in turn by the authority's current key certificate:
 
