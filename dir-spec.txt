@@ -2130,6 +2130,10 @@
         [At most once for votes; does not occur in consensuses.]
 
         A digest of the bandwidth file used to generate this vote.
+        "algorithm" is the name of the hash algorithm producing "digest",
+        which can be "sha256" or another algorithm.  "digest" is the
+        base64 encoding of the hash of the bandwidth file, with trailing =s
+        omitted.
 
         This line appears in this vote in the the same cases the
         "bandwith-file-headers" appears.
