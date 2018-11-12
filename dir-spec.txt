@@ -2141,7 +2141,7 @@
         If an authority is configured with a V3BandwidthsFile, but parsing
         fails, this line SHOULD appear in its vote, with the digest(s) of the
         unparseable file.
-        [TODO: First-appeared: Tor XXX]
+        First-appeared: Tor 0.4.0.1-alpha
 
    The authority section of a vote contains the following items, followed
    in turn by the authority's current key certificate:
