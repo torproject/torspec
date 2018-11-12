@@ -2130,7 +2130,6 @@
         [At most once for votes; does not occur in consensuses.]
 
         A digest of the bandwidth file used to generate this vote.
-        (Hex, upper-case.)
 
         This line appears in this vote in the the same cases the
         "bandwith-file-headers" appears.
