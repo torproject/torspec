@@ -2136,7 +2136,6 @@
         omitted.
 
         This line appears in this vote in the the same cases the
-        "bandwith-file-headers" appears.
         [TODO: First-appeared: Tor XXX]
 
    The authority section of a vote contains the following items, followed
