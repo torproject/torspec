@@ -2135,7 +2135,12 @@
         base64 encoding of the hash of the bandwidth file, with trailing =s
         omitted.
 
-        This line appears in this vote in the the same cases the
+        If an authority is not configured with a V3BandwidthsFile, this line
+        SHOULD NOT appear in its vote.
+
+        If an authority is configured with a V3BandwidthsFile, but parsing
+        fails, this line SHOULD appear in its vote, with the digest(s) of the
+        unparseable file.
         [TODO: First-appeared: Tor XXX]
 
    The authority section of a vote contains the following items, followed
