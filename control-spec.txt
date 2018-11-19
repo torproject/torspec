@@ -430,7 +430,7 @@
 
      Signal = "RELOAD" / "SHUTDOWN" / "DUMP" / "DEBUG" / "HALT" /
               "HUP" / "INT" / "USR1" / "USR2" / "TERM" / "NEWNYM" /
-              "CLEARDNSCACHE" / "HEARTBEAT"
+              "CLEARDNSCACHE" / "HEARTBEAT" / "ACTIVE" / "DORMANT"
 
   The meaning of the signals are:
 
@@ -448,6 +448,12 @@
                    the client-side DNS cache.  (Tor MAY rate-limit its
                    response to this signal.)
       HEARTBEAT -- Make Tor dump an unscheduled Heartbeat message to log.
+      DORMANT   -- Tell Tor to become "dormant".  A dormant Tor will
+                   try to avoid CPU and network usage until it receives
+                   user-initiated network request.  (Don't use this
+                   on relays or hidden services yet!)
+      ACTIVE    -- Tell Tor to stop being "dormant", as if it had received
+                   a user-initiated network request.
 
   The server responds with "250 OK" if the signal is recognized (or simply
   closes the socket if it was asked to close immediately), or "552
@@ -462,6 +468,8 @@
       HALT: TERM
       DUMP: USR1
       DEBUG: USR2
+
+  [SIGNAL DORMANT and SIGNAL ACTIVE were added in 0.4.0.1-alpha.]
 
 3.8. MAPADDRESS
 
