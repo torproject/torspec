@@ -857,10 +857,19 @@ see tor-design.pdf.
          Number of addresses    [1 byte]
          This OR's addresses    [variable]
 
-   The address format is a type/length/value sequence as given in
-   section 6.4 below, without the final TTL.  The timestamp is a
-   big-endian unsigned integer number of seconds since the Unix epoch.
-   Implementations MUST ignore unexpected bytes at the end of the cell.
+   The address format is as follows:
+         Type [1 byte]
+           * 0x04 - IPv4
+           * 0x06 - IPv6
+         Length (size of Value field) [1 byte]
+           * 4 if Type is IPv4
+           * 16 if Type is IPv6
+         Value [Variable-width]
+           * Address value in network byte order.
+
+   The timestamp is a big-endian unsigned integer number of seconds
+   since the Unix epoch. Implementations MUST ignore unexpected bytes
+   at the end of the cell.
 
    Implementations MAY use the timestamp value to help decide if their
    clocks are skewed.  Initiators MAY use "other OR's address" to help
