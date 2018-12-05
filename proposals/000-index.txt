@@ -213,7 +213,7 @@ Proposals by number:
 290  Continuously update consensus methods [META]
 291  The move to two guard nodes [NEEDS-REVISION]
 292  Mesh-based vanguards [ACCEPTED]
-293  Other ways for relays to know when to publish [OPEN]
+293  Other ways for relays to know when to publish [CLOSED]
 294  TLS 1.3 Migration [DRAFT]
 295  Using ADL-GCM for relay cryptography (solving the crypto-tagging attack) [OPEN]
 296  Have Directory Authorities expose raw bandwidth list files [OPEN]
@@ -247,7 +247,6 @@ Proposals by status:
    285  Directory documents should be standardized as UTF-8
    287  Reduce circuit lifetime without overloading the network
    289  Authenticating sendme cells to mitigate bandwidth attacks
-   293  Other ways for relays to know when to publish [for 0.3.5]
    295  Using ADL-GCM for relay cryptography (solving the crypto-tagging attack)
    296  Have Directory Authorities expose raw bandwidth list files
    297  Relaxing the protover-based shutdown rules [for 0.3.5.x]
@@ -356,6 +355,7 @@ Proposals by status:
    278  Directory Compression Scheme Negotiation [in 0.3.1.1-alpha]
    283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [for 0.3.3.x] [in 0.3.3.1-alpha]
    284  Hidden Service v3 Control Port
+   293  Other ways for relays to know when to publish [for 0.3.5] [in 0.4.0.1-alpha]
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration

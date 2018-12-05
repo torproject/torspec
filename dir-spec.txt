@@ -358,6 +358,11 @@
 
       - Its uptime has been reset (by restarting).
 
+      - It receives a networkstatus consensus in which it is not listed.
+
+      - It receives a networkstatus consensus in which it is listed
+        with the StaleDesc flag.
+
       [XXX this list is incomplete; see router_differences_are_cosmetic()
        in routerlist.c for others]
 
@@ -2293,6 +2298,8 @@
           "NoEdConsensus" if any Ed25519 key in the router's descriptor or
              microdesriptor does not reflect authority consensus.
           "Stable" if the router is suitable for long-lived circuits.
+          "StaleDesc" if the router should upload a new descriptor because
+             the old one is too old.
           "Running" if the router is currently usable over all its published
              ORPorts. (Authorities ignore IPv6 ORPorts unless configured to
              check IPv6 reachability.) Relays without this flag are omitted
@@ -2575,6 +2582,10 @@
 
    "NoEdConsensus" -- authorities should not vote on this flag; it is
    produced as part of the consensus for consensus method 22 or later.
+
+   "StaleDesc" -- authorities should vote to assign this flag if the
+   published time on the descriptor is over 18 hours in the past.  (This flag
+   was added in 0.4.0.1-alpha.)
 
    Directory server administrators may label some relays or IPs as
    blacklisted, and elect not to include them in their network-status lists.

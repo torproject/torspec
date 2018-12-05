@@ -2,8 +2,12 @@ Filename: 293-know-when-to-publish.txt
 Title: Other ways for relays to know when to publish
 Author: Nick Mathewson
 Created: 30-May-2018
-Status: Open
+Status: Closed
 Target: 0.3.5
+Implemented-In: 0.4.0.1-alpha
+
+  [IMPLEMENTATION NOTES: Mechanism one is implemented; mechanism two is
+  rejected.]
 
 
 1. Motivation
