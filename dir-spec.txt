@@ -1500,6 +1500,32 @@
 
         The "family" element as specified in section 2.1.1.
 
+        When generating microdescriptors for consensus method 29 or later,
+        the following canonicalization algorithm is applied to improve
+        compression:
+
+           For all entries of the form $hexid=name or $hexid~name,
+           remove the =name or ~name portion.
+
+           Remove all entries of the form $hexid, where hexid is not
+           40 hexadecimal characters long.
+
+           If an entry is a valid nickname, put it into lower case.
+
+           If an entry is a valid $hexid, put it into upper case.
+
+           If there are any entries, add a single $hexid entry for
+           the relay in question, so that it is a member of its own
+           family.
+
+           Sort all entries in lexical order.
+
+           Remove duplicate entries.
+
+        (Note that if an entry is not of the form "nickname", "$hexid",
+        "$hexid=nickname" or "$hexid~nickname", then it will be unchanged:
+        this is what makes the algorithm forward-compatible.)
+
      "p" SP ("accept" / "reject") SP PortList NL
 
         [Exactly once.]
@@ -1517,8 +1543,8 @@
 
         [At most once]
 
-        The IPv6 exit policy summary as specified in sections 3.4.1 and 3.8.2. A
-        missing "p6" line is equivalent to "p6 reject 1-65535".
+        The IPv6 exit policy summary as specified in sections 3.4.1 and
+        3.8.2. A missing "p6" line is equivalent to "p6 reject 1-65535".
 
         (Only included when generating microdescriptors for
         consensus-method 15 or later.)
@@ -2972,6 +2998,7 @@
      "26" -- Initialize bandwidth weights to 1 to avoid division-by-zero.
      "27" -- Adds support for "a" lines in microdescriptor consensues.
      "28" -- Removes "a" lines from microdescriptors.
+     "29" -- Canonicalizes families in microdescriptors.
 
    Before generating a consensus, an authority must decide which consensus
    method to use.  To do this, it looks for the highest version number

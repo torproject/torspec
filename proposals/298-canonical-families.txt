@@ -2,8 +2,9 @@ Filename: 298-canonical-families.txt
 Title: Putting family lines in canonical form
 Author: Nick Mathewson
 Created: 31-Oct-2018
-Status: Open
+Status: Closed
 Target: 0.3.6.x
+Implemented-In: 0.4.0.1-alpha
 
 1. Introduction
 
