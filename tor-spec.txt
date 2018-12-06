@@ -2085,3 +2085,9 @@ see tor-design.pdf.
    "1" -- consensus methods 9 through 20.
 
    "2" -- consensus method 21 (adds ed25519 keys to microdescs).
+
+9.11. "Padding"
+
+   Describes the padding capabilities of the relay.
+
+   "1" -- Relay supports circuit-level padding.
