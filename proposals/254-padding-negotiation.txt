@@ -178,7 +178,7 @@ following:
   * For other bins, uniformly sample a time value between this bin and
     the next bin, and schedule padding then.
 
-3.1.2 Histogram Token Removal
+3.1.1.1. Histogram Token Removal
 
 Tokens can be optionally removed from histogram bins whenever a padding or
 non-padding packet is sent. With this token removal, the histogram functions
@@ -210,6 +210,20 @@ treated as part of bin 0, and all values greater than
 start_usec+rtt_estimate+range_sec are treated as part of the bin before the
 infinity bin. Tokens are not removed from the infinity bin when non-padding is
 sent. (They are only removed when an "infinite" delay is chosen).
+
+3.1.2. Delay Probability Distribution
+
+Alternatively, a delay probability distribution can be used instead of a
+histogram, to sample padding delays.
+
+In this case, the designer also needs to specify the appropriate distribution
+parameters, and when a padding cell needs to be scheduled, the padding
+subsystem will sample a positive delay value (in microseconds) from that
+distribution (where the minimum delay is range_usec+start_usec as is the case
+for histograms).
+
+We currently support the following probability distributions:
+   Uniform, Logistic, Log-logistic, Geometric, Weibull, Pareto
 
 3.2. State Machine Selection
 
