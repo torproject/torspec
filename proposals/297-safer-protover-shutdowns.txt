@@ -2,8 +2,16 @@ Filename: 297-safer-protover-shutdowns.txt
 Title: Relaxing the protover-based shutdown rules
 Author: Nick Mathewson
 Created: 19-Sep-2018
-Status: Open
+Status: Closed
 Target: 0.3.5.x
+Implemented-In: 0.4.0.x
+
+IMPLEMENTATION NOTE:
+
+   We went with the proposed change in section 2.  The "release date" is
+   now updated by the "make update-versions" target whenever the version
+   number is incremented.  Maintainers may also manually set the "release
+   date" to the future.
 
 1. Introduction
 

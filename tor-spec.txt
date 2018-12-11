@@ -1935,18 +1935,26 @@ see tor-design.pdf.
         it should warn its operator that the relay is obsolete.
 
       - When a relay lacks a protocol listed in required-relay-protocols, it
-        must not attempt to join the network.
+        should warn its operator as above. If the consensus is newer than the
+        date when the software was released or scheduled for release, it must
+        not attempt to join the network.
 
       - When a client lacks a protocol listed in recommended-client-protocols,
         it should warn the user that the client is obsolete.
 
-      - When a client lacks a protocol listed in required-client-protocols, it
-        must not connect to the network.  This implements a "safe forward
-        shutdown" mechanism for zombie clients.
+      - When a client lacks a protocol listed in required-client-protocols,
+        it should warn the user as above.  If the consensus is newer than the
+        date when the software was released, it must not connect to the
+        network.  This implements a "safe forward shutdown" mechanism for
+        zombie clients.
 
       - If a client or relay has a cached consensus telling it that a given
         protocol is required, and it does not implement that protocol, it
         SHOULD NOT try to fetch a newer consensus.
+
+   Software release dates SHOULD be automatically updated as part of the
+   release process, to prevent forgetting to move them forward.  Software
+   release dates MAY be manually adjusted by maintainers if necessary.
 
    Starting in version 0.2.9.4-alpha, the initial required protocols for
    clients that we will Recommend and Require are:
