@@ -1801,6 +1801,24 @@
 
   [HSPOST was added in Tor 0.2.7.1-alpha]
 
+3.23. DROPOWNERSHIP
+
+  The syntax is:
+    "DROPOWNERSHIP" CRLF
+
+  This command instructs Tor to relinquish ownership of its control
+  connection. As such tor will not shut down when this control
+  connection is closed.
+
+  This method is idempotent. If the control connection does not
+  already have ownership this method returns successfully, and
+  does nothing.
+
+  The controller can call TAKEOWNERSHIP again to re-establish
+  ownership.
+
+  [DROPOWNERSHIP was added in Tor 0.4.0.0-alpha]
+
 4. Replies
 
   Reply codes follow the same 3-character format as used by SMTP, with the
