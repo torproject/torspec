@@ -852,15 +852,27 @@ see tor-design.pdf.
    If version 2 or higher is negotiated, each party sends the other a
    NETINFO cell.  The cell's payload is:
 
-         Timestamp              [4 bytes]
-         Other OR's address     [variable]
-         Number of addresses    [1 byte]
-         This OR's addresses    [variable]
+      TIME       (Timestamp)                     [4 bytes]
+      OTHERADDR  (Other OR's address)            [variable]
+         ATYPE   (Address type)                  [1 byte]
+         ALEN    (Adress length)                 [1 byte]
+         AVAL    (Address value in NBO)          [ALEN bytes]
+      NMYADDR    (Number of this OR's addresses) [1 byte]
+        NMYADDR times:
+          ATYPE   (Address type)                 [1 byte]
+          ALEN    (Adress length)                [1 byte]
+          AVAL    (Address value in NBO))        [ALEN bytes]
 
-   The address format is a type/length/value sequence as given in
-   section 6.4 below, without the final TTL.  The timestamp is a
-   big-endian unsigned integer number of seconds since the Unix epoch.
-   Implementations MUST ignore unexpected bytes at the end of the cell.
+   Recognized address types (ATYPE) are:
+     [04] IPv4.
+     [06] IPv6.
+
+   ALEN MUST be 4 when ATYPE is 0x04 (IPv4) and 16 when ATYPE is 0x06
+   (IPv6).
+
+   The timestamp is a big-endian unsigned integer number of seconds
+   since the Unix epoch. Implementations MUST ignore unexpected bytes
+   at the end of the cell.
 
    Implementations MAY use the timestamp value to help decide if their
    clocks are skewed.  Initiators MAY use "other OR's address" to help
