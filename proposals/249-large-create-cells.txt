@@ -270,3 +270,8 @@ Appendix A. A rejected idea for migration
    where authentication hasn't actually been performed).  So I'm
    guessing we shouldn't do that.
 
+Appendix B. Acknowledgements
+
+  This research was supported in part by NSF grants CNS-1111539,
+  CNS-1314637, CNS-1526306, CNS-1619454, and CNS-1640548.
+
