@@ -1999,7 +1999,7 @@ see tor-design.pdf.
 9.2. "LinkAuth"
 
    LinkAuth protocols correspond to varieties of Authenticate cells used for
-   the v3+ link protocools.
+   the v3+ link protocols.
 
    Current versions are:
 
