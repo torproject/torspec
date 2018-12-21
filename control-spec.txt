@@ -3425,6 +3425,9 @@
 
 5.5. Phases from the Bootstrap status event.
 
+ [For the bootstrap phases reported by Tor prior to 0.4.0.x, see
+  Section 5.6.]
+
   This section describes the various bootstrap phases currently reported
   by Tor. Controllers should not assume that the percentages and tags
   listed here will continue to match up, or even that the tags will stay
@@ -3436,6 +3439,174 @@
   Current Tor versions enter these phases in order, monotonically.
   Future Tors MAY revisit earlier stages.
  [XXXX: do we revisit earlier stages if the network fails?]
+
+  Phase 0:
+  tag=starting summary="Starting"
+
+  Tor starts out in this phase.
+
+  Phase 1:
+  tag=conn_pt summary="Connecting to pluggable transport"
+ [This phase is new in 0.4.0.x]
+
+  Phase 2:
+  tag=conn_done_pt summary="Connected to pluggable transport"
+ [New in 0.4.0.x]
+
+  Phase 3:
+  tag=conn_proxy summary="Connecting to proxy"
+ [New in 0.4.0.x]
+
+  Phase 4:
+  tag=conn_done_proxy summary="Connected to proxy"
+ [New in 0.4.0.x]
+
+  Phase 5:
+  tag=conn summary="Connecting to a relay"
+ [New in 0.4.0.x; prior versions of Tor had a "conn_dir" phase that
+  sometimes but not always corresponded to connecting to a directory server]
+
+  Phase 10:
+  tag=conn_done summary="Connected to a relay"
+ [New in 0.4.0.x]
+
+  Phase 14:
+  tag=handshake summary="Handshaking with a relay"
+ [New in 0.4.0.x; prior versions of Tor had a "handshake_dir" phase]
+
+  Phase 15:
+  tag=handshake_done summary="Handshake with a relay done"
+ [New in 0.4.0.x]
+
+  Phase 20:
+  tag=onehop_create summary="Establishing an encrypted directory connection"
+ [prior to 0.4.0.x, this was numbered 15]
+
+  Once TLS is finished with a relay, Tor will send a CREATE_FAST cell
+  to establish a one-hop circuit for retrieving directory information.
+  It will remain in this phase until it receives the CREATED_FAST cell
+  back, indicating that the circuit is ready.
+
+  Phase 25:
+  tag=requesting_status summary="Asking for networkstatus consensus"
+ [prior to 0.4.0.x, this was numbered 20]
+
+  Once we've finished our one-hop circuit, we will start a new stream
+  for fetching the networkstatus consensus. We'll stay in this phase
+  until we get the 'connected' relay cell back, indicating that we've
+  established a directory connection.
+
+  Phase 30:
+  tag=loading_status summary="Loading networkstatus consensus"
+ [prior to 0.4.0.x, this was numbered 25]
+
+  Once we've established a directory connection, we will start fetching
+  the networkstatus consensus document. This could take a while; this
+  phase is a good opportunity for using the "progress" keyword to indicate
+  partial progress.
+
+  This phase could stall if the directory server we picked doesn't
+  have a copy of the networkstatus consensus so we have to ask another,
+  or it does give us a copy but we don't find it valid.
+
+  Phase 40:
+  tag=loading_keys summary="Loading authority key certs"
+
+  Sometimes when we've finished loading the networkstatus consensus,
+  we find that we don't have all the authority key certificates for the
+  keys that signed the consensus. At that point we put the consensus we
+  fetched on hold and fetch the keys so we can verify the signatures.
+
+  Phase 45
+  tag=requesting_descriptors summary="Asking for relay descriptors"
+
+  Once we have a valid networkstatus consensus and we've checked all
+  its signatures, we start asking for relay descriptors. We stay in this
+  phase until we have received a 'connected' relay cell in response to
+  a request for descriptors.
+
+ [Some versions of Tor (between 0.2.6.2-alpha and 0.4.0.x):
+  Tor could report having internal paths only; see Section 5.6]
+
+  Phase 50:
+  tag=loading_descriptors summary="Loading relay descriptors"
+
+  We will ask for relay descriptors from several different locations,
+  so this step will probably make up the bulk of the bootstrapping,
+  especially for users with slow connections. We stay in this phase until
+  we have descriptors for a significant fraction of the usable relays
+  listed in the networkstatus consensus (this can be between 25% and 95%
+  depending on Tor's configuration and network consensus parameters).
+  This phase is also a good opportunity to use the "progress" keyword to
+  indicate partial steps.
+
+ [Some versions of Tor (between 0.2.6.2-alpha and 0.4.0.x):
+  Tor could report having internal paths only; see Section 5.6]
+
+  Phase 75:
+  tag=enough_dirinfo summary="Loaded enough directory info to build
+  circuits"
+ [New in 0.4.0.x; previously, Tor would misleadingly report the
+  "conn_or" tag once it had enough directory info.]
+
+  Phase 76:
+  tag=ap_conn_pt summary="Connecting to pluggable transport to build
+  circuits"
+ [New in 0.4.0.x]
+
+  Phase 77:
+  tag=ap_conn_done_pt summary="Connected to pluggable transport to build circuits"
+ [New in 0.4.0.x]
+
+  Phase 78:
+  tag=ap_conn_proxy summary="Connecting to proxy to build circuits"
+ [New in 0.4.0.x]
+ [XXX fix mispaste in control_bootstrap.c for this!]
+
+  Phase 79:
+  tag=ap_conn_done_proxy summary="Connected to proxy to build circuits"
+ [New in 0.4.0.x]
+
+  Phase 80:
+  tag=ap_conn summary="Connecting to a relay to build circuits"
+ [New in 0.4.0.x]
+
+  Phase 85:
+  tag=ap_conn_done summary="Connected to a relay to build circuits"
+ [New in 0.4.0.x]
+
+  Phase 89:
+  tag=ap_handshake summary="Finishing handshake with a relay to build circuits"
+ [New in 0.4.0.x]
+
+  Phase 90:
+  tag=ap_handshake_done summary="Handshake fininshed with a relay to build circuits"
+ [New in 0.4.0.x]
+
+  Phase 95:
+  tag=circuit_create summary="Establishing a[n internal] Tor circuit"
+ [prior to 0.4.0.x, this was numbered 90]
+
+  Once we've finished our TLS handshake with the first hop of a circuit,
+  we will set about trying to make some 3-hop circuits in case we need them
+  soon.
+
+ [Some versions of Tor (between 0.2.6.2-alpha and 0.4.0.x):
+  Tor could report having internal paths only; see Section 5.6]
+
+  Phase 100:
+  tag=done summary="Done"
+
+  A full 3-hop circuit has been established. Tor is ready to handle
+  application connections now.
+
+ [Some versions of Tor (between 0.2.6.2-alpha and 0.4.0.x):
+  Tor could report having internal paths only; see Section 5.6]
+
+5.6 Bootstrap phases reported by older versions of Tor
+
+  These phases were reported by Tor older than 0.4.0.x.  For newer
+  versions of Tor, see Section 5.5.
 
  [Newer versions of Tor (0.2.6.2-alpha and later):
   If the consensus contains Exits (the typical case), Tor will build both
