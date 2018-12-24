@@ -1693,7 +1693,8 @@
   importing an ED25519-V3 key.]
 
   (The "NEW:BEST" option obeys the HiddenServiceVersion torrc option default
-  value. Currently it is 2.)
+  value. Since 0.3.5.1-alpha, it is 3. For Tor versions before 0.3.5.1-alpha,
+  default HiddenServiceVersion is 2.)
 
   Examples:
      C: ADD_ONION NEW:BEST Flags=DiscardPK Port=80
