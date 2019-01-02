@@ -2425,7 +2425,7 @@
     [No extra arguments]
 
    It contains two subsections, a bandwidths-weights line and a
-   directory-signature. (Prior to conensus method 9, footers only contained
+   directory-signature. (Prior to consensus method 9, footers only contained
    directory-signatures without a 'directory-footer' line or
    bandwidth-weights.)
 
