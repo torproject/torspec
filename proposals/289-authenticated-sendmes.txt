@@ -223,17 +223,37 @@ Status: Open
    (100) has arrived. So the client should use the digest from the cell
    that triggers the sendme.
 
-   How shall we version the sendme payload so we can change the format of
-   it later? Right now sendme payloads are empty. Here's a simple design:
-   we use five bytes in the payload, where the first byte indicates the
-   sendme payload version (0 in the original design, and 1 once we've
-   implemented this proposal), and the rest of the payload is formatted
-   based on the payload version number: in this case, it's simply the
-   four bytes of digest.
+   In order to achieve this, we need to version the SENDME cell so we can
+   differentiate the original protocol versus the new authenticated cell.
+   Right now, the SENDME payload is empty which translate to a version value
+   of 0 with this proposed change. The version to achieve authenticated
+   SENDMEs of this proposal would be 1.
 
-   Is there a better way to version the payload, e.g. a way that is
-   already standard in other parts of the design, so we aren't adding
-   a new paint color to keep track of on the bike shed?
+   The SENDME cell payload would contain the following:
+
+      VERSION     [1 byte]
+      DATA_LEN    [2 bytes]
+      DATA        [DATA_LEN bytes]
+
+   The VERSION tells us what is expected in the DATA section of length
+   DATA_LEN. The recognized values are:
+
+      0x00: The rest of the payload should be ignored.
+
+      0x01: Authenticated SENDME. The DATA section should contain:
+
+         DIGEST   [4 bytes]
+
+      If the DATA_LEN value is less then 4 bytes, the cell should be dropped
+      and the circuit closed. If the value is more than 4 bytes, then the
+      first 4 bytes should be read to get the correct value.
+
+      The DIGEST is the digest value from the cell that triggered this SENDME
+      as mentionned above. This value is matched on the other side from the
+      previous cell.
+
+   If a VERSION is unrecognized, the SENDME cell should be treated as version
+   0 meaning the payload is ignored.
 
 3.2. Verifying the sendme payload
 
