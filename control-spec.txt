@@ -3283,6 +3283,29 @@
 
    [PT_LOG was added in Tor 0.4.0.1-alpha]
 
+4.1.29. Pluggable Transport Status
+
+   Syntax:
+      "650" SP "PT_STATUS" SP PT=Program SP Message
+
+      Program = The program path as defined in the *TransportPlugin
+                configuration option. Tor accepts relative and full path.
+      Message = The status message that the PT sends back to the tor parent
+                process minus the "STATUS" string prefix. Formatted as
+                specified in pt-spec.txt section 3.3.5.
+
+   This event is triggered when tor receives a log message from the PT.
+
+   Example:
+
+      PT (obfs4): STATUS TYPE=obfs4 CONNECT=Success
+
+   the resulting control port event would be:
+
+      Tor: 650 PT_STATUS PT=/usr/bin/obfs4proxy TYPE=obfs4 CONNECT=Success
+
+   [PT_STATUS was added in Tor 0.4.0.1-alpha]
+
 5. Implementation notes
 
 5.1. Authentication
