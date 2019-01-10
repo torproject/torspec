@@ -309,11 +309,16 @@ Status: Open
    payload version 0 sendmes.
 
    In phase two, we flip a switch in the consensus, and everybody starts
-   sending payload version 1 sendmes. Payload version 0 sendmes are
-   still accepted.
+   sending payload version 1 sendmes. Payload version 0 sendmes are still
+   accepted. The newly proposed consensus parameter to achieve this is:
+
+      "sendme_emit_min_version" - Minimum SENDME version that can be sent.
 
    In phase three, we flip a different switch in the consensus, and
-   everybody starts refusing payload version 0 sendmes.
+   everybody starts refusing payload version 0 sendmes. The newly proposed
+   consensus parameter to achieve this is:
+
+      "sendme_accept_min_version" - Minimum SENDME version that is accepted.
 
    (It has to be two separate switches, not one unified one, because
    otherwise we'd have a race where relays learn about the update before
