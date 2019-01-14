@@ -2550,7 +2550,7 @@
    A minority of voting authorities that set AuthDirHasIPv6Connectivity will
    drop unreachable IPv6 ORPorts from the full consensus. Consensus method 27
    in 0.3.3.x puts IPv6 ORPorts in the microdesc consensus, so that
-   authorities can drop unreachable IPv6 ORPorts from all consensus flavours.
+   authorities can drop unreachable IPv6 ORPorts from all consensus flavors.
    Consensus method 28 removes IPv6 ORPorts from microdescriptors.
 
    "Stable" -- A router is 'Stable' if it is active, and either its Weighted
@@ -3252,16 +3252,15 @@
    "network-status-version" where version is 3 or higher, and the flavor
    is a string consisting of alphanumeric characters and dashes:
 
-      "network-status-version" SP version SP flavor NL
+      "network-status-version" SP version [SP flavor] NL
 
 3.9.1. ns consensus
 
-   The ns consensus flavor is equivalent to the unflavored consensus
-   except for its first line which states its consensus flavor name:
-
-    "network-status-version" SP version SP "ns" NL
-
-        [At start, exactly once.]
+   The ns consensus flavor is equivalent to the unflavored consensus.
+   When the flavor is omitted from the "network-status-version" line,
+   it should be assumed to be "ns". Some implementations may explicitly
+   state that the flavor is "ns" when generating consensuses, but should
+   accept consensuses where the flavor is omitted.
 
 3.9.2. Microdescriptor consensus
 
