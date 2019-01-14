@@ -116,425 +116,427 @@
 
 2.2. Header List format
 
-Some header Lines MUST appear in specific positions, as documented
-below. All other Lines can appear in any order.
+  Some header Lines MUST appear in specific positions, as documented
+  below. All other Lines can appear in any order.
 
-If a parser does not recognize any extra material in a header Line,
-the Line MUST be ignored.
+  If a parser does not recognize any extra material in a header Line,
+  the Line MUST be ignored.
 
-If a header Line does not conform to this format, the Line SHOULD be
-ignored by parsers.
+  If a header Line does not conform to this format, the Line SHOULD be
+  ignored by parsers.
 
-It consists of:
+  It consists of:
 
-  Timestamp NL
+    Timestamp NL
 
-    [At start, exactly once.]
+      [At start, exactly once.]
 
-    The Unix Epoch time in seconds of the most recent generator bandwidth
-    result.
+      The Unix Epoch time in seconds of the most recent generator bandwidth
+      result.
 
-    If the generator implementation has multiple threads or
-    subprocesses which can fail independently, it SHOULD take the most
-    recent timestamp from each thread and use the oldest value. This
-    ensures all the threads continue running.
+      If the generator implementation has multiple threads or
+      subprocesses which can fail independently, it SHOULD take the most
+      recent timestamp from each thread and use the oldest value. This
+      ensures all the threads continue running.
 
-    If there are threads that do not run continuously, they SHOULD be
-    excluded from the timestamp calculation.
+      If there are threads that do not run continuously, they SHOULD be
+      excluded from the timestamp calculation.
 
-    If there are no recent results, the generator MUST NOT generate a new file.
+      If there are no recent results, the generator MUST NOT generate a new
+      file.
 
-    It does not follow the KeyValue format for backwards compatibility
-    with version 1.0.0.
+      It does not follow the KeyValue format for backwards compatibility
+      with version 1.0.0.
 
-  "version=" version_number NL
+    "version=" version_number NL
 
-    [In second position, zero or one time.]
+      [In second position, zero or one time.]
 
-    The specification document format version.
-    It uses semantic versioning [5].
+      The specification document format version.
+      It uses semantic versioning [5].
 
-    This Line was added in version 1.1.0 of this specification.
+      This Line was added in version 1.1.0 of this specification.
 
-    Version 1.0.0 documents do not contain this Line, and the
-    version_number is considered to be "1.0.0".
+      Version 1.0.0 documents do not contain this Line, and the
+      version_number is considered to be "1.0.0".
 
-  "software=" Value NL
+    "software=" Value NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The name of the software that created the document.
+      The name of the software that created the document.
 
-    This Line was added in version 1.1.0 of this specification.
+      This Line was added in version 1.1.0 of this specification.
 
-    Version 1.0.0 documents do not contain this Line, and the software
-    is considered to be "torflow".
+      Version 1.0.0 documents do not contain this Line, and the software
+      is considered to be "torflow".
 
-  "software_version=" Value NL
+    "software_version=" Value NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The version of the software that created the document.
-    The version may be a version_number, a git commit, or some other
-    version scheme.
+      The version of the software that created the document.
+      The version may be a version_number, a git commit, or some other
+      version scheme.
 
-    This Line was added in version 1.1.0 of this specification.
+      This Line was added in version 1.1.0 of this specification.
 
-  "file_created=" DateTime NL
+    "file_created=" DateTime NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The date and time timestamp in ISO 8601 format and UTC time zone
-    when the file was created.
+      The date and time timestamp in ISO 8601 format and UTC time zone
+      when the file was created.
 
-    This Line was added in version 1.1.0 of this specification.
+      This Line was added in version 1.1.0 of this specification.
 
-  "generator_started=" DateTime NL
+    "generator_started=" DateTime NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The date and time timestamp in ISO 8601 format and UTC time zone
-    when the generator started.
+      The date and time timestamp in ISO 8601 format and UTC time zone
+      when the generator started.
 
-    This Line was added in version 1.1.0 of this specification.
+      This Line was added in version 1.1.0 of this specification.
 
-  "earliest_bandwidth=" DateTime NL
+    "earliest_bandwidth=" DateTime NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The date and time timestamp in ISO 8601 format and UTC time zone
-    when the first relay bandwidth was obtained.
+      The date and time timestamp in ISO 8601 format and UTC time zone
+      when the first relay bandwidth was obtained.
 
-    This Line was added in version 1.1.0 of this specification.
+      This Line was added in version 1.1.0 of this specification.
 
-  "latest_bandwidth=" DateTime NL
+    "latest_bandwidth=" DateTime NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The date and time timestamp in ISO 8601 format and UTC time zone
-    of the most recent generator bandwidth result.
+      The date and time timestamp in ISO 8601 format and UTC time zone
+      of the most recent generator bandwidth result.
 
-    This time MUST be identical to the initial Timestamp line.
+      This time MUST be identical to the initial Timestamp line.
 
-    This duplicate value is included to make the format easier for people
-    to read.
+      This duplicate value is included to make the format easier for people
+      to read.
 
-    This Line was added in version 1.1.0 of this specification.
+      This Line was added in version 1.1.0 of this specification.
 
-  "number_eligible_relays=" Int NL
+    "number_eligible_relays=" Int NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The number of relays that have enough measurements to be
-    included in the bandwidth file.
+      The number of relays that have enough measurements to be
+      included in the bandwidth file.
 
-    This Line was added in version 1.2.0 of this specification.
+      This Line was added in version 1.2.0 of this specification.
 
-  "minimum_percent_eligible_relays=" Int NL
+    "minimum_percent_eligible_relays=" Int NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The percentage of relays in the consensus that SHOULD be
-    included in every generated bandwidth file.  If there are not
-    enough eligible relays, the bandwidth file SHOULD contain a
-    header, but no relays.
+      The percentage of relays in the consensus that SHOULD be
+      included in every generated bandwidth file.  If there are not
+      enough eligible relays, the bandwidth file SHOULD contain a
+      header, but no relays.
 
-    The minimum percentage is 60% in Torflow, so sbws uses
-    60% as the default.
+      The minimum percentage is 60% in Torflow, so sbws uses
+      60% as the default.
 
-    This Line was added in version 1.2.0 of this specification.
+      This Line was added in version 1.2.0 of this specification.
 
-  "number_consensus_relays=" Int NL
+    "number_consensus_relays=" Int NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The number of relays in the consensus.
+      The number of relays in the consensus.
 
-    This Line was added in version 1.2.0 of this specification.
+      This Line was added in version 1.2.0 of this specification.
 
-  "percent_eligible_relays=" Int NL
+    "percent_eligible_relays=" Int NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The number of eligible relays, as a percentage of the number
-    of relays in the consensus.
+      The number of eligible relays, as a percentage of the number
+      of relays in the consensus.
 
-    This line SHOULD be equal to:
-        (number_eligible_relays * 100.0) / number_consensus_relays
-    to the number of relays in the consensus to include in this file.
+      This line SHOULD be equal to:
+          (number_eligible_relays * 100.0) / number_consensus_relays
+      to the number of relays in the consensus to include in this file.
 
-    This Line was added in version 1.2.0 of this specification.
+      This Line was added in version 1.2.0 of this specification.
 
-  "minimum_number_eligible_relays=" Int NL
+    "minimum_number_eligible_relays=" Int NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The minimum number of relays to include in the bandwidth file.
+      The minimum number of relays to include in the bandwidth file.
 
-    This line SHOULD be equal to:
-        number_consensus_relays * (minimum_percent_eligible_relays / 100.0)
+      This line SHOULD be equal to:
+          number_consensus_relays * (minimum_percent_eligible_relays / 100.0)
 
-    This Line was added in version 1.2.0 of this specification.
+      This Line was added in version 1.2.0 of this specification.
 
-  KeyValue NL
+    KeyValue NL
 
-    [Zero or more times.]
+      [Zero or more times.]
 
-    There MUST NOT be multiple KeyValue header Lines with the same key.
-    If there are, the parser SHOULD choose an arbitrary Line.
+      There MUST NOT be multiple KeyValue header Lines with the same key.
+      If there are, the parser SHOULD choose an arbitrary Line.
 
-    If a parser does not recognize a Keyword in a KeyValue Line, it
-    MUST be ignored.
+      If a parser does not recognize a Keyword in a KeyValue Line, it
+      MUST be ignored.
 
-    Future format versions may include additional KeyValue header Lines.
-    Additional header Lines will be accompanied by a minor version
-    increment.
+      Future format versions may include additional KeyValue header Lines.
+      Additional header Lines will be accompanied by a minor version
+      increment.
 
-    Implementations MAY add additional header Lines as needed. This
-    specification SHOULD be updated to avoid conflicting meanings for
-    the same header keys.
+      Implementations MAY add additional header Lines as needed. This
+      specification SHOULD be updated to avoid conflicting meanings for
+      the same header keys.
 
-    Parsers MUST NOT rely on the order of these additional Lines.
+      Parsers MUST NOT rely on the order of these additional Lines.
 
-    Additional header Lines MUST NOT use any keywords specified in the
-    relay measurements format.
-    If there are, the parser MAY ignore conflicting keywords.
+      Additional header Lines MUST NOT use any keywords specified in the
+      relay measurements format.
+      If there are, the parser MAY ignore conflicting keywords.
 
-  Terminator NL
+    Terminator NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The Header List section ends with this Terminator.
+      The Header List section ends with this Terminator.
 
-    In version 1.0.0, Header List ends when the first relay bandwidth
-    is found conforming to the next section.
-    Implementations of version 1.1.0 and later SHOULD include this Line.
+      In version 1.0.0, Header List ends when the first relay bandwidth
+      is found conforming to the next section.
+      Implementations of version 1.1.0 and later SHOULD include this Line.
 
 2.3. Relay Line format
 
-It consists of zero or more RelayLines with the relays' bandwidth
-in arbitrary order.
+  It consists of zero or more RelayLines with the relays' bandwidth
+  in arbitrary order.
 
-There MUST NOT be multiple KeyValue pairs with the same key in the same
-RelayLine. If there are, the parser SHOULD choose an arbitrary Value.
+  There MUST NOT be multiple KeyValue pairs with the same key in the same
+  RelayLine. If there are, the parser SHOULD choose an arbitrary Value.
 
-There MUST NOT be multiple RelayLine per relay identity (node_id or
-master_key_ed25519). If there are, parsers SHOULD issue a warning.
-Parers MAY choose an arbitrary value, or ignore both values.
+  There MUST NOT be multiple RelayLine per relay identity (node_id or
+  master_key_ed25519). If there are, parsers SHOULD issue a warning.
+  Parers MAY choose an arbitrary value, or ignore both values.
 
-If a parser does not recognize any extra material in a RelayLine,
-the extra material MUST be ignored.
+  If a parser does not recognize any extra material in a RelayLine,
+  the extra material MUST be ignored.
 
-Each RelayLine MUST include the following KeyValue pairs:
+  Each RelayLine MUST include the following KeyValue pairs:
 
-  "node_id=" hexdigest
+    "node_id=" hexdigest
 
-    [Exactly once.]
+      [Exactly once.]
 
-    The fingerprint for the relay's RSA identity key.
+      The fingerprint for the relay's RSA identity key.
 
-    Note: In bandwidth files read by Tor versions earlier than
-          0.3.4.1-alpha, node_id MUST NOT be at the end of the Line.
-          These authority versions are no longer supported.
+      Note: In bandwidth files read by Tor versions earlier than
+            0.3.4.1-alpha, node_id MUST NOT be at the end of the Line.
+            These authority versions are no longer supported.
 
-  "master_key_ed25519=" MasterKey
+    "master_key_ed25519=" MasterKey
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The relays's master Ed25519 key, base64 encoded,
-    without trailing "="s, to avoid ambiguity with KeyValue "="
-    character.
+      The relays's master Ed25519 key, base64 encoded,
+      without trailing "="s, to avoid ambiguity with KeyValue "="
+      character.
 
-    Implementations of version 1.1.0 SHOULD include both node_id and
-    master_key_ed25519.
-    Parsers SHOULD accept Lines that contain at least one of them.
+      Implementations of version 1.1.0 SHOULD include both node_id and
+      master_key_ed25519.
+      Parsers SHOULD accept Lines that contain at least one of them.
 
-  "bw=" Bandwidth
+    "bw=" Bandwidth
 
-    [Exactly once.]
+      [Exactly once.]
 
-    The measured bandwidth of this relay.
+      The measured bandwidth of this relay.
 
-    No Zero Bandwidths:
-    Tor accepts zero bandwidths, but they trigger bugs in older Tor
-    implementations. Therefore, implementations SHOULD NOT produce zero
-    bandwidths. Instead, they SHOULD use one as their minimum bandwidth.
-    If there are zero bandwidths, the parser MAY ignore them.
+      No Zero Bandwidths:
+      Tor accepts zero bandwidths, but they trigger bugs in older Tor
+      implementations. Therefore, implementations SHOULD NOT produce zero
+      bandwidths. Instead, they SHOULD use one as their minimum bandwidth.
+      If there are zero bandwidths, the parser MAY ignore them.
 
-    Bandwidth Aggregation:
-    Multiple measurements can be aggregated using an averaging scheme,
-    such as a mean, median, or decaying average.
+      Bandwidth Aggregation:
+      Multiple measurements can be aggregated using an averaging scheme,
+      such as a mean, median, or decaying average.
 
-    Bandwidth Scaling:
-    Torflow scales bandwidths to kilobytes per second. Other
-    implementations SHOULD use kilobytes per second for their initial
-    bandwidth scaling.
+      Bandwidth Scaling:
+      Torflow scales bandwidths to kilobytes per second. Other
+      implementations SHOULD use kilobytes per second for their initial
+      bandwidth scaling.
 
-    If different implementations or configurations are used in votes for
-    the same network, their measurements MAY need further scaling. See
-    Appendix B for information about scaling, and one possible scaling
-    method.
+      If different implementations or configurations are used in votes for
+      the same network, their measurements MAY need further scaling. See
+      Appendix B for information about scaling, and one possible scaling
+      method.
 
-    MaxAdvertisedBandwidth:
-    Bandwidth generators MUST limit the relays' measured bandwidth based
-    on the MaxAdvertisedBadwidth.
-    A relay's MaxAdvertisedBandwidth limits the bandwidth-avg in its
-    descriptor. bandwidth-avg is the minimum of MaxAdvertisedBandwidth,
-    BandwidthRate, RelayBandwidthRate, BandwidthBurst, and
-    RelayBandwidthBurst.
-    Therefore, generators MUST limit a relay's measured bandwidth to its
-    descriptor's bandwidth-avg. This limit needs to be implemented in the
-    generator, because generators may scale consensus weights before
-    sending them to Tor.
-    Generators SHOULD NOT limit measured bandwidths based on descriptors'
-    bandwidth-observed, because that penalises new relays.
+      MaxAdvertisedBandwidth:
+      Bandwidth generators MUST limit the relays' measured bandwidth based
+      on the MaxAdvertisedBadwidth.
+      A relay's MaxAdvertisedBandwidth limits the bandwidth-avg in its
+      descriptor. bandwidth-avg is the minimum of MaxAdvertisedBandwidth,
+      BandwidthRate, RelayBandwidthRate, BandwidthBurst, and
+      RelayBandwidthBurst.
+      Therefore, generators MUST limit a relay's measured bandwidth to its
+      descriptor's bandwidth-avg. This limit needs to be implemented in the
+      generator, because generators may scale consensus weights before
+      sending them to Tor.
+      Generators SHOULD NOT limit measured bandwidths based on descriptors'
+      bandwidth-observed, because that penalises new relays.
 
-    sbws limits the relay's measured bandwidth to the bandwidth-avg
-    advertised.
+      sbws limits the relay's measured bandwidth to the bandwidth-avg
+      advertised.
 
-    Torflow partitions relays based on their bandwidth. For unmeasured
-    relays, Torflow uses the minimum of all descriptor bandwidths,
-    including bandwidth-avg (MaxAdvertisedBandwidth) and
-    bandwidth-observed. Then Torflow measures the relays in each partition
-    against each other, which implicitly limits a relay's measured
-    bandwidth to the bandwidths of similar relays.
+      Torflow partitions relays based on their bandwidth. For unmeasured
+      relays, Torflow uses the minimum of all descriptor bandwidths,
+      including bandwidth-avg (MaxAdvertisedBandwidth) and
+      bandwidth-observed. Then Torflow measures the relays in each partition
+      against each other, which implicitly limits a relay's measured
+      bandwidth to the bandwidths of similar relays.
 
-    Torflow also generates consensus weights based on the ratio between the
-    measured bandwidth and the minimum of all descriptor bandwidths (at the
-    time of the measurement). So when an operator reduces the
-    MaxAdvertisedBandwidth for a relay, Torflow reduces that relay's
-    measured bandwidth.
+      Torflow also generates consensus weights based on the ratio between the
+      measured bandwidth and the minimum of all descriptor bandwidths (at the
+      time of the measurement). So when an operator reduces the
+      MaxAdvertisedBandwidth for a relay, Torflow reduces that relay's
+      measured bandwidth.
 
-  KeyValue
+    KeyValue
 
-    [Zero or more times.]
+      [Zero or more times.]
 
-    Future format versions may include additional KeyValue pairs on a
-    RelayLine.
-    Additional KeyValue pairs will be accompanied by a minor version
-    increment.
+      Future format versions may include additional KeyValue pairs on a
+      RelayLine.
+      Additional KeyValue pairs will be accompanied by a minor version
+      increment.
 
-    Implementations MAY add additional relay KeyValue pairs as needed.
-    This specification SHOULD be updated to avoid conflicting meanings
-    for the same Keywords.
+      Implementations MAY add additional relay KeyValue pairs as needed.
+      This specification SHOULD be updated to avoid conflicting meanings
+      for the same Keywords.
 
-    Parsers MUST NOT rely on the order of these additional KeyValue
-    pairs.
+      Parsers MUST NOT rely on the order of these additional KeyValue
+      pairs.
 
-    Additional KeyValue pairs MUST NOT use any keywords specified in the
-    header format.
-    If there are, the parser MAY ignore conflicting keywords.
+      Additional KeyValue pairs MUST NOT use any keywords specified in the
+      header format.
+      If there are, the parser MAY ignore conflicting keywords.
 
 2.4. Implementation details
 
 2.4.1 Writing bandwidth files atomically
 
-To avoid inconsistent reads, implementations SHOULD write bandwidth files
-atomically. If the file is transferred from another host, it SHOULD be
-written to a temporary path, then renamed to the V3BandwidthsFile path.
+  To avoid inconsistent reads, implementations SHOULD write bandwidth files
+  atomically. If the file is transferred from another host, it SHOULD be
+  written to a temporary path, then renamed to the V3BandwidthsFile path.
 
-sbws versions 0.7.0 and later write the bandwidth file to an archival location,
-create a temporary symlink to that location, then atomically rename the symlink
-to the configured V3BandwidthsFile path.
+  sbws versions 0.7.0 and later write the bandwidth file to an archival
+  location, create a temporary symlink to that location, then atomically rename
+  the symlink
+  to the configured V3BandwidthsFile path.
 
-Torflow does not write bandwidth files atomically.
+  Torflow does not write bandwidth files atomically.
 
 2.4.2. Additional KeyValue pair definitions
 
-KeyValue pairs in RelayLines that current implementations generate.
+  KeyValue pairs in RelayLines that current implementations generate.
 
 2.4.2.1. Simple Bandwidth Scanner
 
-Every RelayLine in sbws version 0.1.0 consists of:
+  Every RelayLine in sbws version 0.1.0 consists of:
 
-  "node_id=" hexdigest SP
+    "node_id=" hexdigest SP
 
-    As above.
+      As above.
 
-  "bw=" Bandwidth SP
+    "bw=" Bandwidth SP
 
-    As above.
+      As above.
 
-  "nick=" nickname SP
+    "nick=" nickname SP
 
-    [Exactly once.]
+      [Exactly once.]
 
-    The relay nickname.
+      The relay nickname.
 
-  "rtt=" Int SP
+    "rtt=" Int SP
 
-    [Exactly once.]
+      [Exactly once.]
 
-    The Round Trip Time in milliseconds to obtain 1 byte of data.
+      The Round Trip Time in milliseconds to obtain 1 byte of data.
 
-  "time=" DateTime NL
+    "time=" DateTime NL
 
-    [Exactly once.]
+      [Exactly once.]
 
-    The date and time timestamp in ISO 8601 format and UTC time zone
-    when the last bandwidth was obtained.
+      The date and time timestamp in ISO 8601 format and UTC time zone
+      when the last bandwidth was obtained.
 
-  "success=" Int NL
+    "success=" Int NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The number of times that the bandwidth measurements for this relay were
-    successful.
+      The number of times that the bandwidth measurements for this relay were
+      successful.
 
-  "error_circ=" Int NL
+    "error_circ=" Int NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The number of times that the bandwidth measurements for this relay
-    failed because of circuit failures.
+      The number of times that the bandwidth measurements for this relay
+      failed because of circuit failures.
 
-  "error_stream=" Int NL
+    "error_stream=" Int NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The number of times that the bandwidth measurements for this relay
-    failed because of stream failures.
+      The number of times that the bandwidth measurements for this relay
+      failed because of stream failures.
 
-  "error_misc=" Int NL
+    "error_misc=" Int NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The number of times that the bandwidth measurements for this relay
-    failed because of other reasons.
+      The number of times that the bandwidth measurements for this relay
+      failed because of other reasons.
 
-  "bw_mean=" Int NL
+    "bw_mean=" Int NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The measured bandwidth mean for this relay.
+      The measured bandwidth mean for this relay.
 
-  "bw_median=" Int NL
+    "bw_median=" Int NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The measured bandwidth median for this relay.
+      The measured bandwidth median for this relay.
 
-  "desc_bw_average=" Int NL
+    "desc_bw_average=" Int NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The descriptor average bandwidth for this relay.
+      The descriptor average bandwidth for this relay.
 
-  "desc_bw_obs_last=" Int NL
+    "desc_bw_obs_last=" Int NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The last descriptor observed bandwidth for this relay.
+      The last descriptor observed bandwidth for this relay.
 
-  "desc_bw_obs_mean=" Int NL
+    "desc_bw_obs_mean=" Int NL
 
-    [Zero or one time.]
+      [Zero or one time.]
 
-    The descriptor observed bandwidth mean for this relay.
+      The descriptor observed bandwidth mean for this relay.
 
 2.4.2.2. Torflow
 
-Torflow RelayLines include node_id and bw, and other KeyValue pairs [2].
+  Torflow RelayLines include node_id and bw, and other KeyValue pairs [2].
 
 References:
 
@@ -550,7 +552,7 @@ The following has not been obtained from any real measurement.
 
 A.1. Generated by Torflow
 
-This an example version 1.0.0 document:
+  This an example version 1.0.0 document:
 
 1523911758
 node_id=$68A483E05A2ABDCA6DA5A3EF8DB5177638A27F80 bw=760 nick=Test measured_at=1523911725 updated_at=1523911725 pid_error=4.11374090719 pid_error_sum=4.11374090719 pid_bw=57136645 pid_delta=2.12168374577 circ_fail=0.2 scanner=/filepath
@@ -589,7 +591,7 @@ software_version=1.0.3
 bw=38000 bw_mean=1127824 bw_median=1180062 desc_avg_bw=1073741824 desc_obs_bw_last=17230879 desc_obs_bw_mean=14732306 error_circ=0 error_misc=0 error_stream=1 master_key_ed25519=YaqV4vbvPYKucElk297eVdNArDz9HtIwUoIeo0+cVIpQ nick=Test node_id=$68A483E05A2ABDCA6DA5A3EF8DB5177638A27F80 rtt=380 success=1 time=2018-05-08T16:13:26
 bw=1 bw_mean=199162 bw_median=185675 desc_avg_bw=409600 desc_obs_bw_last=836165 desc_obs_bw_mean=858030 error_circ=0 error_misc=0 error_stream=0 master_key_ed25519=a6a+dZadrQBtfSbmQkP7j2ardCmLnm5NJ4ZzkvDxbo0I nick=Test2 node_id=$96C15995F30895689291F455587BD94CA427B6FC rtt=378 success=1 time=2018-05-08T16:13:36
 
-When there are not enough eligible measured relays:
+  When there are not enough eligible measured relays:
 
 1540496079
 version=1.2.0
@@ -610,113 +612,113 @@ B. Scaling bandwidths
 
 B.1. Scaling requirements
 
-Tor accepts zero bandwidths, but they trigger bugs in older Tor
-implementations. Therefore, scaling methods SHOULD perform the
-following checks:
- * If the total bandwidth is zero, all relays should be given equal
+  Tor accepts zero bandwidths, but they trigger bugs in older Tor
+  implementations. Therefore, scaling methods SHOULD perform the
+  following checks:
+   * If the total bandwidth is zero, all relays should be given equal
    bandwidths.
- * If the scaled bandwidth is zero, it should be rounded up to one.
+   * If the scaled bandwidth is zero, it should be rounded up to one.
 
-Initial experiments indicate that scaling may not be needed for
-torflow and sbws, because their measured bandwidths are similar
-enough already.
+  Initial experiments indicate that scaling may not be needed for
+  torflow and sbws, because their measured bandwidths are similar
+  enough already.
 
 B.2. A linear scaling method
 
-If scaling is required, here is a simple linear bandwith scaling
-method, which ensures that all bandwidth votes contain approximately
-the same total bandwidth:
+  If scaling is required, here is a simple linear bandwith scaling
+  method, which ensures that all bandwidth votes contain approximately
+  the same total bandwidth:
 
-1. Calculate the relay quota by dividing the total measured bandwidth
-   in all votes, by the number of relays with measured bandwidth
-   votes. In the public tor network, this is approximately 7500 as of
-   April 2018. The quota should be a consensus parameter, so it can be
-   adjusted for all generators on the network.
+  1. Calculate the relay quota by dividing the total measured bandwidth
+     in all votes, by the number of relays with measured bandwidth
+     votes. In the public tor network, this is approximately 7500 as of
+     April 2018. The quota should be a consensus parameter, so it can be
+     adjusted for all generators on the network.
 
-2. Calculate a vote quota by multiplying the relay quota by the number
-   of relays this bandwidth authority has measured
-   bandwidths for.
+  2. Calculate a vote quota by multiplying the relay quota by the number
+     of relays this bandwidth authority has measured
+     bandwidths for.
 
-3. Calculate a scaling factor by dividing the vote quota by the
-   total unscaled measured bandwidth in this bandwidth
-   authority's upcoming vote.
+  3. Calculate a scaling factor by dividing the vote quota by the
+     total unscaled measured bandwidth in this bandwidth
+     authority's upcoming vote.
 
-4. Multiply each unscaled measured bandwidth by the scaling
-   factor.
+  4. Multiply each unscaled measured bandwidth by the scaling
+     factor.
 
-Now, the total scaled bandwidth in the upcoming vote is
-approximately equal to the quota.
+  Now, the total scaled bandwidth in the upcoming vote is
+  approximately equal to the quota.
 
 B.3. Quota changes
 
-If all generators are using scaling, the quota can be gradually
-reduced or increased as needed. Smaller quotas decrease the size
-of uncompressed consensuses, and may decrease the size of
-consensus diffs and compressed consensuses. But if the relay
-quota is too small, some relays may be over- or under-weighted.
+  If all generators are using scaling, the quota can be gradually
+  reduced or increased as needed. Smaller quotas decrease the size
+  of uncompressed consensuses, and may decrease the size of
+  consensus diffs and compressed consensuses. But if the relay
+  quota is too small, some relays may be over- or under-weighted.
 
 B.4. Torflow aggreation
 
-Torflow implements two methods to compute the bandwidth values from the
-(stream) bandwidth measurements: with and without PID control feedback.
-The method described here is without PID control (see Torflow
-specification, section 2.2).
+  Torflow implements two methods to compute the bandwidth values from the
+  (stream) bandwidth measurements: with and without PID control feedback.
+  The method described here is without PID control (see Torflow
+  specification, section 2.2).
 
-In the following sections, the relays' measured bandwidth refer to the
-ones that this bandwidth authority has measured for the relays that
-would be included in the next bandwidth authority's upcoming vote.
+  In the following sections, the relays' measured bandwidth refer to the
+  ones that this bandwidth authority has measured for the relays that
+  would be included in the next bandwidth authority's upcoming vote.
 
-1. Calculate the filtered bandwidth for each relay:
-   - choose the relay's measurements (`bw_j`) that are equal or greater
-     than the mean of the measurements for this relay
-   - calculate the mean of those measurements
-
-   In pseudocode:
-
-      bw_filt_i = mean(max(mean(bw_j), bw_j))
-
-2. Calculate network averages:
-   - calculate the filtered average by dividing the sum of all the
-     relays' filtered bandwidth by the number of relays that have been
-     measured (`n`), ie, calculate the mean average of the relays'
-     filtered bandwidth.
-   - calculate the stream average by dividing the sum of all the
-     relays' filtered bandwidth by the number of relays that have been
-     measured (`n`), ie, calculate the mean average or the relays'
-     measured bandwidth.
+  1. Calculate the filtered bandwidth for each relay:
+    - choose the relay's measurements (`bw_j`) that are equal or greater
+      than the mean of the measurements for this relay
+    - calculate the mean of those measurements
 
     In pseudocode:
 
-      bw_avg_filt_ = bw_filt_i / n
-      bw_avg_strm = bw_i / n
+      bw_filt_i = mean(max(mean(bw_j), bw_j))
 
-3. Calculate ratios for each relay:
-   - calculate the filtered ratio by dividing each relay filtered
-     bandwidth by the filtered average
-   - calculate the stream ratio by dividing each relay measured
-     bandwidth by the stream average
+  2. Calculate network averages:
+    - calculate the filtered average by dividing the sum of all the
+      relays' filtered bandwidth by the number of relays that have been
+      measured (`n`), ie, calculate the mean average of the relays'
+      filtered bandwidth.
+    - calculate the stream average by dividing the sum of all the
+      relays' filtered bandwidth by the number of relays that have been
+      measured (`n`), ie, calculate the mean average or the relays'
+     measured bandwidth.
 
-   In pseudocode:
+     In pseudocode:
 
-    r_filt_i = bw_filt_i / bw_avg_filt
-    r_strm_i = bw_i / bw_avg_strm
+       bw_avg_filt_ = bw_filt_i / n
+       bw_avg_strm = bw_i / n
 
-4. Calculate the final ratio for each relay:
-   The final ratio is the larger between the filtered bandwidth and the
-   stream bandwidth.
+  3. Calculate ratios for each relay:
+    - calculate the filtered ratio by dividing each relay filtered
+      bandwidth by the filtered average
+    - calculate the stream ratio by dividing each relay measured
+      bandwidth by the stream average
 
-   In pseudocode:
+    In pseudocode:
 
-    r_i = max(r_filt_i, r_strm_i)
+      r_filt_i = bw_filt_i / bw_avg_filt
+      r_strm_i = bw_i / bw_avg_strm
 
-5. Calculate the scaled bandwidth for each relay:
-   The most recent descriptor observed bandwidth (`bw_obs_i`) is
-   multiplied by the ratio
+  4. Calculate the final ratio for each relay:
+    The final ratio is the larger between the filtered bandwidth and the
+    stream bandwidth.
 
-   In pseudocode:
+    In pseudocode:
 
-   bw_new_i = r_i * bw_obs_i
+      r_i = max(r_filt_i, r_strm_i)
 
-   <<In this way, the resulting network status consensus bandwidth
-   values are effectively re-weighted proportional to how much faster
-   the node was as compared to the rest of the network.>>
+  5. Calculate the scaled bandwidth for each relay:
+    The most recent descriptor observed bandwidth (`bw_obs_i`) is
+    multiplied by the ratio
+
+    In pseudocode:
+
+      bw_new_i = r_i * bw_obs_i
+
+    <<In this way, the resulting network status consensus bandwidth
+    values are effectively re-weighted proportional to how much faster
+    the node was as compared to the rest of the network.>>
