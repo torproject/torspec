@@ -117,10 +117,11 @@
 2.2. Header List format
 
 Some header Lines MUST appear in specific positions, as documented
-below.
-All other Lines can appear in any order.
+below. All other Lines can appear in any order.
+
 If a parser does not recognize any extra material in a header Line,
 the Line MUST be ignored.
+
 If a header Line does not conform to this format, the Line SHOULD be
 ignored by parsers.
 
@@ -153,7 +154,7 @@ It consists of:
     The specification document format version.
     It uses semantic versioning [5].
 
-    This Line has been added in version 1.1.0 of this specification.
+    This Line was added in version 1.1.0 of this specification.
 
     Version 1.0.0 documents do not contain this Line, and the
     version_number is considered to be "1.0.0".
@@ -164,7 +165,7 @@ It consists of:
 
     The name of the software that created the document.
 
-    This Line has been added in version 1.1.0 of this specification.
+    This Line was added in version 1.1.0 of this specification.
 
     Version 1.0.0 documents do not contain this Line, and the software
     is considered to be "torflow".
@@ -177,7 +178,7 @@ It consists of:
     The version may be a version_number, a git commit, or some other
     version scheme.
 
-    This Line has been added in version 1.1.0 of this specification.
+    This Line was added in version 1.1.0 of this specification.
 
   "file_created=" DateTime NL
 
@@ -186,7 +187,7 @@ It consists of:
     The date and time timestamp in ISO 8601 format and UTC time zone
     when the file was created.
 
-    This Line has been added in version 1.1.0 of this specification.
+    This Line was added in version 1.1.0 of this specification.
 
   "generator_started=" DateTime NL
 
@@ -195,7 +196,7 @@ It consists of:
     The date and time timestamp in ISO 8601 format and UTC time zone
     when the generator started.
 
-    This Line has been added in version 1.1.0 of this specification.
+    This Line was added in version 1.1.0 of this specification.
 
   "earliest_bandwidth=" DateTime NL
 
@@ -204,7 +205,7 @@ It consists of:
     The date and time timestamp in ISO 8601 format and UTC time zone
     when the first relay bandwidth was obtained.
 
-    This Line has been added in version 1.1.0 of this specification.
+    This Line was added in version 1.1.0 of this specification.
 
   "latest_bandwidth=" DateTime NL
 
@@ -218,7 +219,7 @@ It consists of:
     This duplicate value is included to make the format easier for people
     to read.
 
-    This Line has been added in version 1.1.0 of this specification.
+    This Line was added in version 1.1.0 of this specification.
 
   "number_eligible_relays=" Int NL
 
@@ -227,7 +228,7 @@ It consists of:
     The number of relays that have enough measurements to be
     included in the bandwidth file.
 
-    This Line has been added in version 1.2.0 of this specification.
+    This Line was added in version 1.2.0 of this specification.
 
   "minimum_percent_eligible_relays=" Int NL
 
@@ -241,7 +242,7 @@ It consists of:
     The minimum percentage is 60% in Torflow, so sbws uses
     60% as the default.
 
-    This Line has been added in version 1.2.0 of this specification.
+    This Line was added in version 1.2.0 of this specification.
 
   "number_consensus_relays=" Int NL
 
@@ -249,7 +250,7 @@ It consists of:
 
     The number of relays in the consensus.
 
-    This Line has been added in version 1.2.0 of this specification.
+    This Line was added in version 1.2.0 of this specification.
 
   "percent_eligible_relays=" Int NL
 
@@ -262,7 +263,7 @@ It consists of:
         (number_eligible_relays * 100.0) / number_consensus_relays
     to the number of relays in the consensus to include in this file.
 
-    This Line has been added in version 1.2.0 of this specification.
+    This Line was added in version 1.2.0 of this specification.
 
   "minimum_number_eligible_relays=" Int NL
 
@@ -273,7 +274,7 @@ It consists of:
     This line SHOULD be equal to:
         number_consensus_relays * (minimum_percent_eligible_relays / 100.0)
 
-    This Line has been added in version 1.2.0 of this specification.
+    This Line was added in version 1.2.0 of this specification.
 
   KeyValue NL
 
@@ -315,13 +316,11 @@ It consists of zero or more RelayLines with the relays' bandwidth
 in arbitrary order.
 
 There MUST NOT be multiple KeyValue pairs with the same key in the same
-RelayLine.
-If there are, the parser SHOULD choose an arbitrary Value.
+RelayLine. If there are, the parser SHOULD choose an arbitrary Value.
 
 There MUST NOT be multiple RelayLine per relay identity (node_id or
-master_key_ed25519).
-If there are, parsers SHOULD issue a warning and MAY choose an arbitrary
-value or ignore both values.
+master_key_ed25519). If there are, parsers SHOULD issue a warning.
+Parers MAY choose an arbitrary value, or ignore both values.
 
 If a parser does not recognize any extra material in a RelayLine,
 the extra material MUST be ignored.
