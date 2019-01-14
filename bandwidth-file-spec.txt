@@ -65,8 +65,9 @@
 2. Format details
 
   The Bandwidth List MUST contain the following sections:
-  - Header List (exactly once)
-  - Relays' Bandwidth List (zero or more times)
+  - Header List (exactly once), which is an ordered list of
+    - Header Lines (one or more times), then
+  - Relay Lines (zero or more times), which is an unordered list.
   If it does not contain these sections, parsers SHOULD ignore the file.
 
 2.1. Definitions
@@ -308,7 +309,7 @@ It consists of:
     is found conforming to the next section.
     Implementations of version 1.1.0 and later SHOULD include this Line.
 
-2.3. Relays' Bandwidth List format
+2.3. Relay Line format
 
 It consists of zero or more RelayLines with the relays' bandwidth
 in arbitrary order.
