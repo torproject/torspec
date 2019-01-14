@@ -706,17 +706,23 @@
 
        [Versions before 0.2.0.1-alpha don't recognize this]
 
-   "extra-info-digest" SP sha1digest [SP sha256-digest] NL
+   "extra-info-digest" SP sha1-digest [SP sha256-digest] NL
 
        [At most once]
 
-       "sha1-digest" is a hex-encoded digest (using upper-case characters) of
-       the router's extra-info document, as signed in the router's extra-info
-       (that is, not including the signature).  (If this field is absent, the
-       router is not uploading a corresponding extra-info document.)
+       "sha1-digest" is a hex-encoded SHA1 digest (using upper-case characters)
+       of the router's extra-info document, as signed in the router's
+       extra-info (that is, not including the signature).  (If this field is
+       absent, the router is not uploading a corresponding extra-info
+       document.)
 
        "sha256-digest" is a base64-encoded SHA256 digest of the extra-info
-       document, computed over the same data.
+       document. Unlike the "sha1-digest", this digest is calculated over the
+       entire document, including the signature. This difference is due to
+       a long-lived bug in the tor implementation that it would be difficult
+       to roll out an incremental fix for, not a design choice. Future digest
+       algorithms specified should not include the signature in the data used
+       to compute the digest.
 
        [Versions before 0.2.7.2-alpha did not include a SHA256 digest.]
        [Versions before 0.2.0.1-alpha don't recognize this field at all.]
