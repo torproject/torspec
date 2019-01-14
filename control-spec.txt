@@ -1537,13 +1537,17 @@
     "HSFETCH" SP (HSAddress / "v" Version "-" DescId)
               *[SP "SERVER=" Server] CRLF
 
-    HSAddress = 16*Base32Character
-    Version = "2"
+    HSAddress = 16*Base32Character / 56*Base32Character
+    Version = "2" / "3"
     DescId = 32*Base32Character
     Server = LongName
 
   This command launches hidden service descriptor fetch(es) for the given
   HSAddress or DescId.
+
+  HSAddress can be version 2 or version 3 addresses. DescIDs can only be
+  version 2 IDs. Version 2 addresses consist of 16*Base32Character and
+  version 3 addresses consist of 56*Base32Character.
 
   If a DescId is specified, at least one Server MUST also be provided,
   otherwise a 512 error is returned. If no DescId and Server(s) are specified,
@@ -1570,7 +1574,11 @@
      C: HSFETCH ajkhdsfuygaesfaa
      S: 250 OK
 
+     C: HSFETCH vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd
+     S: 250 OK
+
   [HSFETCH was added in Tor 0.2.7.1-alpha]
+  [HS v3 support added 0.4.1.1-alpha]
 
 3.27. ADD_ONION
 
