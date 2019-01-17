@@ -3279,7 +3279,7 @@
 
     the resulting control port event would be:
 
-      Tor: 650 PT_LOG SEVERITY=debug MESSAGE="Connected to bridge A"
+      Tor: 650 PT_LOG PT=/usr/bin/obs4proxy SEVERITY=debug MESSAGE="Connected to bridge A"
 
    [PT_LOG was added in Tor 0.4.0.1-alpha]
 
@@ -3304,7 +3304,7 @@
 
    the resulting control port event would be:
 
-      Tor: 650 PT_STATUS TRANSPORT=obfs4 CONNECT=Success
+      Tor: 650 PT_STATUS PT=/usr/bin/obs4proxy TRANSPORT=obfs4 CONNECT=Success
 
    [PT_STATUS was added in Tor 0.4.0.1-alpha]
 
