@@ -65,9 +65,9 @@
 2. Format details
 
   The Bandwidth List MUST contain the following sections:
-  - Header List (exactly once), which is an ordered list of
+  - Header List (exactly once), which is a partially ordered list of
     - Header Lines (one or more times), then
-  - Relay Lines (zero or more times), which is an unordered list.
+  - Relay Lines (zero or more times), in an arbitrary order.
   If it does not contain these sections, parsers SHOULD ignore the file.
 
 2.1. Definitions
