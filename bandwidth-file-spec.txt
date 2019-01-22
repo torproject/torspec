@@ -447,7 +447,7 @@
 
 2.4.2.1. Simple Bandwidth Scanner
 
-  Every RelayLine in sbws version 0.1.0 consists of:
+  sbws RelayLines may contain these keys:
 
     "node_id=" hexdigest SP
 
