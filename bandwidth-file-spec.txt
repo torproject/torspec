@@ -96,7 +96,7 @@
     Value ::= ArgumentCharValue+
     ArgumentCharValue ::= any printing ASCII character except NL and SP.
     Terminator ::= "=====" or "===="
-      Note: sbws versions 0.1.0 to 1.0.2 used a 4-character terminator.
+                   Generators SHOULD use a 5-charatcer terminator.
     Timestamp ::= Int
     Bandwidth ::= Int
     MasterKey ::= a base64-encoded Ed25519 public key, with
@@ -305,11 +305,17 @@
 
       [Zero or one time.]
 
-      The Header List section ends with this Terminator.
+      The Header List section ends with a Terminator.
 
       In version 1.0.0, Header List ends when the first relay bandwidth
       is found conforming to the next section.
-      Implementations of version 1.1.0 and later SHOULD include this Line.
+      
+      Implementations of version 1.1.0 and later SHOULD use a 5-character
+      terminator.
+      
+      Tor 0.4.0.1-alpha and later look for a 5-character terminator,
+      or the first relay bandwidth line. sbws versions 0.1.0 to 1.0.2
+      used a 4-character terminator, this bug was fixed in 1.0.3.
 
 2.3. Relay Line format
 
