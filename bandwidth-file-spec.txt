@@ -313,8 +313,8 @@
 
 2.3. Relay Line format
 
-  It consists of zero or more RelayLines with the relays' bandwidth
-  in arbitrary order.
+  It consists of zero or more RelayLines containing relay ids and
+  bandwidths. The relays and their KeyValues are in arbitrary order.
 
   There MUST NOT be multiple KeyValue pairs with the same key in the same
   RelayLine. If there are, the parser SHOULD choose an arbitrary Value.
