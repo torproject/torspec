@@ -100,7 +100,7 @@
     Timestamp ::= Int
     Bandwidth ::= Int
     MasterKey ::= a base64-encoded Ed25519 public key, with
-    padding characters omitted.
+                  padding characters omitted.
     DateTime ::= "YYYY-MM-DDTHH:MM:SS", as in ISO 8601
 
   Note that key_value and value are defined in Tor directory protocol
