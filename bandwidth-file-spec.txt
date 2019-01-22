@@ -319,9 +319,10 @@
   There MUST NOT be multiple KeyValue pairs with the same key in the same
   RelayLine. If there are, the parser SHOULD choose an arbitrary Value.
 
-  There MUST NOT be multiple RelayLine per relay identity (node_id or
+  There MUST NOT be multiple RelayLines per relay identity (node_id or
   master_key_ed25519). If there are, parsers SHOULD issue a warning.
-  Parers MAY choose an arbitrary value, or ignore both values.
+  Parers MAY reject the file, choose an arbitrary RelayLine, or ignore
+  both RelayLines.
 
   If a parser does not recognize any extra material in a RelayLine,
   the extra material MUST be ignored.
