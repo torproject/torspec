@@ -362,7 +362,7 @@
 
       [Exactly once.]
 
-      The measured bandwidth of this relay in kilobytes per second.
+      The bandwidth of this relay in kilobytes per second.
 
       No Zero Bandwidths:
       Tor accepts zero bandwidths, but they trigger bugs in older Tor
