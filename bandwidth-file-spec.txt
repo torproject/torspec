@@ -362,7 +362,7 @@
 
       [Exactly once.]
 
-      The measured bandwidth of this relay.
+      The measured bandwidth of this relay in kilobytes per second.
 
       No Zero Bandwidths:
       Tor accepts zero bandwidths, but they trigger bugs in older Tor
@@ -516,31 +516,33 @@
 
       [Zero or one time.]
 
-      The measured bandwidth mean for this relay.
+      The measured bandwidth mean for this relay in bytes per second.
 
     "bw_median=" Int NL
 
       [Zero or one time.]
 
-      The measured bandwidth median for this relay.
+      The measured bandwidth median for this relay in bytes per second.
 
     "desc_bw_average=" Int NL
 
       [Zero or one time.]
 
-      The descriptor average bandwidth for this relay.
+      The descriptor average bandwidth for this relay in bytes per second.
 
     "desc_bw_obs_last=" Int NL
 
       [Zero or one time.]
 
-      The last descriptor observed bandwidth for this relay.
+      The last descriptor observed bandwidth for this relay in bytes per
+      second.
 
     "desc_bw_obs_mean=" Int NL
 
       [Zero or one time.]
 
-      The descriptor observed bandwidth mean for this relay.
+      The descriptor observed bandwidth mean for this relay in bytes per
+      second.
 
 2.4.2.2. Torflow
 
