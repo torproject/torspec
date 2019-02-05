@@ -1,0 +1,510 @@
+Filename: 300-walking-onions.txt
+Title: Walking Onions: Scaling and Saving Bandwidth
+Author: Nick Mathewson
+Created: 5-Feb-2019
+Status: Draft
+
+0. Status
+
+   This proposal describes a mechanism called "Walking Onions" for
+   scaling the Tor network and reducing the amount of client bandwidth
+   used to maintain a client's view of the Tor network.
+
+   This is a draft proposal; there are problems left to be solved and
+   questions left to be answered.  Once those parts are done, we can
+   fill in section 4 with the final details of the design.
+
+1. Introduction
+
+   In the current Tor network design, we assume that every client has a
+   complete view of all the relays in the network.  To achieve this,
+   clients download consensus directories at regular intervals, and
+   download descriptors for every relay listed in the directory.
+
+   The substitution of microdescriptors for regular descriptors
+   (proposal 158) and the use of consensus diffs (proposal 140) have
+   lowered the bytes that clients must dedicate to directory operations.
+   But we still face the problem that, if we force each client to know
+   about every relay in the network, each client's directory traffic
+   will grow linearly with the number of relays in the network.
+
+   Another drawback in our current system is that client directory
+   traffic is front-loaded: clients need to fetch an entire directory
+   before they begin building circuits.  This places extra delays on
+   clients, and extra load on the network.
+
+   To anonymize the world, we will need to scale to a much larger number
+   of relays and clients: requiring clients to know about every relay in
+   the set simply won't scale, and requiring every new client to download
+   a large document is also problematic.
+
+   There are obvious responses here, and some other anonymity tools have
+   taken them.  It's possible to have a client only use a fraction of
+   the relays in a network--but doing so opens the client to _epistemic
+   attacks_, in which the difference in clients' views of the
+   network is used to partition their traffic.  It's also possible to
+   move the problem of selecting relays from the client to the relays
+   themselves, and let each relay select the next relay in turn--but
+   this choice opens the client to _route capture attacks_, in which a
+   malicious relay selects only other malicious relays.
+
+   In this proposal, I'll describe a design for eliminating up-front
+   client directory downloads.  Clients still choose relays at random,
+   but without ever having to hold a list of all the relays. This design
+   does not require clients to trust relays any more than they do today,
+   or open clients to epistemic attacks.
+
+   I hope to maintain feature parity with the current Tor design; I'll
+   list the places in which I haven't figured out how to do so yet.
+
+   I'm naming this design "walking onions".  The walking onion (Allium x
+   proliferum) reproduces by growing tiny little bulbs at the
+   end of a long stalk.  When the stalk gets too top-heavy, it flops
+   over, and the little bulbs start growing somewhere new.
+
+   The rest of this document will run as follows.  In section 2, I'll
+   explain the ideas behind the "walking onions" design, and how they
+   can eliminate the need for regular directory downloads.  In section 3, I'll
+   answer a number of follow-up questions that arise, and explain how to
+   keep various features in Tor working.  Section 4 (not yet written)
+   will elaborate all the details needed to turn this proposal into a
+   concrete set of specification changes.
+
+2. Overview
+
+2.1. Recapping proposal 141
+
+   Back in Proposal 141 ("Download server descriptors on demand"), Peter
+   Palfrader proposed an idea for eliminating ahead-of-time descriptor
+   downloads.  Instead of fetching all the descriptors in advance, a
+   client would fetch the descriptor for each relay in its path right
+   before extending the circuit to that relay.  For example, if a client
+   has a circuit from A->B and wants to extend the circuit to C, the
+   client asks B for C's descriptor, and then extends the circuit to C.
+
+   (Note that the client needs to fetch the descriptor every time it
+   extends the circuit, so that an observer can't tell whether the
+   client already had the descriptor or not.)
+
+   There are a couple of limitations for this design:
+      * It still requires clients to download a consensus.
+      * It introduces a extra round-trip to each hop of the circuit
+        extension process.
+
+   I'll show how to solve these problems in the two sections below.
+
+2.2. An observation about the ntor handshake.
+
+   I'll start with an observation about our current circuit extension
+   handshake, ntor: it should not actually be necessary to know a
+   relay's onion key before extending to it.
+
+   Right now, the client sends:
+         NODEID     (The relay's identity)
+         KEYID      (The relay's public onion key)
+         CLIENT_PK  (a diffie-hellman public key)
+
+   and the relay responds with:
+         SERVER_PK  (a diffie-hellman public key)
+         AUTH       (a function of the relay's private keys and
+                     *all* of the public keys.)
+
+   Both parties generate shared symmetric keys from the same inputs
+   that are are used to create the AUTH value.
+
+   The important insight here is that we could easily change
+   this handshake so that the client sends only CLIENT_PK, and receives
+   NODEID and KEYID as part of the response.
+
+   In other words, the client needs to know the relay's onion key to
+   _complete_ the handshake, but doesn't actually need to know the
+   relay's onion key in order to _initiate_ the handshake.
+
+   This is the insight that will let us save a round trip:  When the
+   client goes to extend a circuit from A->B to C, it can send B a
+   request to extend to C and retrieve C's descriptor in a single step.
+   Specifically, the client sends only CLIENT_PK, and relay B can include C's
+   keys as part of the EXTENDED cell.
+
+2.3. Extending by certified index
+
+   Now I'll explain how the client can avoid having to download a
+   list of relays entirely.
+
+   First, let's look at how a client chooses a random relay today.
+   First, the client puts all of the relays in a list, and computes a
+   weighted bandwidth for each one. For example, suppose the relay
+   identities are R1, R2, R3, R4, and R5, and their bandwidth weights
+   are 50, 40, 30, 20, and 10.  The client makes a table like this:
+
+      Relay   Weight     Range of index values
+      R1      50         0..49
+      R2      40         50..89
+      R3      30         90..119
+      R4      20         120..139
+      R5      10         140..149
+
+   To choose a random relay, the client picks a random index value
+   between 0 and 149 inclusive, and looks up the corresponding relay in
+   the table.  For example, if the client's random number is 77, it will
+   choose R2.  If its random number is 137, it chooses R4.
+
+   The key observation for the "walking onions" design is that the
+   client doesn't actually need to construct this table itself.
+   Instead, we will have this table be constructed by the authorities
+   and distributed to all the relays.
+
+   Here's how it works: let's have the authorities make a new kind of
+   consensus-like thing.  We'll call it an Efficient Network Directory
+   with Individually Verifiable Entries, or "ENDIVE" for short.  This
+   will differ from the client's index table above in two ways.  First,
+   every entry in the ENDIVE is normalized so that the bandwidth
+   weights maximum index is 2^32-1:
+
+       Relay      Normalized weight    Range of index values
+       R1         0x55555546           0x00000000..0x55555545
+       R2         0x44444438           0x55555546..0x9999997d
+       R3         0x3333332a           0x9999997e..0xcccccca7
+       R4         0x2222221c           0xcccccca8..0xeeeeeec3
+       R5         0x1111113c           0xeeeeeec4..0xffffffff
+
+   Second, every entry in the ENDIVE is timestamped and signed by the
+   authorities independently, so that when a client sees a line from the
+   table above, it can verify that it came from an authentic ENDIVE.
+   When a client has chosen a random index, one of these entries will
+   prove to the client that a given relay corresponds to that index.
+   Because of this property, we'll be calling these entries "Separable
+   Network Index Proofs", or "SNIP"s for short.
+
+   For example, a single SNIP from the table above might consist of:
+     * A range of times during which this SNIP is valid
+     * R1's identity
+     * R1's ntor onion key
+     * R1's address
+     * The index range 0x00000000..0x55555545
+     * A signature of all of the above, by a number of authorities
+
+   Let's put it together. Suppose that the client has a circuit from
+   A->B, and it wants to extend to a random relay, chosen randomly
+   weighted by bandwidth.
+
+   1. The client picks a random index value between 0 and 2**32 - 1.  It
+      sends that index to relay B in its EXTEND cell, along with a
+      g^x value for the ntor handshake.
+
+      Note: the client doesn't send an address or identity for the next
+      relay, since it doesn't know what relay it has chosen!  (The
+      combination of an index and a g^x value is what I'm calling a
+      "walking onion".)
+
+   2. Now, relay B looks up the index in its most recent ENDIVE, to
+      learn which relay the client selected.
+
+      (For example, suppose that the client's random index value is
+      0x50000001.  This index value falls between 0x00000000 and
+      0x55555546 in the table above, so the relay B sees that the client
+      has chosen R1 as its next hop.)
+
+   3. Relay B sends a create cell to R1 as usual.  When it gets a
+      CREATED reply, it includes the authority-signed SNIP for
+      R1 as part of the EXTENDED cell.
+
+   4. As part of verifying the handshake, the client verifies that the
+      SNIP was signed by enough authorities, that its timestamp
+      is recent enough, and that it actually corresponds to the
+      random index that the client selected.
+
+   Notice the properties we have with this design:
+
+       - Clients can extend circuits without having a list of all the
+         relays.
+
+       - Because the client's random index needs to match a routing
+         entry signed by the authorities, the client is still selecting
+         a relay randomly by weight.  A hostile relay cannot choose
+         which relay to send the client.
+
+
+   On a failure to extend, a relay should still report the routing entry
+   for the other relay that it couldn't connect to.  As before, a client
+   will start a new circuit if a partially constructed circuit is a
+   partial failure.
+
+
+   We could achieve a reliability/security tradeoff by letting clients
+   offer the relay a choice of two or more indices to extend to.
+   This would help reliability, but give the relay more influence over
+   the path.  We'd need to analyze this impact.
+
+
+   In the next section, I'll discuss a bunch of details that we need to
+   straighten out in order to make this design work.
+
+
+3. Sorting out the details.
+
+3.1. Will these routing entries fit in EXTEND2 and EXTENDED2 cells?
+
+   The EXTEND2 cell is probably big enough for this design.  The random
+   index that the client sends can be a new "link specifier" type,
+   replacing the IP and identity link specifiers.
+
+   The EXTENDED2 cell is likely to need to grow here.  We'll need to
+   implement proposal 249 ("Allow CREATE cells with >505 bytes of
+   handshake data") so that EXTEND2 and EXTENDED2 cells can be larger.
+
+3.2. How should SNIPs be signed?
+
+   We have a few options, and I'd like to look into the possibilities
+   here more closely.
+
+   The simplest possibility is to use **multiple signatures** on each
+   SNIP, the way we do today for consensuses.  These signatures should
+   be made using medium-term Ed25519 keys from the authorities.  At a
+   cost of 64 bytes per signature, at 9 authorities, we would need 576
+   bytes for each SNIP.  These signatures could be batch-verified to
+   save time at the client side.  Since generating a signature takes
+   around 20 usec on my mediocre laptop, authorities should be able to
+   generate this many signatures fairly easily.
+
+   Another possibility is to use a **threshold signature** on each SNIP,
+   so that the authorities collaboratively generate a short signature
+   that the clients can verify.  There are multiple threshold signature
+   schemes that we could consider here, though I haven't yet found one
+   that looks perfect.
+
+   Another possibility is to use organize the SNIPs in a **merkle tree
+   with a signed root**.  For this design, clients could download the
+   signed root periodically, and receive the hash-path from the signed
+   root to the SNIP.  This design might help with
+   certificate-transparency-style designs, and it would be necessary if we
+   ever want to move to a postquantum signature algorithm that requires
+   large signatures.
+
+   Another possibility (due to a conversation among Chelsea Komlo, Sajin
+   Sasy, and Ian Goldberg), is to *use SNARKs*.  (Why not?  All the cool
+   kids are doing it!)  For this, we'd have the clients download a
+   signed hash of the ENDIVE periodically, and have the authorities
+   generate a SNARK for each SNIP, proving its presence in that
+   document.
+
+3.3. How can we detect authority misbehavior?
+
+   We might want to take countermeasures against the possibility that a
+   quorum of corrupt or compromised authorities give some relays a
+   different set of SNIPs than they give other relays.
+
+   If we incorporate a merkle tree or a hash chain in the design, we can
+   use mechanisms similar to certificate transparency to ensure that the
+   authorities have a consistent log of all the entries that they have
+   ever handed out.
+
+3.4. How many types of weighted node selection are there, and how do we
+     handle them?
+
+   Right now, there are multiple weights that we use in Tor:
+      * Weight for exit
+      * Weight for guard
+      * Weight for middle node
+
+   We also filter nodes for several properties, such as flags they have.
+
+   To reproduce this behavior, we should enumerate the various weights
+   and filters that we use, and (if there are not too many) create a
+   separate index for each.  For example, the Guard index would weight
+   every node for selection as guard, assigning 0 weight to non-Guard
+   nodes.  The Exit index would weight every node for selection as an
+   exit, assigning 0 weight to non-Exit nodes.
+
+   When choosing a relay, the client would have to specify which index
+   to use.  We could either have a separate (labeled) set of SNIPs
+   entries for each index, or we could have each SNIP have a separate
+   (labeled) index range for each index.
+
+   REGRESSION: the client's choice of which index to use would leak the
+   next router's position and purpose in the circuit.  This information
+   is something that we believe relays can infer now, but it's not a
+   desired feature that they can.
+
+3.5. Does this design break onion service introduce handshakes?
+
+   In rend-spec-v3.txt section 3.3.2, we specify a variant of ntor for
+   use in INTRODUCE2 handshakes.  It allows the client to send encrypted
+   data as part of its initial ntor handshake, but requires the client
+   to know the onion service's onion key before it sends its initial
+   handshake.
+
+   That won't be a problem for us here, though: we still require clients
+   to fetch onion service descriptors before contacting a onion
+   service.
+
+3.6. How does the onion service directory work here?
+
+   The onion service directory is implemented as a hash ring, where
+   each relay's position in the hash ring is decided by a hash of its
+   identity, the current date, and a shared random value that the
+   authorities compute each day.
+
+   To implement this hash ring using walking onions, we would need to
+   have an extra index based not on bandwidth, but on position in the
+   hash ring.  Then onion services and clients could build a circuit,
+   then extend it one more hop specifying their desired index in the
+   hash ring.
+
+   We could either have a command to retrieve a trio of hashring-based
+   routing entries by index, or to retrieve (or connect to?) the n'th item
+   after a given hashring entry.
+
+3.7. How can clients choose guard nodes?
+
+   We can reuse the fallback directories here.  A newly bootstrapping
+   client would connect to a fallback directory, then build a three-hop
+   circuit, and finally extend the three-hop circuit by indexing to a
+   random guard node.  The random guard node's SNIP would
+   contain the information that the client needs to build real circuits
+   through that guard in the future.  Because the client would be
+   building a three-hop circuit, the fallback directory would not learn
+   the client's guards.
+
+   (Note that even if the extend attempt fails, we should still pick the
+   node as a possible guard based on its router entry, so that other
+   nodes can't veto our choice of guards.)
+
+3.8. Does the walking onions design preclude postquantum circuit handshakes?
+
+   Not at all!  Both proposal 263 (ntru) and proposal 270 (newhope) work
+   by having the client generate an ephemeral key as part of its initial
+   handshake.  The client does not need to know the relay's onion key to
+   do this, so we can still integrate those proposals with this one.
+
+3.9. Does the walking onions design stop us from changing the network
+     topology?
+
+   For Tor to continue to scale, we will someday need to accept that not
+   every relay can be simultaneously connected to every other relay.
+   Therefore, we will need to move from our current clique topology
+   assumption to some other topology.
+
+   There are also proposals to change node selection rules to generate
+   routes providing better performance, or improved resistance to local
+   adversaries.
+
+   We can, I think, implement this kind of proposal by changing the way
+   that ENDIVEs are generated.  Instead giving every relay the same
+   ENDIVE, the authorities would generate different ENDIVEs for
+   different relays, depending on the probability distribution of which
+   relay should be chosen after which in the network topology.  In the
+   extreme case, this would produce O(n) ENDIVEs and O(n^2) SNIPs.  In
+   practice, I hope that we could do better by having the network
+   topology be non-clique, and by having many relays share the same
+   distribution of successors.
+
+
+3.10. How can clients handle exit policies?
+
+   This is an unsolved challenge.  If the client tells the middle relay
+   its target port, it leaks information inappropriately.
+
+   One possibility is to try to gather exit policies into common
+   categories, such as "most ports supported" and "most common ports
+   supported".
+
+   Another (inefficient) possibility is for clients to keep trying exits
+   until they find one that works.
+
+   Another (inefficient) possibility is to require that clients who use
+   unusual ports fall back to the old mechanism for route selection.
+
+
+3.11. Can this approach support families?
+
+   This is an unsolved challenge.
+
+   One (inefficient) possibility is for clients to generate circuits and
+   discard those that use multiple relays in the same family.
+
+   One (not quite compatible) possibility is for the authorities to sort
+   the ENDIVE so that relays in the same family are adjacent to
+   one another.  The index-bounds part of each SNIP would also
+   have to include the bounds of the family.  This approach is not quite
+   compatible with the status quo, because it prevents relays from
+   belonging to more than one family.
+
+   One interesting possibility (due to Chelsea Komlo, Sajin Sasy, and
+   Ian Goldberg) is for the middle node to take responsibility for
+   family enforcement. In this design, the client might offer the middle
+   node multiple options for the next relay's index, and the middle node
+   would choose the first such relay that is neither in its family nor
+   its predecessor's family.  We'd need to look for a way to make sure
+   that the middle node wasn't biasing the path selection.
+
+   (TODO: come up with more ideas here.)
+
+3.12. Can walking onions support IP-based and country-based restrictions?
+
+   This is an unsolved challenge.
+
+   If the user's restrictions do not exclude most paths, one
+   (inefficient) possibility is for the user to generate paths until
+   they generate one that they like.  This idea becomes inefficient
+   if the user is excluding most paths.
+
+   Another (inefficient and fingerprintable) possibility is to require
+   that clients who use complex path restrictions fall back to the old
+   mechanism for route selection.
+
+   (TODO: come up with better ideas here.)
+
+3.13. What scaling problems have we not solved with this design?
+
+   The walking onions design doesn't solve (on its own) the problem that
+   the authorities need to know about every relay, and arrange to have
+   every relay tested.
+
+   The walking onions design doesn't solve (on its own) the problem that
+   relays need to have a list of all the relays.  (But see section 3.9
+   above.)
+
+3.14. Should we still have clients download a consensus when they're
+      using walking onions?
+
+   There are some fields in the current consensus directory documents
+   that the clients will still need, like the list of supported
+   protocols and network parameters.  A client that uses walking onions
+   should download a new flavor of consensus document that contains only
+   these fields, and does not list any relays.  In some signature
+   schemes, this consensus would contain a digest of the ENDIVE -- see
+   3.2 above.
+
+   (Note that this document would be a "consensus document" but not a
+   "consensus directory", since it doesn't list any relays.)
+
+
+4. Putting it all together
+
+   [This is the section where, in a later version of this proposal, I
+   would specify the exact behavior and data formats to be used here.
+   Right now, I'd say we're too early in the design phase.]
+
+
+A.1. Acknowledgments
+
+   Thanks to Peter Palfrader for his original design in proposal 141,
+   and to the designers of PIR-Tor, both of which inspired aspects of
+   this Walking Onions design.
+
+   Thanks to Chelsea Komlo, Sajin Sasy, and Ian Goldberg for feedback on
+   an earlier version of this design.
+
+   Thanks to David Goulet, Teor, and George Kadianakis for commentary on
+   earlier versions of this draft.
+
+A.2. Additional ideas
+
+   Teor notes that there are ways to try to get this idea to apply to
+   one-pass circuit construction, something like the old onion design.
+   We might be able to derive indices and keys from the same seeds,
+   even.  I don't see a way to do this without losing forward secrecy,
+   but it might be worth looking at harder.
+
+

@@ -220,6 +220,7 @@ Proposals by number:
 297  Relaxing the protover-based shutdown rules [CLOSED]
 298  Putting family lines in canonical form [CLOSED]
 299  Preferring IPv4 or IPv6 based on IP Version Failure Count [OPEN]
+300  Walking Onions: Scaling and Saving Bandwidth [DRAFT]
 
 
 Proposals by status:
@@ -228,6 +229,7 @@ Proposals by status:
    240  Early signing key revocation for directory authorities
    273  Exit relay pinning for web services [for n/a]
    294  TLS 1.3 Migration
+   300  Walking Onions: Scaling and Saving Bandwidth
  NEEDS-REVISION:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
