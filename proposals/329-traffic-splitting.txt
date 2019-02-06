@@ -1,0 +1,843 @@
+Filename: 329-traffic-splitting.txt
+Title: Overcoming Tor's Bottlenecks with Traffic Splitting
+Author: David Goulet, Mike Perry
+Created: 2020-11-25
+Status: Draft
+
+0. Status
+
+   This proposal describes the Conflux [CONFLUX] system developed by Mashael
+   AlSabah, Kevin Bauer, Tariq Elahi, and Ian Goldberg. It aims at improving
+   Tor client network performance by dynamically splitting traffic between two
+   circuits.
+
+
+1. Overview
+
+1.1. Multipath TCP Design Space
+
+   In order to understand our improvements to Conflux, it is important to
+   properly conceptualize what is involved in the design of multipath
+   algorithms in general.
+
+   The design space is broken into two orthogonal parts: congestion
+   control algorithms that apply to each path, and traffic scheduling
+   algorithms that decide when to send packets to send on each path.
+
+   MPTCP specifies 'coupled' congestion control (see [COUPLED]). Coupled
+   congestion control updates single-path congestion control algorithms to
+   account for shared bottlenecks between the paths, so that the combined
+   congestion control algorithms do not overwhelm any bottlenecks that
+   happen to be shared between the multiple paths. Various ways of
+   accomplishing this have been proposed and implemented in the Linux kernel.
+
+   Because Tor's congestion control only concerns itself with bottnecks in Tor
+   relay queues, and not with any other bottlenecks (such as intermediate
+   Internet routers), we can avoid this complexity merely by specifying that
+   any paths that are constructed should not share any relays. In this way, we
+   can proceed to use the exact same congestion control as specified in Proposal
+   324, for each path.
+
+   For this reason, this proposal will focus on the traffic scheduling
+   algorithms, rather than coupling. We propose three candidate algorithms
+   that have been studied in the literature, and will compare their
+   performance using simulation and consensus parameters.
+
+1.2. Divergence from the initial Conflux design
+
+   The initial [CONFLUX] paper doesn't provide any indications on how to handle
+   the size of out-of-order cell queue, which we consider a potential dangerous
+   memory DoS vector (see [MEMORY_DOS]). It also used RTT as the sole heuristic
+   for selecting which circuit to send on, which may vary depending on the
+   geographical locations of the participant relays, without considering their
+   actual available circuit capacity (which will be available to us via Proposal
+   324). Additionally, since the publication of [CONFLUX], more modern
+   packet scheduling algorithms have been developed, which aim to reduce
+   out-of-order queue size.
+
+   We propose mitigations for these issues using modern scheduling algorithms,
+   as well as implementations options for avoiding the out-of-order queue at
+   Exit relays. Additionally, we consider resumption, side channel, and traffic
+   analysis risks and benefits in [RESUMPTION], [SIDE_CHANNELS] and
+   [TRAFFIC_ANALYSIS].
+
+
+2. Design
+
+   The following section describes the Conflux design. Each sub-section is a
+   building block to the multipath design that Conflux proposes.
+
+   The circuit construction is as follow:
+
+          Primary Circuit (lower RTT)
+             +-------+      +--------+
+             |Guard 1|----->|Middle 1|----------+
+             +---^---+      +--------+          |
+    +-----+      |                           +--v---+
+    | OP  +------+                           | Exit |--> ...
+    +-----+      |                           +--^---+
+             +---v---+      +--------+          |
+             |Guard 2|----->|Middle 2|----------+
+             +-------+      +--------+
+          Secondary Circuit (higher RTT)
+
+   Both circuits are built using current Tor path selection, however they
+   SHOULD NOT share the same Guard relay, or middle relay. By avoiding
+   using the same relays in these positions in the path, we ensure
+   additional path capacity, and eliminate the need to use more complicated
+   'coupled' congestion control algorithms from the MPTCP literature[COUPLED].
+   This both simplifies design, and improves performance.
+
+   Then, the OP needs to link the two circuits together, as described in
+   [LINKING_CIRCUITS], [LINKING_EXIT], and [LINKING_SERVICE].
+
+   For ease of explanation, the primary circuit is the circuit with lower RTT,
+   and the secondary circuit is the circuit with higher RTT. Initial RTT
+   is measured during circuit linking, as described in [LINKING_CIRCUITS].
+   RTT is continually measured using SENDME timing, as in Proposal 324.
+   This means that during use, the primary circuit and secondary circuit may
+   switch roles, depending on unrelated network congestion caused by other
+   Tor clients.
+
+   We also support linking onion service circuits together. In this case,
+   only two rendezvous circuits are linked. Each of these RP circuits will be
+   constructed separately, and then linked. However, the same path constraints
+   apply to each half of the circuits (no shared relays between the legs).
+   Should, by chance, the service and the client sides end up sharing some
+   relays, this is not catastrophic. Multipath TCP researchers we have
+   consulted believe Tor's congestion control from Proposal 324 to be
+   sufficient in this rare case.
+
+   Only two circuits SHOULD be linked together. However, implementations
+   SHOULD make it easy for researchers to *test* more than two paths, as this
+   has been shown to assist in traffic analysis resistance[WTF_SPLIT]. At
+   minimum, this means not hardcoding only two circuits in the implementation.
+
+   If the number of circuits exceeds the current number of guard relays,
+   guard relays MAY be re-used, but implementations SHOULD use the same
+   number of Guards as paths.
+
+   Linked circuits MUST NOT be extended further once linked (ie:
+   'cannibalization' is not supported).
+
+2.1. Advertising support for conflux
+
+   We propose a new protocol version in order to advertise support for
+   circuit linking on the relay side:
+
+      "Relay=4" -- Relay supports an 2 byte sequence number in a RELAY cell
+                   header used for multipath circuit which are linked with the
+                   new RELAY_CIRCUIT_LINK relay cell command.
+
+   XXX: Advertise this in onion service descriptor.
+   XXX: Onion service descriptor can advertise more than two circuits?
+
+   The next section describes how the circuits are linked together.
+
+2.2. Linking circuits [LINKING_CIRCUITS]
+
+   To link circuits, we propose new relay commands that are sent on both
+   circuits, as well as a response to confirm the join, and an ack of this
+   response. These commands create a 3way handshake, which allows each
+   endpoint to measure the initial RTT of each leg upon link, without
+   needing to wait for any data.
+
+   All three stages of this handshake are sent on *each* circuit leg to be
+   linked.
+
+   To save round trips, these cells SHOULD be combined with the initial
+   RELAY_BEGIN cell on the faster circuit leg, using Proposal 325. See
+   [LINKING_EXIT] and [LINKING_SERVICE] for more details on setup in each case.
+
+   There are other ways to do this linking that we have considered, but they
+   seem not to be significantly better than this method, especially since we
+   can use Proposal 325 to eliminate the RTT cost of this setup before sending
+   data. For those other ideas, see [ALTERNATIVE_LINKING] and
+   [ALTERNATIVE_RTT], in the appendix.
+
+   The first two parts of the handshake establish the link, and enable
+   resumption:
+
+      16 -- RELAY_CIRCUIT_LINK
+
+            Sent from the OP to the exit/service in order to link
+            circuits together at the end point.
+
+      17 -- RELAY_CIRCUIT_LINKED
+
+            Sent from the exit/service to the OP, to confirm the circuits
+            were linked.
+
+   These cells have the following contents:
+
+     VERSION   [1 byte]
+     PAYLOAD   [variable, up to end of relay payload]
+
+   The VERSION tells us which circuit linking mechanism to use. At this point
+   in time, only 0x01 is recognized and is the one described by the Conflux
+   design.
+
+   For version 0x01, the PAYLOAD contains:
+
+      NONCE              [32 bytes]
+      LAST_SEQNO_SENT    [8 bytes]
+      LAST_SEQNO_RECV    [8 bytes]
+
+   XXX: Should we let endpoints specify their preferred [SCHEDULING] alg
+   here, to override consensus params? This has benefits: eg low-memory
+   mobile clients can ask for an alg that is better for their reorder
+   queues. But it also has complexity risk, if the other endpoint does
+   not want to support it, because of its own memory issues.
+
+   The NONCE contains a random 256-bit secret, used to associate the two
+   circuits together. The nonce must not be shared outside of the circuit
+   transmission, or data may be injected into TCP streams. This means it
+   MUST NOT be logged to disk.
+
+   The two sequence number fields are 0 upon initial link, but non-zero in the
+   case of a resumption attempt (See [RESUMPTION]).
+
+   If either circuit does not receive a RELAY_CIRCUIT_LINKED response, both
+   circuits MUST be closed.
+
+   The third stage of the handshake exists to help the exit/service measure
+   initial RTT, for use in [SCHEDULING]:
+
+      18 -- RELAY_CIRCUIT_LINKED_RTT_ACK
+
+            Sent from the OP to the exit/service, to provide initial RTT
+            measurement for the exit/service.
+
+   For timeout of the handshake, clients should use the normal SOCKS/stream
+   timeout already in use for RELAY_BEGIN.
+
+   These three relay commands (RELAY_CIRCUIT_LINK, RELAY_CIRCUIT_LINKED,
+   and RELAY_CIRCUIT_LINKED_ACK) are send on *each* leg, to allow each
+   endpoint to measure the initial RTT of each leg.
+
+2.2. Linking Circuits from OP to Exit [LINKING_EXIT]
+
+   To link exit circuits, two circuits to the same exit are built. The
+   client records the circuit build time of each.
+
+   If the circuits are being built on-demand, for immediate use, the
+   circuit with the lower build time SHOULD use Proposal 325 to append its
+   first RELAY cell to the RELAY_COMMAND_LINK, on the circuit with the
+   lower circuit build time. The exit MUST respond on this same leg.
+   After that, actual RTT measurements MUST be used to determine
+   future transmissions, as specified in [SCHEDULING].
+
+   The RTT times between RELAY_COMMAND_LINK and RELAY_COMMAND_LINKED are
+   measured by the client, to determine each circuit RTT to determine
+   primary vs secondary circuit use, and for packet scheduling.  Similarly,
+   the exit measures the RTT times between RELAY_COMMAND_LINKED and
+   RELAY_COMMAND_LINKED_ACK, for the same purpose.
+
+2.3. Linking circuits to an onion service [LINKING_SERVICE]
+
+   For onion services, we will only concern ourselves with linking
+   rendezvous circuits.
+
+   To join rendezvous circuits, clients make two introduce requests to a
+   service's intropoint, causing it to create two rendezvous circuits, to
+   meet the client at two separate rendezvous points. These introduce
+   requests MUST be sent to the same intropoint (due to potential use of
+   onionbalance), and SHOULD be sent back-to-back on the same intro
+   circuit. They MAY be combined with Proposal 325.
+
+   The first rendezvous circuit to get joined SHOULD use Proposal 325
+   to append the RELAY_BEGIN command, and the service MUST answer
+   on this circuit, until RTT can be measured.
+
+   Once both circuits are linked and RTT is measured, packet scheduling
+   should be used, as per [SCHEDULING].
+
+2.4. Congestion Control Application [CONGESTION_CONTROL]
+
+   The SENDMEs for congestion control are performed per-leg. As data arrives,
+   regardless of its ordering, it is counted towards SENDME delivery. In this
+   way, 'cwnd - package_window' of each leg always reflects the available
+   data to send on each leg. This is important for [SCHEDULING].
+
+   The Congestion control Stream XON/XOFF can be sent on either leg, and
+   applies to the stream's transmission on both legs.
+
+2.5. Sequencing [SEQUENCING]
+
+   With multiple paths for data, the problem of data re-ordering appears. In
+   other words, cells can arrive out of order from the two circuits where cell
+   N + 1 arrives before the cell N.
+
+   Handling this reordering operates after congestion control for each circuit
+   leg, but before relay cell command processing or stream data delivery.
+
+   For the receiver to be able to reorder the receiving cells, a sequencing
+   scheme needs to be implemented. However, because Tor does not drop or
+   reorder packets inside of a circuit, this sequence number can be very
+   small. It only has to signal that a cell comes after those arriving
+   on another circuit.
+
+   To achieve this, we add a small sequence number to the common relay
+   header for all relay cells on linked circuits. This sequence number
+   is meant to signal the number of cells sent on the *other* leg, so
+   that each endpoint knows how many cells are still in-flight on
+   another leg. It is different from the absolute sequence number used
+   in [LINKING_CIRCUITS] and [RESUMPTION], but can be derived from that
+   number, using relative arithmetic.
+
+     Relay command   [1 byte]
+     Recognized      [2 bytes]
+     StreamID        [2 bytes]
+     Digest          [4 bytes]
+     Length          [2 bytes]
+   > LongSeq         [1 bit]  # If this bit is set, use 31 bits for Seq
+   > Sequencing      [7 or 31 bits]
+     Data            [Remainder]
+
+   The sequence number is only set for the first cell after the endpoint
+   switches legs. In this case, LongSeq is set to 1, and the Sequencing
+   field is 31 more bits. Otherwise it is a 1 byte 0 value.
+
+   These fields MUST be present on ALL end-to-end relay cells on each leg
+   that come from the endpoint, following a RELAY_CIRCUIT_LINK command.
+
+   They are absent on 'leaky pipe' RELAY_COMMAND_DROP and
+   RELAY_COMMAND_PADDING_NEGOTIATED cells that come from middle relays,
+   as opposed to the endpoint, to support padding.
+
+   When an endpoint switches legs, on the first cell in a new leg,
+   LongSeq is set to 1, and the following 31 bits represent the *total*
+   number of cells sent on the *other* leg, before the switch. The receiver
+   must wait for that number of cells to arrive from the previous leg
+   before delivering that cell.
+
+   XXX: In the rare event that we send more than 2^31 cells (~1TB) on a
+   single leg, do we force a switch of legs, or expand the field further?
+
+   An alternative method of sequencing, that assumes that the endpoint
+   knows when it is going to switch, the cell before it switches, is
+   specified in [ALTERNATIVE_SEQUENCING]. Note that that method requires
+   only 1 byte for sequence number and switch signaling, but requires that
+   the sender know that it is planning to switch, the cell before it switches.
+   (This is possible with [BLEST_TOR], but [LOWRTT_TOR] can switch based on
+   RTT change, so it may be one cell late in that case).
+
+2.6. Resumption [RESUMPTION]
+
+   In the event that a circuit leg is destroyed, they MAY be resumed.
+
+   Resumption is achieved by re-using the NONCE and method to the same endpoint
+   (either [LINKING_EXIT] or [LINKING_SERVICE]). The resumed path need not
+   use the same middle and guard relays, but should not share any relays
+   with any existing legs(s).
+
+   To provide resumption, endpoints store an absolute 64bit cell counter of
+   the last cell they have sent on a conflux pair (their LAST_SEQNO_SENT),
+   as well the last sequence number they have delivered in-order to edge
+   connections corresponding to a conflux pair (their LAST_SEQNO_RECV).
+   Additionally, endpoints MAY store the entire contents of unacked
+   inflight cells (ie the 'package_window' from proposal 324), for each
+   leg, along with information corresponding to those cells' absolute
+   sequence numbers.
+
+   These 64 bit absolute counters can wrap without issue, as congestion
+   windows will never grow to 2^64 cells until well past the Singularity.
+   However, it is possible that extremely long, bulk circuits could
+   exceed 2^64 total sent or received cells, so endpoints SHOULD handle
+   wrapped sequence numbers for purposes of computing retransmit
+   information. (But even this case is unlikely to happen within the next
+   decade or so).
+
+   Upon resumption, the LAST_SEQNO_SENT and LAST_SEQNO_RECV fields are used to
+   convey the sequence numbers of the last cell the relay sent and received on
+   that leg. The other endpoint can use these sequence numbers to determine if
+   it received the in-flight data or not, or sent more data since that point,
+   up to and including this absolute sequence number. If LAST_SEQNO_SENT
+   has not been received, the endpoint MAY transmit the missing data, if it
+   still has it buffered.
+
+   Because both endpoints get information about the other side's absolute
+   SENT sequence number, they will know exactly how many re-transmitted
+   packets to expect, should the circuit stay open. Re-transmitters
+   should not re-increment their absolute sent fields while re-transmitting.
+   
+   If it does not have this missing data due to memory pressure, that endpoint
+   should destroy *both* legs, as this represents unrecoverable data loss.
+
+   Otherwise, the new circuit can be re-joined, and its RTT can be compared
+   to the remaining circuit to determine if the new leg is primary or
+   secondary.
+
+   It is even possible to resume conflux circuits where both legs have
+   been collapsed using this scheme, if endpoints continue to buffer their
+   unacked package_window data for some time after this close. However,
+   see [TRAFFIC_ANALYSIS] for more details on the full scope of this
+   issue.
+
+   If endpoints are buffering package_window data, such data should be
+   given priority to be freed in any oomkiller invocation. See
+   [MEMORY_DOS] for more oomkiller information.
+
+
+3. Traffic Scheduling [SCHEDULING]
+
+   In order to load balance the traffic between the two circuits, the original
+   conflux paper used only RTT. However, with Proposal 324, we will have
+   accurate information on the instantaneous available bandwidth of each
+   circuit leg, as 'cwnd - package_window' (see Section 3 of Proposal 324).
+
+   Some additional RTT optimizations are also useful, to improve
+   responsiveness and minimize out-of-order queue sizes.
+
+   We specify two traffic schedulers from the multipath literature and adapt
+   them to Tor: [LOWRTT_TOR] and [BLEST_TOR]. [LOWRTT_TOR] also has three
+   variants, with different trade offs.
+
+   However, see the [TRAFFIC_ANALYSIS] sections of this proposal for important
+   details on how this selection can be changed, to reduce website traffic
+   fingerprinting.
+
+3.1. LowRTT Scheduling [LOWRTT_TOR]
+
+   This scheduling algorithm is based on the original [CONFLUX] paper, with
+   ideas from [MPTCP]'s minRTT/LowRTT scheduler.
+
+   In this algorithm, endpoints send cells on the circuit with lower RTT
+   (primary circuit). This continues while the congestion window on the
+   circuit has available room: ie whenever cwnd - package_window > 0.
+
+   Whenever the primary circuit's congestion window becomes full, the
+   secondary circuit is used. We stop reading on the send window source
+   (edge connection) when both congestion windows become full.
+
+   In this way, unlike original conflux, we switch to the secondary circuit
+   without causing congestion on the primary circuit. This improves both
+   load times, and overall throughput.
+
+   This behavior matches minRTT from [MPTCP], sometimes called LowRTT.
+
+   It may be better to stop reading on the edge connection when the primary
+   congestion window becomes full, rather than switch to the secondary
+   circuit as soon as the primary congestion window becomes full. (Ie: only
+   switch if the RTTs themselves change which circuit is primary). This is
+   what was done in the original Conflux paper. This behavior effectively
+   causes us to optimize for responsiveness and congestion avoidance, rather
+   than throughput. For evaluation, we should control this switching behavior
+   with a consensus parameter (see [CONSENSUS_PARAMETERS]).
+
+   Because of potential side channel risk (see [SIDE_CHANNELS]), a third
+   variant of this algorithm, where the primary circuit is chosen during the
+   [LINKING_CIRCUITS] handshake and never changed, should also be possible
+   to control via consensus parameter.
+
+3.2. BLEST Scheduling [BLEST_TOR]
+
+   [BLEST] attempts to predict the availability of the primary circuit, and
+   use this information to reorder transmitted data, to minimize head-of-line
+   blocking in the recipient (and thus minimize out-of-order queues there).
+
+   BLEST_TOR uses the primary circuit until the congestion window is full.
+   Then, it uses the relative RTT times of the two circuits to calculate
+   how much data can be sent on the secondary circuit faster than if we
+   just waited for the primary circuit to become available. 
+
+   This is achieved by computing two variables at the sender:   
+   
+     rtts = secondary.currRTT / primary.currRTT
+     primary_limit = primary.cwnd + (rtts-1)/2)*rtts
+
+   Note: This (rtts-1)/2 factor represents anticipated congestion window
+   growth over this period.. it may be different for Tor, depending on CC alg.
+
+   If primary_limit < secondary.cwnd - (secondary.package_window + 1), then
+   there is enough space on the secondary circuit to send data faster than we
+   could than waiting for the primary circuit.
+   
+   XXX: Note that BLEST uses total_send_window where we use secondary.cwnd in
+   this check. total_send_window is min(recv_win, CWND). But since Tor does
+   not use receive windows and intead uses stream XON/XOFF, we only use CWND. There
+   is some concern this may alter BLEST's buffer minimization properties,
+   but since receive window should only matter if the application is slower
+   than Tor, and XON/XOFF should cover that case, hopefully this is fine.
+
+   Otherwise, if the primary_limit condition is not hit, cease reading 
+   on source edge connections until SENDME acks come back.
+
+   Here is the pseudocode for this:
+
+     while source.has_data_to_send():
+       if primary.cwnd > primary.package_window:
+         primary.send(source.get_packet())
+         continue
+     
+       rtts = secondary.currRTT / primary.currRTT
+       primary_limit = (primary.cwnd + (rtts-1)/2)*rtts
+     
+       if primary_limit < secondary.cwnd - (secondary.package_window+1):
+         secondary.send(source.get_packet())
+       else:
+         break # done for now, wait for an ACK to free up CWND space and restart
+
+   Note that BLEST also has a parameter lambda that is updated whenever HoL
+   blocking occurs. Because it is expensive and takes significant time to
+   signal this over Tor, we omit this.
+   XXX: See [REORDER_SIGNALING] section if we want this lambda feedback.
+
+3.3. Reorder queue signaling [REORDER_SIGNALING]
+
+   Reordering should be fairly simple task. By following using the sequence
+   number field in [SEQUENCING], endpoints can know how many cells are still
+   in flight on the other leg.
+
+   To reorder them properly, a buffer of out of order cells needs to be kept.
+   On the Exit side, this can quickly become overwhelming considering ten of
+   thousands of possible circuits can be held open leading to gigabytes of
+   memory being used. There is a clear potential memory DoS vector which means
+   that a tor implementation should be able to limit the size of those queues.
+
+   Luckily, [BLEST_TOR] and the form of [LOWRTT_TOR] that only uses the
+   primary circuit will minimize or eliminate this out-of-order buffer.
+
+   XXX: The remainder of this section may be over-complicating things... We
+   only need these concepts if we want to use BLEST's lambda feedback.
+
+   The default for this queue size is governed by the 'cflx_reorder_client'
+   and 'cflx_reorder_srv' consensus parameters (see [CONSENSUS_PARAMS]).
+   'cflx_reorder_srv' applies to Exits and onion services. Both parameters
+   can be overridden by Torrc, to larger or smaller than the consensus
+   parameter. (Low memory clients may want to lower it; SecureDrop onion
+   services or other high-upload services may want to raise it).
+
+   When the reorder queue hits this size, a RELAY_CONFLUX_XOFF is sent down
+   the circuit leg that has data waiting in the queue and use of that leg must
+   cease, until it drains to half of this value, at which point an
+   RELAY_CONFLUX_XON is sent. Note that this is different than the stream
+   XON/XOFF from Proposal 324.
+
+   XXX: [BLEST] actually does not cease use of a path in this case, but
+   instead uses this signal to adjust the lambda parameter, which biases
+   traffic away from that leg.
+
+
+4. Security Considerations
+
+4.1. Memory Denial of Service [MEMORY_DOS]
+
+   Both reorder queues and retransmit buffers inherently represent a memory
+   denial of service condition.
+
+   For [RESUMPTION] retransmit buffers, endpoints that support this
+   feature SHOULD free retransmit information as soon as they get close
+   to memory pressure. This prevents resumption while data is in flight,
+   but will not otherwise harm operation.
+
+   For reorder buffers, adversaries can potentially impact this at any
+   point, but most obviously and most severely from the client position.
+
+   In particular, clients can lie about sequence numbers, sending cells
+   with sequence numbers such that the next expected sequence number
+   is never sent. They can do this repeatedly on many circuits, to exhaust
+   memory at exits.
+
+   One option is to only allow actual traffic splitting in the downstream
+   direction, towards clients, and always use the primary circuit for
+   everything in the upstream direction. However, the ability to support
+   conflux from the client to the exit shows promise against traffic
+   analysis (see [WTF_SPLIT]).
+
+   The other option is to use [BLEST_TOR] from clients to exits, as it has
+   predictable interleaved cell scheduling, and minimizes reorder queues
+   at exits. If the ratios prescribed by that algorithm are not followed
+   within some bounds, the other endpoint can close both circuits, and
+   free the queue memory.
+
+   This still leaves the possibility that intermediate relays may block
+   a leg, allowing cells to traverse only one leg, thus still accumulating
+   at the reorder queue. Clients can also spoof sequence numbers similarly,
+   to make it appear that they are following [BLEST_TOR], without
+   actually sending any data on one of the legs.
+
+   To handle either of these cases, when a relay is under memory pressure,
+   the circuit OOM killer SHOULD free and close circuits with the oldest
+   reorder queue data, first. This heuristic was shown to be best during
+   the [SNIPER] attack OOM killer iteration cycle.
+
+4.2. Side Channels [SIDE_CHANNELS]
+
+   Two potential side channels may be introduced by the use of Conflux:
+      1. RTT leg-use bias by altering SENDME latency
+      2. Location info leaks through the use of both leg's latencies
+
+   For RTT and leg-use bias, Guard relays could delay legs to introduce
+   a pattern into the delivery of cells at the exit relay, by varying the
+   latency of SENDME cells (every 100th cell) to change the distribution
+   of traffic to send information. This attack could be performed in either
+   direction of traffic, to bias traffic load off of a particular Guard.
+   If an adversary controls both Guards, it could in theory send a binary
+   signal more easily, by alternating delays on each.
+
+   However, this risk weighs against the potential benefits against traffic
+   fingerprinting, as per [WTF_SPLIT]. Additionally, even ignoring
+   cryptographic tagging attacks, this side channel provides significantly
+   lower information over time than inter-packet-delay based side channels
+   that are already available to Guards and routers along the path to the
+   Guard.
+
+   Tor currently provides no defenses against already existing
+   single-circuit delay-based side channels, though both circuit padding
+   and [BACKLIT] are potential options it could conceivably deploy. The
+   [BACKLIT] paper also has an excellent review of the various methods
+   that have been studied for such single circuit side channels, and
+   the [BACKLIT] style RTT monitoring could be used to protect against
+   these conflux side channels as well. Circuit padding can also help
+   to obscure which cells are SENDMEs, since circuit padding is not
+   counted towards SENDME totals.
+
+   The second class of side channel is where the Exit relay may be able
+   to use the two legs to further infer more information about client
+   location. See [LATENCY_LEAK] for more details. It is unclear at
+   this time how much more severe this is for two paths than just one.
+
+   We should preserve the ability to disable conflux to and from Exit
+   relays, should these side channels prove more severe, or should
+   it prove possible to mitigate single-circuit side channels, but
+   not conflux side channels.
+
+   In all cases, all of these side channels appear less severe for onion
+   service traffic, due to the higher path variability due to relay
+   selection, as well as the end-to-end nature of conflux in that case.
+   This indicates that our ability to enable/disable conflux for services
+   should be separate from Exits.
+
+4.3. Traffic analysis [TRAFFIC_ANALYSIS]
+
+   Even though conflux shows benefits against traffic analysis in [WTF_SPLIT],
+   these gains may be moot if the adversary is able to perform packet counting
+   and timing analysis at guards to guess which specific circuits are linked.
+   In particular, the 3 way handshake in [LINKING_CIRCUITS] may be quite
+   noticeable.
+
+   As one countermeasure, it may be possible to eliminate the third leg
+   (RELAY_CIRCUIT_LINKED_ACK) by computing the exit/service RTT via measuring
+   the time between CREATED/REND_JOINED and RELAY_CIRCUIT_LINK, but this
+   will introduce cross-component complexity into Tor's protocol that
+   could quickly become unwieldy and fragile.
+
+   Additionally, the conflux handshake may make onion services stand out
+   more, regardless of the number of stages in the handshake. For this
+   reason, it may be more wise to simply address these issues with circuit
+   padding machines during circuit setup (see padding-spec.txt).
+
+   Additional traffic analysis considerations arise when combining conflux
+   with padding, for purposes of mitigating traffic fingerprinting. For this,
+   it seems wise to treat the packet schedulers as another piece of a combined
+   optimization problem in tandem with optimizing padding machines, perhaps
+   introducing randomness or fudge factors their scheduling, as a parameterized
+   distribution. For details, see
+   https://github.com/torproject/tor/blob/master/doc/HACKING/CircuitPaddingDevelopment.md
+
+   Finally, conflux may exacerbate forms of confirmation-based traffic
+   analysis that close circuits to determine concretely if they were in use,
+   since closing either leg might cause resumption to fail. TCP RST
+   injection can perform this attack on the side, without surveillance
+   capability. [RESUMPTION] with buffering of the inflight unacked
+   package_window data, for retransmit, is a partial mitigation, if
+   endpoints buffer this data for retransmission for a brief time even
+   if both legs close. This seems more feasible for onion services,
+   which are more vulnerable to this attack. However, if the adversary
+   controls the client, they will notice the resumption re-link, and
+   still obtain confirmation that way.
+
+   It seems the only way to fully mitigate these kinds of attacks is with
+   the Snowflake pluggable transport, which provides its own resumption
+   and retransmit behavior. Additionally, Snowflake's use of UDP DTLS also
+   protects against TCP RST injection, which we suspect to be the main
+   vector for such attacks.
+
+   In the future, a DTLS or QUIC transport for Tor such as masque could
+   provide similar RST injection resistance, and resumption at
+   Guard/Bridge nodes, as well.
+
+
+5. System Interactions
+
+  - congestion control
+  - EWMA and KIST
+  - CBT and number of guards
+  - Onion service circ obfuscation
+  - Future UDP (it may increase the need for UDP to buffer before dropping)
+  - Padding (no sequence numbers on padding cells, as per [SEQUENCING])
+    - Also, any padding machines may need re-tuning
+  - No 'cannibalization' of linked circuits
+
+
+6. Consensus and Torrc Parameters [CONSENSUS]
+
+  - conflux_circs
+    - Number of conflux circuits
+
+  - conflux_sched_exits, conflux_sched_clients, conflux_sched_service
+    - Three forms of LOWRTT_TOR, and BLEST_TOR
+
+  - ConfluxOnionService
+  - ConfluxOnionCircs
+
+
+7. Tuning Experiments [EXPERIMENTS]
+
+  - conflux_sched & conflux_exits
+    - Exit reorder queue size
+    - Responsiveness vs throughput tradeoff?
+  - Congestion control
+  - EWMA and KIST
+  - num guards & conflux_circs
+
+
+Appended A [ALTERNATIVES]
+
+A.1 BEGIN/END sequencing [ALTERNATIVE_SEQUENCING]
+
+   In this method of signaling, we increment the sequence number by 1
+   only when we switch legs, and use BEGIN/END "bookends" to know that
+   all data on a leg has been received.
+
+   To achieve this, we add a small sequence number to the common relay
+   header for all relay cells on linked circuits, as well as a field to
+   signal the beginning of a sequence, intermediate data, and the end
+   of a sequence.
+
+     Relay command   [1 byte]
+     Recognized      [2 bytes]
+     StreamID        [2 bytes]
+     Digest          [4 bytes]
+     Length          [2 bytes]
+   > Switching       [2 bits]    # 01 = BEGIN, 00 = CONTINUE, 10 = END
+   > Sequencing      [6 bits]
+     Data            [PAYLOAD_LEN - 12 - Length bytes]
+
+   These fields MUST be present on ALL end-to-end relay cells on each leg
+   that come from the endpoint, following a RELAY_CIRCUIT_LINK command.
+
+   They are absent on 'leaky pipe' RELAY_COMMAND_DROP and
+   RELAY_COMMAND_PADDING_NEGOTIATED cells that come from middle relays,
+   as opposed to the endpoint, to support padding.
+
+   Sequence numbers are incremented by one when an endpoint switches legs
+   to transmit a cell. This number will wrap; implementations should treat
+   0 as the next sequence after 2^6-1. Because we do not expect to support
+   significantly more than 2 legs, and much fewer than 63, this is not an
+   issue.
+
+   The first cell on a new circuit MUST use the BEGIN code for switching.
+   Cells are delivered from that circuit until an END switching signal is
+   received, even if cells arrive first on another circuit with the next
+   sequence number before and END switching field. Recipients MUST only
+   deliver cells with a BEGIN, if their Sequencing number is one more than
+   the last END.
+
+A.2 Alternative Link Handshake [ALTERNATIVE_LINKING]
+
+   The circuit linking in [LINKING_CIRCUITS] could be done as encrypted
+   ntor onionskin extension fields, similar to those used by v3 onions.
+
+   This approach has at least four problems:
+     i). For onion services, since the onionskins traverse the intro circuit
+         and then return on the rend circuit, this handshake cannot measure
+         RTT there.
+    ii). Since these onionskins are larger, and have no PFS, an adversary
+         at the middle relay knows that the onionskin is for linking, and
+         can potentially try to obtain the onionskin key for attacks on
+         the link.
+   iii). It makes linking circuits more fragile, since they could timeout
+         due to CBT, or other issues during construction.
+    iv). The overhead in processing this onionskin through onionskin queues
+         adds additional time for linking, even in the Exit case, making
+         that RTT potentially noisy.
+
+   Additionally, it is not clear that this approach actually saves us
+   anything in terms of setup time, because we can optimize away the
+   linking phase using Proposal 325, to combine initial RELAY_BEGIN cells
+   with RELAY_CIRCUIT_LINK.
+
+A.3. Alternative RTT measurement [ALTERNATIVE_RTT]
+
+   Instead of measuring RTTs during [LINKING_CIRCUITS], we could create
+   PING/PONG cells, whose sole purpose is to allow endpoints to measure
+   RTT.
+
+   This was rejected for several reasons. First, during circuit use, we
+   already have SENDMEs to measure RTT. Every 100 cells (or
+   'circwindow_inc' from Proposal 324), we are able to re-measure RTT based
+   on the time between that Nth cell and the SENDME ack. So we only need
+   PING/PONG to measure initial circuit RTT.
+
+   If we were able to use onionskins, as per [ALTERNATIVE_LINKING] above,
+   we might be able to specify a PING/PONG/PING handshake solely for
+   measuring initial RTT, especially for onion service circuits.
+
+   The reason for not making a dedicated PING/PONG for this purpose is that
+   it is context-free. Even if we were able to use onionskins for linking
+   and resumption, to avoid additional data in handshake that just measures
+   RTT, we would have to enforce that this PING/PONG/PING only follows the
+   exact form needed by this proposal, at the expected time, and at no
+   other points.
+
+   If we do not enforce this specific use of PING/PONG/PING, it becomes
+   another potential side channel, for use in attacks such as [DROPMARK].
+
+   In general, Tor is planning to remove current forms of context-free and
+   semantic-free cells from its protocol:
+   https://gitlab.torproject.org/tpo/core/torspec/-/issues/39
+
+   We should not add more.
+
+
+Appendix B: Acknowledgments
+
+   Thanks to Per Hurtig for helping us with the framing of the MPTCP
+   problem space.
+
+   Thanks to Simone Ferlin for clarifications on the [BLEST]
+   paper, and for pointing us at the Linux kernel implementation.
+
+   Extreme thanks goes again to Toke Høiland-Jørgensen, who helped
+   immensely towards our understanding of how the BLEST condition relates
+   to edge connection pushback, and for clearing up many other
+   misconceptions we had.
+
+   Finally, thanks to Mashael AlSabah, Kevin Bauer, Tariq Elahi, and Ian
+   Goldberg, for the original [CONFLUX] paper!
+
+
+References:
+
+[CONFLUX]
+   https://freehaven.net/anonbib/papers/pets2013/paper_65.pdf
+
+[BLEST]
+  https://olivier.mehani.name/publications/2016ferlin_blest_blocking_estimation_mptcp_scheduler.pdf
+  https://opus.lib.uts.edu.au/bitstream/10453/140571/2/08636963.pdf
+  https://github.com/multipath-tcp/mptcp/blob/mptcp_v0.95/net/mptcp/mptcp_blest.c
+
+[WTF_SPLIT]
+   https://www.comsys.rwth-aachen.de/fileadmin/papers/2020/2020-delacadena-trafficsliver.pdf
+
+[COUPLED]
+   https://datatracker.ietf.org/doc/html/rfc6356
+   https://www.researchgate.net/profile/Xiaoming_Fu2/publication/230888515_Delay-based_Congestion_Control_for_Multipath_TCP/links/54abb13f0cf2ce2df668ee4e.pdf?disableCoverPage=true
+   http://staff.ustc.edu.cn/~kpxue/paper/ToN-wwj-2020.04.pdf
+   https://www.thinkmind.org/articles/icn_2019_2_10_30024.pdf
+   https://arxiv.org/pdf/1308.3119.pdf
+
+[BACKLIT]
+   https://www.freehaven.net/anonbib/cache/acsac11-backlit.pdf
+
+[LATENCY_LEAK]
+   https://www.freehaven.net/anonbib/cache/ccs07-latency-leak.pdf
+   https://www.robgjansen.com/publications/howlow-pets2013.pdf
+
+[SNIPER]
+   https://www.freehaven.net/anonbib/cache/sniper14.pdf
+
+[DROPMARK]
+   https://www.freehaven.net/anonbib/cache/sniper14.pdf
