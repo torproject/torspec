@@ -596,6 +596,59 @@ Table of Contents
    Upon sending the "SMETHODS DONE" message, the PT proxy
    initialization is complete.
 
+3.3.4. Pluggable Transport Log Message
+
+   This message is for a client or server PT to be able to signal back to the
+   parent process via stdout or stderr any log messages.
+
+   A log message can be any kind of messages (human readable) that the PT
+   sends back so the parent process can gather information about what is going
+   on in the child process. It is not intended for the parent process to parse
+   and act accordingly but rather a message used for plain logging.
+
+   For example, the tor daemon logs those messages at the Severity level and
+   sends them onto the control port using the PT_LOG (see control-spec.txt)
+   event so any third part can pick them up for debugging.
+
+   The format of the message:
+
+      LOG SEVERITY=Severity MESSAGE=Message
+
+   The SEVERITY value indicate at which logging level the message applies.
+   The accepted values for <Severity> are: error, warning, notice, info, debug
+
+   The MESSAGE value is a human readable string formatted by the PT. The
+   <Message> contains the log message which can be a String or CString (see
+   section 2 in control-spec.txt).
+
+   Example:
+
+      LOG SEVERITY=debug MESSAGE="Connected to bridge A"
+
+3.3.5 Pluggable Transport Status Message
+
+   This message is for a client or server PT to be able to signal back to the
+   parent process via stdout or stderr any status messages.
+
+   The format of the message:
+
+      STATUS TRANSPORT=Transport <K_1>=<V_1> [<K_2>=<V_2>, ...]
+
+   The TRANSPORT value indicate a hint on what the PT is such has the name or
+   the protocol used for instance. As an example, obfs4proxy would use
+   "obfs4". Thus, the Transport value can be anything the PT itself defines
+   and it can be a String or CString (see section 2 in control-spec.txt).
+
+   The <K_n>=<V_n> values are specific to the PT and there has to be at least
+   one. They are messages that reflects the status that the PT wants to
+   report. <V_n> can be a String or CString.
+
+   Examples (fictional):
+
+      STATUS TRANSPORT=obfs4 ADDRESS=198.51.100.123:1234 CONNECT=Success
+      STATUS TRANSPORT=obfs4 ADDRESS=198.51.100.222:2222 CONNECT=Failed FINGERPRINT=<Fingerprint> ERRSTR="Connection refused"
+      STATUS TRANSPORT=trebuchet ADDRESS=198.51.100.15:443 PERCENT=42
+
 3.4. Pluggable Transport Shutdown
 
    The recommended way for Pluggable Transport using applications and
