@@ -9,7 +9,7 @@ Tor's extensions to the SOCKS protocol
   been established, the client application uses the TCP stream as usual.
 
   Tor supports SOCKS4 as defined in [1], SOCKS4A as defined in [2], and
-  SOCKS5 as defined in [3].
+  SOCKS5 as defined in [3] and [4].
 
   The stickiest issue for Tor in supporting clients, in practice, is forcing
   DNS lookups to occur at the OR side: if clients do their own DNS lookup,
@@ -30,13 +30,18 @@ Tor's extensions to the SOCKS protocol
 
   SOCKS5:
   - The (SOCKS5) "UDP ASSOCIATE" command is not supported.
+  - SOCKS5 BIND command is not supported.
   - IPv6 is not supported in CONNECT commands.
+  - SOCKS5 GSSAPI subnegotiation is not supported.
   - The "NO AUTHENTICATION REQUIRED" (SOCKS5) authentication method [00] is
     supported; and as of Tor 0.2.3.2-alpha, the "USERNAME/PASSWORD" (SOCKS5)
     authentication method [02] is supported too, and used as a method to
     implement stream isolation. As an extension to support some broken clients,
-    we allow clients to pass "USERNAME/PASSWORD" authentication to us even if
-    no authentication was selected.
+    we allow clients to pass "USERNAME/PASSWORD" authentication message to us
+    even if no authentication was selected. Furthermore, we allow
+    username/password fields of this message to be empty. This technically
+    violates RFC1929 [4], but ensures interoperability with somewhat broken
+    SOCKS5 client implementations.
 
   (For more information on stream isolation, see IsolateSOCKSAuth on the Tor
   manpage.)
@@ -94,5 +99,6 @@ Tor's extensions to the SOCKS protocol
 References:
  [1] http://en.wikipedia.org/wiki/SOCKS#SOCKS4
  [2] http://en.wikipedia.org/wiki/SOCKS#SOCKS4a
- [3] SOCKS5: RFC1928
+ [3] SOCKS5: RFC 1928 https://www.ietf.org/rfc/rfc1928.txt
+ [4] RFC 1929: https://www.ietf.org/rfc/rfc1929.txt
 
