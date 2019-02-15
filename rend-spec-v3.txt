@@ -2415,3 +2415,81 @@ Appendix G. Managing authorized client data [CLIENT-AUTH-MGMT]
      [XXX what happens when people use both the control port interface and the
           filesystem interface?]
 
+Appendix F. Two methods for managing revision counters.
+
+  Implementations MAY generate revision counters in any way they please,
+  so long as they are monotonically increasing over the lifetime of each
+  blinded public key.  But to avoid fingerprinting, implementors SHOULD
+  choose a strategy also used by other Tor implementations. Here we
+  describe two, and additionally list some strategies that implementors
+  should NOT use.
+
+  F.1. Increment-on-generation
+
+    This is the simplest strategy, and the one used by Tor through at
+    least version 0.3.4.0-alpha.
+
+    Whenever using a new blinded key, the service records the
+    highest revision counter it has used with that key.  When generating
+    a descriptor, the service uses the smallest non-negative number
+    higher than any number it has already used.
+
+    In other words, the revision counters under this system start fresh
+    with each blinded key as 0, 1, 2, 3, and so on.
+
+  F.2. Encrypted time in period
+
+    This scheme is what we recommend for situations when multiple
+    service instances need to coordinate their revision counters,
+    without an actual coordination mechanism.
+
+    Let T be the number of seconds that have elapsed since the descriptor
+    became valid, plus 1.  (T must be at least 1.) Implementations can use the
+    number of seconds since the start time of the shared random protocol run
+    that corresponds to this descriptor.
+
+    Let S be a secret that all the service providers share.  For
+    example, it could be the private signing key corresponding to the
+    current blinded key.
+
+    Let K be an AES-256 key, generated as
+        K = H("rev-counter-generation" | S)
+
+    Use K, and AES in counter mode with IV=0, to generate a stream of T
+    * 2 bytes.  Consider these bytes as a sequence of T 16-bit
+    little-endian words.  Add these words.
+
+    Let the sum of these words be the revision counter.
+
+
+    Cryptowiki attributes roughly this scheme to G. Bebek in:
+
+         G. Bebek. Anti-tamper database research: Inference control
+         techniques. Technical Report EECS 433 Final Report, Case
+         Western Reserve University, November 2002.
+
+    Although we believe it is suitable for use in this application, it
+    is not a perfect order-preserving encryption algorithm (and all
+    order-preserving encryption has weaknesses).  Please think twice
+    before using it for anything else.
+
+    (This scheme can be optimized pretty easily by caching the encryption of
+    X*1, X*2, X*3, etc for some well chosen X.)
+
+    For a slow reference implementation, see src/test/ope_ref.py in the
+    Tor source repository. [XXXX for now, see the same file in Nick's
+    "ope_hax" branch -- it isn't merged yet.]
+
+    This scheme is not currently implemented in Tor.
+
+  F.X. Some revision-counter strategies to avoid
+
+    Though it might be tempting, implementations SHOULD NOT use the
+    current time or the current time within the period directly as their
+    revision counter -- doing so leaks their view of the current time,
+    which can be used to link the onion service to other services run on
+    the same host.
+
+    Similarly, implementations SHOULD NOT let the revision counter
+    increase forever without resetting it -- doing so links the service
+    across changes in the blinded public key.
