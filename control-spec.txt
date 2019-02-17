@@ -3644,7 +3644,7 @@
  [New in 0.4.0.x]
 
   Phase 90:
-  tag=ap_handshake_done summary="Handshake fininshed with a relay to build circuits"
+  tag=ap_handshake_done summary="Handshake finished with a relay to build circuits"
  [New in 0.4.0.x]
 
   Phase 95:
