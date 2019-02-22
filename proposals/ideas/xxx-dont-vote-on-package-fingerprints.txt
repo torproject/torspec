@@ -1,0 +1,73 @@
+Filename: xxx-dont-vote-on-package-fingerprints.txt
+Title: Don't include package fingerprints in consensus documents
+Author: Iain R. Learmonth
+Created: 2019-02-21
+Status: Open
+Ticket: #28465
+
+0. Abstract
+
+   I propose modifying the Tor consensus document to remove
+   digests of the latest versions of package files. These "package"
+   lines were never used by any directory authority and so add
+   additional complexity to the consensus voting mechanisms while
+   adding no additional value.
+
+1. Introduction
+
+   In proposal 227 [1], to improve the integrity and security of
+   updates, a way to authenticate the latest versions of core Tor
+   software through the consensus was described. By listing a location
+   with this information for each version of each package, we can
+   augment the update process of Tor software to authenticate the
+   packages it downloads through the Tor consensus. This was
+   implemented in tor 0.2.6.3-alpha.
+
+   When looking at modernising our network archive recently [2], I
+   came across this line for votes and consensuses. If packages are
+   referenced by the consensus then ideally we should archive those
+   packages just as we archive referenced descriptors. However, this
+   line was never present in any vote archived.
+
+2. Proposal
+
+   We deprecate the "package" line in the specification for votes.
+
+   Directory authorities stop voting for "package" lines in their
+   votes. Changes to votes do not require a new consensus method, so
+   this part of the proposal can be implemented separately.
+
+   We allocate a consensus method when this proposal is implemented.
+   Let's call it consensus method N.
+
+   Authorities will continue computing consensus package lines in the
+   consensus if the consensus method is between 19 and (N-1).  If the
+   consensus method is N or later, they omit these lines.
+
+3. Security Considerations
+
+   This proposal removes a feature that could be used for improved
+   security but currently isn't. As such it is extra code in the
+   codebase that may have unknown bugs or lead to bugs in the future
+   due to unexpected interactions. Overall this should be a good
+   thing for security of Core Tor.
+
+4. Compatability Considerations
+
+   A new consensus method is required for this proposal. The
+   "package" line was always optional and so no client should be
+   depending on it. There are no known consumers of the "package"
+   lines (there are none to consume anyway).
+
+A. References
+
+   [1] Nick Mathewson, Mike Perry. "Include package fingerprints in
+       consensus documents". Tor Proposal 227, February 2014.
+   [2] Iain Learmonth, Karsten Loesing. "Towards modernising data
+       collection and archive for the Tor network". Technical Report
+       2018-12-001, December 2018.
+
+B. Acknowledgements
+
+   Thanks to teor and Nick Mathewson for their comments and
+   suggestions on this proposal.
