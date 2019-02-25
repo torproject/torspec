@@ -44,7 +44,7 @@
 
 1.4. Format Versions
 
-  1.0.0 - The legacy fallback Bandwidth List format
+  1.0.0 - The legacy Bandwidth List format
 
   1.1.0 - Add a header containing information about the bandwidth
           file. Document the sbws and Torflow relay line keys.
