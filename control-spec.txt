@@ -3509,8 +3509,43 @@
   exist in all future versions.
 
   Current Tor versions enter these phases in order, monotonically.
-  Future Tors MAY revisit earlier stages.
- [XXXX: do we revisit earlier stages if the network fails?]
+  Future Tors MAY revisit earlier phases, for example, if the network
+  fails.
+
+5.5.1. Overview of Bootstrap reporting.
+
+  Bootstrap phases can be viewed as belonging to one of three stages:
+
+  1. Initial connection to a Tor relay or bridge
+  2. Obtaining directory information
+  3. Building an application circuit
+
+  Tor doesn't specifically enter Stage 1; that is a side effect of
+  other actions that Tor is taking. Tor could be making a connection
+  to a fallback directory server, or it could be making a connection
+  to a guard candidate. Either one counts as Stage 1 for the purposes
+  of bootstrap reporting.
+
+  Stage 2 might involve Tor contacting directory servers, or it might
+  involve reading cached directory information from a previous
+  session. Large parts of Stage 2 might be skipped if there is already
+  enough cached directory information to build circuits. Tor will
+  defer reporting progress in Stage 2 until Stage 1 is complete.
+
+  Tor defers this reporting because Tor can already have enough
+  directory information to build circuits, yet not be able to connect
+  to a relay. Without that deferral, a user might misleadingly see Tor
+  stuck at a large amount of progress when something as fundamental as
+  making a TCP connection to any relay is failing.
+
+  Tor also doesn't specifically enter Stage 3; that is a side effect
+  of Tor building circuits for some purpose or other. In a typical
+  client, Tor builds predicted circuits to provide lower latency for
+  application connection requests. In Stage 3, Tor might make new
+  connections to relays or bridges that it did not connect to in Stage
+  1.
+
+5.5.2. Phases in Bootstrap Stage 1.
 
   Phase 0:
   tag=starting summary="Starting"
@@ -3521,34 +3556,59 @@
   tag=conn_pt summary="Connecting to pluggable transport"
  [This phase is new in 0.4.0.x]
 
+  Tor is making a TCP connection to the transport plugin for a
+  pluggable transport. Tor will use this pluggable transport to make
+  its first connection to a bridge.
+
   Phase 2:
   tag=conn_done_pt summary="Connected to pluggable transport"
  [New in 0.4.0.x]
+
+  Tor has completed its TCP connection to the transport plugin for the
+  pluggable transport.
 
   Phase 3:
   tag=conn_proxy summary="Connecting to proxy"
  [New in 0.4.0.x]
 
+  Tor is making a TCP connection to a proxy to make its first
+  connection to a relay or bridge.
+
   Phase 4:
   tag=conn_done_proxy summary="Connected to proxy"
  [New in 0.4.0.x]
+
+  Tor has completed its TCP connection to a proxy to make its first
+  connection to a relay or bridge.
 
   Phase 5:
   tag=conn summary="Connecting to a relay"
  [New in 0.4.0.x; prior versions of Tor had a "conn_dir" phase that
   sometimes but not always corresponded to connecting to a directory server]
 
+  Tor is making its first connection to a relay. This might be through
+  a pluggable transport or proxy connection that Tor has already
+  established.
+
   Phase 10:
   tag=conn_done summary="Connected to a relay"
  [New in 0.4.0.x]
+
+  Tor has completed its first connection to a relay.
 
   Phase 14:
   tag=handshake summary="Handshaking with a relay"
  [New in 0.4.0.x; prior versions of Tor had a "handshake_dir" phase]
 
+  Tor is in the process of doing a TLS handshake with a relay.
+
   Phase 15:
   tag=handshake_done summary="Handshake with a relay done"
  [New in 0.4.0.x]
+
+  Tor has completed its TLS handshake with a relay.
+
+5.5.3. Phases in Bootstrap Stage 2.
 
   Phase 20:
   tag=onehop_create summary="Establishing an encrypted directory connection"
@@ -3597,8 +3657,9 @@
   phase until we have received a 'connected' relay cell in response to
   a request for descriptors.
 
- [Some versions of Tor (between 0.2.6.2-alpha and 0.4.0.x):
-  Tor could report having internal paths only; see Section 5.6]
+ [Some versions of Tor (starting with 0.2.6.2-alpha but before
+  0.4.0.x): Tor could report having internal paths only; see Section
+  5.6]
 
   Phase 50:
   tag=loading_descriptors summary="Loading relay descriptors"
@@ -3612,8 +3673,9 @@
   This phase is also a good opportunity to use the "progress" keyword to
   indicate partial steps.
 
- [Some versions of Tor (between 0.2.6.2-alpha and 0.4.0.x):
-  Tor could report having internal paths only; see Section 5.6]
+ [Some versions of Tor (starting with 0.2.6.2-alpha but before
+  0.4.0.x): Tor could report having internal paths only; see Section
+  5.6]
 
   Phase 75:
   tag=enough_dirinfo summary="Loaded enough directory info to build
@@ -3621,39 +3683,72 @@
  [New in 0.4.0.x; previously, Tor would misleadingly report the
   "conn_or" tag once it had enough directory info.]
 
+5.5.4. Phases in Bootstrap Stage 3.
+
   Phase 76:
   tag=ap_conn_pt summary="Connecting to pluggable transport to build
   circuits"
  [New in 0.4.0.x]
 
+  This is similar to conn_pt, except for making connections to
+  additional relays or bridges that Tor needs to use to build
+  application circuits.
+
   Phase 77:
   tag=ap_conn_done_pt summary="Connected to pluggable transport to build circuits"
  [New in 0.4.0.x]
 
+  This is similar to conn_done_pt, except for making connections to
+  additional relays or bridges that Tor needs to use to build
+  application circuits.
+
   Phase 78:
   tag=ap_conn_proxy summary="Connecting to proxy to build circuits"
  [New in 0.4.0.x]
- [XXX fix mispaste in control_bootstrap.c for this!]
+
+  This is similar to conn_proxy, except for making connections to
+  additional relays or bridges that Tor needs to use to build
+  application circuits.
 
   Phase 79:
   tag=ap_conn_done_proxy summary="Connected to proxy to build circuits"
  [New in 0.4.0.x]
 
+  This is similar to conn_done_proxy, except for making connections to
+  additional relays or bridges that Tor needs to use to build
+  application circuits.
+
   Phase 80:
   tag=ap_conn summary="Connecting to a relay to build circuits"
  [New in 0.4.0.x]
+
+  This is similar to conn, except for making connections to additional
+  relays or bridges that Tor needs to use to build application
+  circuits.
 
   Phase 85:
   tag=ap_conn_done summary="Connected to a relay to build circuits"
  [New in 0.4.0.x]
 
+  This is similar to conn_done, except for making connections to
+  additional relays or bridges that Tor needs to use to build
+  application circuits.
+
   Phase 89:
   tag=ap_handshake summary="Finishing handshake with a relay to build circuits"
  [New in 0.4.0.x]
 
+  This is similar to handshake, except for making connections to
+  additional relays or bridges that Tor needs to use to build
+  application circuits.
+
   Phase 90:
   tag=ap_handshake_done summary="Handshake finished with a relay to build circuits"
  [New in 0.4.0.x]
+
+  This is similar to handshake_done, except for making connections to
+  additional relays or bridges that Tor needs to use to build
+  application circuits.
 
   Phase 95:
   tag=circuit_create summary="Establishing a[n internal] Tor circuit"
@@ -3663,8 +3758,9 @@
   we will set about trying to make some 3-hop circuits in case we need them
   soon.
 
- [Some versions of Tor (between 0.2.6.2-alpha and 0.4.0.x):
-  Tor could report having internal paths only; see Section 5.6]
+ [Some versions of Tor (starting with 0.2.6.2-alpha but before
+  0.4.0.x): Tor could report having internal paths only; see Section
+  5.6]
 
   Phase 100:
   tag=done summary="Done"
@@ -3672,8 +3768,9 @@
   A full 3-hop circuit has been established. Tor is ready to handle
   application connections now.
 
- [Some versions of Tor (between 0.2.6.2-alpha and 0.4.0.x):
-  Tor could report having internal paths only; see Section 5.6]
+ [Some versions of Tor (starting with 0.2.6.2-alpha but before
+  0.4.0.x): Tor could report having internal paths only; see Section
+  5.6]
 
 5.6 Bootstrap phases reported by older versions of Tor
 
