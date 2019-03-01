@@ -215,7 +215,7 @@ Proposals by number:
 292  Mesh-based vanguards [ACCEPTED]
 293  Other ways for relays to know when to publish [CLOSED]
 294  TLS 1.3 Migration [DRAFT]
-295  Using ADL-GCM for relay cryptography (solving the crypto-tagging attack) [OPEN]
+295  Using ADL for relay cryptography (solving the crypto-tagging attack) [OPEN]
 296  Have Directory Authorities expose raw bandwidth list files [OPEN]
 297  Relaxing the protover-based shutdown rules [CLOSED]
 298  Putting family lines in canonical form [CLOSED]
@@ -250,7 +250,7 @@ Proposals by status:
    285  Directory documents should be standardized as UTF-8
    287  Reduce circuit lifetime without overloading the network
    289  Authenticating sendme cells to mitigate bandwidth attacks
-   295  Using ADL-GCM for relay cryptography (solving the crypto-tagging attack)
+   295  Using ADL for relay cryptography (solving the crypto-tagging attack)
    296  Have Directory Authorities expose raw bandwidth list files
    299  Preferring IPv4 or IPv6 based on IP Version Failure Count
  ACCEPTED:

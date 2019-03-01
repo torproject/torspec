@@ -1,0 +1,402 @@
+Filename: 295-relay-crypto-with-adl.txt
+Title: Using ADL for relay cryptography (solving the crypto-tagging attack)
+Author: Tomer Ashur, Orr Dunkelman, Atul Luykx
+Created: 22 Feb 2018
+Last-Modified: 1 March 2019
+Status: Open
+
+
+0. Context
+
+   Although Crypto Tagging Attacks were identified already in the
+   original Tor design, it was not before the rise of the
+   Procyonidae in 2012 that their severity was fully realized. In
+   Proposal 202 (Two improved relay encryption protocols for Tor
+   cells) Nick Mathewson discussed two approaches to stymie tagging
+   attacks and generally improve Tor's cryptography. In Proposal 261
+   (AEZ for relay cryptography) Mathewson puts forward a concrete
+   approach which uses the tweakable wide-block cipher AEZ.
+
+   This proposal suggests an alternative approach to Proposal 261
+   using the notion of Release (of) Unverified Plaintext (RUP)
+   security. It describes an improved algorithm for circuit
+   encryption based on CTR-mode which is already used in Tor, and an
+   additional component for hashing.
+
+   Incidentally, and similar to Proposal 261, this proposal employs
+   the ENCODE-then-ENCIPHER approach thus it improves Tor's E2E
+   integrity by using (sufficient) redundancy.
+
+   For more information about the scheme and a security proof for
+   its RUP-security see
+
+       Tomer Ashur, Orr Dunkelman, Atul Luykx: Boosting
+       Authenticated Encryption Robustness with Minimal
+       Modifications. CRYPTO (3) 2017: 3-33
+
+   available online at https://eprint.iacr.org/2017/239 .
+
+   For authentication between the OP and the edge node we use
+   the PIV scheme: https://eprint.iacr.org/2013/835
+
+2. Preliminaries
+
+2.1 Motivation
+
+   For motivation, see proposal 202.
+
+2.2. Notation
+
+   Symbol               Meaning
+   ------               -------
+   M                    Plaintext
+   C_I                  Ciphertext
+   CTR                  Counter Mode
+   N_I                  A de/encryption nonce (to be used in CTR-mode)
+   T_I                  A tweak (to be used to de/encrypt the nonce)
+   T'_I                 A running digest
+   ^                    XOR
+   ||                   Concatenation
+          (This is more readable than a single | but must be adapted
+          before integrating the proposal into tor-spec.txt)
+
+2.3. Security parameters
+
+   HASH_LEN -- The length of the hash function's output, in bytes.
+
+   PAYLOAD_LEN -- The longest allowable cell payload, in bytes. (509)
+
+   DIG_KEY_LEN -- The key length used to digest messages (e.g.,
+   using GHASH). Since GHASH is only defined for 128-bit keys, we
+   recommend DIG_KEY_LEN = 128.
+
+   ENC_KEY_LEN -- The key length used for encryption (e.g., AES). We
+   recommend ENC_KEY_LEN = 128.
+
+2.4. Key derivation (replaces Section 5.2.2)
+
+   For newer KDF needs, Tor uses the key derivation function HKDF
+   from RFC5869, instantiated with SHA256. The generated key
+   material is:
+
+                 K = K_1 | K_2 | K_3 | ...
+
+   where, if H(x,t) denotes HMAC_SHA256 with value x and key t,
+         and m_expand denotes an arbitrarily chosen value,
+         and INT8(i) is an octet with the value "i", then
+             K_1     = H(m_expand | INT8(1) , KEY_SEED )
+         and K_(i+1) = H(K_i | m_expand | INT8(i+1) , KEY_SEED ),
+   in RFC5869's vocabulary, this is HKDF-SHA256 with info ==
+   m_expand, salt == t_key, and IKM == secret_input.
+
+   When used in the ntor handshake a string of key material is
+   generated and is used in the following way:
+
+   Length       Purpose                         Notation
+   ------        -------                        --------
+   HASH_LEN     forward digest IV               DF      *
+   HASH_LEN     backward digest IV              DB      *
+   ENC_KEY_LEN  encryption key                  Kf
+   ENC_KEY_LEN  decryption key                  Kb
+   DIG_KEY_LEN  forward digest key              Khf
+   DIG_KEY_LEN  backward digest key             Khb
+   ENC_KEY_LEN  forward tweak key               Ktf
+   ENC_KEY_LEN  backward tweak key              Ktb
+   DIGEST_LEN   nonce to use in the                      *
+                  hidden service protocol
+
+      * I am not sure that we need these any longer.
+
+   Excess bytes from K are discarded.
+
+2.6. Ciphers
+
+   For hashing(*) we use GHASH with a DIG_KEY_LEN-bit key. We write
+   this as Digest(K,M) where K is the key and M the message to be
+   hashed.
+
+   We use AES with an ENC_KEY_LEN-bit key. For AES encryption
+   (resp., decryption) we write E(K,X) (resp., D(K,X)) where K is an
+   ENC_KEY_LEN-bit key and X the block to be encrypted (resp.,
+   decrypted).
+
+   For a stream cipher, unless otherwise specified, we use
+   ENC_KEY_LEN-bit AES in counter mode, with a nonce that is
+   generated as explained below. We write this as Encrypt(K,N,X)
+   (resp., Decrypt(K,N,X)) where K is the key, N the nonce, and X
+   the message to be encrypted (resp., decrypted).
+
+   (*) The terms hash and digest are used interchangeably.
+
+3. Routing relay cells
+
+3.1. Forward Direction
+
+   The forward direction is the direction that CREATE/CREATE2 cells
+   are sent.
+
+3.1.1. Routing from the Origin
+
+   Let n denote the integer representing the destination node. For
+   I = 1...n+1, T'_{I} is initialized to the 128-bit string consisting
+   entirely of '0's. When an OP sends a relay cell, they prepare the
+   cell as follows:
+
+        The OP prepares the authentication part of the message:
+
+                C_{n+1} = M
+                T_{n+1} = Digest(Khf_n,T'_{n+1}||C_{n+1})
+                N_{n+1} = T_{n+1} ^ E(Ktf_n,T_{n+1} ^ 0)
+                T'_{n+1} = T_{n+1}
+
+        Then, the OP prepares the multi-layered encryption:
+
+                For I=n...1:
+                        C_I = Encrypt(Kf_I,N_{I+1},C_{I+1})
+                        T_I = Digest(Khf_I,T'_I||C_I)
+                        N_I = T_I ^ E(Ktf_I,T_I ^ N_{I+1})
+                        T'_I = T_I
+
+          The OP sends C_1 and N_1 to node 1.
+
+3.1.2. Relaying Forward at Onion Routers
+
+   When a forward relay cell is received by OR I, it decrypts the
+   payload with the stream cipher, as follows:
+
+        'Forward' relay cell:
+
+                T_I = Digest(Khf_I,T'_I||C_I)
+                N_{I+1} = T_I ^ D(Ktf_I,T_I ^ N_I)
+                C_{I+1} = Decrypt(Kf_I,N_{I+1},C_I)
+                T'_I = T_I
+
+   The OR then decides whether it recognizes the relay cell as
+   described below. If the OR recognizes the cell, it processes the
+   contents of the relay cell. Otherwise, it passes C_{I+1}||N_{I+1}
+   along the circuit if the circuit continues.
+
+   For more information, see section 4 below.
+
+3.2. Backward Direction
+
+   The backward direction is the opposite direction from
+   CREATE/CREATE2 cells.
+
+3.2.1. Relaying Backward at Onion Routers
+
+   When a backward relay cell is received by OR I, it encrypts the
+   payload with the stream cipher, as follows:
+
+        'Backward' relay cell:
+
+                T_I = Digest(Khb_I,T'_I||C_{I+1})
+                N_I = T_I ^ E(Ktb_I,T_I ^ N_{I+1})
+                C_I = Encrypt(Kb_I,N_I,C_{I+1})
+                T'_I = T_I
+
+   with C_{n+1} = M and N_{n+1}=0. Once encrypted, the node passes
+   C_I and N_I along the circuit towards the OP.
+
+3.2.2. Routing to the Origin
+
+   When a relay cell arrives at an OP, the OP decrypts the payload
+   with the stream cipher as follows:
+
+        OP receives relay cell from node 1:
+
+                For I=1...n, where n is the end node on the circuit:
+                        C_{I+1} = Decrypt(Kb_I,N_I,C_I)
+                        T_I = Digest(Khb_I,T'_I||C_{I+1})
+                        N_{I+1} = T_I ^ D(Ktb_I,T_I ^ N_I)
+                        T'_I = T_I
+
+                If the payload is recognized (see Section 4.1),
+                then:
+
+                       The sending node is I. Stop, process the
+                       payload and authenticate.
+
+4. Application connections and stream management
+
+4.1. Relay cells
+
+  Within a circuit, the OP and the end node use the contents of
+  RELAY packets to tunnel end-to-end commands and TCP connections
+  ("Streams") across circuits. End-to-end commands can be initiated
+  by either edge; streams are initiated by the OP.
+
+        The payload of each unencrypted RELAY cell consists of:
+
+                Relay command           [1 byte]
+                'Recognized'            [2 bytes]
+                StreamID                [2 bytes]
+                Length                  [2 bytes]
+                Data                    [PAYLOAD_LEN-23 bytes]
+
+   The 'recognized' field is used as a simple indication that the
+   cell is still encrypted. It is an optimization to avoid
+   calculating expensive digests for every cell. When sending cells,
+   the unencrypted 'recognized' MUST be set to zero.
+
+   When receiving and decrypting cells the 'recognized' will always
+   be zero if we're the endpoint that the cell is destined for. For
+   cells that we should relay, the 'recognized' field will usually
+   be nonzero, but will accidentally be zero with P=2^-16.
+
+   If the cell is recognized, the node moves to verifying the
+   authenticity of the message as follows(*):
+
+          forward direction (executed by the end node):
+
+                T_{n+1} = Digest(Khf_n,T'_{n+1}||C_{n+1})
+                Tag = T_{n+1} ^ D(Ktf_n,T_{n+1} ^ N_{n+1})
+                T'_{n+1} = T_{n+1}
+
+                The message is authenticated (i.e., M = C_{n+1}) if
+                and only if Tag = 0
+
+          backward direction (executed by the OP):
+
+                The message is authenticated (i.e., C_{n+1} = M) if
+                and only if N_{n+1} = 0
+
+
+   The old Digest field is removed since sufficient information for
+   authentication is now included in the nonce part of the payload.
+
+       (*) we should consider dropping the 'recognized' field
+       altogether and always try to authenticate. Note that this is
+       an optimization question and the crypto works just as well
+       either way.
+
+   The 'Length' field of a relay cell contains the number of bytes
+   in the relay payload which contain real payload data. The
+   remainder of the payload is padding bytes.
+
+4.2. Appending the encrypted nonce and dealing with version-homogenic
+     and version-heterogenic circuits
+
+   When a cell is prepared to be routed from the origin (see Section
+   3.1.1) the encrypted nonce N is appended to the encrypted cell
+   (occupying the last 16 bytes of the cell). If the cell is
+   prepared to be sent to a node supporting the new protocol, S is
+   combined with other sources to generate the layer's
+   nonce. Otherwise, if the node only supports the old protocol, n
+   is still appended to the encrypted cell (so that following nodes
+   can still recover their nonce), but a synchronized nonce (as per
+   the old protocol) is used in CTR-mode.
+
+   When a cell is sent along the circuit in the 'backward'
+   direction, nodes supporting the new protocol always assume that
+   the last 16 bytes of the input are the nonce used by the previous
+   node, which they process as per Section 3.2.1. If the previous
+   node also supports the new protocol, these cells are indeed the
+   nonce. If the previous node only supports the old protocol, these
+   bytes are either encrypted padding bytes or encrypted data.
+
+5. Security
+
+5.1. Resistance to crypto-tagging attacks
+
+   A crypto-tagging attack involves a circuit with two colluding
+   nodes and at least one honest node between them. The attack works
+   when one node makes a change to the cell (tagging) in a way that
+   can be undone by the other colluding party. In between, the
+   tagged cell is processed by honest nodes which do not detect the
+   change. The attack is possible due to the malleability property
+   of CTR-mode: a change to a ciphertext bit effects only the
+   respective plaintext bit in a predicatble way. This proposal
+   frustrates the crypto-tagging attack by linking the nonce to the
+   encrypted message such that any change to the ciphertext results
+   in a random nonce and hence, random plaintext.
+
+   Let us consider the following 3-hop scenario: the entry and end
+   nodes are malicious and colluding and the middle node is honest.
+
+5.1.1. forward direction
+
+   Suppose that node I tags the ciphertext part of the message
+   (C'_{I+1} != C_{I+1}) then forwards it to the next node (I+1). As
+   per Section 3.1.2. Node I+1 digests C'_{I+1} to generate T_{I+1}
+   and N_{I+2}. Since C'_{I+2} is different than it should be, so
+   are the resulting T_{I+1} and N_{I+2}. Hence, decrypting C'_{I+2}
+   using these values results in a random string for C_{I+2}. Since
+   C_{I+2} is now just a random string, it is decrypted into a
+   random string and cannot be 'recognized' nor
+   authenticated. Furthermore, since C'_{I+1} is different than what
+   it should be, T'_{I+1} (i.e., the running digest of the middle
+   node) is now out of sync with that of the OP, which means that
+   all future cells sent through this node will decrypt into garbage
+   (random strings).
+
+   Likewise, suppose that instead of tagging the ciphertext, Node I
+   node tags the encrypted nonce N'_{I+1} != N_{I+1}. Now, when Node
+   I+1 digests the payload the tweak T_{I+1} is find, but using it
+   to decrypt N'_{I+1} again results in a random nonce for
+   N_{I+2}. This random nonce is used to decrypt C_{I+1} into a
+   random C'_{I+2} which is not recognized by the end node. Since
+   C_{I+2} is now a random string, the running digest of the end
+   node is now out of sync, which prevents the end node from
+   decrypting further cells.
+
+5.1.2. Backward direction
+
+   In the backward direction the tagging is done by Node I+2
+   untagging by the Node I. Suppose first that Node I+2 tags the
+   ciphertext C_{I+2} and sends it to Node I+1. As per Section
+   3.2.1, Node I+1 first digests C_{I+2} and uses the resulting
+   T_{I+1} to generate a nonce N_{I+1}. From this it is clear that
+   any change introduced by Node I+2 influences the entire payload
+   and cannot be removed by Node I.
+
+   Unlike in Section 5.1.1., the cell is blindly delivered by Node I
+   to the OP which decrypts it. However, since the payload leaving
+   the end node was modified, the message cannot be authenticated by
+   the OP which can be trusted to tear down the circuit.
+
+   Suppose now that tagging is done by Node I+2 to the nonce part of
+   the payload, i.e., N_{I+2}. Since this value is encrypted by Node
+   I+1 to generate its own nonce N_{I+1}, again, a random nonce is
+   used which affects the entire keystream of CTR-mode. The cell
+   again cannot be authenticated by the OP and the circuit is torn
+   down.
+
+   We note that the end node can modify the plain message before
+   ever encrypting it and this cannot be discovered by the Tor
+   protocol. This vulnerability is outside the scope of this
+   proposal and users should always use TLS to make sure that their
+   application data is encrypted before it enters the Tor network.
+
+5.2. End-to-end authentication
+
+   Similar to the old protocol, this proposal only offers end-to-end
+   authentication rather than per-hop authentication. However,
+   unlike the old protocol, the ADL-construction is non-malleable
+   and hence, once a non-authentic message was processed by an
+   honest node supporting the new protocol, it is effectively
+   destroyed for all nodes further down the circuit. This is because
+   the nonce used to de/encrypt all messages is linked to (a digest
+   of) the payload data.
+
+   As a result, while honest nodes cannot detect non-authentic
+   messages, such nodes still destroy the message thus invalidating
+   its authentication tag when it is checked by edge nodes. As a
+   result, security against crypto-tagging attacks is ensured as
+   long as an honest node supporting the new protocol processes the
+   message between two dishonest ones.
+
+5.3 The Running Digest
+
+   Unlike the old protocol, the running digest is now computed as
+   the output of a GHASH call instead of a hash function call
+   (SHA256). Since GHASH does not provide the same type of security
+   guarantees as SHA256, it is worth discussing why security is not
+   lost from computing the running digest differently.
+
+   The running digets is used to ensure that if the same payload is
+   encrypted twice, then the resulting ciphertext does not remain
+   the same. Therefore, all that is needed is that the digest should
+   repeat with low probability. GHASH is a universal hash function,
+   hence it gives such a guarantee assuming its key is chosen
+   uniformly at random.
