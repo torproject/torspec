@@ -58,7 +58,7 @@
           bandwidth values (averages and descriptor bandwidths).
 
   All Tor versions can consume format version 1.0.0.
-  
+
   All Tor versions can consume format version 1.1.0 and later,
   but Tor versions earlier than 0.3.5.1-alpha warn if the header
   contains any KeyValue lines after the Timestamp.
@@ -310,10 +310,10 @@
 
       In version 1.0.0, Header List ends when the first relay bandwidth
       is found conforming to the next section.
-      
+
       Implementations of version 1.1.0 and later SHOULD use a 5-character
       terminator.
-      
+
       Tor 0.4.0.1-alpha and later look for a 5-character terminator,
       or the first relay bandwidth line. sbws versions 0.1.0 to 1.0.2
       used a 4-character terminator, this bug was fixed in 1.0.3.
