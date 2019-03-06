@@ -104,7 +104,8 @@
                   padding characters omitted.
     DateTime ::= "YYYY-MM-DDTHH:MM:SS", as in ISO 8601
     CountryCode ::= Two capital ASCII letters ([A-Z]{2}), as defined in
-                    ISO 3166-1 alpha-2 plus "ZZ" to denote unknown country.
+                    ISO 3166-1 alpha-2 plus "ZZ" to denote unknown country
+                    (eg the destination is in a Content Delivery Network).
     CountryCodeList ::= One or more CountryCode(s) separated by a comma
                         ([A-Z]{2}(,[A-Z]{2})*).
 
@@ -298,9 +299,6 @@
       destination Web server(s) are located.
       The destination Web Servers serve the data that the generator retrieves
       to measure the bandwidth.
-
-      The code "ZZ" is used here to denote that the country is unknown.
-      For instance, when the destination is in a Content Delivery Network.
 
       This Line was added in version 1.3.0 of this specification.
 
