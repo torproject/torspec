@@ -33,38 +33,19 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/27491
 
    I propose that the failure counter uses the following fields:
 
-      * IPv4 failure count
+      * IPv4 failure points
 
-      * IPv4 failure count from no route (autofail)
-
-      * IPv6 failure count
-
-      * IPv6 failure count from no route (autofail)
+      * IPv6 failure points
 
    These entries will exist as internal counters for the current session, and
-   as a list of the previous counts of these counters from previous sessions in
-   the state file.
+   a calculated value from the previous session in the statefile. 
 
    These values will be stored as 32-bit unsigned integers for the current
-   session, and as comma seperated values in the statefile.
+   session and in the statefile.
 
-   The list capacity will be the 4 most recent sessions for each field above
-   stored in the state file with the least recent first. This is for the
-   following reasons:
-
-      * We can forget about the oldest sessions without having to keep the
-        exact timestamp when a client failed. This prevents an attacker from
-        getting detailed failure information from the state file.
-
-      * Some clients (mobile phones, laptops) may switch between networks of
-        which may be more or less reliable than the previous in terms of IPv4
-        or IPv6. In this case, it makes less sense to remember old failures
-        caused on a different network from the current one.
-
-   When Tor is being closed, and there are less than four entries for each
-   field, we will append the current session at the end. If there are four
-   entries, we will remove the oldest entry and then add the current session's
-   values at Tor's shutdown.
+   When a new session is loaded, we will load the failure count from the
+   statefile, and when a session is closed, the failure counts from the current
+   session will be stored in the statefile. 
 
 3. Failure Probability Calculation
 
@@ -92,26 +73,134 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/27491
 
    The failure points for both IPv4 and IPv6 is sum of the values in the state
    file plus the current session's failure values. The total failure points is
-   a sum of the IPv4 and IPv6 failure points.
+   a sum of the IPv4 and IPv6 failure points, and is updated when the failure
+   point count of an IP version is updated.
 
    The probability of a particular IP version is the failure points of the
    other version divided by the total number of failure points, multiplied
-   by 8 and stored as an integer. We will call this value the summarized
+   by 4 and stored as an integer. We will call this value the summarized
    failure point value (SFPV). The reason for this summarization is to
-   emulate a probability in 1/8 intervals by the random number generator.
+   emulate a probability in 1/4 intervals by the random number generator.
 
    In the random number generator, we will choose a random number between 0
-   and 8. If the random number is less than the IPv6 SFPV, we will choose
+   and 4. If the random number is less than the IPv6 SFPV, we will choose
    IPv4. If it is equal or greater, we will choose IPv6.
 
-   If the probability is 0/8 with a SFPV value of 0, it will be rounded to
-   1/8 with a SFPV of 1. Also, if the probability is 8/8 with a SFPV of 8,
-   it will be rounded to 7/8 with a SFPV of 7. The reason for this is to
+   If the probability is 0/4 with a SFPV value of 0, it will be rounded to
+   1/4 with a SFPV of 1. Also, if the probability is 4/4 with a SFPV of 4,
+   it will be rounded to 3/4 with a SFPV of 3. The reason for this is to
    accomodate mobile clients which could change networks at any time (e.g.
    WiFi to cellular) which may be more or less reliable in terms of a
    particular IP family when compared to the previous network of the client.
 
-4. Acknowledgements
+4. Initial Failure Point Calculation
+
+   When a client starts without failure points or if the FP value drops to 0,
+   we need a SFPV value to start with. The Initial SFPV value will be counted
+   based on whether the client is using a bridge or not and if the relays in
+   the bridge configuration or consensus have IPv6.
+
+   For clients connecting directly to Tor, we will:
+
+      * During Bootstrap: use the number of IPv4 and IPv6 capable fallback
+        directory mirrors during bootstrap.
+
+      * After the initial consensus is received: use the number of IPv4 and
+        IPv6 capable guards in the consensus.
+
+   The reason why the consensus will be used to calculate the initial failure
+   point value is because using the number of guards would bias the SFPV value
+   with whatever's dominant on the network rather than what works on the
+   client.
+
+   For clients connecting through bridges, we will use the number of bridges
+   configured and the IP versions supported.
+
+   The initial value of the failure points in the scenarios described in this
+   section would be:
+
+      * IPv4 Faulure Points: Count the number of IPv6-capable relays
+
+      * IPv6 Failure Points: Count the number of IPv4-capable relays
+
+   If the consensus or bridge configuration changes during a session, we should
+   not update the failure point counters to generate a SFPV.
+
+   If we are starting a new session, we should use the existing failure points
+   to generate a SFPV unless the counts for IPv4 or IPv6 are zero.
+
+5. Forgetting Old Sessions
+
+   We should be able to forget old failures as clients could change networks.
+   For instance, a mobile phone could switch between WiFi and cellular. Keeping
+   an exact failure history would have privacy implications, so we should store
+   an approximate history.
+
+   One way we could forget old sessions is by halving all the failure point
+   (FP) values before adding when:
+
+      * One or more failure point values are a multiple of a random number
+        between 1 and 5
+
+      * One or more failure point values are greater than or equal to 100
+
+   The reason for halving the values at regular intervals is to forget old
+   sessions while keeping an approxmate history. We halve all FP values so
+   that one IP version doesn't dominante on the failure count if the other
+   is halved. This keeps an approximate scale of the failures on a client.
+
+   The reason for halving at a multiple of a random number instead of a fixed
+   interval is so we can halve regularly while not making it too predictable.
+   This prevents a situation where we would be halving too often to keep an
+   approximate failure history.
+
+   If we halve, we add the FP value for the failed IP version after halving all
+   FPs if done to account for the failure. If halving is not done, we will just
+   add the FP.
+
+   If the FP value for one IP version goes down to zero, we will re-calculate
+   the SFPV for that version using the methods described in Section 4.
+
+6. Separate Concurrent Connection Limits
+
+   Right now, there is a limit for three concurrent connections from a client.
+   at any given time. This limit includes both IPv4 and IPv6 connections.
+   This is to prevent denial of service attacks. I propose that a seperate
+   connection limit is used for IPv4 and IPv6. This means we can have three
+   concurrent IPv4 connections and three concurrent IPv6 connections at the
+   same time.
+
+   Having seperate connection limits allows us to deal with networks dropping
+   packets for a particular IP family while still preventing potential denial
+   of service attacks.
+
+7. Pathbias and Failure Probability
+
+   If ClientAutoIPv6ORPort is in use, and pathbias is triggered, we should
+   ignore "no route" warnings. The reason for this is because we would be
+   adding two failure points for the failed as described in Section 3 of this
+   proposal. Adding two failure points would make us more likely to prefer the
+   competing IP family over the failed one versus than adding a single failure
+   point on a normal failure.
+
+8. Counting Successful Connections
+
+   If a connection to a particular IP version is successful, we should use
+   it. This ensures that clients have a reliable connection to Tor. Accounting
+   for successful connections can be done by adding one failure point to the
+   competing IP version of the successful connection. For instance, if we have
+   a successful IPv6 connection, we add one IPv4 failure point.
+
+   Why use failure points for successful connections? This reduces the need for
+   separate counters for successes and allows for code reuse. Why add to the
+   competing version's failure point? Similar to how we should prefer IPv4 if
+   IPv6 fails, we should also prefer IPv4 if it is successful. We should also
+   prefer IPv6 if it is successful.
+
+   Even on adding successes, we will still halve the failure counters as
+   described in Section 5.
+
+9. Acknowledgements
 
    Thank you teor for aiding me with the implementation of Happy Eyeballs in
    Tor. This would not have been possible if it weren't for you.
