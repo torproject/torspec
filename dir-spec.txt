@@ -2087,6 +2087,11 @@
         Min 1000. Max 4294967295. Default 50000.
         First-appeared: 0.3.3.6-rc.
 
+        "circpad_max_circ_queued_cells" -- The circuitpadding module will
+        stop sending more padding cells if more than this many cells are in
+        the circuit queue a given circuit. Min: 0. Max: 50000. Default 1000.
+        First appeared: 0.4.0.3-alpha.
+
     "shared-rand-previous-value" SP NumReveals SP Value NL
 
         [At most once]
