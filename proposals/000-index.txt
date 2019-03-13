@@ -221,6 +221,7 @@ Proposals by number:
 298  Putting family lines in canonical form [CLOSED]
 299  Preferring IPv4 or IPv6 based on IP Version Failure Count [OPEN]
 300  Walking Onions: Scaling and Saving Bandwidth [DRAFT]
+301  Don't include package fingerprints in consensus documents [OPEN]
 
 
 Proposals by status:
@@ -253,6 +254,7 @@ Proposals by status:
    295  Using ADL for relay cryptography (solving the crypto-tagging attack)
    296  Have Directory Authorities expose raw bandwidth list files
    299  Preferring IPv4 or IPv6 based on IP Version Failure Count
+   301  Don't include package fingerprints in consensus documents
  ACCEPTED:
    188  Bridge Guards and other anti-enumeration defenses
    249  Allow CREATE cells with >505 bytes of handshake data
