@@ -57,7 +57,7 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/27491
    These entries will exist as internal counters for the current session, and
    a calculated value from the previous session in the statefile. 
 
-   These values will be stored as 32-bit unsigned integers for the current
+   These values will be stored as 16-bit unsigned integers for the current
    session and in the statefile.
 
    When a new session is loaded, we will load the failure count from the
@@ -82,7 +82,7 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/27491
    These values will be stored as 32-bit unsigned integers.
 
    A generic failure of an IP version will add one point to the failure point
-   count values of the particular IP version which failed.
+   count of the particular IP version which failed.
 
    A failure of an IP version from a "no route" error which happens when
    connections automatically fail will be counted as two failure points
@@ -136,7 +136,7 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/27491
    The initial value of the failure points in the scenarios described in this
    section would be:
 
-      * IPv4 Faulure Points: Count the number of IPv6-capable relays
+      * IPv4 Failure Points: Count the number of IPv6-capable relays
 
       * IPv6 Failure Points: Count the number of IPv4-capable relays
 
@@ -156,10 +156,14 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/27491
    One way we could forget old sessions is by halving all the failure point
    (FP) values before adding when:
 
-      * One or more failure point values are a multiple of a random number
-        between 1 and 5
+      * The failure point value being added to is a multiple of a random
+        number between 1 and 5
 
       * One or more failure point values are greater than or equal to 100
+
+   Halving by a random number as described above happens by first generating a
+   random number. Then if the FP value we are going to add to is a multiple of
+   the random number we generated, we halve.
 
    The reason for halving the values at regular intervals is to forget old
    sessions while keeping an approxmate history. We halve all FP values so
@@ -168,8 +172,8 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/27491
 
    The reason for halving at a multiple of a random number instead of a fixed
    interval is so we can halve regularly while not making it too predictable.
-   This prevents a situation where we would be halving too often to keep an
-   approximate failure history.
+   This prevents a situation where we would be halving too often where we can't
+   keep an approximate failure history.
 
    If we halve, we add the FP value for the failed IP version after halving all
    FPs if done to account for the failure. If halving is not done, we will just
@@ -191,14 +195,13 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/27491
    packets for a particular IP family while still preventing potential denial
    of service attacks.
 
-8. Pathbias and Failure Probability
+8. Marking Guards As Failed with ClientAutoIPv6ORPort
 
-   If ClientAutoIPv6ORPort is in use, and pathbias is triggered, we should
-   ignore "no route" warnings. The reason for this is because we would be
-   adding two failure points for the failed as described in Section 3 of this
-   proposal. Adding two failure points would make us more likely to prefer the
-   competing IP family over the failed one versus than adding a single failure
-   point on a normal failure.
+   If ClientAutoIPv6ORPort is in use, we should mark a guard as failed if we
+   fail both IPv4 and IPv6 connections to the guard.
+
+   We should add the number of attempts for IPv4 and IPv6 as the failure points
+   of the respective version tried, and halve per Section 5 of this proposal.
 
 9. Counting Successful Connections
 
