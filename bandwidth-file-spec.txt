@@ -501,67 +501,67 @@
 
       The Round Trip Time in milliseconds to obtain 1 byte of data.
 
-    "time=" DateTime NL
+    "time=" DateTime SP
 
       [Exactly once.]
 
       The date and time timestamp in ISO 8601 format and UTC time zone
       when the last bandwidth was obtained.
 
-    "success=" Int NL
+    "success=" Int SP
 
       [Zero or one time.]
 
       The number of times that the bandwidth measurements for this relay were
       successful.
 
-    "error_circ=" Int NL
+    "error_circ=" Int SP
 
       [Zero or one time.]
 
       The number of times that the bandwidth measurements for this relay
       failed because of circuit failures.
 
-    "error_stream=" Int NL
+    "error_stream=" Int SP
 
       [Zero or one time.]
 
       The number of times that the bandwidth measurements for this relay
       failed because of stream failures.
 
-    "error_misc=" Int NL
+    "error_misc=" Int SP
 
       [Zero or one time.]
 
       The number of times that the bandwidth measurements for this relay
       failed because of other reasons.
 
-    "bw_mean=" Int NL
+    "bw_mean=" Int SP
 
       [Zero or one time.]
 
       The measured bandwidth mean for this relay in bytes per second.
 
-    "bw_median=" Int NL
+    "bw_median=" Int SP
 
       [Zero or one time.]
 
       The measured bandwidth median for this relay in bytes per second.
 
-    "desc_bw_average=" Int NL
+    "desc_bw_average=" Int SP
 
       [Zero or one time.]
 
       The descriptor average bandwidth for this relay in bytes per second.
 
-    "desc_bw_obs_last=" Int NL
+    "desc_bw_obs_last=" Int SP
 
       [Zero or one time.]
 
       The last descriptor observed bandwidth for this relay in bytes per
       second.
 
-    "desc_bw_obs_mean=" Int NL
+    "desc_bw_obs_mean=" Int SP
 
       [Zero or one time.]
 
