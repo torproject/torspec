@@ -88,6 +88,7 @@
   The following nonterminals are defined in Tor directory protocol
   sections 1.2., 2.1.1., 2.1.3.:
 
+    bool
     Int
     SP (space)
     NL (newline)
@@ -791,6 +792,46 @@
       than 2, by default).
 
       (See the note in section 1.4, version 1.4.0, about excluded relays.)
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "vote=" bool
+
+      [Zero or one time.]
+
+      If the value is 0, Tor directory authorities SHOULD ignore the relay's
+      entry in the bandwidth file. They SHOULD vote for the relay the same
+      way they would vote for a relay that is not present in the file.
+
+      This MAY be the case when this relay was not successfully measured but
+      the is included in the Bandwidth File, to diagnose why they were not
+      measured.
+      If the value is 1 or the KeyValue is not present, Tor directory
+      authorities MUST use the relay's bw value in any votes for that relay.
+
+      Because Tor versions 0.3.4.11, 0.3.5.8, 0.4.0.2-alpha, and earlier
+      ignore this KeyValue, generator implementations MUST set "bw=1"
+      for a relay when Tor directory authorities SHOULD ignore its relay
+      line. Using the minimum bw value allows authorities that do not
+      understand "vote=0" or "unmeasured=1" to produce sensible votes
+      for unmeasured relays.
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "unmeasured=" bool
+
+      [Zero or one time.]
+
+      If the value is 1, this relay was not successfully measured and
+      Tor bandwidth authorities MAY NOT vote on this relay.
+      (Current Tor versions do not change their behaviour based on
+      the "unmeasured" key.)
+      If the value is 0 or the KeyValue is not present, this relay
+      was successfully measured.
+
+      Implementations MUST also set "bw=1" for this relay when it was not
+      successfully measured. (See the explanation under "vote" for more
+      details.)
 
       This KeyValue was added in version 1.4.0 of this specification.
 
