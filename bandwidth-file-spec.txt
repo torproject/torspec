@@ -583,7 +583,7 @@
       authorities MUST use the relay's bw value in any votes for that relay.
 
       Because Tor versions before 0.3.4 ignore this KeyValue, generator
-      implementations MUST set "bw=1" for this relay when Tor directory
+      for a relay when Tor directory authorities SHOULD ignore its relay
       authorities should not vote on it.
 
     "unmeasured=" Bool SP
