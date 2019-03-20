@@ -569,7 +569,7 @@
       The descriptor observed bandwidth mean for this relay in bytes per
       second.
 
-    "vote=" Bool SP
+    "vote=" bool SP
 
       [Zero or one time.]
 
