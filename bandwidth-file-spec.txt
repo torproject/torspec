@@ -582,7 +582,8 @@
       If the value is 1 or the KeyValue is not present, Tor directory
       authorities MUST use the relay's bw value in any votes for that relay.
 
-      Because Tor versions before 0.3.4 ignore this KeyValue, generator
+      Because Tor versions 0.3.4.11, 0.3.5.8, 0.4.0.2-alpha, and earlier
+      ignore this KeyValue, generator implementations MUST set "bw=1"
       for a relay when Tor directory authorities SHOULD ignore its relay
       authorities should not vote on it.
 
