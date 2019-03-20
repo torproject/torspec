@@ -576,7 +576,7 @@
       If the value is 0, Tor directory authorities SHOULD ignore the relay's
       entry in the bandwidth file. They SHOULD vote for the relay the same
       way they would vote for a relay that is not present in the file.
-      
+
       This MAY be the case when this relay was not successfully measured but
       the Bandwidth File, to diagnose why they were not measured.
       If the value is 1 or the KeyValue is not present, Tor directory
@@ -589,12 +589,12 @@
       understand "vote=0" or "unmeasured=1" to produce sensible votes
       for unmeasured relays.
 
-    "unmeasured=" Bool SP
+    "unmeasured=" bool SP
 
       [Zero or one time.]
 
       If the value is 1, this relay was not successfully measured and
-      Tor bandwith authorities MAY NOT vote on this relay.
+      Tor bandwidth authorities MAY NOT vote on this relay.
       (Current Tor versions do not change their behaviour based on
       the "unmeasured" key.)
       If the value is 0 or the KeyValue is not present, this relay
