@@ -580,7 +580,7 @@
       This MAY be the case when this relay was not successfully measured but
       it is reported in the Bandwidth File to diagnose why it was not measured.
       If the value is 1 or the KeyValue is not present, Tor directory
-      authorities MUST vote on this relay.
+      authorities MUST use the relay's bw value in any votes for that relay.
 
       Because Tor versions before 0.3.4 ignore this KeyValue, generator
       implementations MUST set "bw=1" for this relay when Tor directory
