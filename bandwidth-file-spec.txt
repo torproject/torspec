@@ -596,7 +596,8 @@
       was successfully measured.
 
       Implementations MUST also set "bw=1" for this relay when it was not
-      successfully measured.
+      successfully measured. (See the explanation under "vote" for more
+      details.)
 
 2.4.2.2. Torflow
 
