@@ -578,7 +578,7 @@
       way they would vote for a relay that is not present in the file.
       
       This MAY be the case when this relay was not successfully measured but
-      it is reported in the Bandwidth File to diagnose why it was not measured.
+      the Bandwidth File, to diagnose why they were not measured.
       If the value is 1 or the KeyValue is not present, Tor directory
       authorities MUST use the relay's bw value in any votes for that relay.
 
