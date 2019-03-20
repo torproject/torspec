@@ -573,7 +573,10 @@
 
       [Zero or one time.]
 
-      If the value is 0, Tor directory authorities MUST NOT vote on this relay.
+      If the value is 0, Tor directory authorities SHOULD ignore the relay's
+      entry in the bandwidth file. They SHOULD vote for the relay the same
+      way they would vote for a relay that is not present in the file.
+      
       This MAY be the case when this relay was not successfully measured but
       it is reported in the Bandwidth File to diagnose why it was not measured.
       If the value is 1 or the KeyValue is not present, Tor directory
