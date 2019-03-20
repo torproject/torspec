@@ -221,7 +221,7 @@ Proposals by number:
 298  Putting family lines in canonical form [CLOSED]
 299  Preferring IPv4 or IPv6 based on IP Version Failure Count [OPEN]
 300  Walking Onions: Scaling and Saving Bandwidth [DRAFT]
-301  Don't include package fingerprints in consensus documents [OPEN]
+301  Don't include package fingerprints in consensus documents [ACCEPTED]
 
 
 Proposals by status:
@@ -254,7 +254,6 @@ Proposals by status:
    295  Using ADL for relay cryptography (solving the crypto-tagging attack)
    296  Have Directory Authorities expose raw bandwidth list files
    299  Preferring IPv4 or IPv6 based on IP Version Failure Count
-   301  Don't include package fingerprints in consensus documents
  ACCEPTED:
    188  Bridge Guards and other anti-enumeration defenses
    249  Allow CREATE cells with >505 bytes of handshake data
@@ -262,6 +261,7 @@ Proposals by status:
    282  Remove "Named" and "Unnamed" handling from consensus voting [for 0.3.3.x]
    288  Privacy-Preserving Statistics with Privcount in Tor (Shamir version)
    292  Mesh-based vanguards
+   301  Don't include package fingerprints in consensus documents
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process
