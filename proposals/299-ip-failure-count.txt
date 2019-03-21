@@ -50,9 +50,9 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/27491
 
    I propose that the failure counter uses the following fields:
 
-      * IPv4 failure points
+      * IPv4 affinity points
 
-      * IPv6 failure points
+      * IPv6 affinity points
 
    These entries will exist as internal counters for the current session, and
    a calculated value from the previous session in the statefile. 
@@ -66,56 +66,60 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/27491
 
 4. Failure Probability Calculation
 
-   The failure count of one IP version will increase the probability of the
-   other IP version. For instance, a failure of IPv4 will increase the IPv6
-   probability, and vice versa.
+   A failure of one IP version will increase the probability of the other IP
+   version. For instance, a failure of IPv4 will increase the IPv6 probability,
+   and vice versa.
 
    When the IP version is being chosen, I propose that these values will be
    included in the guard selection code:
 
-      * IPv4 failure points
+      * IPv4 affinity points
 
-      * IPv6 failure points
+      * IPv6 affinity points
 
-      * Total failure points
+      * Total affinity points
 
-   These values will be stored as 32-bit unsigned integers.
+   These values will be stored as 16-bit unsigned integers.
 
-   A generic failure of an IP version will add one point to the failure point
-   count of the particular IP version which failed.
+   A generic failure of an IP version will add one point to the affinity point
+   count of the competing IP version to the one which failed.
 
-   A failure of an IP version from a "no route" error which happens when
-   connections automatically fail will be counted as two failure points
-   for the automatically failed version.
+   We add two affinity points when one (or more) of the following happens:
 
-   The failure points for both IPv4 and IPv6 is sum of the values in the state
-   file plus the current session's failure values. The total failure points is
-   a sum of the IPv4 and IPv6 failure points, and is updated when the failure
-   point count of an IP version is updated.
+      * A "no route" warning when communications automatically fail
 
-   The probability of a particular IP version is the failure points of the
-   other version divided by the total number of failure points, multiplied
-   by 4 and stored as an integer. We will call this value the summarized
-   failure point value (SFPV). The reason for this summarization is to
-   emulate a probability in 1/4 intervals by the random number generator.
+      * Any permanent failure, such as an unsupported protocol error
+
+   The affinity points for both IPv4 and IPv6 will be stored in the session.
+   They are loaded from the statefile at startup, and the current session's
+   affinity point values are saved in the statefile when Tor closes.
+
+   The total failure affinity is a sum of the IPv4 and IPv6 affinity points,
+   and is updated when the affinity point count of an IP version is updated.
+
+   The probability of a particular IP version is the affinity points of that
+   version divided by the total number of affinity points, multiplied by 4
+   and stored as an integer. We will call this value the summarized affinity
+   point value (SAPV). The reason for this summarization is to emulate a
+   probability in 1/4 intervals by the random number generator.
 
    In the random number generator, we will choose a random number between 0
-   and 4. If the random number is less than the IPv6 SFPV, we will choose
+   and 4. If the random number is less than the IPv4 SAPV, we will choose
    IPv4. If it is equal or greater, we will choose IPv6.
 
-   If the probability is 0/4 with a SFPV value of 0, it will be rounded to
-   1/4 with a SFPV of 1. Also, if the probability is 4/4 with a SFPV of 4,
-   it will be rounded to 3/4 with a SFPV of 3. The reason for this is to
+   If the probability is 0/4 with a SAPV value of 0, it will be rounded to
+   1/4 with a SAPV of 1. Also, if the probability is 4/4 with a SAPV of 4,
+   it will be rounded to 3/4 with a SAPV of 3. The reason for this is to
    accomodate mobile clients which could change networks at any time (e.g.
    WiFi to cellular) which may be more or less reliable in terms of a
    particular IP family when compared to the previous network of the client.
 
 5. Initial Failure Point Calculation
 
-   When a client starts without failure points or if the FP value drops to 0,
-   we need a SFPV value to start with. The Initial SFPV value will be counted
-   based on whether the client is using a bridge or not and if the relays in
-   the bridge configuration or consensus have IPv6.
+   When a client starts without affinity points or if the affinity point value
+   drops to 0, we need a SAPV value to start with. The initial SAPV value will
+   be counted based on whether the client is using a bridge or not and if the
+   relays in the bridge configuration or consensus have IPv6.
 
    For clients connecting directly to Tor, we will:
 
@@ -125,26 +129,32 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/27491
       * After the initial consensus is received: use the number of IPv4 and
         IPv6 capable guards in the consensus.
 
-   The reason why the consensus will be used to calculate the initial failure
-   point value is because using the number of guards would bias the SFPV value
+   The reason why the consensus will be used to calculate the initial affinity
+   point value is because using the number of guards would bias the SAPV value
    with whatever's dominant on the network rather than what works on the
    client.
 
    For clients connecting through bridges, we will use the number of bridges
    configured and the IP versions supported.
 
-   The initial value of the failure points in the scenarios described in this
+   If there are no IPv6 fallback directory mirrors, bridges, or guards, we
+   should log a notice once and always choose IPv4. If we have no IPv4
+   bridges, should log a notice once and always choose IPv6. This is to
+   prevent connection failure messages in the log on the unavailability of
+   an IP family.
+
+   The initial value of the affinity points in the scenarios described in this
    section would be:
 
-      * IPv4 Failure Points: Count the number of IPv6-capable relays
+      * IPv4 Affinity Points: Count the number of IPv4-capable relays
 
-      * IPv6 Failure Points: Count the number of IPv4-capable relays
+      * IPv6 Affinity Points: Count the number of IPv6-capable relays
 
    If the consensus or bridge configuration changes during a session, we should
-   not update the failure point counters to generate a SFPV.
+   update the affinity point counters to generate a SAPV.
 
-   If we are starting a new session, we should use the existing failure points
-   to generate a SFPV unless the counts for IPv4 or IPv6 are zero.
+   If we are starting a new session, we should use the existing affinity points
+   to generate a SAPV unless the counts for IPv4 or IPv6 are zero.
 
 6. Forgetting Old Sessions
 
@@ -153,69 +163,45 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/27491
    an exact failure history would have privacy implications, so we should store
    an approximate history.
 
-   One way we could forget old sessions is by halving all the failure point
-   (FP) values before adding when:
+   One way we could forget old sessions is by halving all the affinity point
+   (AP) values before adding when:
 
-      * The failure point value being added to is a multiple of a random
-        number between 1 and 5
+      * We choose a random number N between 8 and 24, and halve the AP values
+        when we have seen N connections. In this case, we repeat this step with
+        a new random number
 
-      * One or more failure point values are greater than or equal to 100
+      * One or more affinity point values are greater than or equal to 100
 
-   Halving by a random number as described above happens by first generating a
-   random number. Then if the FP value we are going to add to is a multiple of
-   the random number we generated, we halve.
+   If the AP value for one IP version goes down to zero, we will re-calculate
+   the SAPV for that version using the methods described in Section 4.
 
-   The reason for halving the values at regular intervals is to forget old
-   sessions while keeping an approxmate history. We halve all FP values so
-   that one IP version doesn't dominante on the failure count if the other
-   is halved. This keeps an approximate scale of the failures on a client.
+7. Increasing Simultaneous Connection Attempts When Bootstrapping
 
-   The reason for halving at a multiple of a random number instead of a fixed
-   interval is so we can halve regularly while not making it too predictable.
-   This prevents a situation where we would be halving too often where we can't
-   keep an approximate failure history.
+   Right now, Tor limits the number of simultaneous connection attempts when
+   bootstrapping to three connections. This is too low for networks that drop
+   all IPv4 or all IPv6 packets. This is specified using the option
+   ClientBootstrapConsensusMaxInProgressTries.
 
-   If we halve, we add the FP value for the failed IP version after halving all
-   FPs if done to account for the failure. If halving is not done, we will just
-   add the FP.
+   I propose the default value of ClientBootstrapConsensusMaxInProgressTries
+   is increased to 6. While not exact, this will account for approximately
+   three IPv4 connections and three IPv6 connections during bootstrap.
 
-   If the FP value for one IP version goes down to zero, we will re-calculate
-   the SFPV for that version using the methods described in Section 4.
+8. Marking Guards As Failed With ClientAutoIPv6ORPort
 
-7. Separate Concurrent Connection Limits
+   If Tor is successful on both IPv4 and IPv6, we should require failures on
+   both IPv4 and IPv6 connections before marking a guard as failed.
 
-   Right now, there is a limit for three concurrent connections from a client.
-   at any given time. This limit includes both IPv4 and IPv6 connections.
-   This is to prevent denial of service attacks. I propose that a seperate
-   connection limit is used for IPv4 and IPv6. This means we can have three
-   concurrent IPv4 connections and three concurrent IPv6 connections at the
-   same time.
-
-   Having seperate connection limits allows us to deal with networks dropping
-   packets for a particular IP family while still preventing potential denial
-   of service attacks.
-
-8. Marking Guards As Failed with ClientAutoIPv6ORPort
-
-   If ClientAutoIPv6ORPort is in use, we should mark a guard as failed if we
-   fail both IPv4 and IPv6 connections to the guard.
-
-   We should add the number of attempts for IPv4 and IPv6 as the failure points
-   of the respective version tried, and halve per Section 5 of this proposal.
+   If we are successful on only one protocol (IPv4 or IPv6), we should only
+   require a failure on that protocol to mark a guard as failed.
 
 9. Counting Successful Connections
 
    If a connection to a particular IP version is successful, we should use
    it. This ensures that clients have a reliable connection to Tor. Accounting
-   for successful connections can be done by adding one failure point to the
-   competing IP version of the successful connection. For instance, if we have
-   a successful IPv6 connection, we add one IPv4 failure point.
-
-   Why use failure points for successful connections? This reduces the need for
-   separate counters for successes and allows for code reuse. Why add to the
-   competing version's failure point? Similar to how we should prefer IPv4 if
-   IPv6 fails, we should also prefer IPv4 if it is successful. We should also
-   prefer IPv6 if it is successful.
+   for successful connections can be done by adding one affinity point to the
+   successful connection's IP version. For instance, if we have a successful
+   IPv6 connection, we add one IPv6 affinity point. This increases the chances
+   of using IP versions that work.
 
    Even on adding successes, we will still halve the failure counters as
    described in Section 5.
