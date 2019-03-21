@@ -77,7 +77,7 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/27491
 
       * IPv6 affinity points
 
-      * Total affinity points
+      * Total summarized affinity points
 
    These values will be stored as 16-bit unsigned integers.
 
@@ -94,14 +94,22 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/27491
    They are loaded from the statefile at startup, and the current session's
    affinity point values are saved in the statefile when Tor closes.
 
-   The total failure affinity is a sum of the IPv4 and IPv6 affinity points,
-   and is updated when the affinity point count of an IP version is updated.
+   The total summarized affinity point count is a sum of the IPv4 and IPv6
+   affinity points multiplied with a multiplier for that version's public and
+   private IP addresses which will be described in Section 9. This total is
+   updated when the affinity point count of an IP version is updated.
 
-   The probability of a particular IP version is the affinity points of that
-   version divided by the total number of affinity points, multiplied by 4
-   and stored as an integer. We will call this value the summarized affinity
-   point value (SAPV). The reason for this summarization is to emulate a
-   probability in 1/4 intervals by the random number generator.
+   Keep in mind that the affinity point counts are not multiplied on their
+   own by the multiplier. This is to accommodate mobile clients which could
+   switch between networks that vary in terms of IPv4 and IPv6 support while
+   saving the state of affinity point counts.
+
+   The probability of a particular IP version is the affinity points multiplied
+   with a multiplier of that version divided by the number of summarized total
+   affinity points, multiplied by 4 and stored as an integer. We will call this
+   value the summarized affinity point value (SAPV). The reason for this
+   summarization is to emulate a probability in 1/4 intervals by the random
+   number generator.
 
    In the random number generator, we will choose a random number between 0
    and 4. If the random number is less than the IPv4 SAPV, we will choose
@@ -194,7 +202,38 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/27491
    If we are successful on only one protocol (IPv4 or IPv6), we should only
    require a failure on that protocol to mark a guard as failed.
 
-9. Counting Successful Connections
+9. Counting Public and Private IP Addresses
+
+   In Ticket #27492, we plan to increase the probability of an IP family based
+   on how many internal or external IP addresses a client machine has.
+
+   This will be implemented as two values to be used as multipliers to the
+   affinity values. The values are as follows:
+
+      * IPv4 Affinity Point Multiplier
+
+      * IPv6 Affinity Point Multiplier
+
+   The rules for these multipliers are as follows:
+
+      * If we have a public IP address, we add two to the multiplier for the
+        version of the IP address being evaluated
+
+      * If we have a private IP address, we add two to the multiplier for the
+        version of the IP address being evaluated unless the "private" address
+        is link-local IPv6
+
+   For instance, if a client has one public IPv6 address and one private IPv4
+   address, we add two to the IPv6 multiplier, and one to the IPv4 multiplier.
+
+   The multiplier for an IP version is multiplied into the affinity point
+   counts of that version when calculating its SAPV or summarized total as
+   per Section 4 of this proposal. Keep in mind that we do not multiply the
+   IPv4 or IPv6 affinity point values itself. This allows us to accommodate
+   mobile clients which could change networks that vary in terms of IPv4
+   and IPv6 support while saving affinity point counts in the state file.
+
+10. Counting Successful Connections
 
    If a connection to a particular IP version is successful, we should use
    it. This ensures that clients have a reliable connection to Tor. Accounting
@@ -206,7 +245,7 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/27491
    Even on adding successes, we will still halve the failure counters as
    described in Section 5.
 
-10. Acknowledgements
+11. Acknowledgements
 
    Thank you teor for aiding me with the implementation of Happy Eyeballs in
    Tor. This would not have been possible if it weren't for you.
