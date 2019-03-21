@@ -440,8 +440,11 @@
        the OR is willing to sustain in very short intervals.  The "observed"
        value is an estimate of the capacity this relay can handle.  The
        relay remembers the max bandwidth sustained output over any ten
-       second period in the past day, and another sustained input.  The
+       second period in the past 5 days, and another sustained input.  The
        "observed" value is the lesser of these two numbers.
+
+       Tor versions released before 2018 only kept bandwidth-observed for one
+       day. These versions are no longer supported or recommended.
 
     "platform" string NL
 
