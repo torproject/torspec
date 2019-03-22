@@ -583,15 +583,15 @@
 
   sbws RelayLines contain these keys:
 
-    "node_id=" hexdigest SP
+    "node_id=" hexdigest
 
       As above.
 
-    "bw=" Bandwidth SP
+    "bw=" Bandwidth
 
       As above.
 
-    "nick=" nickname SP
+    "nick=" nickname
 
       [Exactly once.]
 
@@ -599,7 +599,7 @@
 
       Torflow also has a "nick=" KeyValue.
 
-    "rtt=" Int SP
+    "rtt=" Int
 
       [Zero or one time.]
 
@@ -608,7 +608,7 @@
       This KeyValue was added in version 1.1.0 of this specification.
       It became optional in version 1.3.0 or 1.4.0 of this specification.
 
-    "time=" DateTime SP
+    "time=" DateTime
 
       [Exactly once.]
 
@@ -618,7 +618,7 @@
       This KeyValue was added in version 1.1.0 of this specification.
       The Torflow equivalent is "measured_at=".
 
-    "success=" Int SP
+    "success=" Int
 
       [Zero or one time.]
 
@@ -627,7 +627,7 @@
 
       This KeyValue was added in version 1.1.0 of this specification.
 
-    "error_circ=" Int SP
+    "error_circ=" Int
 
       [Zero or one time.]
 
@@ -637,7 +637,7 @@
       This KeyValue was added in version 1.1.0 of this specification.
       The Torflow equivalent is "circ_fail=".
 
-    "error_stream=" Int SP
+    "error_stream=" Int
 
       [Zero or one time.]
 
@@ -646,7 +646,7 @@
 
       This KeyValue was added in version 1.1.0 of this specification.
 
-    "error_misc=" Int SP
+    "error_misc=" Int
 
       [Zero or one time.]
 
@@ -655,7 +655,7 @@
 
       This KeyValue was added in version 1.1.0 of this specification.
 
-    "bw_mean=" Int SP
+    "bw_mean=" Int
 
       [Zero or one time.]
 
@@ -663,7 +663,7 @@
 
       This KeyValue was added in version 1.2.0 of this specification.
 
-    "bw_median=" Int SP
+    "bw_median=" Int
 
       [Zero or one time.]
 
@@ -671,7 +671,7 @@
 
       This KeyValue was added in version 1.2.0 of this specification.
 
-    "desc_bw_average=" Int SP
+    "desc_bw_average=" Int
 
       [Zero or one time.]
 
@@ -679,7 +679,7 @@
 
       This KeyValue was added in version 1.2.0 of this specification.
 
-    "desc_obs_bw_last=" Int SP
+    "desc_obs_bw_last=" Int
 
       [Zero or one time.]
 
@@ -688,7 +688,7 @@
 
       This KeyValue was added in version 1.2.0 of this specification.
 
-    "desc_obs_bw_mean=" Int SP
+    "desc_obs_bw_mean=" Int
 
       [Zero or one time.]
 
