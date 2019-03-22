@@ -646,6 +646,24 @@
 
       This KeyValue was added in version 1.1.0 of this specification.
 
+    "error_destination=" Int
+
+      [Zero or one time.]
+
+      The number of times that the bandwidth measurements for this relay
+      failed because the destination HTTPS server was not available.
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "error_second_relay=" Int
+
+      [Zero or one time.]
+
+      The number of times that the bandwidth measurements for this relay
+      failed because sbws could not find a second relay for the test circuit.
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
     "error_misc=" Int
 
       [Zero or one time.]
@@ -696,6 +714,54 @@
       second.
 
       This KeyValue was added in version 1.2.0 of this specification.
+
+    "relay_recent_measurements_excluded_error_count=" Int
+
+      [Zero or one time.]
+
+      The number of recent relay measurements which were excluded because
+      the measurement was attempted, but failed. Measurements are recent
+      if they are in the last data_period days (5 by default).
+
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "relay_recent_measurements_excluded_near_count=" Int
+
+      [Zero or one time.]
+
+      When all of a relay's recent successful measurements were performed in
+      a period of time that was too short (by default 1 day), the relay is
+      excluded. This KeyValue contains the number of recent successful
+      measurements for the relay that were ignored for this reason.
+
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "recent_measurements_excluded_old_count=" Int
+
+      [Zero or one time.]
+
+      The number of successful measurements for this relay that are too old
+      (more than 5 days, by default).
+
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "recent_measurements_excluded_few_count=" Int
+
+      [Zero or one time.]
+
+      The number of successful measurements for this relay that were ignored
+      because the relay did not have enough successful measurements (fewer
+      than 2, by default).
+
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
+
+      This KeyValue was added in version 1.4.0 of this specification.
 
 2.4.2.2. Torflow
 
