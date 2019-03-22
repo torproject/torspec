@@ -63,8 +63,11 @@
   1.4.0 - Adds monitoring KeyValues to the header and relay lines.
 
           RelayLines for excluded relays MAY be present in the bandwidth
-          file for diagnositc reasons, but they are marked with vote=0,
-          so that Tor SHOULD NOT use their bandwidths in its vote.
+          file for diagnostic reasons. Similarly, if there are not enough
+          eligible relays, the bandwidth file MAY contain all known relays.
+
+          Diagnostic relay lines SHOULD be marked with vote=0, and
+          Tor SHOULD NOT use their bandwidths in its votes.
 
   All Tor versions can consume format version 1.0.0.
 
@@ -256,8 +259,12 @@
 
       The percentage of relays in the consensus that SHOULD be
       included in every generated bandwidth file.  If there are not
-      enough eligible relays, the bandwidth file SHOULD contain a
+      enough eligible relays, the bandwidth file MAY contain a
       header, but no relays.
+
+      Format versions 1.4.0 and later SHOULD include all the relays for
+      diagnostic purposes, even if this threshold is not reached.
+      See section 1.4 for details.
 
       The minimum percentage is 60% in Torflow, so sbws uses
       60% as the default.
@@ -289,7 +296,8 @@
 
       [Zero or one time.]
 
-      The minimum number of relays to include in the bandwidth file.
+      The minimum number of relays that SHOULD be included in the bandwidth
+      file. See minimum_percent_eligible_relays for details.
 
       This line SHOULD be equal to:
           number_consensus_relays * (minimum_percent_eligible_relays / 100.0)
@@ -806,6 +814,7 @@
       This MAY be the case when this relay was not successfully measured but
       the is included in the Bandwidth File, to diagnose why they were not
       measured.
+
       If the value is 1 or the KeyValue is not present, Tor directory
       authorities MUST use the relay's bw value in any votes for that relay.
 
@@ -826,12 +835,43 @@
       Tor bandwidth authorities MAY NOT vote on this relay.
       (Current Tor versions do not change their behaviour based on
       the "unmeasured" key.)
+
       If the value is 0 or the KeyValue is not present, this relay
       was successfully measured.
 
       Implementations MUST also set "bw=1" for this relay when it was not
       successfully measured. (See the explanation under "vote" for more
       details.)
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "under_min_report=" bool
+
+      [Zero or one time.]
+
+      If the value is 1, there are not enough eligible relays in the
+      bandwidth file, and Tor bandwidth authorities MAY NOT vote on this
+      relay. (Current Tor versions do not change their behaviour based on
+      the "under_min_report" key.)
+
+      If the value is 0 or the KeyValue is not present, there are enough
+      relays in the bandwidth file.
+
+      When there are not enough eligible relays in the bandwidth file,
+      implementations MUST also set "bw=1" for all relays. (See the
+      explanation under "vote" for more details.) The actual measured
+      bandwidth MAY be included as "real_bw=".
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "real_bw=" Int
+
+      [Zero or one time.]
+
+      The actual measured bandwidth of a relay, when the bandwidth for
+      that relay is excluded from Tor's votes using "vote=0 bw=1".
+
+      See vote and under_min_report for details.
 
       This KeyValue was added in version 1.4.0 of this specification.
 
