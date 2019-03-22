@@ -52,16 +52,28 @@
   1.2.0 - If there are not enough eligible relays, the bandwidth file
           SHOULD contain a header, but no relays. (To match Torflow's
           existing behaviour.)
+
           Adds new KeyValue Lines to the Header List section with
           statistics about the number of relays included in the file.
           Add new KeyValues to Relay Bandwidth Lines, with different
           bandwidth values (averages and descriptor bandwidths).
+
+  1.3.0 - Adds scanner and destination countries to the header.
+
+  1.4.0 - Adds monitoring KeyValues to the header and relay lines.
+
+          RelayLines for excluded relays MAY be present in the bandwidth
+          file for diagnositc reasons, but they are marked with vote=0,
+          so that Tor SHOULD NOT use their bandwidths in its vote.
 
   All Tor versions can consume format version 1.0.0.
 
   All Tor versions can consume format version 1.1.0 and later,
   but Tor versions earlier than 0.3.5.1-alpha warn if the header
   contains any KeyValue lines after the Timestamp.
+
+  Tor versions released before March 2019 do not understand "vote=0".
+  Instead, they will vote "bw=1" for diagnostic relay lines.
 
 2. Format details
 
