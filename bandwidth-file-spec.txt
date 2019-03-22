@@ -318,8 +318,13 @@
 
       [Zero or one time.].
 
-      The number of the different consensuses seen in the last days
-      (by default 5).
+      The number of the different consensuses seen in the last data_period
+      days. (data_period is 5 by default.)
+
+      Assuming that Tor clients fetch a consensus every 1-2 hours,
+      and that the data_period is 5 days, this line SHOULD be between:
+          data_period * 24 / 2 =  60
+          data_period * 24     = 120
 
       This Line was added in version 1.4.0 of this specification.
 
@@ -328,7 +333,11 @@
       [Zero or one time.]
 
       The number of times that a list with a subset of relays prioritized
-      to be measured has been created in the last days (by default 5).
+      to be measured has been created in the last data_period days.
+      (data_period is 5 by default.)
+
+      In 2019, with 7000 relays in the network, this line SHOULD be between:
+      TODO
 
       This Line was added in version 1.4.0 of this specification.
 
@@ -337,7 +346,11 @@
       [Zero or one time.]
 
       The number of relays that has been in in the list of relays prioritized
-      to be measured in the last days (by default 5).
+      to be measured in the last data_period days. (data_period is 5 by
+      default.)
+
+      In 2019, with 7000 relays in the network, this line SHOULD be between:
+      TODO
 
       This Line was added in version 1.4.0 of this specification.
 
@@ -346,7 +359,10 @@
       [Zero or one time.]
 
       The number of times that any relay has been queued to be measured
-      in the last days (by default 5).
+      in the last data_period days. (data_period is 5 by default.)
+
+      In 2019, with 7000 relays in the network, this line SHOULD be between:
+      TODO
 
       This Line was added in version 1.4.0 of this specification.
 
@@ -354,9 +370,9 @@
 
       [Zero or one time.]
 
-      The number of times that a relay has been attempted be measured
-      in the last days (by default 5), but the relay's measurement
-      was not performed.
+      The number of times that the scanner attempted to measure a relay in
+      the last data_period days (5 by default), but the pre-conditions
+      for measuring that relay could not be satisfied.
 
       This Line was added in version 1.4.0 of this specification.
 
@@ -364,10 +380,10 @@
 
       [Zero or one time.]
 
-      The number of times that a relay has been measured in the last days
-      (by default 5), but the relay's measurement failed.
+      The number of relays that have no successful measurements in the last
+      data_period days (5 by default).
 
-      Tor directory authorities SHOULD NOT vote on the relay's bandwidth.
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
 
       This Line was added in version 1.4.0 of this specification.
 
@@ -375,11 +391,11 @@
 
       [Zero or one time.]
 
-      The number of times that a relay has been measured in the last days
-      (by default 5), but the relay's successful measurements (ie. the relay
-      was not counted in "recent_measurements_excluded_error_count")
-      were performed in a short a period of time too short (by default 1 day).
-      Tor directory authorities SHOULD NOT vote on the relay's bandwidth.
+      The number of relays that have some successful measurements in the last
+      data_period days (5 by default), but all those measurements were
+      performed in a period of time that was too short (by default 1 day).
+
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
 
       This Line was added in version 1.4.0 of this specification.
 
@@ -387,11 +403,12 @@
 
       [Zero or one time.]
 
-      The number of times that a relay that was not counted in
-      "recent_measurements_excluded_near_count", but the relay's measurements
-      were older than the last days (by default 5 too).
+      The number of relays that have some successful measurements, but all
+      those measurements are too old (more than 5 days, by default).
+      Excludes relays that are already counted in
+      recent_measurements_excluded_near_count.
 
-      Tor directory authorities SHOULD NOT vote on the relay's bandwidth.
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
 
       This Line was added in version 1.4.0 of this specification.
 
@@ -399,11 +416,13 @@
 
       [Zero or one time.]
 
-      The number of times that a relay was not counted in
-      "recent_measurements_excluded_old_count", but there were not enough
-      relay's measurements (by default 2).
+      The number of relays that don't have enough recent measurements.
+      (Fewer than 2 measurements in the last 5 days, by default).
+      Excludes relays that are already counted in
+      recent_measurements_excluded_near_count and
+      recent_measurements_excluded_old_count.
 
-      Tor directory authorities SHOULD NOT vote on the relay's bandwidth.
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
 
       This Line was added in version 1.4.0 of this specification.
 
