@@ -382,7 +382,8 @@
       In 2019, with 7000 relays in the network, the Value of this Key SHOULD be
       approximately the same as "recent_priority_relay_count",
       assuming that there is one attempt to measure a relay for each relay that
-      has been prioritized when there are not any implementation errors.
+      has been prioritized unless there are system, network or implementation
+      issues.
 
       This Line was added in version 1.4.0 of this specification.
 
@@ -391,8 +392,8 @@
       [Zero or one time.]
 
       The number of times that the scanner attempted to measure a relay in
-      the last data_period days (5 by default), but the pre-conditions
-      for measuring that relay could not be satisfied.
+      the last data_period days (5 by default), but the relay has not been
+      measured because of system, network or implementation issues.
 
       This Line was added in version 1.4.0 of this specification.
 
@@ -823,7 +824,7 @@
       way they would vote for a relay that is not present in the file.
 
       This MAY be the case when this relay was not successfully measured but
-      the is included in the Bandwidth File, to diagnose why they were not
+      it is included in the Bandwidth File, to diagnose why they were not
       measured.
 
       If the value is 1 or the KeyValue is not present, Tor directory
