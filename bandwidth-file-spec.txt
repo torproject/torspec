@@ -331,7 +331,8 @@
       days. (data_period is 5 by default.)
 
       Assuming that Tor clients fetch a consensus every 1-2 hours,
-      and that the data_period is 5 days, this line SHOULD be between:
+      and that the data_period is 5 days, the Value of this Key SHOULD be
+      between:
           data_period * 24 / 2 =  60
           data_period * 24     = 120
 
@@ -345,9 +346,9 @@
       to be measured has been created in the last data_period days.
       (data_period is 5 by default.)
 
-      In 2019, with 7000 relays in the network, this line SHOULD be
+      In 2019, with 7000 relays in the network, the Value of this Key SHOULD be
       approximately:
-      data_period * 24 / 1.5 = 80
+          data_period * 24 / 1.5 = 80
       Being 1.5 the approximate number of hours it takes to measure a
       priority list of 7000 * 0.05 (350) relays, when the fraction of relays
       in a priority list is the 5% (0.05).
@@ -362,9 +363,9 @@
       to be measured in the last data_period days. (data_period is 5 by
       default.)
 
-      In 2019, with 7000 relays in the network, this line SHOULD be
+      In 2019, with 7000 relays in the network, the Value of this Key SHOULD be
       approximately:
-      80 * (7000 * 0.05) = 28000
+          80 * (7000 * 0.05) = 28000
       Being 0.05 (5%) the fraction of relays in a priority list and 80
       the approximate number of priority lists (see
       "recent_priority_list_count").
@@ -378,10 +379,10 @@
       The number of times that any relay has been queued to be measured
       in the last data_period days. (data_period is 5 by default.)
 
-      In 2019, with 7000 relays in the network, this line SHOULD be:
-      The same as "recent_priority_relay_count", assuming that there is one
-      attempt to measure a relay for each relay that has been prioritized if
-      there are not any implementation errors.
+      In 2019, with 7000 relays in the network, the Value of this Key SHOULD be
+      approximately the same as "recent_priority_relay_count",
+      assuming that there is one attempt to measure a relay for each relay that
+      has been prioritized when there are not any implementation errors.
 
       This Line was added in version 1.4.0 of this specification.
 
