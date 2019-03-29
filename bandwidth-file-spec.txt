@@ -440,8 +440,10 @@
 
       [Zero or one time.]
 
-      The number of relays that don't have enough recent measurements.
-      (Fewer than 2 measurements in the last 5 days, by default).
+      The number of relays that don't have enough recent successful
+      measurements. (Fewer than 2 measurements in the last 5 days, by
+      default).
+
       Excludes relays that are already counted in
       recent_measurements_excluded_near_count and
       recent_measurements_excluded_old_count.
