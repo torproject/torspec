@@ -787,9 +787,9 @@
 
       [Zero or one time.]
 
-      The number of recent relay measurements which were excluded because
-      the measurement was attempted, but failed. Measurements are recent
-      if they are in the last data_period days (5 by default).
+      The number of recent relay measurement attempts that failed.
+      Measurements are recent if they are in the last data_period days
+      (5 by default).
 
       (See the note in section 1.4, version 1.4.0, about excluded relays.)
 
@@ -808,12 +808,15 @@
 
       This KeyValue was added in version 1.4.0 of this specification.
 
-    "recent_measurements_excluded_old_count=" Int
+    "relay_recent_measurements_excluded_old_count=" Int
 
       [Zero or one time.]
 
       The number of successful measurements for this relay that are too old
-      (more than 5 days, by default).
+      (more than data_period days, 5 by default).
+
+      Excludes measurements that are already counted in
+      relay_recent_measurements_excluded_near_count.
 
       (See the note in section 1.4, version 1.4.0, about excluded relays.)
 
@@ -826,6 +829,10 @@
       The number of successful measurements for this relay that were ignored
       because the relay did not have enough successful measurements (fewer
       than 2, by default).
+
+      Excludes measurements that are already counted in
+      relay_recent_measurements_excluded_near_count or
+      relay_recent_measurements_excluded_old_count.
 
       (See the note in section 1.4, version 1.4.0, about excluded relays.)
 
