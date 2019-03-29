@@ -94,6 +94,7 @@
   The following nonterminals are defined in Tor directory protocol
   sections 1.2., 2.1.1., 2.1.3.:
 
+    bool
     Int
     SP (space)
     NL (newline)
@@ -828,6 +829,70 @@
 
       This KeyValue was added in version 1.4.0 of this specification.
 
+    "under_min_report=" bool
+
+      [Zero or one time.]
+
+      If the value is 1, there are not enough eligible relays in the
+      bandwidth file, and Tor bandwidth authorities MAY NOT vote on this
+      relay. (Current Tor versions do not change their behaviour based on
+      the "under_min_report" key.)
+
+      If the value is 0 or the KeyValue is not present, there are enough
+      relays in the bandwidth file.
+
+      Because Tor versions released before April 2019 (see section 1.4. for
+      the full list of versions) ignore "vote=0", generator implementations
+      MUST NOT change the bandwidths for under_min_report relays. Using the
+      same bw value makes authorities that do not understand "vote=0"
+      or "under_min_report=1" produce votes that don't change relay weights
+      too much. It also avoids flapping when the reporting threshold is
+      reached.
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "unmeasured=" bool
+
+      [Zero or one time.]
+
+      If the value is 1, this relay was not successfully measured and
+      Tor bandwidth authorities MAY NOT vote on this relay.
+      (Current Tor versions do not change their behaviour based on
+      the "unmeasured" key.)
+
+      If the value is 0 or the KeyValue is not present, this relay
+      was successfully measured.
+
+      Because Tor versions released before April 2019 (see section 1.4. for
+      the full list of versions) ignore "vote=0", generator implementations
+      MUST set "bw=1" for unmeasured relays. Using the minimum bw value
+      makes authorities that do not understand "vote=0" or "unmeasured=1"
+      produce votes that don't change relay weights too much.
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "vote=" bool
+
+      [Zero or one time.]
+
+      If the value is 0, Tor directory authorities SHOULD ignore the relay's
+      entry in the bandwidth file. They SHOULD vote for the relay the same
+      way they would vote for a relay that is not present in the file.
+
+      This MAY be the case when this relay was not successfully measured but
+      it is included in the Bandwidth File, to diagnose why they were not
+      measured.
+
+      If the value is 1 or the KeyValue is not present, Tor directory
+      authorities MUST use the relay's bw value in any votes for that relay.
+
+      Implementations MUST also set "bw=1" for unmeasured relays.
+      But they MUST NOT change the bw for under_min_report relays.
+      (See the explanations under "unmeasured" and "under_min_report"
+      for more details.)
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
 2.4.2.2. Torflow
 
   Torflow RelayLines include node_id and bw, and other KeyValue pairs [2].
@@ -948,9 +1013,10 @@ recent_priority_relay_count=6243
 scanner_country=SN
 software=sbws
 software_version=1.1.0
+time_to_report_half_network=57273
 =====
-bw=1 error_circ=1 error_destination=0 error_misc=0 error_second_relay=0 error_stream=0 master_key_ed25519=J3HQ24kOQWac3L1xlFLp7gY91qkb5NuKxjj1BhDi+m8 nick=snap269 node_id=$DC4D609F95A52614D1E69C752168AF1FCAE0B05F relay_recent_measurements_excluded_error_count=1 relay_recent_measurements_excluded_near_count=3 success=3 time=2019-03-16T18:20:57 unmeasured=1 vote=0
-bw=1 error_circ=0 error_destination=0 error_misc=0 error_second_relay=0 error_stream=0 master_key_ed25519=h6ZB1E1yBFWIMloUm9IWwjgaPXEpL5cUbuoQDgdSDKg nick=jrelay node_id=$C4544F9E209A9A9B99591D548B3E2822236C0503 relay_recent_measurements_excluded_few_count=1 success=1 time=2019-03-17T06:50:58 unmeasured=1 vote=0
+bw=1 error_circ=1 error_destination=0 error_misc=0 error_second_relay=0 error_stream=0 master_key_ed25519=J3HQ24kOQWac3L1xlFLp7gY91qkb5NuKxjj1BhDi+m8 nick=snap269 node_id=$DC4D609F95A52614D1E69C752168AF1FCAE0B05F relay_recent_measurement_attempt_count=3 relay_recent_measurements_excluded_error_count=1 relay_recent_measurements_excluded_near_count=3 relay_recent_consensus_count=3 relay_recent_priority_list_count=3 success=3 time=2019-03-16T18:20:57 unmeasured=1 vote=0
+bw=1 error_circ=0 error_destination=0 error_misc=0 error_second_relay=0 error_stream=2 master_key_ed25519=h6ZB1E1yBFWIMloUm9IWwjgaPXEpL5cUbuoQDgdSDKg nick=relay node_id=$C4544F9E209A9A9B99591D548B3E2822236C0503 relay_recent_measurement_attempt_count=3 relay_recent_measurements_excluded_error_count=2 relay_recent_measurements_excluded_few_count=1 relay_recent_consensus_count=3 relay_recent_priority_list_count=3 success=1 time=2019-03-17T06:50:58 unmeasured=1 vote=0
 
 B. Scaling bandwidths
 
