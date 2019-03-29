@@ -607,8 +607,6 @@
       MaxAdvertisedBandwidth for a relay, Torflow reduces that relay's
       measured bandwidth.
 
-      This KeyValue pair MUST be present in each relay Line.
-
     KeyValue
 
       [Zero or more times.]
