@@ -75,9 +75,9 @@
   but Tor versions earlier than 0.3.5.1-alpha warn if the header
   contains any KeyValue lines after the Timestamp.
 
-  Tor versions less than or equal to 0.4.0.3-alpha, 0.3.5.8 and 0.3.4.11,
-  do not understand "vote=0". Instead, they will vote for the actual
-  bandwidths that sbws puts in diagnostic relay lines:
+  Tor versions 0.4.0.3-alpha, 0.3.5.8, 0.3.4.11, and earlier do not
+  understand "vote=0". Instead, they will vote for the actual bandwidths
+  that sbws puts in diagnostic relay lines:
     * 1 for relays with "unmeasured=1", and
     * the relay's measured and scaled bandwidth when "under_min_report=1".
 
