@@ -453,6 +453,18 @@
 
       This Line was added in version 1.4.0 of this specification.
 
+    "time_to_report_half_network=" Int NL
+
+      [Zero or one time.]
+
+      The time in seconds that it would take to report measurements about the
+      half of the network, given the number of eligible relays and the time
+      it took in the last days (5 days, by default).
+
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
+
+      This Line was added in version 1.4.0 of this specification.
+
     KeyValue NL
 
       [Zero or more times.]
