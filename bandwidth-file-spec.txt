@@ -429,6 +429,7 @@
 
       The number of relays that have some successful measurements, but all
       those measurements are too old (more than 5 days, by default).
+
       Excludes relays that are already counted in
       recent_measurements_excluded_near_count.
 
