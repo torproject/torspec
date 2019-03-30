@@ -261,12 +261,15 @@
       [Zero or one time.]
 
       The percentage of relays in the consensus that SHOULD be
-      included in every generated bandwidth file.  If there are not
-      enough eligible relays, the bandwidth file MAY contain a
-      header, but no relays.
+      included in every generated bandwidth file.
+
+      If this threshold is not reached, format versions 1.3.0 and earlier
+      SHOULD NOT contain any relays. (Bandwidth files always include a
+      header.)
 
       Format versions 1.4.0 and later SHOULD include all the relays for
-      diagnostic purposes, even if this threshold is not reached.
+      diagnostic purposes, even if this threshold is not reached. But these
+      relays SHOULD be marked so that Tor does not vote on them.
       See section 1.4 for details.
 
       The minimum percentage is 60% in Torflow, so sbws uses
