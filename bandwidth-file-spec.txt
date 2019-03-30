@@ -52,16 +52,34 @@
   1.2.0 - If there are not enough eligible relays, the bandwidth file
           SHOULD contain a header, but no relays. (To match Torflow's
           existing behaviour.)
+
           Adds new KeyValue Lines to the Header List section with
           statistics about the number of relays included in the file.
           Add new KeyValues to Relay Bandwidth Lines, with different
           bandwidth values (averages and descriptor bandwidths).
+
+  1.3.0 - Adds scanner and destination countries to the header.
+
+  1.4.0 - Adds monitoring KeyValues to the header and relay lines.
+
+          RelayLines for excluded relays MAY be present in the bandwidth
+          file for diagnostic reasons. Similarly, if there are not enough
+          eligible relays, the bandwidth file MAY contain all known relays.
+
+          Diagnostic relay lines SHOULD be marked with vote=0, and
+          Tor SHOULD NOT use their bandwidths in its votes.
 
   All Tor versions can consume format version 1.0.0.
 
   All Tor versions can consume format version 1.1.0 and later,
   but Tor versions earlier than 0.3.5.1-alpha warn if the header
   contains any KeyValue lines after the Timestamp.
+
+  Tor versions 0.4.0.3-alpha, 0.3.5.8, 0.3.4.11, and earlier do not
+  understand "vote=0". Instead, they will vote for the actual bandwidths
+  that sbws puts in diagnostic relay lines:
+    * 1 for relays with "unmeasured=1", and
+    * the relay's measured and scaled bandwidth when "under_min_report=1".
 
 2. Format details
 
@@ -76,6 +94,7 @@
   The following nonterminals are defined in Tor directory protocol
   sections 1.2., 2.1.1., 2.1.3.:
 
+    bool
     Int
     SP (space)
     NL (newline)
@@ -242,9 +261,16 @@
       [Zero or one time.]
 
       The percentage of relays in the consensus that SHOULD be
-      included in every generated bandwidth file.  If there are not
-      enough eligible relays, the bandwidth file SHOULD contain a
-      header, but no relays.
+      included in every generated bandwidth file.
+
+      If this threshold is not reached, format versions 1.3.0 and earlier
+      SHOULD NOT contain any relays. (Bandwidth files always include a
+      header.)
+
+      Format versions 1.4.0 and later SHOULD include all the relays for
+      diagnostic purposes, even if this threshold is not reached. But these
+      relays SHOULD be marked so that Tor does not vote on them.
+      See section 1.4 for details.
 
       The minimum percentage is 60% in Torflow, so sbws uses
       60% as the default.
@@ -276,7 +302,8 @@
 
       [Zero or one time.]
 
-      The minimum number of relays to include in the bandwidth file.
+      The minimum number of relays that SHOULD be included in the bandwidth
+      file. See minimum_percent_eligible_relays for details.
 
       This line SHOULD be equal to:
           number_consensus_relays * (minimum_percent_eligible_relays / 100.0)
@@ -301,6 +328,145 @@
       to measure the bandwidth.
 
       This Line was added in version 1.3.0 of this specification.
+
+    "recent_consensus_count=" Int NL
+
+      [Zero or one time.].
+
+      The number of the different consensuses seen in the last data_period
+      days. (data_period is 5 by default.)
+
+      Assuming that Tor clients fetch a consensus every 1-2 hours,
+      and that the data_period is 5 days, the Value of this Key SHOULD be
+      between:
+          data_period * 24 / 2 =  60
+          data_period * 24     = 120
+
+      This Line was added in version 1.4.0 of this specification.
+
+    "recent_priority_list_count=" Int NL
+
+      [Zero or one time.]
+
+      The number of times that a list with a subset of relays prioritized
+      to be measured has been created in the last data_period days.
+      (data_period is 5 by default.)
+
+      In 2019, with 7000 relays in the network, the Value of this Key SHOULD be
+      approximately:
+          data_period * 24 / 1.5 = 80
+      Being 1.5 the approximate number of hours it takes to measure a
+      priority list of 7000 * 0.05 (350) relays, when the fraction of relays
+      in a priority list is the 5% (0.05).
+
+      This Line was added in version 1.4.0 of this specification.
+
+    "recent_priority_relay_count=" Int NL
+
+      [Zero or one time.]
+
+      The number of relays that has been in in the list of relays prioritized
+      to be measured in the last data_period days. (data_period is 5 by
+      default.)
+
+      In 2019, with 7000 relays in the network, the Value of this Key SHOULD be
+      approximately:
+          80 * (7000 * 0.05) = 28000
+      Being 0.05 (5%) the fraction of relays in a priority list and 80
+      the approximate number of priority lists (see
+      "recent_priority_list_count").
+
+      This Line was added in version 1.4.0 of this specification.
+
+    "recent_measurement_attempt_count=" Int NL
+
+      [Zero or one time.]
+
+      The number of times that any relay has been queued to be measured
+      in the last data_period days. (data_period is 5 by default.)
+
+      In 2019, with 7000 relays in the network, the Value of this Key SHOULD be
+      approximately the same as "recent_priority_relay_count",
+      assuming that there is one attempt to measure a relay for each relay that
+      has been prioritized unless there are system, network or implementation
+      issues.
+
+      This Line was added in version 1.4.0 of this specification.
+
+    "recent_measurement_failure_count=" Int NL
+
+      [Zero or one time.]
+
+      The number of times that the scanner attempted to measure a relay in
+      the last data_period days (5 by default), but the relay has not been
+      measured because of system, network or implementation issues.
+
+      This Line was added in version 1.4.0 of this specification.
+
+    "recent_measurements_excluded_error_count=" Int NL
+
+      [Zero or one time.]
+
+      The number of relays that have no successful measurements in the last
+      data_period days (5 by default).
+
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
+
+      This Line was added in version 1.4.0 of this specification.
+
+    "recent_measurements_excluded_near_count=" Int NL
+
+      [Zero or one time.]
+
+      The number of relays that have some successful measurements in the last
+      data_period days (5 by default), but all those measurements were
+      performed in a period of time that was too short (by default 1 day).
+
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
+
+      This Line was added in version 1.4.0 of this specification.
+
+    "recent_measurements_excluded_old_count=" Int NL
+
+      [Zero or one time.]
+
+      The number of relays that have some successful measurements, but all
+      those measurements are too old (more than 5 days, by default).
+
+      Excludes relays that are already counted in
+      recent_measurements_excluded_near_count.
+
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
+
+      This Line was added in version 1.4.0 of this specification.
+
+    "recent_measurements_excluded_few_count=" Int NL
+
+      [Zero or one time.]
+
+      The number of relays that don't have enough recent successful
+      measurements. (Fewer than 2 measurements in the last 5 days, by
+      default).
+
+      Excludes relays that are already counted in
+      recent_measurements_excluded_near_count and
+      recent_measurements_excluded_old_count.
+
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
+
+      This Line was added in version 1.4.0 of this specification.
+
+    "time_to_report_half_network=" Int NL
+
+      [Zero or one time.]
+
+      The time in seconds that it would take to report measurements about the
+      half of the network, given the number of eligible relays and the time
+      it took in the last days (5 days, by default).
+
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
+
+      This Line was added in version 1.4.0 of this specification.
 
     KeyValue NL
 
@@ -358,7 +524,7 @@
   If a parser does not recognize any extra material in a RelayLine,
   the extra material MUST be ignored.
 
-  Each RelayLine MUST include the following KeyValue pairs:
+  Each RelayLine includes the following KeyValue pairs:
 
     "node_id=" hexdigest
 
@@ -370,6 +536,13 @@
             0.3.4.1-alpha, node_id MUST NOT be at the end of the Line.
             These authority versions are no longer supported.
 
+      Current Tor versions ignore master_key_ed25519, so node_id MUST be
+      present in each relay Line.
+
+      Implementations of version 1.1.0 and later SHOULD include both node_id
+      and master_key_ed25519. Parsers SHOULD accept Lines that contain at
+      least one of them.
+
     "master_key_ed25519=" MasterKey
 
       [Zero or one time.]
@@ -378,9 +551,9 @@
       without trailing "="s, to avoid ambiguity with KeyValue "="
       character.
 
-      Implementations of version 1.1.0 SHOULD include both node_id and
-      master_key_ed25519.
-      Parsers SHOULD accept Lines that contain at least one of them.
+      This KeyValue pair SHOULD be present, see the note under node_id.
+
+      This KeyValue was added in version 1.1.0 of this specification.
 
     "bw=" Bandwidth
 
@@ -479,94 +652,258 @@
 
 2.4.2.1. Simple Bandwidth Scanner
 
-  sbws RelayLines may contain these keys:
+  sbws RelayLines contain these keys:
 
-    "node_id=" hexdigest SP
-
-      As above.
-
-    "bw=" Bandwidth SP
+    "node_id=" hexdigest
 
       As above.
 
-    "nick=" nickname SP
+    "bw=" Bandwidth
+
+      As above.
+
+    "nick=" nickname
 
       [Exactly once.]
 
       The relay nickname.
 
-    "rtt=" Int SP
+      Torflow also has a "nick=" KeyValue.
 
-      [Exactly once.]
+    "rtt=" Int
+
+      [Zero or one time.]
 
       The Round Trip Time in milliseconds to obtain 1 byte of data.
 
-    "time=" DateTime SP
+      This KeyValue was added in version 1.1.0 of this specification.
+      It became optional in version 1.3.0 or 1.4.0 of this specification.
+
+    "time=" DateTime
 
       [Exactly once.]
 
       The date and time timestamp in ISO 8601 format and UTC time zone
       when the last bandwidth was obtained.
 
-    "success=" Int SP
+      This KeyValue was added in version 1.1.0 of this specification.
+      The Torflow equivalent is "measured_at=".
+
+    "success=" Int
 
       [Zero or one time.]
 
       The number of times that the bandwidth measurements for this relay were
       successful.
 
-    "error_circ=" Int SP
+      This KeyValue was added in version 1.1.0 of this specification.
+
+    "error_circ=" Int
 
       [Zero or one time.]
 
       The number of times that the bandwidth measurements for this relay
       failed because of circuit failures.
 
-    "error_stream=" Int SP
+      This KeyValue was added in version 1.1.0 of this specification.
+      The Torflow equivalent is "circ_fail=".
+
+    "error_stream=" Int
 
       [Zero or one time.]
 
       The number of times that the bandwidth measurements for this relay
       failed because of stream failures.
 
-    "error_misc=" Int SP
+      This KeyValue was added in version 1.1.0 of this specification.
+
+    "error_destination=" Int
+
+      [Zero or one time.]
+
+      The number of times that the bandwidth measurements for this relay
+      failed because the destination Web server was not available.
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "error_second_relay=" Int
+
+      [Zero or one time.]
+
+      The number of times that the bandwidth measurements for this relay
+      failed because sbws could not find a second relay for the test circuit.
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "error_misc=" Int
 
       [Zero or one time.]
 
       The number of times that the bandwidth measurements for this relay
       failed because of other reasons.
 
-    "bw_mean=" Int SP
+      This KeyValue was added in version 1.1.0 of this specification.
+
+    "bw_mean=" Int
 
       [Zero or one time.]
 
       The measured bandwidth mean for this relay in bytes per second.
 
-    "bw_median=" Int SP
+      This KeyValue was added in version 1.2.0 of this specification.
+
+    "bw_median=" Int
 
       [Zero or one time.]
 
       The measured bandwidth median for this relay in bytes per second.
 
-    "desc_bw_average=" Int SP
+      This KeyValue was added in version 1.2.0 of this specification.
+
+    "desc_bw_average=" Int
 
       [Zero or one time.]
 
       The descriptor average bandwidth for this relay in bytes per second.
 
-    "desc_bw_obs_last=" Int SP
+      This KeyValue was added in version 1.2.0 of this specification.
+
+    "desc_obs_bw_last=" Int
 
       [Zero or one time.]
 
       The last descriptor observed bandwidth for this relay in bytes per
       second.
 
-    "desc_bw_obs_mean=" Int SP
+      This KeyValue was added in version 1.2.0 of this specification.
+
+    "desc_obs_bw_mean=" Int
 
       [Zero or one time.]
 
       The descriptor observed bandwidth mean for this relay in bytes per
       second.
+
+      This KeyValue was added in version 1.2.0 of this specification.
+
+    "relay_recent_measurements_excluded_error_count=" Int
+
+      [Zero or one time.]
+
+      The number of recent relay measurement attempts that failed.
+      Measurements are recent if they are in the last data_period days
+      (5 by default).
+
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "relay_recent_measurements_excluded_near_count=" Int
+
+      [Zero or one time.]
+
+      When all of a relay's recent successful measurements were performed in
+      a period of time that was too short (by default 1 day), the relay is
+      excluded. This KeyValue contains the number of recent successful
+      measurements for the relay that were ignored for this reason.
+
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "relay_recent_measurements_excluded_old_count=" Int
+
+      [Zero or one time.]
+
+      The number of successful measurements for this relay that are too old
+      (more than data_period days, 5 by default).
+
+      Excludes measurements that are already counted in
+      relay_recent_measurements_excluded_near_count.
+
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "recent_measurements_excluded_few_count=" Int
+
+      [Zero or one time.]
+
+      The number of successful measurements for this relay that were ignored
+      because the relay did not have enough successful measurements (fewer
+      than 2, by default).
+
+      Excludes measurements that are already counted in
+      relay_recent_measurements_excluded_near_count or
+      relay_recent_measurements_excluded_old_count.
+
+      (See the note in section 1.4, version 1.4.0, about excluded relays.)
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "under_min_report=" bool
+
+      [Zero or one time.]
+
+      If the value is 1, there are not enough eligible relays in the
+      bandwidth file, and Tor bandwidth authorities MAY NOT vote on this
+      relay. (Current Tor versions do not change their behaviour based on
+      the "under_min_report" key.)
+
+      If the value is 0 or the KeyValue is not present, there are enough
+      relays in the bandwidth file.
+
+      Because Tor versions released before April 2019 (see section 1.4. for
+      the full list of versions) ignore "vote=0", generator implementations
+      MUST NOT change the bandwidths for under_min_report relays. Using the
+      same bw value makes authorities that do not understand "vote=0"
+      or "under_min_report=1" produce votes that don't change relay weights
+      too much. It also avoids flapping when the reporting threshold is
+      reached.
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "unmeasured=" bool
+
+      [Zero or one time.]
+
+      If the value is 1, this relay was not successfully measured and
+      Tor bandwidth authorities MAY NOT vote on this relay.
+      (Current Tor versions do not change their behaviour based on
+      the "unmeasured" key.)
+
+      If the value is 0 or the KeyValue is not present, this relay
+      was successfully measured.
+
+      Because Tor versions released before April 2019 (see section 1.4. for
+      the full list of versions) ignore "vote=0", generator implementations
+      MUST set "bw=1" for unmeasured relays. Using the minimum bw value
+      makes authorities that do not understand "vote=0" or "unmeasured=1"
+      produce votes that don't change relay weights too much.
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "vote=" bool
+
+      [Zero or one time.]
+
+      If the value is 0, Tor directory authorities SHOULD ignore the relay's
+      entry in the bandwidth file. They SHOULD vote for the relay the same
+      way they would vote for a relay that is not present in the file.
+
+      This MAY be the case when this relay was not successfully measured but
+      it is included in the Bandwidth File, to diagnose why they were not
+      measured.
+
+      If the value is 1 or the KeyValue is not present, Tor directory
+      authorities MUST use the relay's bw value in any votes for that relay.
+
+      Implementations MUST also set "bw=1" for unmeasured relays.
+      But they MUST NOT change the bw for under_min_report relays.
+      (See the explanations under "unmeasured" and "under_min_report"
+      for more details.)
+
+      This KeyValue was added in version 1.4.0 of this specification.
 
 2.4.2.2. Torflow
 
@@ -576,6 +913,8 @@ References:
 
 1. https://gitweb.torproject.org/torflow.git
 2. https://gitweb.torproject.org/torflow.git/tree/NetworkScanners/BwAuthority/README.spec.txt#n332
+   The Torflow specification is outdated, and does not match the current
+   implementation. See section A.1. for the format produced by Torflow.
 3. https://gitweb.torproject.org/torspec.git/tree/dir-spec.txt
 4. https://gitweb.torproject.org/torspec.git/tree/version-spec.txt
 5. https://semver.org/
@@ -586,7 +925,7 @@ The following has not been obtained from any real measurement.
 
 A.1. Generated by Torflow
 
-  This an example version 1.0.0 document:
+This an example version 1.0.0 document:
 
 1523911758
 node_id=$68A483E05A2ABDCA6DA5A3EF8DB5177638A27F80 bw=760 nick=Test measured_at=1523911725 updated_at=1523911725 pid_error=4.11374090719 pid_error_sum=4.11374090719 pid_bw=57136645 pid_delta=2.12168374577 circ_fail=0.2 scanner=/filepath
@@ -625,7 +964,7 @@ software_version=1.0.3
 bw=38000 bw_mean=1127824 bw_median=1180062 desc_avg_bw=1073741824 desc_obs_bw_last=17230879 desc_obs_bw_mean=14732306 error_circ=0 error_misc=0 error_stream=1 master_key_ed25519=YaqV4vbvPYKucElk297eVdNArDz9HtIwUoIeo0+cVIpQ nick=Test node_id=$68A483E05A2ABDCA6DA5A3EF8DB5177638A27F80 rtt=380 success=1 time=2018-05-08T16:13:26
 bw=1 bw_mean=199162 bw_median=185675 desc_avg_bw=409600 desc_obs_bw_last=836165 desc_obs_bw_mean=858030 error_circ=0 error_misc=0 error_stream=0 master_key_ed25519=a6a+dZadrQBtfSbmQkP7j2ardCmLnm5NJ4ZzkvDxbo0I nick=Test2 node_id=$96C15995F30895689291F455587BD94CA427B6FC rtt=378 success=1 time=2018-05-08T16:13:36
 
-  When there are not enough eligible measured relays:
+A.3.1. When there are not enough eligible measured relays:
 
 1540496079
 version=1.2.0
@@ -659,6 +998,37 @@ percent_eligible_relays=93
 scanner_country=SN
 software=sbws
 software_version=1.0.4
+=====
+
+A.5 Generated by sbws version 1.1.0
+
+1523911758
+version=1.4.0
+latest_bandwidth=2018-04-16T20:49:18
+destinations_countries=TH,ZZ
+file_created=2018-04-16T21:49:18
+generator_started=2018-04-16T15:13:25
+earliest_bandwidth=2018-04-16T15:13:26
+minimum_number_eligible_relays=3862
+minimum_percent_eligible_relays=60
+number_consensus_relays=6436
+number_eligible_relays=6000
+percent_eligible_relays=93
+recent_measurement_attempt_count=6243
+recent_measurement_failure_count=732
+recent_measurements_excluded_error_count=969
+recent_measurements_excluded_few_count=3946
+recent_measurements_excluded_near_count=90
+recent_measurements_excluded_old_count=0
+recent_priority_list_count=20
+recent_priority_relay_count=6243
+scanner_country=SN
+software=sbws
+software_version=1.1.0
+time_to_report_half_network=57273
+=====
+bw=1 error_circ=1 error_destination=0 error_misc=0 error_second_relay=0 error_stream=0 master_key_ed25519=J3HQ24kOQWac3L1xlFLp7gY91qkb5NuKxjj1BhDi+m8 nick=snap269 node_id=$DC4D609F95A52614D1E69C752168AF1FCAE0B05F relay_recent_measurement_attempt_count=3 relay_recent_measurements_excluded_error_count=1 relay_recent_measurements_excluded_near_count=3 relay_recent_consensus_count=3 relay_recent_priority_list_count=3 success=3 time=2019-03-16T18:20:57 unmeasured=1 vote=0
+bw=1 error_circ=0 error_destination=0 error_misc=0 error_second_relay=0 error_stream=2 master_key_ed25519=h6ZB1E1yBFWIMloUm9IWwjgaPXEpL5cUbuoQDgdSDKg nick=relay node_id=$C4544F9E209A9A9B99591D548B3E2822236C0503 relay_recent_measurement_attempt_count=3 relay_recent_measurements_excluded_error_count=2 relay_recent_measurements_excluded_few_count=1 relay_recent_consensus_count=3 relay_recent_priority_list_count=3 success=1 time=2019-03-17T06:50:58 unmeasured=1 vote=0
 
 B. Scaling bandwidths
 
