@@ -3216,7 +3216,8 @@
        - "QUERY_RATE_LIMITED" - query for this service is rate-limited
 
     For "QUERY_NO_HSDIR" or "QUERY_RATE_LIMITED", the HsDir will be set to
-    "UNKNOWN" which was introduced in tor 0.3.1.0-alpha.
+    "UNKNOWN" which was introduced in tor 0.3.1.0-alpha and 0.4.1.0-alpha
+    respectively.
 
     If Action is "CREATED", Tor SHOULD send Replica field as well. The Replica
     field contains the replica number of the generated descriptor. The Replica
@@ -3264,7 +3265,7 @@
 
   If the fetch fails for the QUERY_NO_HSDIR or QUERY_RATE_LIMITED reason from
   the HS_DESC event, the HsDir is set to "UNKNOWN". This was introduced in
-  0.3.1.0-alpha.
+  0.3.1.0-alpha and 0.4.1.0-alpha respectively.
 
   It's expected to receive a reply relatively fast as in it's the time it
   takes to fetch something over the Tor network. This can be between a
