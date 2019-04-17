@@ -634,7 +634,8 @@
       queries.
       [First implemented in 0.2.0.13-alpha.]
       [In 0.2.0.9-alpha this switched from v2 directory style to v3]
-      [in 0.4.1.1-alpha we stop setting bridges as running here]
+      [In versions before 0.4.1.1-alpha we set the Running flag on bridges when /ns/purpose/bridge is accessed]
+      [In 0.4.1.1-alpha we set the Running flag on bridges when the bridge networkstatus file is written to disk]
 
     "desc/all-recent" -- the latest server descriptor for every router that
       Tor knows about.  (See md note about "desc/id" and "desc/name" above.)
