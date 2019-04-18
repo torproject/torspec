@@ -367,6 +367,17 @@ When either global or machine limits are reached, padding is no longer
 scheduled. The machine simply becomes idle until the overhead drops below
 the threshold.
 
+Finally, the consensus can also be used to specify that clients should
+use only machines that are flagged as reduced padding, or disable circuit
+padding entirely, with the following two parameters:
+
+   * circpad_padding_reduced=1
+     - Tells clients to only use padding machines with the
+       'reduced_padding_ok' machine condition flag set.
+   * circpad_padding_disabled=1
+     - Tells clients to stop circuit padding immediately, and not negotiate
+       any further padding machines.
+
 5.2. Overhead accounting
 
 In order to monitor the quantity of padding to decide if we should alter
