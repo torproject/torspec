@@ -22,6 +22,11 @@
    signed document is prefixed with a personalization string, which
    will be different in each case.
 
+1.2 Integer encoding
+
+   Network byte order (big-endian) is used to encode all integer values
+   in Ed25519 certificates unless explicitly specified otherwise.
+
 2. Document formats
 
 2.1. Ed25519 Certificates
