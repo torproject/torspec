@@ -223,17 +223,37 @@ Status: Open
    (100) has arrived. So the client should use the digest from the cell
    that triggers the sendme.
 
-   How shall we version the sendme payload so we can change the format of
-   it later? Right now sendme payloads are empty. Here's a simple design:
-   we use five bytes in the payload, where the first byte indicates the
-   sendme payload version (0 in the original design, and 1 once we've
-   implemented this proposal), and the rest of the payload is formatted
-   based on the payload version number: in this case, it's simply the
-   four bytes of digest.
+   In order to achieve this, we need to version the SENDME cell so we can
+   differentiate the original protocol versus the new authenticated cell.
+   Right now, the SENDME payload is empty which translate to a version value
+   of 0 with this proposed change. The version to achieve authenticated
+   SENDMEs of this proposal would be 1.
 
-   Is there a better way to version the payload, e.g. a way that is
-   already standard in other parts of the design, so we aren't adding
-   a new paint color to keep track of on the bike shed?
+   The SENDME cell payload would contain the following:
+
+      VERSION     [1 byte]
+      DATA_LEN    [2 bytes]
+      DATA        [DATA_LEN bytes]
+
+   The VERSION tells us what is expected in the DATA section of length
+   DATA_LEN. The recognized values are:
+
+      0x00: The rest of the payload should be ignored.
+
+      0x01: Authenticated SENDME. The DATA section should contain:
+
+         DIGEST   [20 bytes]
+
+         If the DATA_LEN value is less then 4 bytes, the cell should be
+         dropped and the circuit closed. If the value is more than 4 bytes,
+         then the first 20 bytes should be read to get the correct value.
+
+         The DIGEST is the digest value from the cell that triggered this
+         SENDME as mentionned above. This value is matched on the other side
+         from the previous cell.
+
+   If a VERSION is unrecognized, the SENDME cell should be treated as version
+   0 meaning the payload is ignored.
 
 3.2. Verifying the sendme payload
 
@@ -282,31 +302,128 @@ Status: Open
 
 4. Deployment Plan
 
-   In phase one, both sides begin remembering their expected digests,
-   and they learn how to parse sendme payloads. When they receive a
-   sendme with payload version 1, they verify its digest and tear down
-   the circuit if it's wrong. But they continue to send and accept
-   payload version 0 sendmes.
+   This section describes how we will be able to deploy this new mechanism on
+   the network.
 
-   In phase two, we flip a switch in the consensus, and everybody starts
-   sending payload version 1 sendmes. Payload version 0 sendmes are
-   still accepted.
+   Alas, this deployment plan leaves a pretty large window until relays are
+   protected from attack. It's not all bad news though, since we could flip
+   the switches earlier than intended if we encounter a network-wide attack.
 
-   In phase three, we flip a different switch in the consensus, and
-   everybody starts refusing payload version 0 sendmes.
+   There are 5 phases to this plan and detailed in the subsections.
+
+4.1. Phase One - Remembering Digests
+
+   Both sides begin remembering their expected digests, and they learn how to
+   parse sendme version 1 payloads. When they receive a version 1 SENDME, they
+   verify its digest and tear down the circuit if it's wrong. But they
+   continue to send and accept payload version 0 sendmes.
+
+4.2. Phase Two - Sending Version 1
+
+   We flip a switch in the consensus, and everybody starts sending payload
+   version 1 sendmes. Payload version 0 sendmes are still accepted. The newly
+   proposed consensus parameter to achieve this is:
+
+      "sendme_emit_min_version" - Minimum SENDME version that can be sent.
+
+4.3. Phase Three - Protover
+
+   On phase four (section 4.4), the new consensus parameter that tells us
+   which minimum version to accept, once flipped to version 1, has the
+   consequence of making every tor not supporting that version to fail to
+   operate on the network. It goes as far as unable to download a consensus.
+
+   It is essentially a "false-kill" switch because tor will still run but will
+   simply not work. It will retry over and over to download a consensus. In
+   order to help us transition before only accepting v1 on the network, a new
+   protover value is proposed (see section 9 of tor-spec.txt for protover
+   details).
+
+   Tor clients and relays that don't support this protover version from the
+   consensus "required-client-protocols" or "required-relay-protocols" lines
+   will exit and thus not try to join the network. Here is the proposed value:
+
+     "FlowCtrl"
+
+     Describes the flow control protocol at the circuit and stream level. If
+     there is no FlowCtrl protocol version, tor supports the unauthenticated
+     flow control features from its supported Relay protocols.
+
+       "1" -- supports authenticated circuit level SENDMEs as of proposal
+              289 in Tor 0.4.1.1-alpha.
+
+4.4. Phase Four - Accepting Version 1
+
+   We flip a different switch in the consensus, and everybody starts refusing
+   payload version 0 sendmes. The newly proposed consensus parameter to
+   achieve this is:
+
+      "sendme_accept_min_version" - Minimum SENDME version that is accepted.
 
    (It has to be two separate switches, not one unified one, because
    otherwise we'd have a race where relays learn about the update before
    clients know to start the new behavior.)
 
-   We'll want to do a bunch of testing in chutney before flipping the
-   switches in the real network: I've long suspected we still have bugs
-   in our sendme timing, and this proposal might expose some of them.
+   Phase three will shutdown every clients that understand protover. However,
+   one important case remains which is when a client not supporting verison 1
+   boots up for the first time (no consensus).
 
-   Alas, this deployment plan leaves a pretty large window until relays
-   are protected from attack. It's not all bad news though, since we
-   could flip the switches earlier than intended if we encounter a
-   network-wide attack.
+   It won't be able to download a consensus and thus know that it can't join
+   the network making it re-try over and over again. To avoid that, we propose
+   to still allow v0 SENDMEs on one-hop directory circuits meaning the new
+   parameter above affects everything except these specific circuits.
+
+   It will allow us to extend the period of time between Phase Four and too
+   old clients to bootstrap and fail properly. The last phase will then turn
+   this behavior off and we will be done once and for all with version 0.
+
+4.5. Phase Five - Turning Off v0
+
+   The last consensus switch to flip is the one refusing SENDME v0 on one-hop
+   directory circuit as described in previous phase.
+
+   The newly proposed consensus parameter to achieve this is:
+
+      "sendme_onehop_dir_min_version" - Minimum SENDME version that is
+                                        accepted on one-hop directory circuits.
+
+   After this phase, any tor still not supporting v0 will retry over and over
+   again to bootstrap. We can't avoid that but at least we can give enough
+   time to minimize the amount of old clients unable to boostrap with the
+   proposed timeline below.
+
+4.6. Timeline
+
+   The proposed timeline for the deployment phases:
+
+      Phase 1 and 2:
+
+         Once this proposal is merged into tor (expected: 0.4.1.1-alpha).
+
+         Those two phases will start roughly at the same time. The reason we
+         can do that is because SENDME payloads are ignored for version 0 thus
+         sending v1 right now will not affect Tor current behavior.
+
+      Phase 3:
+
+         This phase will effectively exit() all tor not supporting
+         "FlowCtrl=1". The earliest date we can do that is when all versions
+         not supporting v1 are EOL.
+
+         According to our release schedule[4], this can happen when our latest
+         LTS (0.3.5) goes EOL that is on Feb 1st, 2022.
+
+      Phase 4:
+
+         We recommend to pass at least one version after Phase 3 so we can
+         take the time to see the effect that it had on the network.
+         Considering 6 months release time frame we expect to do this phase
+         around July 2022.
+
+      Phase 5:
+
+         Depends on how Phase 4 goes. It could be we'll do that very quickly
+         or not depending on our users and also Tor situation/health in 2022.
 
 5. Security Discussion
 
@@ -395,6 +512,7 @@ Status: Open
    [1] https://www.freehaven.net/anonbib/#sniper14
    [2] https://www.freehaven.net/anonbib/#torta05
    [3] https://www.freehaven.net/anonbib/#congestion-longpaths
+   [4] https://trac.torproject.org/projects/tor/wiki/org/teams/NetworkTeam/CoreTorReleases
 
 8. Acknowledgements
 
