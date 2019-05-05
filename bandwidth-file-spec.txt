@@ -112,6 +112,7 @@
 
     Line ::= ArgumentChar* NL
     RelayLine ::= KeyValue (SP KeyValue)* NL
+    HeaderLine ::= KeyValue NL
     KeyValue ::= Keyword "=" Value
     Value ::= ArgumentCharValue+
     ArgumentCharValue ::= any printing ASCII character except NL and SP.
@@ -140,6 +141,14 @@
   removed after Tor 0.4.0 is released in 2019.
 
 2.2. Header List format
+
+  It consists of a Timestamp line and zero or more HeaderLines.
+
+  All the header lines MUST conform HeaderLine format, except the first
+  Timestamp line.
+
+  The Timestamp line is not a HeaderLine to keep compatibility with
+  the legacy Bandwidth File format.
 
   Some header Lines MUST appear in specific positions, as documented
   below. All other Lines can appear in any order.
