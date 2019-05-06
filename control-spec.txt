@@ -1811,7 +1811,53 @@
 
   [HSPOST was added in Tor 0.2.7.1-alpha]
 
-3.23. DROPOWNERSHIP
+3.30. ADD_ONION_CLIENT_AUTH
+
+  The syntax is:
+    "ADD_ONION_CLIENT_AUTH" SP HSAddress
+                            SP "X25519Key=" PrivateKeyBlob
+                            [SP "ClientName=" Nickname] CRLF
+
+    HSAddress = 56*Base32Character
+    PrivateKeyBlob = base64 encoding of x25519 key
+
+  Tells the server to add client-side v3 client auth credentials for the onion
+  service with "HSAddress". The "PrivateKeyBlob" is the x25519 private key that
+  should be used for this client, and "Nickname" is an optional nickname for
+  the client.
+
+3.31. REMOVE_ONION_CLIENT_AUTH
+
+  The syntax is:
+    "REMOVE_ONION_CLIENT_AUTH" SP HSAddress
+                               SP "X25519Key=" PrivateKeyBlob CRLF
+
+  Tells the server to remove the client-side v3 client auth credentials for the
+  onion service with "HSAddress" and client with key "PrivateKeyBlob".
+
+3.32. VIEW_ONION_CLIENT_AUTH
+
+  The syntax is:
+    "VIEW_ONION_CLIENT_AUTH" SP HSAddress CRLF
+
+  Tells the server to list all the stored client-side v3 client auth
+  credentials for "HSAddress".
+
+  The server reply format is:
+    "250-VIEW_ONION_CLIENT_AUTH" SP HSAddress CRLF
+    *("250-CLIENT X25519Key=" PrivateKeyBlob
+                              [SP "ClientName=" Nickname]
+                              [SP "Type=Permanent"] CRLF)
+    "250 OK" CRLF
+
+  Where "PrivateKeyBlob" is the x25519 private key of this client. If the
+  client auth credentials are stored in the filesystem, "Type=Permanent" is
+  returned as part of the output. "Nickname" is an optional nickname for this
+  client, which can be set either through the ADD_ONION_CLIENT_AUTH command, or
+  it's the filename of this client if the credentials are stored in the
+  filesystem.
+
+3.33. DROPOWNERSHIP
 
   The syntax is:
     "DROPOWNERSHIP" CRLF
