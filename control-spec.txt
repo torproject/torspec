@@ -1811,60 +1811,70 @@
 
   [HSPOST was added in Tor 0.2.7.1-alpha]
 
-3.30. ADD_ONION_CLIENT_AUTH
+3.30. ONION_CLIENT_AUTH_ADD
 
   The syntax is:
-    "ADD_ONION_CLIENT_AUTH" SP HSAddress
-                            SP "X25519Key=" PrivateKeyBlob
-                            [SP "ClientName=" Nickname] CRLF
+    "ONION_CLIENT_AUTH_ADD" SP HSAddress
+                            SP "X25519PrivKey=" PrivateKeyBlob
+                            [SP "ClientName=" Nickname]
+                            [SP "Type=" TYPE] CRLF
 
     HSAddress = 56*Base32Character
     PrivateKeyBlob = base64 encoding of x25519 key
 
-  Tells the server to add client-side v3 client auth credentials for the onion
-  service with "HSAddress". The "PrivateKeyBlob" is the x25519 private key that
-  should be used for this client, and "Nickname" is an optional nickname for
-  the client.
+  Tells the connected Tor to add client-side v3 client auth credentials for the
+  onion service with "HSAddress". The "PrivateKeyBlob" is the x25519 private
+  key that should be used for this client, and "Nickname" is an optional
+  nickname for the client.
+
+  TYPE is a comma-separated tuple of types for this new client. For now, the
+  currently supported types are:
+    "Permanent" - This client's credentials should be stored in the filesystem.
+                  If this is not set, the client's credentials are epheremal
+                  and stored in memory.
 
   On success, "250 OK" is returned. Otherwise, the following error codes exist:
     251 - Client with with this "PrivateKeyBlob" already existed.
     512 - Syntax error in "HSAddress", or "PrivateKeyBlob" or "Nickname"
     551 - Client with with this "Nickname" already exists
 
-3.31. REMOVE_ONION_CLIENT_AUTH
+3.31. ONION_CLIENT_AUTH_REMOVE
 
   The syntax is:
-    "REMOVE_ONION_CLIENT_AUTH" SP HSAddress
-                               SP "X25519Key=" PrivateKeyBlob CRLF
+    "ONION_CLIENT_AUTH_REMOVE" SP HSAddress
+                               SP "X25519PrivKey=" PrivateKeyBlob CRLF
 
-  Tells the server to remove the client-side v3 client auth credentials for the
-  onion service with "HSAddress" and client with key "PrivateKeyBlob".
+  Tells the connected Tor to remove the client-side v3 client auth credentials
+  for the onion service with "HSAddress" and client with key "PrivateKeyBlob".
 
   On success "250 OK" is returned. Otherwise, the following error codes exist:
     512 - Syntax error in "HSAddress", or "PrivateKeyBlob".
     251 - Client with "PrivateKeyBlob" did not exist.
 
-3.32. VIEW_ONION_CLIENT_AUTH
+3.32. ONION_CLIENT_AUTH_VIEW
 
   The syntax is:
-    "VIEW_ONION_CLIENT_AUTH" SP HSAddress CRLF
+    "ONION_CLIENT_AUTH_VIEW" [SP HSAddress] CRLF
 
-  Tells the server to list all the stored client-side v3 client auth
-  credentials for "HSAddress".
+  Tells the connected Tor to list all the stored client-side v3 client auth
+  credentials for "HSAddress". If no "HSAddress" is provided, list all the
+  stored client-side v3 client auth credentials.
 
   The server reply format is:
-    "250-VIEW_ONION_CLIENT_AUTH" SP HSAddress CRLF
-    *("250-CLIENT X25519Key=" PrivateKeyBlob
+    "250-ONION_CLIENT_AUTH_VIEW" [SP HSAddress] CRLF
+    *("250-CLIENT X25519PrivKey=" PrivateKeyBlob
                               [SP "ClientName=" Nickname]
-                              [SP "Type=Permanent"] CRLF)
+                              [SP "Type=" TYPE] CRLF)
     "250 OK" CRLF
 
-  Where "PrivateKeyBlob" is the x25519 private key of this client. If the
-  client auth credentials are stored in the filesystem, "Type=Permanent" is
-  returned as part of the output. "Nickname" is an optional nickname for this
-  client, which can be set either through the ADD_ONION_CLIENT_AUTH command, or
-  it's the filename of this client if the credentials are stored in the
-  filesystem.
+  Where "PrivateKeyBlob" is the x25519 private key of this client. "Nickname"
+  is an optional nickname for this client, which can be set either through the
+  ONION_CLIENT_AUTH_ADD command, or it's the filename of this client if the
+  credentials are stored in the filesystem.
+
+  TYPE is a comma-separated field of types for this client, the currently
+  supported types are:
+      "Permanent" - This client's credentials are stored in the filesystem.
 
   On success "250 OK" is returned. Otherwise, the following error codes exist:
     512 - Syntax error in "HSAddress".
