@@ -1826,6 +1826,11 @@
   should be used for this client, and "Nickname" is an optional nickname for
   the client.
 
+  On success, "250 OK" is returned. Otherwise, the following error codes exist:
+    251 - Client with with this "PrivateKeyBlob" already existed.
+    512 - Syntax error in "HSAddress", or "PrivateKeyBlob" or "Nickname"
+    551 - Client with with this "Nickname" already exists
+
 3.31. REMOVE_ONION_CLIENT_AUTH
 
   The syntax is:
@@ -1834,6 +1839,10 @@
 
   Tells the server to remove the client-side v3 client auth credentials for the
   onion service with "HSAddress" and client with key "PrivateKeyBlob".
+
+  On success "250 OK" is returned. Otherwise, the following error codes exist:
+    512 - Syntax error in "HSAddress", or "PrivateKeyBlob".
+    251 - Client with "PrivateKeyBlob" did not exist.
 
 3.32. VIEW_ONION_CLIENT_AUTH
 
@@ -1856,6 +1865,9 @@
   client, which can be set either through the ADD_ONION_CLIENT_AUTH command, or
   it's the filename of this client if the credentials are stored in the
   filesystem.
+
+  On success "250 OK" is returned. Otherwise, the following error codes exist:
+    512 - Syntax error in "HSAddress".
 
 3.33. DROPOWNERSHIP
 
