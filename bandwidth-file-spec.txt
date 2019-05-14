@@ -98,7 +98,7 @@
     Int
     SP (space)
     NL (newline)
-    Keyword
+    KeywordChar
     ArgumentChar
     nickname
     hexdigest (a '$', followed by 40 hexadecimal characters
@@ -113,7 +113,8 @@
     Line ::= ArgumentChar* NL
     RelayLine ::= KeyValue (SP KeyValue)* NL
     HeaderLine ::= KeyValue NL
-    KeyValue ::= Keyword "=" Value
+    KeyValue ::= Key "=" Value
+    Key ::= (KeywordChar | "_")+
     Value ::= ArgumentCharValue+
     ArgumentCharValue ::= any printing ASCII character except NL and SP.
     Terminator ::= "=====" or "===="
