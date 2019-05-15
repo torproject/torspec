@@ -17,7 +17,7 @@ Supersedes: 169
    and authenticate the original handshake, this proposal takes an
    approach similar to Steven Murdoch's proposal 124 and my old
    proposal 169, and uses Tor cells to finish authenticating the
-   parties' identities once the initial TLS handshake is finished.spo
+   parties' identities once the initial TLS handshake is finished.
 
    I discuss some alternative design choices and why I didn't make
    them in section 7; please have a quick look there before

@@ -244,12 +244,12 @@ Status: Open
 
          DIGEST   [20 bytes]
 
-         If the DATA_LEN value is less then 4 bytes, the cell should be
+         If the DATA_LEN value is less than 4 bytes, the cell should be
          dropped and the circuit closed. If the value is more than 4 bytes,
          then the first 20 bytes should be read to get the correct value.
 
          The DIGEST is the digest value from the cell that triggered this
-         SENDME as mentionned above. This value is matched on the other side
+         SENDME as mentioned above. This value is matched on the other side
          from the previous cell.
 
    If a VERSION is unrecognized, the SENDME cell should be treated as version
