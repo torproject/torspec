@@ -222,6 +222,7 @@ Proposals by number:
 299  Preferring IPv4 or IPv6 based on IP Version Failure Count [OPEN]
 300  Walking Onions: Scaling and Saving Bandwidth [DRAFT]
 301  Don't include package fingerprints in consensus documents [ACCEPTED]
+302  Hiding onion service clients using padding [ACCEPTED]
 
 
 Proposals by status:
@@ -262,6 +263,7 @@ Proposals by status:
    288  Privacy-Preserving Statistics with Privcount in Tor (Shamir version)
    292  Mesh-based vanguards
    301  Don't include package fingerprints in consensus documents
+   302  Hiding onion service clients using padding
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process

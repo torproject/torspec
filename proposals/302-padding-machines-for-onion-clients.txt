@@ -1,0 +1,299 @@
+Filename: 302-padding-machines-for-onion-clients.txt
+Title: Hiding onion service clients using padding
+Author: George Kadianakis, Mike Perry
+Created: Thursday 16 May 2019
+Status: Accepted
+Ticket: #28634
+
+0. Overview
+
+   Tor clients use "circuits" to do anonymous communications. There are various
+   types of circuits. Some of them are for navigating the normal Internet,
+   others are for fetching Tor directory information, others are for connecting
+   to onion services, while others are simply for measurements and testing.
+
+   It's currently possible for MITM type of adversaries (like tor-network-level
+   and local-area-network adversaries) to distinguish Tor circuit types from
+   each other using a wide array of metadata and distinguishers.
+
+   In this proposal, we study various techniques that can be used to
+   distinguish client-side onion service circuits and provide WTF-PAD circuit
+   padding machines (using prop#254) to hide them against certain adversaries.
+
+1. Motivation
+
+   We are writing this proposal for various reasons:
+
+   1) We believe that in an ideal setting MITM adversaries should not be able
+      to distinguish circuit types by inspecting traffic. Tor traffic should
+      look amorphous to an outside observer to maximize uncertainty and
+      anonymity properties.
+
+      Client-side onion service circuits are an easy target for this proposal,
+      because we believe we can improve their privacy with low bandwidth
+      overhead.
+
+   2) We want to start experimenting with the WTF-PAD subsystem of Tor, and
+      this use-case provides us with a good testbed.
+
+   3) We hope that by actually starting to use the WTF-PAD subsystem of Tor, we
+      will encourage more researchers to start experimenting with it.
+
+2. Scope of the proposal [SCOPE]
+
+   Given the above, this proposal sets forth to use the WTF-PAD system to hide
+   client-side onion service circuits against the classifiers of paper by Kwon
+   et al. above.
+
+   By client-side onion service circuits we refer to these two types of circuits:
+      - Client-side introduction circuits: Circuit from client to the introduction point
+      - Client-side rendezvous circuits: Circuit from client to the rendezvous point
+
+   Service-side onion service circuits are not in scope for this proposal, and
+   this is because hiding those would require more bandwidth and also more
+   advanced WTF-PAD features.
+
+   Furthermore, this proposal only aims to cloak the naive distinguishing
+   features mentioned in the [KNOWN_DISTINGUISHERS] section, and can by no
+   means guarantee that client-side onion service circuits are totally
+   indistinguishable by other means.
+
+   The machines specified in this proposal are meant to be lightweight and
+   created for a specific purpose. This means that they can be easily extended
+   with additional states to do more advanced hiding.
+
+3. Known distinguishers against onion service circuits [KNOWN_DISTINGUISHERS]
+
+   Over the past years it's been assumed that motivated adversaries can
+   distinguish onion-service traffic from normal Tor traffic given their
+   special characteristics.
+
+   As far as we know, there has been relatively little research-level work done
+   to this direction. The main article published in this area is the USENIX
+   paper "Circuit Fingerprinting Attacks: Passive Deanonymization of Tor Hidden
+   Services" by Kwon et al. [0]
+
+   The above paper deals with onion service circuits in sections 3.2 and 5.1.
+   It uses the following three "naive" circuit features to distinguish circuits:
+      1) Circuit construction sequence
+      2) Number of incoming and outgoing cells
+      3) Duration of Activity ("DoA")
+
+    All onion service circuits have particularly loud signatures to the above
+    characteristics, but WTF-PAD (prop#254) gives us tools to effectively
+    silence those signatures to the point where the paper's classifiers won't
+    work.
+
+4. Hiding circuit features using WTF-PAD
+
+   According to section [KNOWN_DISTINGUISHERS] there are three circuit features
+   we are attempting to hide. Here is how we plan to do this using the WTF-PAD
+   system:
+
+   1) Circuit construction sequence
+
+      The USENIX paper uses the directions of the first 10 cells sent in a
+      circuit to fingerprint them. Client-side onion service circuits have
+      unique circuit construction sequences and hence they can be fingeprinted
+      using just the first 10 cells.
+
+      We use WTF-PAD to destroy this feature of onion service circuits by
+      carefully sending padding cells (relay DROP cells) during circuit
+      construction and making them look exactly like most general tor circuits
+      up till the end of the circuit construction sequence.
+
+   2) Number of incoming and outgoing cells
+
+      The USENIX paper uses the amount of incoming and outgoing cells to
+      distinguish circuit types. For example, client-side introduction circuits
+      have the same amount of incoming and outgoing cells, whereas client-side
+      rendezvous circuits have more incoming than outgoing cells.
+
+      We use WTF-PAD to destroy this feature by changing the number of cells
+      sent in introduction circuits. We leave rendezvous circuits as is, since
+      the actual rendezvous traffic flow usually resembles well normal Tor
+      circuits.
+
+    3) Duration of Activity ("DoA")
+
+      The USENIX paper uses the period of time during which circuits send and
+      receive cells to distinguish circuit types. For example, client-side
+      introduction circuits are really short lived, wheras service-side
+      introduction circuits are very long lived. OTOH, rendezvous circuits have
+      the same median lifetime as general Tor circuits which is 10 minutes.
+
+      We use WTF-PAD to destroy this feature of client-side introduction
+      circuits by setting a special WTF-PAD option, which keeps the circuits
+      open for 10 minutes completely mimicking the DoA of general Tor circuits.
+
+4.1. A dive into general circuit construction sequences [CIRCCONSTRUCTION]
+
+   In this section we give an overview of how circuit construction looks like
+   to a network or guard-level adversary. We use this knowledge to make the
+   right padding machines that can make intro and rend circuits look like these
+   general circuits.
+
+   In particular, most general Tor circuits used to surf the web or download
+   directory information, start with the following 6-cell relay cell sequence (cells
+   surrounded in [brackets] are outgoing, the others are incoming):
+
+     [EXTEND2] -> EXTENDED2 -> [EXTEND2] -> EXTENDED2 -> [BEGIN] -> CONNECTED
+
+   When this is done, the client has established a 3-hop circuit and also
+   opened a stream to the other end. Usually after this comes a series of DATA
+   cell that either fetches pages, establishes an SSL connection or fetches
+   directory information:
+
+     [DATA] -> [DATA] -> DATA -> DATA
+
+   The above stream of 10 relay cells defines the grand majority of general
+   circuits that come out of Tor browser during our testing, and it's what we
+   are gonna use to make introduction and rednezvous circuits blend in.
+
+   Please note that in this section we only investigate relay cells and not
+   connection-level cells like CREATE/CREATED or AUTHENTICATE/etc. that are
+   used during the link-layer handshake. The rationale is that connection-level
+   cells depend on the type of guard used and are not an effective fingerprint
+   for a network/guard-level adversary.
+
+5. WTF-PAD machines
+
+   For the purposes of this proposal we will make use of four WTF-PAD machines
+   as follows:
+
+      - Client-side introduction circuit hiding machine (origin-side)
+      - Client-side introduction circuit hiding machine (relay-side)
+
+      - Client-side rendezvous circuit hiding machine (origin-side)
+      - Client-side rendezvous circuit hiding machine (relay-side)
+
+   In the following sections we will analyze these machines.
+
+5.1. Client-side introduction circuit hiding machines [INTRO_CIRC_HIDING]
+
+   These two machines are meant to hide client-side introduction circuits. The
+   origin-side machine sits on the client and sends padding towards the
+   introduction circuit, whereas the relay-side machine sits on the middle-hop
+   (second hop of the circuit) and sends padding towards the client. The
+   padding from the origin-side machine terminates at the middle-hop and does
+   not get forwarded to the actual introduction point.
+
+   Both of these machines only get activated for introduction circuits, and
+   only after an INTRODUCE1 cell has been sent out.
+
+   This means that before the machine gets activated our cell flow looks like this:
+
+    [EXTEND2] -> EXTENDED2 -> [EXTEND2] -> EXTENDED2 -> [EXTEND2] -> EXTENDED2 -> [INTRODUCE1]
+
+   Comparing the above with section [CIRCCONSTRUCTION], we see that the above
+   cell sequence matches the one from general circuits up to the first 7 cells.
+
+   However, in normal introduction circuits this is followed by an
+   INTRODUCE_ACK and then the circuit gets teared down, which does not match
+   the sequence from [CIRCCONSTRUCTION].
+
+   Hence when our machine is used, after sending an [INTRODUCE1] cell, we also
+   send a [PADDING_NEGOTIATE] cell, which gets answered by a PADDING_NEGOTIATED
+   cell and an INTRODUCE_ACKED cell. This makes us match the [CIRCCONSTRUCTION]
+   sequence up to the first 10 cells.
+
+   After that, we continue sending padding from the relay-side machine so as to
+   fake a directory download, or an SSL connection setup. We also want to
+   continue sending padding so that the connection stays up longer to destroy
+   the "Duration of Activity" fingerprint.
+
+   To calculate the padding overhead, we see that the origin-side machine just
+   sends a single [PADDING_NEGOATIATE] cell, wheras the origin-side machine
+   sends a PADDING_NEGOTIATED cell and between 7 to 10 DROP cells. This means
+   that the average overhead of this machine is 11 padding cells.
+
+   In terms of WTF-PAD terminology, these machines have three states (START,
+   OBF, END). They move from the START to OBF state when the first
+   non-padding cell is received on the circuit, and they stay in the OBF
+   state until all the padding gets depleted. The OBF state is controlled by
+   a histogram which specifies the parameters described in the paragraphs
+   above. After all the padding finishes, it moves to END state.
+
+   We also set a special WTF-PAD flag which keeps the circuit open even after
+   the introduction is performed. In particular, with this feature the circuit
+   will stay alive for the same durations as normal web circuits before they
+   expire (usually 10 minutes).
+
+5.2. Client-side rendezvous circuit hiding machines
+
+   The rendezvous circuit machines apply on client-side rendezvous circuits and
+   only after the rendezvous point has been established (REND_ESTABLISHED has
+   been received). Up to that point, the following cell sequence has been
+   observed on the circuit:
+
+    [EXTEND2] -> EXTENDED2 -> [EXTEND2] -> EXTENDED2 -> [ESTABLISH_REND] -> REND_ESTABLISHED
+
+   which matches the general circuit construction sequence [CIRCCONSTRUCTION]
+   up to the first 6 cells. However after that, normal rendezvous circuits
+   receive a RENDEZVOUS2 cell followed by a [BEGIN] and a CONNECTED, which does
+   not fit the circuit construction sequence we are trying to imitate.
+
+   Hence our machine gets activated right after REND_ESTABLISHED is received,
+   and continues by sending a [PADDING_NEGOTIATE] and a [DROP] cell, before
+   receiving a PADDING_NEGOTIATED and a DROP cell, effectively blending into
+   the general circuit construction sequence on the first 10 cells.
+
+   After that our machine gets deactivated, and we let the actual rendezvous
+   circuit shape the traffic flow. Since rendezvous circuits usually immitate
+   general circuits (their purpose is to surf the web), we can expect that they
+   will look alike.
+
+   In terms of overhead, this machine is quite light. Both sides send 2 padding
+   cells, for a total of 4 padding cells.
+
+6. Overhead analysis
+
+   Given the parameters above, intro circuit machines have an overhead of 11
+   padding cells, and rendezvous circuit machines have an overhead of 4
+   cpadding ells.  . This means that for every intro and rendezvous circuit
+   there will be an overhead of 15 padding cells in average, which is about
+   7.5kb.
+
+   In the PrivCount paper [1] we learn that the Tor network sees about 12
+   million successful descriptor fetches per day. We can use this figure to
+   assume that the Tor network also sees about 12 million intro and rendezvous
+   circuits per day. Given the 7.5kb overhead of each of these circuits, we get
+   that our padding machines infer an additional 94GB overhead per day on the
+   network, which is about 3.9GB per hour.
+
+   XXX Isn't this kinda intense????? Using the graphs from metrics we see that
+       the Tor network has total capacity of 300 Gbit/s which is about 135000GB per
+       hour, so 3.9GB per hour is not that much, but still...
+
+7. Discussion
+
+7.1. Alternative approaches
+
+   These machines try to hide onion service client-side circuits by obfuscating
+   their looks. This is a reasonable approach, but if the resulting circuits
+   look unlike any other Tor circuits, they would still be fingerprintable just
+   by that fact.
+
+   Another approach we could take is make normal client circuits look like
+   onion service circuits, or just make normal clients establish fake onion
+   service circuits periodically. The hope here is that the adversary won't be
+   able to distinguish fake onion service circuits from real ones. This
+   approach has not been taken yet, mainly because it requires additional
+   WTF-PAD features and poses greater overhead risks.
+
+7.2. Future work
+
+   As discussed in [SCOPE], this proposal only aims to hide some very specific
+   features of client-side onion service circuits. There is lots of work to be
+   done here to see what other features can be used to distinguish such
+   circuits, and also what other classifiers can be built using deep learning
+   and whatnot.
+
+---
+
+   [0]: https://www.usenix.org/node/190967
+        https://blog.torproject.org/technical-summary-usenix-fingerprinting-paper
+
+   [1]: "Understanding Tor Usage with Privacy-Preserving Measurement"
+        by Akshaya Mani, T Wilson-Brown, Rob Jansen, Aaron Johnson, and Micah Sherr
+        In Proceedings of the Internet Measurement Conference 2018 (IMC 2018).
