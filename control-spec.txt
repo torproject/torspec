@@ -1131,6 +1131,14 @@
       0 or 1, depending on whether it is possible to use SAVECONF without the
       FORCE flag. (Introduced in 0.3.1.1-alpha.)
 
+    "limits/max-mem-in-queues"
+      The amount of memory that Tor's out-of-memory checker will allow
+      Tor to allocate (in places it can see) before it starts freeing memory
+      and killing circuits. See the MaxMemInQueues option for more
+      details. Unlike the option, this value reflects Tor's actual limit, and
+      may be adjusted depending on the available system memory rather than on
+      the MaxMemInQueues option. (Introduced in 0.2.5.4-alpha)
+
   Examples:
      C: GETINFO version desc/name/moria1
      S: 250+desc/name/moria=
