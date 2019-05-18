@@ -217,6 +217,29 @@ Table of Contents
 
          TOR_PT_EXIT_ON_STDIN_CLOSE=1
 
+     "TOR_PT_OUTBOUND_BIND_ADDRESS"
+
+       Specifies an IP address that the PT proxy or server SHOULD use as source
+       address for outgoing IP connections. This feature allows people with multiple
+       network interfaces to specify explicitly which interface they prefer the PT to
+       use.
+
+       If this value is unset or empty the PT MUST use the default source
+       address for outgoing connections.
+
+       This setting MUST be ignored for connections to
+       loopback addresses (127.0.0.0/8 and [::1]).
+
+       IPv6 addresses MUST always be wrapped in square brackets.
+
+       Example with IPv4:
+
+         TOR_PT_OUTBOUND_BIND_ADDRESS=203.0.113.4
+
+       Example with IPv6:
+
+         TOR_PT_OUTBOUND_BIND_ADDRESS=[2001:db8::4]
+
 3.2.2. Pluggable Transport Client Environment Variables
 
    Client-side Pluggable Transport forward proxies are configured
