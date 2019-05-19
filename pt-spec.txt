@@ -219,12 +219,11 @@ Table of Contents
 
      "TOR_PT_OUTBOUND_BIND_ADDRESS"
 
-       Specifies an IP address that the PT proxy or server SHOULD use as source
-       address for outgoing IP connections. This feature allows people with multiple
-       network interfaces to specify explicitly which interface they prefer the PT to
-       use.
+       Specifies an IP address that the PT proxy SHOULD use as source address for
+       outgoing IP packets. This feature allows people with multiple network
+       interfaces to specify explicitly which interface they prefer the PT proxy to use.
 
-       If this value is unset or empty the PT MUST use the default source
+       If this value is unset or empty, the PT proxy MUST use the default source
        address for outgoing connections.
 
        This setting MUST be ignored for connections to
