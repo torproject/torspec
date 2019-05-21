@@ -1,0 +1,62 @@
+Filename: 303-protover-removal-policy.txt
+Title: When and how to remove support for protocol versions
+Author: Nick Mathewson
+Created: 21 May 2019
+Status: Draft
+
+1. Background
+
+   With proposal 264, added support for "subprotocol versions" -- a
+   means to declare which features are required for participation in the
+   Tor network.  We also created a mechanism (refined later in proposal
+   297) for telling Tor clients and relays that they cannot participate
+   effectively in the Tor network, and they need to shut down.
+
+   In this document, we describe a policy according to which these
+   decisions should be made in practice.
+
+2. Recommending features (for clients and relays)
+
+   A subprotocol version SHOULD become recommended soon after all
+   release series that did not provide it become unsupported (within a
+   month or so).
+
+   For example, the current oldest LTS release series is 0.2.9; when it
+   becomes unsupported in 2020, the oldest supported release series will
+   be 0.3.5.  Suppose that 0.2.9 supports a subprotocol Cupcake=1, and
+   that all stable 0.3.5.x versions support Cupcake=1-3.  Around one
+   month after the end of 0.2.9 support, Cupcake=3 should become a
+   _recommended_ protocol for clients and relays.
+
+   Additionally, a feature can become _recommended_ because of security
+   reasons.  If we believe that it is a terrible idea to run an old
+   protocol, we can make it _recommended_ for relays or clients or both.
+   We should not do this lightly, since it will be annoying.
+
+3. Requiring features (for relays)
+
+   We regularly update the directory authorities to require relays to
+   run certain versions of Tor or later.  We generally do this after a
+   short outreach campaign to get as many relays as possible to upgrade.
+
+   We MAY make a feature required for relays one month after every
+   version without it is obsolete and unsupported, though it is better
+   to wait three months if possible.
+
+   We SHOULD make a feature required for relays within 12 months after
+   every version without it is obsolete and unsupported.
+
+4. Requiring features (for clients)
+
+   Clients take the longest time to update, and are often the least able
+   to fetch upgrades. Because of this, we should be very careful about
+   making subprotocol versions required on clients, and should only do
+   so for fairly compelling reasons.
+
+   We SHOULD NOT make a feature required for clients until it has been
+   _recommended_ for clients for at first 9 months.
+
+   We SHOULD make a feature required for clients if it has been
+   _recommended_ for clients for at least 18 months.
+
+
