@@ -244,8 +244,7 @@ Table of Contents
        If this value is unset or empty, the PT proxy MUST use the default source
        address for outgoing connections.
 
-       This setting MUST be ignored for connections to
-       loopback addresses ([::1]).
+       This setting MUST be ignored for connections to the loopback address ([::1]).
 
        IPv6 addresses MUST always be wrapped in square brackets.
 
