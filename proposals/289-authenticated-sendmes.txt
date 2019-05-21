@@ -309,7 +309,7 @@ Status: Open
    protected from attack. It's not all bad news though, since we could flip
    the switches earlier than intended if we encounter a network-wide attack.
 
-   There are 5 phases to this plan and detailed in the subsections.
+   There are 4 phases to this plan detailed in the following subsections.
 
 4.1. Phase One - Remembering Digests
 
@@ -360,49 +360,28 @@ Status: Open
 
       "sendme_accept_min_version" - Minimum SENDME version that is accepted.
 
-   (It has to be two separate switches, not one unified one, because
-   otherwise we'd have a race where relays learn about the update before
-   clients know to start the new behavior.)
+   It has to be two separate switches, not one unified one, because otherwise
+   we'd have a race where relays learn about the update before clients know to
+   start the new behavior.
 
-   Phase three will shutdown every clients that understand protover. However,
-   one important case remains which is when a client not supporting verison 1
-   boots up for the first time (no consensus).
-
-   It won't be able to download a consensus and thus know that it can't join
-   the network making it re-try over and over again. To avoid that, we propose
-   to still allow v0 SENDMEs on one-hop directory circuits meaning the new
-   parameter above affects everything except these specific circuits.
-
-   It will allow us to extend the period of time between Phase Four and too
-   old clients to bootstrap and fail properly. The last phase will then turn
-   this behavior off and we will be done once and for all with version 0.
-
-4.5. Phase Five - Turning Off v0
-
-   The last consensus switch to flip is the one refusing SENDME v0 on one-hop
-   directory circuit as described in previous phase.
-
-   The newly proposed consensus parameter to achieve this is:
-
-      "sendme_onehop_dir_min_version" - Minimum SENDME version that is
-                                        accepted on one-hop directory circuits.
-
-   After this phase, any tor still not supporting v0 will retry over and over
-   again to bootstrap. We can't avoid that but at least we can give enough
-   time to minimize the amount of old clients unable to boostrap with the
-   proposed timeline below.
-
-4.6. Timeline
+4.5. Timeline
 
    The proposed timeline for the deployment phases:
 
-      Phase 1 and 2:
+      Phase 1:
 
-         Once this proposal is merged into tor (expected: 0.4.1.1-alpha).
+         Once this proposal is merged into tor (expected: 0.4.1.1-alpha), v1
+         SENDMEs can be accepted on a circuit.
 
-         Those two phases will start roughly at the same time. The reason we
-         can do that is because SENDME payloads are ignored for version 0 thus
-         sending v1 right now will not affect Tor current behavior.
+      Phase 2:
+
+         Once Tor Browser releases a stable version containing 0.4.1, we
+         consider that we have a very large portion of clients supporting v1
+         and thus limit the partition problem.
+
+         We can safely emit v1 SENDMEs in the network because the payload is
+         ignored for version 0 thus sending a v1 right now will not affect
+         older tor's behavior and will be considered a v0.
 
       Phase 3:
 
@@ -419,11 +398,6 @@ Status: Open
          take the time to see the effect that it had on the network.
          Considering 6 months release time frame we expect to do this phase
          around July 2022.
-
-      Phase 5:
-
-         Depends on how Phase 4 goes. It could be we'll do that very quickly
-         or not depending on our users and also Tor situation/health in 2022.
 
 5. Security Discussion
 
