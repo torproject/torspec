@@ -223,6 +223,7 @@ Proposals by number:
 300  Walking Onions: Scaling and Saving Bandwidth [DRAFT]
 301  Don't include package fingerprints in consensus documents [ACCEPTED]
 302  Hiding onion service clients using padding [ACCEPTED]
+303  When and how to remove support for protocol versions [DRAFT]
 
 
 Proposals by status:
@@ -232,6 +233,7 @@ Proposals by status:
    273  Exit relay pinning for web services [for n/a]
    294  TLS 1.3 Migration
    300  Walking Onions: Scaling and Saving Bandwidth
+   303  When and how to remove support for protocol versions
  NEEDS-REVISION:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
