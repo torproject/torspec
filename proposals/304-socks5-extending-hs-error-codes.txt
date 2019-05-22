@@ -1,0 +1,109 @@
+Filename: 304-socks5-extending-hs-error-codes.txt
+Title: Extending SOCKS5 Onion Service Error Codes
+Author: David Goulet, George Kadianakis
+Created: 22-May-2019
+Status: Open
+
+Note: We are extending SOCKS5 here but in terms, when Tor Browser supports
+      HTTPCONNECT, we should not do that anymore.
+
+0. Abstract
+
+   We propose extending the SOCKS5 protocol to allow returning more meaningful
+   response failure onion service codes back to the client.
+
+   This is inspired by proposal 229 [PROP229] minus the new authentication
+   method.
+
+1. Introduction
+
+   The motivation behind this proposal is because we need a synchronous way to
+   return a reason on why the SOCKS5 connection failed.
+
+   The alternative is to use a control port event but then the caller needs to
+   match the SOCKS failure to the control event. And tor provides no guarantee
+   that a control event will be emitted before the SOCKS failure or vice
+   versa.
+
+   With this proposal, the client can get the reason on why the onion service
+   connection failed with the SOCKS5 returned error code.
+
+2. Proposal
+
+2.1. New SocksPort Flag
+
+   In order to have backward compatibility with third party applications that
+   do not support the new proposed SOCKS5 error code, we propose a new
+   SocksPort flag that needs to be set in the tor configuration file in order
+   for those code to be sent back.
+
+   The new SocksPort flag is:
+
+      "ExtendedErrors" -- Tor will report new SOCKS5 error code detailed below
+                          in section 2.2 (once merged, they will end up in
+                          socks-extension.txt).
+
+   It is possible that more codes will be added in the future so an
+   application using this flag should possibly expect unknown codes to be
+   returned.
+
+2.2. Onion Service Extended SOCKS5 Error Code
+
+   We introduce the following additional SOCKS5 reply codes to be sent in the
+   REP field of a SOCKS5 message iff the "ExtendedErrors" on the SocksPort is
+   set (see section 2.1 above).
+
+   The SOCKS5 specification [RFC1928] defines a range of code that are
+   "unassigned" so we'll be using those on the far end of the range in order
+   to inform the client of onion service failures:
+
+   Where:
+
+    * X'F0' Onion Service Descriptor Can Not be Found
+
+      The requested onion service descriptor can't be found on the hashring
+      and thus not reachable by the client.
+
+    * X'F1' Onion Service Descriptor Is Invalid
+
+      The requested onion service descriptor can't be parsed or signature
+      validation failed.
+
+    * X'F2' Onion Service Introduction Failed
+
+      Client failed to introduce to the service meaning the descriptor was
+      found but the service is not anymore at the introduction points. The
+      service has likely changed its descriptor or is not running.
+
+    * X'F3' Onion Service Rendezvous Failed
+
+      Client failed to rendezvous with the service which means that the client
+      is unable to finalize the connection.
+
+    * X'F4' Onion Service Missing Client Authorization
+
+      Tor was able to download the requested onion service descriptor but is
+      unable to decrypt its content because it is missing client authorization
+      information for it.
+
+    * X'F5' Onion Service Wrong Client Authorization
+
+      Tor was able to download the requested onion service descriptor but is
+      unable to decrypt its content using the client authorization information
+      it has. This means the client access were revoked.
+
+3. Compatibility
+
+   No new field or extension has been added. Only new code values from the
+   unassigned range are being used. We expect these to not be a problem for
+   backward compatibility.
+
+   These codes are only sent back if the new proposed SocksPort flag,
+   "ExtendedErrors", is set and making it easier for backward and foward
+   compatibility.
+
+References:
+
+[PROP229] https://gitweb.torproject.org/torspec.git/tree/proposals/229-further-socks5-extensions.txt
+
+[RFC1928] https://www.ietf.org/rfc/rfc1928.txt
