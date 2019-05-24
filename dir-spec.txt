@@ -2098,6 +2098,14 @@
         the circuit queue a given circuit. Min: 0. Max: 50000. Default 1000.
         First appeared: 0.4.0.3-alpha.
 
+        "sendme_emit_min_version" -- Minimum SENDME version that can be sent.
+                                     Min: 0. Max: 255. Default 0. First
+                                     appeared: 0.4.1.1-alpha.
+
+        "sendme_accept_min_version" -- Minimum SENDME version that is accepted.
+                                       Min: 0. Max: 255. Default 0. First
+                                       appeared: 0.4.1.1-alpha.
+
     "shared-rand-previous-value" SP NumReveals SP Value NL
 
         [At most once]
