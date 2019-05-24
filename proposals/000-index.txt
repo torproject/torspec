@@ -209,7 +209,7 @@ Proposals by number:
 286  Controller APIs for hibernation access on mobile [REJECTED]
 287  Reduce circuit lifetime without overloading the network [OPEN]
 288  Privacy-Preserving Statistics with Privcount in Tor (Shamir version) [ACCEPTED]
-289  Authenticating sendme cells to mitigate bandwidth attacks [OPEN]
+289  Authenticating sendme cells to mitigate bandwidth attacks [CLOSED]
 290  Continuously update consensus methods [META]
 291  The move to two guard nodes [NEEDS-REVISION]
 292  Mesh-based vanguards [ACCEPTED]
@@ -253,7 +253,6 @@ Proposals by status:
    277  Detect multiple relay instances running with same ID [for 0.3.??]
    285  Directory documents should be standardized as UTF-8
    287  Reduce circuit lifetime without overloading the network
-   289  Authenticating sendme cells to mitigate bandwidth attacks
    295  Using ADL for relay cryptography (solving the crypto-tagging attack)
    296  Have Directory Authorities expose raw bandwidth list files
    299  Preferring IPv4 or IPv6 based on IP Version Failure Count
@@ -363,6 +362,7 @@ Proposals by status:
    278  Directory Compression Scheme Negotiation [in 0.3.1.1-alpha]
    283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [for 0.3.3.x] [in 0.3.3.1-alpha]
    284  Hidden Service v3 Control Port
+   289  Authenticating sendme cells to mitigate bandwidth attacks [in 0.4.1.1-alpha]
    293  Other ways for relays to know when to publish [for 0.3.5] [in 0.4.0.1-alpha]
    297  Relaxing the protover-based shutdown rules [for 0.3.5.x] [in 0.4.0.x]
    298  Putting family lines in canonical form [for 0.3.6.x] [in 0.4.0.1-alpha]
