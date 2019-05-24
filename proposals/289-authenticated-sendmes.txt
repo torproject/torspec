@@ -1,6 +1,6 @@
 Filename: 289-authenticated-sendmes.txt
 Title: Authenticating sendme cells to mitigate bandwidth attacks
-Author: Rob Jansen, Roger Dingledine
+Author: Rob Jansen, Roger Dingledine, David Goulet
 Created: 2016-12-01
 Status: Open
 
