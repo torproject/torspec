@@ -1815,11 +1815,12 @@
 
   The syntax is:
     "ONION_CLIENT_AUTH_ADD" SP HSAddress
-                            SP "X25519PrivKey=" PrivateKeyBlob
+                            SP KeyType ":" PrivateKeyBlob
                             [SP "ClientName=" Nickname]
-                            [SP "Type=" TYPE] CRLF
+                            [SP "Flags=" TYPE] CRLF
 
     HSAddress = 56*Base32Character
+    KeyType = "x25519" is the only one supported right now
     PrivateKeyBlob = base64 encoding of x25519 key
 
   Tells the connected Tor to add client-side v3 client auth credentials for the
@@ -1827,29 +1828,39 @@
   key that should be used for this client, and "Nickname" is an optional
   nickname for the client.
 
-  TYPE is a comma-separated tuple of types for this new client. For now, the
-  currently supported types are:
+  FLAGS is a comma-separated tuple of flags for this new client. For now, the
+  currently supported flags are:
     "Permanent" - This client's credentials should be stored in the filesystem.
                   If this is not set, the client's credentials are epheremal
                   and stored in memory.
 
+  If client auth credentials already existed for this service, replace them
+  with the new ones.
+
+  If Tor has cached onion service descriptors that it has been unable to
+  decrypt in the past (due to lack of client auth credentials), attempt to
+  decrypt those descriptors as soon as this command succeeds.
+
   On success, "250 OK" is returned. Otherwise, the following error codes exist:
-    251 - Client with with this "PrivateKeyBlob" already existed.
+    251 - Client auth credentials for this onion service already existed and replaced.
+    252 - Added client auth credentials and successfully decrypted a cached descriptor.
     512 - Syntax error in "HSAddress", or "PrivateKeyBlob" or "Nickname"
     551 - Client with with this "Nickname" already exists
+    552 - Unrecognized KeyType
 
 3.31. ONION_CLIENT_AUTH_REMOVE
 
   The syntax is:
     "ONION_CLIENT_AUTH_REMOVE" SP HSAddress
-                               SP "X25519PrivKey=" PrivateKeyBlob CRLF
+
+   KeyType = "x25519" is the only one supported right now
 
   Tells the connected Tor to remove the client-side v3 client auth credentials
-  for the onion service with "HSAddress" and client with key "PrivateKeyBlob".
+  for the onion service with "HSAddress".
 
   On success "250 OK" is returned. Otherwise, the following error codes exist:
-    512 - Syntax error in "HSAddress", or "PrivateKeyBlob".
-    251 - Client with "PrivateKeyBlob" did not exist.
+    512 - Syntax error in "HSAddress".
+    251 - Client credentials for "HSAddress" did not exist.
 
 3.32. ONION_CLIENT_AUTH_VIEW
 
@@ -1862,18 +1873,20 @@
 
   The server reply format is:
     "250-ONION_CLIENT_AUTH_VIEW" [SP HSAddress] CRLF
-    *("250-CLIENT X25519PrivKey=" PrivateKeyBlob
-                              [SP "ClientName=" Nickname]
-                              [SP "Type=" TYPE] CRLF)
+    *("250-CLIENT" SP KeyType ":" PrivateKeyBlob
+                  [SP "ClientName=" Nickname]
+                  [SP "Flags=" FLAGS] CRLF)
     "250 OK" CRLF
 
-  Where "PrivateKeyBlob" is the x25519 private key of this client. "Nickname"
-  is an optional nickname for this client, which can be set either through the
-  ONION_CLIENT_AUTH_ADD command, or it's the filename of this client if the
-  credentials are stored in the filesystem.
+    KeyType = "x25519" is the only one supported right now
+    PrivateKeyBlob = base64 encoding of x25519 key
 
-  TYPE is a comma-separated field of types for this client, the currently
-  supported types are:
+  "Nickname" is an optional nickname for this client, which can be set either
+  through the ONION_CLIENT_AUTH_ADD command, or it's the filename of this
+  client if the credentials are stored in the filesystem.
+
+  FLAGS is a comma-separated field of flags for this client, the currently
+  supported flags are:
       "Permanent" - This client's credentials are stored in the filesystem.
 
   On success "250 OK" is returned. Otherwise, the following error codes exist:
