@@ -1,0 +1,197 @@
+Filename: 305-establish-intro-dos-defense-extention.txt
+Title: ESTABLISH_INTRO Cell DoS Defense Extension
+Author: David Goulet, George Kadianakis
+Created: 06-June-2019
+Status: Draft
+
+0. Abstract
+
+   We propose introducing a new cell extension to the onion service version 3
+   ESTABLISH_INTRO cell in order for a service operator to send directives to
+   the introduction point.
+
+1. Introduction
+
+   The idea behind this proposal is to provide a way for a service operator to
+   give to the introduction points Denial of Service (DoS) defense parameters
+   through the ESTABLISH_INTRO cell.
+
+   We are currently developing onion service DoS defenses at the introduction
+   point layer which for now has consensus parameter values for the defenses'
+   knobs. This proposal would allow the service operator more flexibility for
+   tuning these knobs and/or future parameters.
+
+2. ESTABLISH_INTRO Cell DoS Extention
+
+   We introduce a new extention to the ESTABLISH_INTRO cell. The EXTENSIONS
+   field will be leveraged and a new protover will be introduced to reflect
+   that change.
+
+   As a reminder, this is the content of an ESTABLISH_INTRO cell (taken from
+   rend-spec-v3.txt section 3.1.1):
+
+     AUTH_KEY_TYPE         [1 byte]
+     AUTH_KEY_LEN          [2 bytes]
+     AUTH_KEY              [AUTH_KEY_LEN bytes]
+     N_EXTENSIONS          [1 byte]
+     N_EXTENSIONS times:
+        EXT_FIELD_TYPE     [1 byte]
+        EXT_FIELD_LEN      [1 byte]
+        EXT_FIELD          [EXT_FIELD_LEN bytes]
+     HANDSHAKE_AUTH        [MAC_LEN bytes]
+     SIG_LEN               [2 bytes]
+     SIG                   [SIG_LEN bytes]
+
+   We propose a new EXT_FIELD_TYPE value:
+
+      [01] -- DOS_PARAMETERS.
+
+              If this flag is set, the extension should be used by the
+              introduction point to learn what values the denial of service
+              subsystem should be using.
+
+   The EXT_FIELD content format is:
+
+      N_PARAMS    [1 byte]
+      N_PARAMS times:
+         PARAM_TYPE  [1 byte]
+         PARAM_VALUE [8 byte]
+
+   The PARAM_TYPE proposed values are:
+
+      [01] -- DOS_INTRODUCE2_RATE_PER_SEC
+              The rate per second of INTRODUCE2 cell relayed to the service.
+
+      [02] -- DOS_INTRODUCE2_BURST_PER_SEC
+              The burst per second of INTRODUCE2 cell relayed to the service.
+
+   The PARAM_VALUE size is 8 bytes in order to accomodate 64bit values
+   (uint64_t). It MUST match the specified limit for the following PARAM_TYPE:
+
+      [01] -- Min: 0, Max: 2147483647
+      [02] -- Min: 0, Max: 2147483647
+
+   A value of 0 means the defense is disabled. If the rate per second is set
+   to 0 (param 0x01) then the burst value should be ignored. And vice-versa,
+   if the burst value is 0 (param 0x02), then the rate value should be
+   ignored. In other words, setting one single parameter to 0 disables the
+   INTRODUCE2 rate limiting defense.
+
+   The burst can NOT be smaller than the rate. If so, the parameters should be
+   ignored by the introduction point.
+
+   The maximum is set to INT32_MAX meaning (2^31 - 1). Our consensus
+   parameters are capped to that limit and these parameters happen to be also
+   consensus parameters as well hence the common limit.
+
+   Any valid value does have precedence over the network wide consensus
+   parameter.
+
+   This will increase the payload size by 21 bytes:
+
+      This extension type and length is 2 extra bytes, the N_EXTENSIONS field
+      is always present and currently set to 0.
+
+      Then the EXT_FIELD is 19 bytes because one parameter is 9 bytes so for
+      two parameters, it is 18 bytes plus 1 byte for the N_PARAMS for a total
+      of 19.
+
+   The ESTABLISH_INTRO v3 cell currently uses 134 bytes for its payload. With
+   this increase, 343 bytes remain unused (498 maximum payload size minus 155
+   bytes new payload).
+
+3. Protocol Version
+
+   We introduce a new protocol version in order for onion service that wants
+   to specifically select introduction points supporting this new extension.
+   But also, it should be used to know when to send this extension or not.
+
+   The new version for the "HSIntro" protocol is:
+
+      "5" -- support ESTABLISH_INTRO cell DoS parameters extension for onion
+             service version 3 only.
+
+4. Configuration Options
+
+   We also propose new torrc options in order for the operator to control
+   those values passed through the ESTABLISH_INTRO cell.
+
+      "HiddenServiceEnableIntroDoSDefense 0|1"
+
+         If this option is set to 1, the onion service will always send to an
+         introduction point, supporting this extension (using protover), the
+         denial of service defense parameters regardless if the consensus
+         enables them or not. The values are taken from
+         HiddenServiceEnableIntroDoSRatePerSec and
+         HiddenServiceEnableIntroDoSBurstPerSec torrc option.
+         (Default: 0)
+
+      "HiddenServiceEnableIntroDoSRatePerSec N sec"
+
+         Controls the introduce rate per second the introduction point should
+         impose on the introduction circuit. The default values are only used
+         if the consensus param is not set.
+         (Default: 25, Min: 0, Max: 4294967295)
+
+      "HiddenServiceEnableIntroDoSBurstPerSec N sec"
+
+         Controls the introduce burst per second the introduction point should
+         impose on the introduction circuit. The default values are only used
+         if the consensus param is not set.
+         (Default: 200, Min: 0, Max: 4294967295)
+
+   They respectively control the parameter type 0x01 and 0x02 in the
+   ESTABLISH_INTRO cell detailed in section 2.
+
+   The default values of the rate and burst are taken from ongoing anti-DoS
+   implementation work [1][2]. They aren't meant to be defined with this
+   proposal.
+
+5. Security Considerations
+
+   Using this new extension leaks to the introduction point the service's tor
+   version. This could in theory help any kind of de-anonymization attack on a
+   service since at first it partitions it in a very small group of running
+   tor.
+
+   Furthermore, when the first tor version supporting this extension will be
+   released, very few introduction points will be updated to that version.
+   Which means that we could end up in a situation where many services want to
+   use this feature and thus will only select a very small subset of relays
+   supporting it overloading them but also making it an easier vector for an
+   attacker that whishes to be the service introduction point.
+
+   For the above reasons, we propose a new consensus parameter that will
+   provide a "go ahead" for all service out there to start using this
+   extension only if the introduction point supports it.
+
+      "HiddenServiceEnableIntroDoSDefense?"
+
+         If set to 1, this makes tor start using this new proposed extension
+         if available by the introduction point (looking at the new protover).
+
+   This parameter should be switched on when a majority of relays have
+   upgraded to a tor version that supports this extension for which we believe
+   will also give enough time for most services to move to this new stable
+   version making the anonymity set much bigger.
+
+   We believe that there are services that do not care about anonymity on the
+   service side and thus could benefit from this feature right away if they
+   wish to use it.
+
+5. Discussions
+
+   One possible new avenue to explore is for the introduction point to send
+   back a new type of cell which would tell the service that the DoS defenses
+   have been triggered. It could include some statistics in the cell which can
+   ultimately be reported back to the service operator to use those for better
+   decisions for the parameters.
+
+   But also for the operator to be noticed that their service is under attack
+   or very popular which could mean time to increase or disable the denial of
+   service defenses.
+
+References:
+
+[1] https://lists.torproject.org/pipermail/tor-dev/2019-May/013837.html
+[2] https://trac.torproject.org/15516

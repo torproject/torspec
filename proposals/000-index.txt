@@ -225,6 +225,7 @@ Proposals by number:
 302  Hiding onion service clients using padding [ACCEPTED]
 303  When and how to remove support for protocol versions [DRAFT]
 304  Extending SOCKS5 Onion Service Error Codes [ACCEPTED]
+305  ESTABLISH_INTRO Cell DoS Defense Extension [DRAFT]
 
 
 Proposals by status:
@@ -235,6 +236,7 @@ Proposals by status:
    294  TLS 1.3 Migration
    300  Walking Onions: Scaling and Saving Bandwidth
    303  When and how to remove support for protocol versions
+   305  ESTABLISH_INTRO Cell DoS Defense Extension
  NEEDS-REVISION:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
