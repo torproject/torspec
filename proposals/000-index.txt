@@ -224,7 +224,7 @@ Proposals by number:
 301  Don't include package fingerprints in consensus documents [ACCEPTED]
 302  Hiding onion service clients using padding [ACCEPTED]
 303  When and how to remove support for protocol versions [DRAFT]
-304  Extending SOCKS5 Onion Service Error Codes [OPEN]
+304  Extending SOCKS5 Onion Service Error Codes [ACCEPTED]
 
 
 Proposals by status:
@@ -257,7 +257,6 @@ Proposals by status:
    295  Using ADL for relay cryptography (solving the crypto-tagging attack)
    296  Have Directory Authorities expose raw bandwidth list files
    299  Preferring IPv4 or IPv6 based on IP Version Failure Count
-   304  Extending SOCKS5 Onion Service Error Codes
  ACCEPTED:
    188  Bridge Guards and other anti-enumeration defenses
    249  Allow CREATE cells with >505 bytes of handshake data
@@ -267,6 +266,7 @@ Proposals by status:
    292  Mesh-based vanguards
    301  Don't include package fingerprints in consensus documents
    302  Hiding onion service clients using padding
+   304  Extending SOCKS5 Onion Service Error Codes
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process
