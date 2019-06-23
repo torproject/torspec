@@ -63,6 +63,16 @@
 
 1.3. Format Versions
 
+   The directory list format uses semantic versioning: https://semver.org
+
+   In particular:
+     * major versions are used for incompatible changes, like
+       removing non-optional fields
+     * minor versions are used for compatible changes, like adding
+       fields
+     * patch versions are for bug fixes, like fixing an
+       incorrectly-formatted Summary item
+
    1.0.0 - The legacy fallback directory list format
 
    2.0.0 - Adds name and extrainfo structured comments, and section separator
@@ -151,16 +161,10 @@
 
        [In second position, exactly once.]
 
-       The version of the directory list format. version_number uses
-       semantic versioning: https://semver.org
+       The version of the directory list format.
 
-       In particular:
-         * major versions are used for incompatible changes, like
-           removing non-optional fields
-         * minor versions are used for compatible changes, like adding
-           fields
-         * patch versions are for bug fixes, like fixing an
-           incorrectly-formatted Summary item
+       version_number is a semantic version, see the "Format Versions"
+       section for details.
 
        Version 1.0.0 represents the undocumented, legacy fallback list
        format(s). Version 2.0.0 and later are documented by this
