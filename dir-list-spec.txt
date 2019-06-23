@@ -68,6 +68,8 @@
    2.0.0 - Adds name and extrainfo structured comments, and section separator
            comments to make the list easier to parse.
 
+   2.1.0 - Adds a source list comment to the header.
+
 2. Format Details
 
    Directory lists contain the following sections:
@@ -173,6 +175,20 @@
        version 2.0.0 and later directory list.
 
        The current timestamp format is YYYYMMDDHHMMSS, as an integer.
+
+     "/*" SP+ "source=" Keyword SP+ "*/" SP* NL
+
+       [Zero or one time.]
+
+       The source of the directory entries in the list.
+
+       As of version 2.1.0, the sources are:
+         * "whitelist" - the fallback.whitelist file in the fallback-scripts
+                         repository. This is the default.
+         * "fallback"  - a fallback_dirs.inc file from a tor repository.
+                         Used in check_existing mode.
+
+       This line was added in version 2.1.0 of this specification.
 
      "/*" SP+ key_value SP+ "*/" SP* NL
 
