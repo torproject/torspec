@@ -80,6 +80,20 @@
 
    2.1.0 - Adds a source list comment to the header.
 
+1.4. Future Plans
+
+   Tor also has an auth_dirs.inc file, but it is not yet in this format.
+   Tor uses slightly different formats for authorities and fallback
+   directory mirrors, so we will need to make some changes to tor so that
+   it parses this format. (We will also need to add authority-specific
+   information to this format.) See #24818 for details.
+
+   We want to add a torrc option so operators can opt-in their relays as
+   fallback directory mirrors. This gives us a signed opt-in confirmation.
+   (We can also continue to accept whitelist entries, and do other checks.)
+   We need to write a short proposal, and make some changes to tor and the
+   fallback update script. See #24839 for details.
+
 2. Format Details
 
    Directory lists contain the following sections:
