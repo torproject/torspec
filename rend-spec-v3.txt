@@ -1418,6 +1418,9 @@ Table of contents:
    Other encryption and authentication key formats are allowed; clients
    should ignore ones they do not recognize.
 
+   When parsing the list of introduction points, clients should reject
+   descriptors which contain duplicate introduction point entries.
+
    Clients who manage to extract the introduction points of the hidden service
    can prroceed with the introduction protocol as specified in [INTRO-PROTOCOL].
 

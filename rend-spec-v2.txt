@@ -568,6 +568,9 @@
    [Caching may make her partitionable, but she fetched it anonymously,
     and we can't very well *not* cache it. -RD]
 
+   When parsing the descriptor's introduction points, Alice's OP should reject
+   the descriptor if duplicate introduction points exist.
+
    If Alice's OP is running 0.2.1.10-alpha or higher, it fetches v2 hidden
    service descriptors. Versions before 0.2.2.1-alpha are fetching both v0 and
    v2 descriptors in parallel. Similar to the description in section 1.4,
