@@ -165,7 +165,7 @@ Status: Draft
    provide a "go ahead" for all service out there to start using this
    extension only if the introduction point supports it.
 
-      "HiddenServiceEnableIntroDoSDefense?"
+      "HiddenServiceEnableIntroDoSDefense"
 
          If set to 1, this makes tor start using this new proposed extension
          if available by the introduction point (looking at the new protover).
