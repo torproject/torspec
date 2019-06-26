@@ -226,6 +226,7 @@ Proposals by number:
 303  When and how to remove support for protocol versions [DRAFT]
 304  Extending SOCKS5 Onion Service Error Codes [ACCEPTED]
 305  ESTABLISH_INTRO Cell DoS Defense Extension [DRAFT]
+306  A Tor Implementation of IPv6 Happy Eyeballs
 
 
 Proposals by status:
@@ -259,6 +260,7 @@ Proposals by status:
    295  Using ADL for relay cryptography (solving the crypto-tagging attack)
    296  Have Directory Authorities expose raw bandwidth list files
    299  Preferring IPv4 or IPv6 based on IP Version Failure Count
+   306  A Tor Implementation of IPv6 Happy Eyeballs
  ACCEPTED:
    188  Bridge Guards and other anti-enumeration defenses
    249  Allow CREATE cells with >505 bytes of handshake data

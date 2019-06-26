@@ -1,0 +1,95 @@
+Filename: 306-ipv6-happy-eyeballs.txt
+Title: A Tor Implementation of IPv6 Happy Eyeballs
+Author: Neel Chauhan
+Created: 25-Jun-2019
+Status: Open
+Ticket: https://trac.torproject.org/projects/tor/ticket/29801
+
+1. Introduction
+
+   As IPv4 address space becomes scarce, ISPs and organizations will deploy
+   IPv6 in their networks. Right now, Tor clients connect to guards using
+   IPv4 connectivity by default.
+
+   When networks first transition to IPv6, both IPv4 and IPv6 will be enabled
+   on most networks in a so-called "dual-stack" configuration. This is to not
+   break existing IPv4-only applications while enabling IPv6 connectivity.
+   However, IPv6 connectivity may be unreliable and clients should be able
+   to connect to the guard using the most reliable technology, whether IPv4
+   or IPv6.
+
+   In ticket #27490, we introduced the option ClientAutoIPv6ORPort which
+   lets a client randomly choose between IPv4 or IPv6. However, this
+   random decision does not take into account unreliable connectivity
+   or falling back to the competing IP version should one be unreliable
+   or unavailable.
+
+   One way to select between IPv4 and IPv6 on a dual-stack network is a
+   so-called "Happy Eyeballs" algorithm as per RFC 8305. In one, a client
+   attempts an IP family, whether IPv4 or IPv6. Should it work, the client
+   sticks with the working IP family. Otherwise, the client attempts the
+   opposing version. This means if a dual-stack client has both IPv4 and
+   IPv6, and IPv6 is unreliable, the client uses IPv4, and vice versa.
+
+   In Proposal 299, we have attempted a IP fallback mechanism using failure
+   counters and preferring IPv4 and IPv6 based on the state of the counters.
+   However, Prop299 was not standard Happy Eyeballs and an alternative,
+   standards-compliant proposal was requested in [P299-TRAC] to avoid issues
+   from complexity caused by randomness.
+
+   This proposal describes a Tor implementation of Happy Eyeballs and is
+   intended as a successor to Proposal 299.
+
+2. Address Selection
+
+   To be able to handle Happy Eyeballs in Tor, we will need to modify the
+   data structures used for connections to guards, namely the extend info
+   structure.
+
+   The extend info structure should contain both an IPv4 and an IPv6 address.
+   This will allow us to try IPv4 and the IPv6 addresses should both be
+   available on a relay and the client is dual-stack.
+
+   When parsing relay descriptors and filling in the extend info data
+   structure, we need to fill in both the IPv4 and IPv6 address if they both
+   are available. If only one family is available for a relay (IPv4 or IPv6),
+   we should fill in the address for available family and leave the opposing
+   family null.
+
+3. Connecting To A Relay
+
+   When a client connects to a guard using an extend info data structure, we
+   should first check if there is an existing authenticated connection. If
+   there is, we should use it.
+
+   If there is no existing authenticated connection for an extend info, we
+   should attempt to connect using the first available, allowed, and preferred
+   address. At the time of writing, this is IPv4.
+
+   We should also schedule a timer for connecting using the other address
+   should one be available and allowed, and the first attempted version
+   fails. This should be higher than most client's successful TLS
+   authentication time. I propose that the timer is 15 seconds. The reason
+   for this is to accommodate high-latency connections such as dial-up and
+   satellite.
+
+4. Handling Connection Successes And Failures
+
+   Should a connection to a guard succeed and is authenticated via TLS, we
+   can then use the connection. In this case, we should cancel all other
+   connection timers and in-progress connections. Cancelling the timers is
+   so we don't attempt new unnecessary connections when our existing
+   connection is successful, preventing denial-of-service risks.
+
+   However, if we fail all available and allowed connections, we should tell
+   the rest of Tor that the connection has failed. This is so we can attempt
+   another guard relay.
+
+5. Acknowledgments
+
+   Thank you so much to teor for the discussion of the happy eyeballs proposal.
+   I wouldn't have been able to do this has it not been for your help.
+
+6. Appendix
+
+   [P299-TRAC]: https://trac.torproject.org/projects/tor/ticket/29801
