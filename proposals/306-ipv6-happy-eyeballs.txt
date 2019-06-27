@@ -2,6 +2,7 @@ Filename: 306-ipv6-happy-eyeballs.txt
 Title: A Tor Implementation of IPv6 Happy Eyeballs
 Author: Neel Chauhan
 Created: 25-Jun-2019
+Supercedes: 299
 Status: Open
 Ticket: https://trac.torproject.org/projects/tor/ticket/29801
 
@@ -26,10 +27,12 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
 
    One way to select between IPv4 and IPv6 on a dual-stack network is a
    so-called "Happy Eyeballs" algorithm as per RFC 8305. In one, a client
-   attempts an IP family, whether IPv4 or IPv6. Should it work, the client
-   sticks with the working IP family. Otherwise, the client attempts the
-   opposing version. This means if a dual-stack client has both IPv4 and
-   IPv6, and IPv6 is unreliable, the client uses IPv4, and vice versa.
+   attempts the preferred IP family, whether IPv4 or IPv6. Should it work,
+   the client sticks with the preferred IP family. Otherwise, the client
+   attempts the alternate version. This means if a dual-stack client has
+   both IPv4 and IPv6, and IPv6 is unreliable, preferred or not, the
+   client uses IPv4, and vice versa. However, if IPv4 and IPv6 are both
+   equally reliable, and IPv6 is preferred, we use IPv6.
 
    In Proposal 299, we have attempted a IP fallback mechanism using failure
    counters and preferring IPv4 and IPv6 based on the state of the counters.
@@ -53,25 +56,72 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
    When parsing relay descriptors and filling in the extend info data
    structure, we need to fill in both the IPv4 and IPv6 address if they both
    are available. If only one family is available for a relay (IPv4 or IPv6),
-   we should fill in the address for available family and leave the opposing
+   we should fill in the address for preferred family and leave the alternate
    family null.
 
 3. Connecting To A Relay
 
-   When a client connects to a guard using an extend info data structure, we
-   should first check if there is an existing authenticated connection. If
-   there is, we should use it.
+   If there is an existing authenticated connection, we should use it
+   similar to how we used it pre-Prop306.
 
-   If there is no existing authenticated connection for an extend info, we
-   should attempt to connect using the first available, allowed, and preferred
-   address. At the time of writing, this is IPv4.
+   If there is no existing authenticated connection for an extend info,
+   we should attempt to connect using the first available, allowed, and
+   preferred address.
 
-   We should also schedule a timer for connecting using the other address
-   should one be available and allowed, and the first attempted version
-   fails. This should be higher than most client's successful TLS
-   authentication time. I propose that the timer is 15 seconds. The reason
-   for this is to accommodate high-latency connections such as dial-up and
-   satellite.
+   We should also allow falling back to the alternate address. For this,
+   three alternate designs will be given.
+
+3.1. Proposed Designs
+
+   This subsection will have three proposed designs for connecting to relays
+   via IPv4 and IPv6 in a Tor implementation of Happy Eyeballs. The proposed
+   designs are as listed as follows:
+
+    * Section 3.1.1: First Successful Authentication
+
+    * Section 3.1.2: TCP Connection to Preferred Address On First Authenticated
+      Connection
+
+    * Section 3.1.3: TCP Connection to Preferred Address On First TCP Success
+
+3.1.1. First Successful Authentication
+
+   In this design, Tor will first connect to the preferred address and
+   attempt to authenticate. After a 1.5 second delay, Tor will connect
+   to the alternate address and try to authenticate. On the first
+   successful authenticated connection, we close the other connection.
+
+   This design places the least connection load on the network, but
+   might add extra TLS load.
+
+3.1.2. TCP Connection to Preferred Address On First Authenticated Connection
+
+   This design attempts a TCP connection to a preferred address. On a
+   failure or a 250 ms delay, we try the alternative address.
+
+   On the first successful TCP connection Tor attempts to authenticate
+   immediately. On the authentication failure, or a 1.5 second delay,
+   Tor closes the other connection.
+
+   This design is the most reliable for clients, but increases the
+   connection load on dual-stack guards and authorities.
+
+3.1.3. TCP Connection to Preferred Address On First TCP Success
+
+   In this design, we will connect via TCP to the first preferred address.
+   On a failure or after a 250 ms delay, we attempt to connect via TCP to
+   the alternate address. On a success, Tor attempts to authenticate and
+   closes the other connection.
+
+   This design is the closest to RFC 8305 and is similar to how Happy
+   Eyeballs is implemented in a web browser.
+
+3.2. Recommendations for Implementation of Section 3.1 Proposals
+
+   We should start with implementing and testing the implementation as
+   described in Section 3.1.1 (First Successful Authentication), and then
+   doing the same for the implementations described in 3.1.2 and 3.1.3 if
+   desired or required.
 
 4. Handling Connection Successes And Failures
 
