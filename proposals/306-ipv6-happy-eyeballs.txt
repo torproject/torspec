@@ -43,7 +43,12 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
    This proposal describes a Tor implementation of Happy Eyeballs and is
    intended as a successor to Proposal 299.
 
-2. Address Selection
+2. Address/Relay Selection
+
+   This section describes the necessary changes for address selection to
+   implement Prop306.
+
+2.1. Extend Info Structure Changes
 
    To be able to handle Happy Eyeballs in Tor, we will need to modify the
    data structures used for connections to guards, namely the extend info
@@ -59,7 +64,18 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
    we should fill in the address for preferred family and leave the alternate
    family null.
 
-3. Connecting To A Relay
+2.2. Relay Selection Changes
+
+   In Proposal 283, we have allowed microdescriptor consensus documents to
+   contain IPv6 addresses. As clients download microdescriptors, Prop283
+   makes it possible to implement Prop306.
+
+   When we select candidates for the entry guard, we should select at least
+   one relay with an IPv6 address. This makes it possible for an IPv6-only
+   client to bootstrap. Otherwise we would have failures if all the selected
+   guard candidates only have IPv4 addresses.
+
+3. Relay Connections
 
    If there is an existing authenticated connection, we should use it
    similar to how we used it pre-Prop306.
@@ -138,42 +154,46 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
    doing the same for the implementations described in 3.1.2 and 3.1.3 if
    desired or required.
 
-4. Handling Connection Successes And Failures
+3.3. Handling Connection Successes And Failures
 
    Should a connection to a guard succeed and is authenticated via TLS, we
    can then use the connection. In this case, we should cancel all other
    connection timers and in-progress connections. Cancelling the timers is
-   so we don't attempt new unnecessary connections when our existing
-   connection is successful, preventing denial-of-service risks.
+   necessary so we don't attempt new unnecessary connections when our
+   existing connection is successful, preventing denial-of-service risks.
 
    However, if we fail all available and allowed connections, we should tell
    the rest of Tor that the connection has failed. This is so we can attempt
    another guard relay.
 
-4.1. Connection Attempt Delays
+3.4. Connection Attempt Delays
 
-   As mentioned in [TEOR-P306-REP], by default, clients should prefer IPv4
+   As mentioned in [TEOR-P306-REP], initially, clients should prefer IPv4
    by default. The Connection Attempt Delay, or delay between IPv4 and IPv6
    connections should be 1.5 seconds. This is to avoid the overhead from
    tunneled IPv6 connections.
 
    The Minimum Connection Attempt Delay should not be dynamically adjusted
    as it adds privacy risks. This value should be fixed at 10 ms as per
-   RFC 8305 and adjusted using a proposed consensus parameter called
+   RFC 8305 and could be adjusted using a proposed consensus parameter called
    ConnectionAttemptDelay. ConnectionAttemptDelay should be in milliseconds.
 
-   The Maximum Connection Attempt Delay should also not be dynamically
-   adjusted for privacy reasons, but the maximum should be higher than the
-   RFC 8305 recommendation of 2 seconds. For Tor, we should make this
-   timeout value 30 seconds to match Tor's existing timeout. We should also
-   make it possible for users to set this value higher for slower networks
-   like dial-up.
+   The Maximum Connection Attempt Delay should also not be dynamically adjusted
+   for privacy reasons, but the maximum should be higher than the RFC 8305
+   recommendation of 2 seconds. For Tor, we should make this timeout value 30
+   seconds to match Tor's existing timeout.
 
-5. New Default Options And Consensus Parameters
+   We should also make it possible for users to set the Maximum Connection
+   Attempt value higher for slower and higher-latency networks such as dial-up
+   and satellite.
+
+4. Option Changes
 
    As we enable IPv6-enabled clients to connect out of the box, we should
    adjust the default options to enable IPv6 while not breaking IPv4-only
    clients.
+
+4.1. New Default Options for Prop306
 
    The new default options should be:
 
@@ -184,64 +204,96 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
     * ClientPreferIPv6ORPort as 0 (for load-balancing reasons so we don't
       overload IPv6-only guards)
 
-   Clients should be able to connect with the above options on IPv4-only,
-   dual-stack, and IPv6-only networks, and they should also work if
-   ClientPreferIPv6ORPort is 1. This means we shouldn't expect IPv4 or
-   IPv6 to work if ClientUseIPv4 or ClientUseIPv6 is set.
+   One thing to note is that clients should be able to connect with the above
+   options on IPv4-only, dual-stack, and IPv6-only networks, and they should
+   also work if ClientPreferIPv6ORPort is 1. This means we shouldn't expect
+   IPv4 or IPv6 to work if ClientUseIPv4 or ClientUseIPv6 is set.
 
-   We should also have the following consensus parameters:
+   When the majority of clients are IPv6-capable, we could set the default
+   value of ClientPreferIPv6ORPort to 1 in order to take advantage of IPv6.
+
+4.2. Prop306 Consensus Parameters
+
+   We could have the following consensus parameters:
 
     * ClientUseIPv6
 
     * ClientPreferIPv6ORPort (when most of the guards have IPv6 and it is fast)
 
-5.1. Testing And Deploying These Options
+   Should we have the consenus parameters, the values for these options should
+   be set to the values of the similarly-named options as described in Section
+   4.1 including the consideration for ClientPreferIPv6ORPort.
 
-   We should test the options on dual-stack, IPv4-only, and IPv6-only.
+5. Statistics
 
-   To test this proposal, the directory authorities should set the following
-   consensus parameters:
+5.1. Relay Statistics
 
-    * ClientUseIPv6
+   Relays could measure the number of successful IPv4 and IPv6 connections.
+   We could also send this information to directory authorities.
 
-    * ClientPreferIPv6ORPort
+   However, should we implement Section 5.1, we should consider the privacy
+   implications of these statistics, and whether they should be public or not.
 
-    * ConnectionAttemptDelay (from Section 4.1)
-
-   A Prop306-enabled client should parse these parameters to infer the default
-   IPv6 options, but a client should be able to override these options. We
-   should start with setting the consensus parameters of both ClientUseIPv6
-   and ClientPreferIPv6ORPort as 0, and then adjusting the values once we have
-   tested.
-
-   When we reach a point where the majority of clients are IPv6-enabled, we
-   should set ClientPreferIPv6ORPort to 1. This will make us prefer IPv6
-   and prepare us for IPv6-only networks.
-
-6. Relay Selection Changes
-
-   In Proposal 283, we have allowed microdescriptor consensus documents to
-   contain IPv6 addresses. As clients download microdescriptors, Prop283
-   makes it possible to implement Prop306.
-
-   When we select candidates for the entry guard, we should select at least
-   one relay with an IPv6 address. This makes it possible for an IPv6-only
-   client to bootstrap. Otherwise we would have failures if all the selected
-   guard candidates only have IPv4 addresses.
-
-7. Heartbeat Log Updates
+5.2. Client Heartbeat Messages
 
    In a Tor session, we should count the number of IPv4 and IPv6 connections
    to ORPorts, and distinguish between authenticated (relay, authority
    reachability) and unauthenticated (client, bridge) connections. These
    statistics should be included in the Heartbeat logs.
 
-8. Acknowledgments
+6. Deploying Prop306
+
+   This section describes the information necessary for deployment of Prop306
+   on Tor clients and in Tor Browser.
+
+6.1. Initial Feasibility Testing
+
+   We should test this proposal with the following scenarios:
+
+    * Different combinations of values for the options ClientUseIPv4,
+      ClientUseIPv6, and ClientPreferIPv6ORPort on IPv4-only, IPv6-only,
+      and dual-stack connections
+
+    * Dual-stack connections of different technologies, including high-bandwidth
+      and low-latency (e.g. fiber), moderate-bandwidth and moderate-latency
+      (e.g. DSL, LTE), and high-latency and low-bandwidth (e.g. satellite,
+      dial-up) to see if Prop306 is reliable and feasible
+
+6.2. Minimum Viable Prop306 Product
+
+   The mimumum viable product for Prop306 must include the following:
+
+    * Implementation of one of the algorithms in Section 3.1 along with the
+      changes described in Sections 2.1 and 2.2
+
+    * The Connection Success/Failure mechanism in Section 3.3 and Connection
+      Delay mechanism in Section 3.4 (the consensus parameter is optional)
+
+    * A default setup capable of both IPv4 and IPv6 connections with the
+      options described in Section 4.1
+
+6.3. Optional Features
+
+   Some features which are optional include:
+
+    * Consensus Parameter ConnectionAttemptDelay (Section 3.4) - We will need
+      this if the Minimum Connection Attempt Delay needs to be dynamically
+      adjusted
+
+    * Consensus Parameters ClientUseIPv6 (Section 4.2), and
+      ClientPreferIPv6ORPort (Section 4.2) - We will need this if we desire
+      the ability for clients to prefer IPv6 when the majority of clients
+      and relays are IPv6-capable without changing the configuration
+
+    * Prop306 Statistics (Section 5) - While optional, this may be useful for
+      debugging and reliability testing, and metrics on IPv4 vs. IPv6
+
+7. Acknowledgments
 
    Thank you so much to teor for the discussion of the happy eyeballs proposal.
    I wouldn't have been able to do this has it not been for your help.
 
-9. Appendix
+8. Refrences
 
    [P299-TRAC]: https://trac.torproject.org/projects/tor/ticket/29801
 
