@@ -2267,6 +2267,14 @@
 
      Severity = "DEBUG" / "INFO" / "NOTICE" / "WARN"/ "ERR"
 
+  Some low-level logs may be sent from signal handlers, so their destination
+  logs must be signal-safe. These low-level logs include backtraces,
+  logging function errors, and errors in code called by logging functions.
+  Signal-safe logs are never sent as control port log events.
+
+  Control port message trace debug logs are never sent as control port log
+  events, to avoid modifying control output when debugging.
+
 4.1.6. New descriptors available
 
   This event is generated when new router descriptors (not microdescs or
