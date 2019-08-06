@@ -2,7 +2,7 @@ Filename: 295-relay-crypto-with-adl.txt
 Title: Using ADL for relay cryptography (solving the crypto-tagging attack)
 Author: Tomer Ashur, Orr Dunkelman, Atul Luykx
 Created: 22 Feb 2018
-Last-Modified: 1 March 2019
+Last-Modified: 10 July 2019
 Status: Open
 
 
@@ -54,7 +54,8 @@ Status: Open
    CTR                  Counter Mode
    N_I                  A de/encryption nonce (to be used in CTR-mode)
    T_I                  A tweak (to be used to de/encrypt the nonce)
-   T'_I                 A running digest
+   Tf'_I                A running digest (forward direction)
+   Tb'_I                A running digest (backward direction)
    ^                    XOR
    ||                   Concatenation
           (This is more readable than a single | but must be adapted
@@ -71,7 +72,7 @@ Status: Open
    recommend DIG_KEY_LEN = 128.
 
    ENC_KEY_LEN -- The key length used for encryption (e.g., AES). We
-   recommend ENC_KEY_LEN = 128.
+   recommend ENC_KEY_LEN = 256.
 
 2.4. Key derivation (replaces Section 5.2.2)
 
@@ -94,8 +95,8 @@ Status: Open
 
    Length       Purpose                         Notation
    ------        -------                        --------
-   HASH_LEN     forward digest IV               DF      *
-   HASH_LEN     backward digest IV              DB      *
+   HASH_LEN     forward digest IV               DF
+   HASH_LEN     backward digest IV              DB
    ENC_KEY_LEN  encryption key                  Kf
    ENC_KEY_LEN  decryption key                  Kb
    DIG_KEY_LEN  forward digest key              Khf
@@ -105,7 +106,7 @@ Status: Open
    DIGEST_LEN   nonce to use in the                      *
                   hidden service protocol
 
-      * I am not sure that we need these any longer.
+      * I am not sure that we need this any longer.
 
    Excess bytes from K are discarded.
 
@@ -130,6 +131,10 @@ Status: Open
 
 3. Routing relay cells
 
+   Let n denote the integer representing the destination node. For
+   I = 1...n, we set Tf'_{I} = DF_I and Tb'_{I} = DB_I
+   where DF_I and DB_I are generated according to Section 2.4.
+
 3.1. Forward Direction
 
    The forward direction is the direction that CREATE/CREATE2 cells
@@ -137,25 +142,22 @@ Status: Open
 
 3.1.1. Routing from the Origin
 
-   Let n denote the integer representing the destination node. For
-   I = 1...n+1, T'_{I} is initialized to the 128-bit string consisting
-   entirely of '0's. When an OP sends a relay cell, they prepare the
+   When an OP sends a relay cell, they prepare the
    cell as follows:
 
         The OP prepares the authentication part of the message:
 
                 C_{n+1} = M
-                T_{n+1} = Digest(Khf_n,T'_{n+1}||C_{n+1})
+                T_{n+1} = Digest(Khf_n,C_{n+1})
                 N_{n+1} = T_{n+1} ^ E(Ktf_n,T_{n+1} ^ 0)
-                T'_{n+1} = T_{n+1}
 
         Then, the OP prepares the multi-layered encryption:
 
                 For I=n...1:
                         C_I = Encrypt(Kf_I,N_{I+1},C_{I+1})
-                        T_I = Digest(Khf_I,T'_I||C_I)
+                        T_I = Digest(Khf_I,Tf'_I||C_I)
                         N_I = T_I ^ E(Ktf_I,T_I ^ N_{I+1})
-                        T'_I = T_I
+                        Tf'_I = T_I
 
           The OP sends C_1 and N_1 to node 1.
 
@@ -166,10 +168,10 @@ Status: Open
 
         'Forward' relay cell:
 
-                T_I = Digest(Khf_I,T'_I||C_I)
+                T_I = Digest(Khf_I,Tf'_I||C_I)
                 N_{I+1} = T_I ^ D(Ktf_I,T_I ^ N_I)
                 C_{I+1} = Decrypt(Kf_I,N_{I+1},C_I)
-                T'_I = T_I
+                Tf'_I = T_I
 
    The OR then decides whether it recognizes the relay cell as
    described below. If the OR recognizes the cell, it processes the
@@ -190,10 +192,10 @@ Status: Open
 
         'Backward' relay cell:
 
-                T_I = Digest(Khb_I,T'_I||C_{I+1})
+                T_I = Digest(Khb_I,Tb'_I||C_{I+1})
                 N_I = T_I ^ E(Ktb_I,T_I ^ N_{I+1})
                 C_I = Encrypt(Kb_I,N_I,C_{I+1})
-                T'_I = T_I
+                Tb'_I = T_I
 
    with C_{n+1} = M and N_{n+1}=0. Once encrypted, the node passes
    C_I and N_I along the circuit towards the OP.
@@ -207,9 +209,9 @@ Status: Open
 
                 For I=1...n, where n is the end node on the circuit:
                         C_{I+1} = Decrypt(Kb_I,N_I,C_I)
-                        T_I = Digest(Khb_I,T'_I||C_{I+1})
+                        T_I = Digest(Khb_I,Tb'_I||C_{I+1})
                         N_{I+1} = T_I ^ D(Ktb_I,T_I ^ N_I)
-                        T'_I = T_I
+                        Tb'_I = T_I
 
                 If the payload is recognized (see Section 4.1),
                 then:
@@ -229,46 +231,30 @@ Status: Open
         The payload of each unencrypted RELAY cell consists of:
 
                 Relay command           [1 byte]
-                'Recognized'            [2 bytes]
                 StreamID                [2 bytes]
                 Length                  [2 bytes]
-                Data                    [PAYLOAD_LEN-23 bytes]
-
-   The 'recognized' field is used as a simple indication that the
-   cell is still encrypted. It is an optimization to avoid
-   calculating expensive digests for every cell. When sending cells,
-   the unencrypted 'recognized' MUST be set to zero.
-
-   When receiving and decrypting cells the 'recognized' will always
-   be zero if we're the endpoint that the cell is destined for. For
-   cells that we should relay, the 'recognized' field will usually
-   be nonzero, but will accidentally be zero with P=2^-16.
-
-   If the cell is recognized, the node moves to verifying the
-   authenticity of the message as follows(*):
-
-          forward direction (executed by the end node):
-
-                T_{n+1} = Digest(Khf_n,T'_{n+1}||C_{n+1})
-                Tag = T_{n+1} ^ D(Ktf_n,T_{n+1} ^ N_{n+1})
-                T'_{n+1} = T_{n+1}
-
-                The message is authenticated (i.e., M = C_{n+1}) if
-                and only if Tag = 0
-
-          backward direction (executed by the OP):
-
-                The message is authenticated (i.e., C_{n+1} = M) if
-                and only if N_{n+1} = 0
+                Data                    [PAYLOAD_LEN-21 bytes]
 
 
    The old Digest field is removed since sufficient information for
    authentication is now included in the nonce part of the payload.
 
-       (*) we should consider dropping the 'recognized' field
-       altogether and always try to authenticate. Note that this is
-       an optimization question and the crypto works just as well
-       either way.
+   The old 'Recognized' field is removed and the node always tries to
+   authenticate the message as follows:
+
+          forward direction (executed by the end node):
+
+                T_{n+1} = Digest(Khf_n,C_{n+1})
+                Tag = T_{n+1} ^ D(Ktf_n,T_{n+1} ^ N_{n+1})
+
+                The message is recognized and authenticated
+				(i.e., M = C_{n+1}) if and only if Tag = 0.
+
+          backward direction (executed by the OP):
+
+                The message is recognized and authenticated
+				(i.e., C_{n+1} = M) if and only if N_{n+1} = 0.
+
 
    The 'Length' field of a relay cell contains the number of bytes
    in the relay payload which contain real payload data. The
@@ -319,31 +305,30 @@ Status: Open
    Suppose that node I tags the ciphertext part of the message
    (C'_{I+1} != C_{I+1}) then forwards it to the next node (I+1). As
    per Section 3.1.2. Node I+1 digests C'_{I+1} to generate T_{I+1}
-   and N_{I+2}. Since C'_{I+2} is different than it should be, so
-   are the resulting T_{I+1} and N_{I+2}. Hence, decrypting C'_{I+2}
+   and N_{I+2}. Since C'_{I+2} is different from what it should be, so
+   are the resulting T_{I+1} and N_{I+2}. Hence, decrypting C'_{I+1}
    using these values results in a random string for C_{I+2}. Since
    C_{I+2} is now just a random string, it is decrypted into a
-   random string and cannot be 'recognized' nor
-   authenticated. Furthermore, since C'_{I+1} is different than what
-   it should be, T'_{I+1} (i.e., the running digest of the middle
-   node) is now out of sync with that of the OP, which means that
-   all future cells sent through this node will decrypt into garbage
-   (random strings).
+   random string and cannot be authenticated. Furthermore, since
+   C'_{I+1} is different than what it should be, Tf'_{I+1}
+   (i.e., the running digest of the middle node) is now out of sync
+   with that of the OP, which means that all future cells sent through
+   this node will decrypt into garbage (random strings).
 
    Likewise, suppose that instead of tagging the ciphertext, Node I
-   node tags the encrypted nonce N'_{I+1} != N_{I+1}. Now, when Node
-   I+1 digests the payload the tweak T_{I+1} is find, but using it
+   tags the encrypted nonce N'_{I+1} != N_{I+1}. Now, when Node
+   I+1 digests the payload the tweak T_{I+1} is fine, but using it
    to decrypt N'_{I+1} again results in a random nonce for
    N_{I+2}. This random nonce is used to decrypt C_{I+1} into a
-   random C'_{I+2} which is not recognized by the end node. Since
-   C_{I+2} is now a random string, the running digest of the end
-   node is now out of sync, which prevents the end node from
+   random C'_{I+2} which cannot be authenticated by the end node. Since
+   C_{I+2} is a random string, the running digest of the end node is
+   now out of sync with that of OP, which prevents the end node from
    decrypting further cells.
 
 5.1.2. Backward direction
 
    In the backward direction the tagging is done by Node I+2
-   untagging by the Node I. Suppose first that Node I+2 tags the
+   untagging by Node I. Suppose first that Node I+2 tags the
    ciphertext C_{I+2} and sends it to Node I+1. As per Section
    3.2.1, Node I+1 first digests C_{I+2} and uses the resulting
    T_{I+1} to generate a nonce N_{I+1}. From this it is clear that
