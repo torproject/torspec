@@ -2169,7 +2169,11 @@ see tor-design.pdf.
 
    Describes the padding capabilities of the relay.
 
-   "1" -- Relay supports circuit-level padding.
+   "1" -- [DEFUNCT] Relay supports circuit-level padding. This version MUST NOT
+          be used as it was also enabled in relays that don't actually support
+          circuit-level padding.
+
+   "2" -- Relay supports the HS circuit setup padding machines (proposal 302)
 
 9.12. "FlowCtrl"
 
