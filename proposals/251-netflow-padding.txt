@@ -5,7 +5,7 @@ Created: 20 August 2015
 Status: Closed
 Implemented-In: 0.3.1.1-alpha
 
-NOTE: Please look at padding-spec.txt now, not this document.
+NOTE: Please look at section 2 of padding-spec.txt now, not this document.
 
 0. Motivation
 
