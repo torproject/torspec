@@ -2175,7 +2175,7 @@ see tor-design.pdf.
           tor-0.4.0.1-alpha and only up to and including tor-0.4.1.4-rc.
 
    "2" -- Relay supports the HS circuit setup padding machines (proposal 302).
-          Advertised by Tor versions from tor-0.4.1.5-rc and onwards.
+          Advertised by Tor versions from tor-0.4.1.5 and onwards.
 
 9.12. "FlowCtrl"
 
