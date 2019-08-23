@@ -240,6 +240,11 @@ Table of contents:
    (TLS-over-TCP, IPv4), [02] (legacy node identity) and [03] (ed25519
    identity key).
 
+   As of 0.4.1.1-alpha, Tor includes both IPv4 and IPv6 link specifiers
+   in v3 onion service protocol link specifier lists. All available
+   addresses SHOULD be included as link specifiers, regardless of the
+   address that Tor actually used to connect/extend to the remote relay.
+
    We also incorporate Tor's circuit extension handshakes, as used in
    the CREATE2 and CREATED2 cells described in tor-spec.txt. In these
    handshakes, a client who knows a public key for a server sends a
@@ -1343,6 +1348,12 @@ Table of contents:
           The link-specifiers is a base64 encoding of a link specifier
           block in the format described in BUILDING-BLOCKS.
 
+          As of 0.4.1.1-alpha, services include both IPv4 and IPv6 link
+          specifiers in descriptors. All available addresses SHOULD be
+          included in the descriptor, regardless of the address that the
+          onion service actually used to connect/extend to the intro
+          point.
+
           The client SHOULD NOT reject any LSTYPE fields which it doesn't
           recognize; instead, it should use them verbatim in its EXTEND
           request to the introduction point.
@@ -1717,6 +1728,11 @@ Table of contents:
    fields, using the ONION_KEY to complete the extension. As mentioned
    in [BUILDING-BLOCKS], the "TLS-over-TCP, IPv4" and "Legacy node
    identity" specifiers must be present.
+
+   As of 0.4.1.1-alpha, clients include both IPv4 and IPv6 link specifiers
+   in INTRODUCE1 cells. All available addresses SHOULD be included in the
+   cell, regardless of the address that the client actually used to extend
+   to the rendezvous point.
 
    The hidden service should handle invalid or unrecognised link specifiers
    the same way as clients do in section 2.5.2.2. In particular, services
