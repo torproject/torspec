@@ -1477,6 +1477,13 @@ Table of contents:
    First, a hidden service host builds an anonymous circuit to a Tor
    node and registers that circuit as an introduction point.
 
+   Single Onion Services attempt to build a non-anonymous single-hop circuit,
+   but use an anonymous 3-hop circuit if:
+     * the intro point is on an address that is configured as unreachable via
+       a direct connection, or
+     * the initial attempt to connect to the intro point over a single-hop
+       circuit fails, and they are retrying the intro point connection.
+
         [After 'First' and before 'Second', the hidden service publishes its
         introduction points and associated keys, and the client fetches
         them as described in section [HSDIR] above.]
@@ -1911,6 +1918,13 @@ Table of contents:
    later connects to the same node and sends a RENDEZVOUS cell. Once
    this has occurred, the relay forwards the contents of the RENDEZVOUS
    cell to the client, and joins the two circuits together.
+
+   Single Onion Services attempt to build a non-anonymous single-hop circuit,
+   but use an anonymous 3-hop circuit if:
+     * the rend point is on an address that is configured as unreachable via
+       a direct connection, or
+     * the initial attempt to connect to the rend point over a single-hop
+       circuit fails, and they are retrying the rend point connection.
 
 4.1. Establishing a rendezvous point [EST_REND_POINT]
 
