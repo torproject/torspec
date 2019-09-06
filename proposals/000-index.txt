@@ -227,6 +227,7 @@ Proposals by number:
 304  Extending SOCKS5 Onion Service Error Codes [ACCEPTED]
 305  ESTABLISH_INTRO Cell DoS Defense Extension [DRAFT]
 306  A Tor Implementation of IPv6 Happy Eyeballs [OPEN]
+307  Onion Balance Support for Onion Service v3 [DRAFT]
 
 
 Proposals by status:
@@ -238,6 +239,7 @@ Proposals by status:
    300  Walking Onions: Scaling and Saving Bandwidth
    303  When and how to remove support for protocol versions
    305  ESTABLISH_INTRO Cell DoS Defense Extension
+   307  Onion Balance Support for Onion Service v3
  NEEDS-REVISION:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]

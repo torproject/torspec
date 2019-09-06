@@ -1,0 +1,180 @@
+Filename: 307-onionbalance-v3.txt
+Title: Onion Balance Support for Onion Service v3
+Author: Nick Mathewson
+Created: 03-April-2019
+Status: Draft
+
+0. Draft Notes
+
+   2019-07-25:
+
+      At this point in time, the cross-certification is not implemented
+      correctly in >= tor-0.3.2.1-alpha. See https://trac.torproject.org/29583
+      for more details.
+
+      This proposal assumes that this bug is fixed.
+
+1. Introduction
+
+   The OnionBalance tool allows several independent Tor instances to host an
+   onion service, while clients can access that onion service without having
+   to take its distributed status into account. OnionBalance works by having
+   each instance run a separate onion service. Then, a management server
+   periodically downloads the descriptors from those onion services, and
+   generates a new descriptor containing the introduction points from each
+   instance's onion service.
+
+   OnionBalance is used by several high-profile onion services, including
+   Facebook and The Tor Project.
+
+   Unfortunately, because of the cross-certification features in v3 onion
+   services, OnionBalance no longer works for them. To a certain extent, this
+   breakage is because of a security improvement: It's probably a good thing
+   that random third parties can no longer grab a onion service's introduction
+   points and claim that they are introduction points for a different service.
+   But nonetheless, a lack of a working OnionBalance remains an obstacle for
+   v3 onion service migration.
+
+   This proposal describes extensions to v3 onion service design to
+   accommodate OnionBalance.
+
+2. Background and Solution
+
+   If an OnionBalance management server wants to provide an aggregate
+   descriptor for a v3 onion service, it faces several obstacles that it
+   didn't have in v2.
+
+   When the management server goes to construct an aggregated descriptor, it
+   will have a mismatch on the "auth-key", "enc-key-cert", and
+   "legacy-key-cert" fields: these fields are supposed to certify the onion
+   service's current descriptor-signing key, but each of these keys will be
+   generated independently by each instance. Because they won't match each
+   other, there is no possible key that the aggregated descriptor could use
+   for its descriptor signing key.
+
+   In this design, we require that each instance should know in advance about
+   a descriptor-signing public key that the aggregate descriptor will use for
+   each time period. (I'll explain how they can do this later, in section 3
+   below.) They don't have to know the corresponding private key.
+
+   When generating their own onion service descriptors for a given time
+   period, the instances generate these additional fields to be used for the
+   aggregate descriptor:
+
+       "meta-auth-key"
+       "meta-enc-key-cert"
+       "meta-legacy-key-cert"
+
+   These fields correspond to "auth-key", "enc-key-cert", and
+   "legacy-key-cert" respectively, but differ in one regard: the
+   descriptor-signing public key that they certify is _not_ the instance's own
+   descriptor-signing key, but rather the aggregate public key for the time
+   period.
+
+   Ordinary clients ignore these new fields.
+
+   When the management server creates the aggregate descriptor, it checks that
+   the signing key for each of these "meta" fields matches the signing key for
+   its corresponding non-"meta" field, and that they certify the correct
+   descriptor-signing key-- and then uses these fields in place of their
+   corresponding non-"meta" variants.
+
+2.1. A quick note on synchronization
+
+   In the design above, and in the section below, I frequently refer to "the
+   current time period". By this, I mean the time period for which the
+   descriptor is encoded, not the time period in which it is generated.
+
+   Instances and management servers should generate descriptors for the two
+   closest time periods, as they do today: no additional synchronization
+   should needed here.
+
+3. How to distribute descriptor-signing keys
+
+   The design requires that every instance of the onion service knows about
+   the public descriptor-signing key that will be used for the aggregate onion
+   service. Here I'll discuss how this can be achieved.
+
+3.1. If the instances are trusted.
+
+   If the management server trusts each of the instances, it can distribute a
+   shared secret to each one of them, and use this shared secret to derive
+   each time period's private key.
+
+   For example, if the shared secret is SK, then the private descriptor-
+   signing key for each time period could be derived as:
+
+        H("meta-descriptor-signing-key-deriv" |
+           onion_service_identity
+           INT_8(period_num) |
+           INT_8(period_length) |
+           SK )
+
+   (Remember that in the terminology of rend-spec-v3, INT_8() denotes a 64-bit
+   integer, see section 0.2 in rend-spec-v3.txt.)
+
+   If shared secret is ever compromised, then an attacker can impersonate the
+   onion service until the shared secret is changed, and can correlate all
+   past descriptors for the onion service.
+
+3.2. If the instances are not trusted: Option One
+
+   If the management server does not trust the instances with
+   descriptor-signing public keys, another option for it is to simply
+   distribute a load of public keys in advance, and use them according to a
+   schedule.
+
+   In this design, the management server would pre-generate the
+   "descriptor-signing-key-cert" fields for a long time in advance, and
+   distribute them to the instances offline. Each one would be
+   associated with its corresponding time period.
+
+   If these certificates were revealed to an attacker, the attacker
+   could correlate descriptors for the onion service with one another,
+   but could not impersonate the service.
+
+3.3. If the instances are not trusted: Option Two
+
+   Another option for the trust model of 3.2 above is to use the same
+   key-blinding method as used for v3 onion services. The management server
+   would hold a private descriptor-signing key, and use it to derive a
+   different private descriptor-signing key for each time period. The instance
+   servers would hold the corresponding public key, and use it to derive a
+   different public descriptor-signing key for each time period.
+
+   (For security, the key-blinding function in this case should use a
+   different nonce than used in the)
+
+   This design would allow the instances to only be configured once, which
+   would be simpler than 3.2 above-- but at a cost. The management server's
+   use of a long-term private descriptor-signing key would require it to keep
+   that key online. (It could keep the derived private descriptor-signing keys
+   online, but the parent key could be derived from them.)
+
+   Here, if the instance's knowledge were revealed to an attack, the attacker
+   could correlate descriptors for the onion service with one another, but
+   could not impersonate the service.
+
+4. Some features of this proposal
+
+   We retain the property that each instance service remains accessible as a
+   working onion service. However, anyone who can access it can identify it as
+   an instance of an OnionBalance service, and correlate its descriptor to the
+   aggregate descriptor.
+
+   Instances could use client authorization to ensure that only the management
+   server can decrypt their introduction points. However, because of the
+   key-blinding features of v3 onion services, nobody who doesn't know the
+   onion addresses for the instances can access them anyway: It would be
+   sufficient to keep these addresses secret.
+
+   Although anybody who successfully accesses an instance can correlate its
+   descriptor to the meta-descriptor, this only works for two descriptors
+   within a single time period: You can't match an instance descriptor from
+   one time period to a meta-descriptor from another.
+
+A. Acknowledgments
+
+   Thanks to the network team for helping me clarify my ideas here, explore
+   options, and better understand some of the implementations and challenges
+   in this problem space.
