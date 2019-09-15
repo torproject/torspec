@@ -228,6 +228,7 @@ Proposals by number:
 305  ESTABLISH_INTRO Cell DoS Defense Extension [DRAFT]
 306  A Tor Implementation of IPv6 Happy Eyeballs [OPEN]
 307  Onion Balance Support for Onion Service v3 [DRAFT]
+308  Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography [DRAFT]
 
 
 Proposals by status:
@@ -240,6 +241,7 @@ Proposals by status:
    303  When and how to remove support for protocol versions
    305  ESTABLISH_INTRO Cell DoS Defense Extension
    307  Onion Balance Support for Onion Service v3
+   308  Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography
  NEEDS-REVISION:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]

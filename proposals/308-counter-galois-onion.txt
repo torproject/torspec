@@ -1,0 +1,550 @@
+Filename: 308-counter-galois-onion.txt
+Title: Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography
+Authors: Jean Paul Degabriele, Alessandro Melloni, Martijn Stam
+Created: 13 Sep 2019
+Last-Modified: 13 Sep 2019
+Status: Draft
+
+
+
+1. Background and Motivation
+
+    In Proposal 202, Mathewson expressed the need to update Tor's Relay
+    cryptography and protect against tagging attacks. Towards this goal he
+    outlined two possible approaches for constructing an onion encryption
+    scheme that should be able to withstand tagging attacks. Later, in
+    Proposal 261, Mathewson proposed a concrete scheme based on the
+    tweakable wide-block cipher AEZ. The security of Proposal 261 was
+    analysed in [DS18]. An alternative scheme was suggested in Proposal 295
+    which combines an instantiation of the PIV construction from [ST14] and
+    a variant of the GCM-RUP construction from [ADL17]. In this document we
+    propose yet another scheme, Counter Galois Onion (CGO)
+    which improves over proposals 261 and 295 in a number of ways. CGO has
+    a minimalistic design requiring only a block cipher in counter-mode and
+    a universal hash function. To take advantage of Intel's AES-NI and
+    PCLMULQDQ instructions we recommend using AES and POLYVAL [GLL18]. In
+    terms of security, it protects against tagging attacks while
+    simultaneously providing forward security with respect to end-to-end
+    authenticity and confidentiality. Furthermore CGO performs better than
+    proposal 295 in terms of efficiency and its support of "leaky pipes".
+
+
+1.2 Design Overview
+
+    CGO makes due with a universal hash function while simultaneously
+    satisfying forward security. It employs two distinct types of
+    encryption, a dynamic encryption scheme DEnc and a static encryption
+    scheme SEnc. DEnc is used for end-to-end encryption (layer n) and SEnc
+    is used for the intermediate layers (n-1 to 1). DEnc is a Forward-
+    Secure Authenticated Encryption scheme for securing end-to-end
+    communication and SEnc provides the non-malleability for protecting
+    against tagging attacks. In order to provide forward security, the key
+    material in DEnc is updated with every encryption whereas in SEnc the
+    key material is static. To support leaky pipes, in the forward
+    direction each OR first attempts a partial decryption using DEnc and
+    if it fails it reverts to decrypting using SEnc. The rest of the
+    document describes the scheme's operation in terms of the low-level
+    primitives and we make no further mention of DEnc and SEnc. However,
+    on an intuitive level it can be helpful to think of:
+
+    a) the combinations of E(KSf_I, *) and PH(HSf_I, *) as well as
+    E(KDf_I, *) and PH(HDf_I, *) as two instances of a tweakable block
+    cipher,
+
+    b) the operation E(Sf_I, <0>) | E(Sf_I, <1>) |  E(Sf_I, <2>) | ... as a
+    PRG with seed Sf_I,
+
+    c) and E(JSf_I, <IV>) | E(JSf_I, <IV+1>) | ... | E(JSf_I, <IV+31>) as
+    counter-mode encryption with <IV> as the initial vector.
+
+
+2. Preliminaries
+
+2.1. Notation
+
+   Symbol               Meaning
+   ------               -------
+   M                    Plaintext
+   Sf_I                 PRG Seed, forward direction, layer I
+   Sb_I                 PRG Seed, backward direction, layer I
+   Cf_I                 Ciphertext, forward direction, layer I
+   Cb_I                 Ciphertext, backward direction, layer I
+   Tf_I                 Tag, forward direction, layer I
+   LTf_I                Last Tag, forward direction, layer I
+   Tb_I                 Tag, backward direction, layer I
+   LTb_I                Last Tag, backward direction, layer I
+   Nf_I                 Nonce, forward direction, layer I
+   LNf_I                Last Nonce, forward direction, layer I
+   Nb_I                 Nonce, backward direction, layer I
+   LNb_I                Last Nonce, backward direction, layer I
+   JSf_I                Static Block Cipher Key, forward direction, layer I
+   JSb_I                Static Block Cipher Key, backward direction, layer I
+   KSf_I                Static Block Cipher Key, forward direction, layer I
+   KSb_I                Static Block Cipher Key, backward direction, layer I
+   KDf_I                Dynamic Block Cipher Key, forward direction, layer I
+   KDb_I                Dynamic Block Cipher Key, backward direction, layer I
+   HSf_I                Static Poly-Hash Key, forward direction, layer I
+   HSb_I                Static Poly-Hash Key, backward direction, layer I
+   HDf_I                Dynamic Poly-Hash Key, forward direction, layer I
+   HDb_I                Dynamic Poly-Hash Key, backward direction, layer I
+   ^                    Bitwise XOR operator
+   |                    Concatenation
+   &&                   Logical AND  operator
+   Z[a, b]               For a string Z, the substring from byte a to byte b
+                        (indexing starts at 1)
+   INT(X)               Translate string X into an unsigned integer
+
+2.2. Security parameters %%%REVISE
+
+   POLY_HASH_LEN -- The length of the polynomial hash function's output,
+   in bytes. For POLYVAL, POLY_HASH_LEN = 16.
+
+   PAYLOAD_LEN -- The longest allowable cell payload, in bytes (509).
+
+   HASH_KEY_LEN -- The key length used to digest messages in bytes.
+   For POLYVAL, DIG_KEY_LEN = 16.
+
+   BC_KEY_LEN -- The key length, in bytes, of the block cipher used. For
+   AES we recommend ENC_KEY_LEN = 16.
+
+   BC_BLOCK_LEN -- The block length, in bytes, of the block cipher used.
+   For AES, BC_BLOCK_LEN = 16.
+
+2.3. Primitives
+
+   The polynomial hash function is POLYVAL with a HASH_KEY_LEN-bit key. We
+   write this as PH(H, M) where H is the key and M the message to be hashed.
+
+   We use AES with a BC_KEY_LEN-bit key. For AES encryption (resp.,
+   decryption) we write E(K, X) (resp., D(K, X)) where K is a BC_KEY_LEN-bit
+   key and X the block to be encrypted (resp., decrypted). For an integer
+   j, we use <j> to denote the string of length BC_BLOCK_LEN representing
+   that integer.
+
+2.4 Key derivation and initialisation (replaces Section 5.2.2)
+
+   For newer KDF needs, Tor uses the key derivation function HKDF from
+   RFC5869, instantiated with SHA256.  (This is due to a construction
+   from Krawczyk.)  The generated key material is:
+
+     K = K_1 | K_2 | K_3 | ...
+
+   Where H(x, t) is HMAC_SHA256 with value x and key t
+   and K_1     = H(m_expand | INT8(1) , KEY_SEED )
+   and K_(i+1) = H(K_i | m_expand | INT8(i+1) , KEY_SEED )
+   and m_expand is an arbitrarily chosen value,
+   and INT8(i) is an octet with the value "i".
+
+   In RFC5869's vocabulary, this is HKDF-SHA256 with info == m_expand,
+   salt == t_key, and IKM == secret_input.
+
+2.4.1. Key derivation using the KDF
+
+   When used in the ntor handshake, for each layer I, the key material is
+   split into the following sequence of contiguous values:
+
+   Length             Purpose                    Notation
+   ------             -------                    --------
+   BC_KEY_LEN         forward Seed               Sf_I
+   BC_KEY_LEN         backward Seed              Sb_I
+
+   if (I < n) in addition derive the following static keys:
+
+   BC_KEY_LEN         forward BC Key             KSf_I
+   BC_KEY_LEN         backward BC Key            KSb_I
+   BC_KEY_LEN         forward CTR Key            JSf_I
+   BC_KEY_LEN         backward CTR Key           JSb_I
+   HASH_KEY_LEN       forward poly hash key      HSf_I
+   HASH_KEY_LEN       backward poly hash key     HSb_I
+
+   Excess bytes from K are discarded.
+
+2.4.2. Initialisation from Seed
+
+   For each layer I compute E(Sf_I, <0>) | E(Sf_I, <1>) |  E(Sf_I, <2>) | ...
+   and parse the output as:
+
+   Length             Purpose                    Notation
+   ------             -------                    --------
+   BC_BLOCK_LEN       forward Nonce              Nf_I
+   BC_KEY_LEN         forward BC Key             KDf_I
+   HASH_KEY_LEN       forward poly hash key      HDf_I
+   BC_KEY_LEN         new forward Seed           Sf'_I
+
+   Discard excess bytes, replace Sf_I with Sf'_I, and set LNf_n and LTf_I
+   to the zero string.
+
+   Similarly for the backward direction, compute E(Sb_I, <0>) | E(Sb_I, <1>)
+  | E(Sb_I, <2>) | ... and parse the output as:
+
+   Length             Purpose                    Notation
+   ------             -------                    --------
+   BC_BLOCK_LEN       backward Nonce             Nb_I
+   BC_KEY_LEN         forward BC Key             KDb_I
+   HASH_KEY_LEN       forward poly hash key      HDb_I
+   BC_KEY_LEN         new backward Seed          Sb'_I
+
+   Discard excess bytes, replace Sb_I with Sb'_I, and set LNb_n and LTb_I
+   to the zero string.
+
+   NOTE: For layers n-1 to 1 the values Nf_I, KDf_I, HDf_I, Sf_I and their
+   backward counterparts are only required in order to support leaky
+   pipes. If leaky pipes is not required these values can be safely
+   omitted.
+
+
+3. Routing relay cells
+
+   Let n denote the number of nodes in the circuit. Then encryption layer n
+   corresponds to the encryption between the OP and the exit/destination
+   node.
+
+
+3.1. Forward Direction
+
+   The forward direction is the direction that CREATE/CREATE2 cells
+   are sent.
+
+
+3.1.1. Routing From the Origin
+
+   When an OP sends a relay cell, the cell is produced as follows:
+
+   The OP computes E(Sf_n, <0>) | E(Sf_n, <1>) |  E(Sf_n, <2>) | ...
+   and parses the output as
+
+   Length             Purpose                    Notation
+   ------             -------                    --------
+   509                encryption pad             Z
+   BC_BLOCK_LEN       backward Nonce             Nf'_I
+   BC_KEY_LEN         forward BC Key             KDf'_I
+   HASH_KEY_LEN       forward poly hash key      HDf'_I
+   BC_KEY_LEN         new forward Seed           Sf'_I
+
+   Excess bytes are discarded. It then computes the n'th layer ciphertext
+   (Tf_n, Cf_n) as follows:
+
+   Cf_n = M ^ Z
+   X_n = PH(HDf_n, (LNf_n | Cf_n))
+   Y_n = Nf_n ^ X_n
+   Tf_n = E(KDf_n, Y_n) ^ X_n)
+
+   and updates its state by overwriting the old variables with the new
+   ones.
+
+   LNf_n = Nf_n
+   Nf_n = Nf'_n
+   KDf_n = KDf'_n
+   HDf_n = HDf'_n
+   Sf_n = Sf'_n
+
+   It then applies the remaining n-1 layers of encryption to (Tf_n, Cf_n)
+   as follows:
+
+   For I = n-1 to 1:
+     IV = INT(Tf_{I+1})
+     Z  = E(JSf_I, <IV>) | E(JSf_I, <IV+1>) | ... | E(JSf_I, <IV+31>)
+     % BC_BLOCK_LEN = 16
+     Cf_I = Cf_{I+1} ^ Z[1, 509]
+     X_I = PH(HSf_n, (LTf_{I+1} | Cf_I))
+     Y_I = Tf_I ^ X_I
+     Tf_I = E(KSf_I, Y_I) ^ X_I
+     LTf_{I+1} = Tf_{I+1}
+
+   Upon completion the OP sends (Tf_1, Cf_1) to node 1.
+
+
+3.1.2. Relaying Forward at Onion Routers
+
+   When a forward relay cell (Tf_I, Cf_I) is received by OR I, it decrypts
+   it performs the following set of steps:
+
+   'Forward' relay cell:
+
+    X_I = PH(HDf_n, (LNf_I | Cf_I))
+    Y_I = Tf_I ^ X_I
+    if (Nf_I == D(KDf_I, Y_I) ^ X_I)  % cell recognized and authenticated
+      compute E(Sf_I, <0>) | E(Sf_I, <1>) |  E(Sf_I, <2>) | ... and parse the
+      output as Z, Nf'_I, KDf'_I, HDf'_I, Sf'_I
+
+      M = Cf_n ^ Z
+      LNf_I = Nf_I
+      Nf_I = Nf'_I
+      KDf_I = KDf'_I
+      HDf_I = HDf'_I
+      Sf_I = Sf'_I
+
+      return M
+
+    else if (I == n)    % last node, decryption has failed
+      send DESTROY cell to tear down the circuit
+
+    else    % decrypt and forward cell
+      X_I = PH(HSf_I, (LTf_{I+1} | Cf_I))
+      Y_I = Tf_I ^ X_I
+      Tf_{I+1} = D(KSf_I, Y_I) ^ X_I
+      IV = INT(Tf_{I+1})
+      Z  = E(JSf_I, <IV>) | E(JSf_I, <IV+1>) | ... | E(JSf_I, <IV+31>)
+      % BC_BLOCK_LEN = 16
+      Cf_{I+1} = Cf_I ^ Z[1, 509]
+
+      forward (Tf_{I+1}, Cf_{I+1}) to OR I+1
+
+3.2. Backward Direction
+
+   The backward direction is the opposite direction from
+   CREATE/CREATE2 cells.
+
+3.2.1. Routing From the Exit Node
+
+   At OR n encryption proceeds as follows:
+
+   It computes E(Sb_n, <0>) | E(Sb_n, <1>) |  E(Sb_n, <2>) | ...
+   and parses the output as
+
+   Length             Purpose                    Notation
+   ------             -------                    --------
+   509                encryption pad             Z
+   BC_BLOCK_LEN       backward Nonce             Nb'_I
+   BC_KEY_LEN         forward BC Key             KDb'_I
+   HASH_KEY_LEN       forward poly hash key      HDb'_I
+   BC_KEY_LEN         new forward Seed           Sb'_I
+
+   Excess bytes are discarded. It then computes the ciphertext
+   (Tf_n, Cf_n) as follows:
+
+   Cb_n = M ^ Z
+   X_n = PH(HDb_n, (LNb_n | Cb_n))
+   Y_n = Nb_n ^ X_n
+   Tb_n = E(KDb_n, Y_n) ^ X_n)
+
+   and updates its state by overwriting the old variables with the new
+   ones.
+
+   LNb_n = Nb_n
+   Nb_n = Nb'_n
+   KDb_n = KDb'_n
+   HDb_n = HDb'_n
+   Sb_n = Sb'_n
+
+
+3.2.2. Relaying Backward at the Onion Routers
+
+   At OR I (for I < n) when a ciphertext (Tb_I, Cb_I) in the backward
+   direction is received it is processed as follows:
+
+   X_I = PH(HSb_n, (LTb_{I-1} | Cb_I))
+   Y_I = Tb_I ^ X_I
+   Tb_{I-1} = D(KSb_I, Y_I) ^ X_I
+   IV = INT(Tb_{I-1})
+   Z  = E(JSb_I, <IV>) | E(JSb_I, <IV+1>) | ... | E(JSb_I, <IV+31>)
+   % BC_BLOCK_LEN = 16
+   Cb_{I-1} = Cb_I ^ Z[1, 509]
+
+   The ciphertext (Tb_I, Cb_I) is then passed along the circuit towards
+   the OP.
+
+
+3.2.2. Routing to the Origin
+
+   When a ciphertext (Tb_1, Cb_1) arrives at an OP, the OP decrypts it in
+   two stages. It first reverses the layers from 1 to n-1 as follows:
+
+   For I = 1 to n-1:
+     X_I = PH(HSb_I, (LTb_{I+1} | Cb_I))
+     Y_I = Tb_I ^ X_I
+     Tb_{I+1} = E(KSb_I, Y_I) ^ X_I
+     IV = INT(Tb_{I+1})
+     Z  = E(JSb_I, <IV>) | E(JSb_I, <IV+1>) | ... | E(JSb_I, <IV+31>)
+     % BC_BLOCK_LEN = 16
+     Cb_{I+1} = Cb_I ^ Z[1, 509]
+
+   Upon completion the n'th layer of encryption is removed as follows:
+
+   X_n = PH(HDb_n, (LNb_n | Cb_n))
+   Y_n = Tb_n ^ X_n
+   if (Nb_n = D(KDb_n, Y_n) ^ X_n)     % authentication is successful
+     compute E(Sb_n, <0>) | E(Sb_n, <1>) |  E(Sb_n, <2>) | and parse the
+     output as Z, Nb'_n, KDb'_n, HDb'_n, Sb'_n
+
+     M = Cb_n ^ Z
+     LNb_n = Nb_n
+     Nb_n = Nb'_n
+     KDb_n = KDb'_n
+     HDb_n = HDb'_n
+     Sb_n = Sb'_n
+
+     return M
+
+   else
+     send DESTROY cell to tear down the circuit
+
+
+4. Application connections and stream management
+
+4.1. Amendments to the Relay Cell Format
+
+   Within a circuit, the OP and the end node use the contents of
+   RELAY packets to tunnel end-to-end commands and TCP connections
+   ("Streams") across circuits. End-to-end commands can be initiated
+   by either edge; streams are initiated by the OP.
+
+   The payload of each unencrypted RELAY cell consists of:
+
+       Relay command           [1 byte]
+       StreamID                [2 bytes]
+       Length                  [2 bytes]
+       Data                    [PAYLOAD_LEN-21 bytes]
+
+   The old Digest field is removed since sufficient information for
+   authentication is now included in the nonce part of the payload.
+
+   The old 'Recognized' field is removed. Instead a cell is recognized
+   via a partial decryption using the node's dynamic keys - namely the
+   following steps (already included in Section 3):
+
+   Forward direction:
+
+   X_I = PH(HDf_n, (LNf_I | Cf_I))
+   Y_I = Tf_I ^ X_I
+   if (Nf_I == D(KDf_I, Y_I) ^ X_I)  % cell is recognized and authenticated
+
+   Backward direction (executed by the OP):
+
+   If the OP is aware of the number of layers present in the cell there
+   is no need to attempt to recognize the cell. Otherwise the OP can, for
+   each layer, first attempt a partial decryption using the dynamic keys
+   for that layer as follows:
+
+   X_I = PH(HDb_I, (LNb_I | Cb_I))
+   Y_I = Tb_I ^ X_I
+   if (Nb_I = D(KDb_I, Y_I) ^ X_I)    % cell is recognized and authenticated
+
+   The 'Length' field of a relay cell contains the number of bytes
+   in the relay payload which contain real payload data. The
+   remainder of the payload is padding bytes.
+
+4.2. Appending the encrypted nonce and dealing with version-homogenic
+     and version-heterogenic circuits
+
+   When a cell is prepared to be routed from the origin (see Section
+   3.1.1) the encrypted nonce N is appended to the encrypted cell
+   (occupying the last 16 bytes of the cell). If the cell is prepared to
+   be sent to a node supporting the new protocol, S is combined with other
+   sources to generate the layer's nonce. Otherwise, if the node only
+   supports the old protocol, n is still appended to the encrypted cell
+   (so that following nodes can still recover their nonce), but a
+   synchronized nonce (as per the old protocol) is used in CTR-mode.
+
+   When a cell is sent along the circuit in the 'backward' direction,
+   nodes supporting the new protocol always assume that the last 16 bytes
+   of the input are the nonce used by the previous node, which they
+   process as per Section 3.2.1. If the previous node also supports the
+   new protocol, these cells are indeed the nonce. If the previous node
+   only supports the old protocol, these bytes are either encrypted
+   padding bytes or encrypted data.
+
+5. Security and Design Rationale
+
+   We are currently working on a security proof to better substantiate our
+   security claims. Below is a short informal summary on the security of
+   CGO and its design rationale.
+
+5.1. Resistance to crypto-tagging attacks
+
+   Protection against crypto-tagging attacks is provided by layers n-1 to
+   1. This part of the scheme is based on the paradigm from [ADL17] which
+   has the property that if any single bit of the OR's input is changed
+   then all of the OR's output will be randomised. Specifically, if
+   (Tf_I, Cf_I) is travelling in the forward direction and is processed by
+   an honest node I, a single bit flip to either Tf_I or Cf_I will result
+   in both Tf_{I+1} and Cf_{I+1} being completely randomised. In addition,
+   the processing of (Tf_I, Cf_I) includes LTf_{I+1} so that any
+   modification to (Tf_I, Cf_I) at time j will in turn randomise the value
+   (Tf_{I+1}, Cf_{I+1}) at any time >= j . Thus once a circuit is tampered
+   with it is not possible to recover from it at a later stage. This helps
+   to protect against the standard crypto-tagging attack and variations
+   thereof (Section 5.2 in [DS18]). A similar argument holds in the
+   backward direction.
+
+
+5.2. End-to-end authenticated encryption
+
+   Layer n provides end-to-end authenticated encryption. Similar to the
+   old protocol, this proposal only offers end-to-end authentication
+   rather than per-hop authentication. However, CGO provides 128-bit
+   authentication as opposed to the 32-bit authentication provided by the
+   old protocol. A main observation underpinning the design of CGO is
+   that the n'th layer does not need to be secure against the release of
+   unverified plaintext (RUP). RUP security is only needed to protect
+   against tagging attacks and the n'th layer does not help in that regard
+   (but the layers below do). Consequently we employ a different scheme at
+   the n'th layer which is designed to provide forward-secure
+   authenticated encryption.
+
+
+5.3 Forward Security
+
+   As mentioned in the previous section CGO provides end-to-end
+   authenticated encryption that is also forward secure. Our notion of
+   forward security follows the definitions of Bellare and Yee [BY03] for
+   both confidentiality and authenticity. Forward-secure confidentiality
+   says that upon corrupting either the sender (or the receiver), the
+   secrecy of the messages that have already been sent (or received) is
+   still guaranteed. As for forward-secure authentication, upon corrupting
+   the sender the authenticity of previously authenticated messages is
+   still guaranteed (even if they have not yet been received). In order to
+   achieve forward-secure authenticated encryption, CGO updates the key
+   material of the n'th layer encryption with every cell that is
+   processed. In order to support leaky pipes the lower layers also need
+   to maintain a set of dynamic keys that are used to recognize cells that
+   are intended for them. This key material is only used for partial
+   processing, i.e. recognizing the cell, and is only updated if
+   verification is successful. If the cell is not recognized, the node
+   reverts to processing the cell with the static key material. If support
+   for leaky-pipes is not required this extra processing can be omitted.
+
+
+6. Efficiency Considerations
+
+   Although we have not carried out any experiments to verify this, we
+   expect CGO to perform relatively well in terms of efficiency. Firstly,
+   it manages to achieve forward security with just a universal hash as
+   opposed to other proposals which suggested the use of SHA2 or SHA3. In
+   this respect we recommend using POLYVAL [GLL18], a variant of GHASH
+   that is more compatible with Intel's PCMULQDQ instruction. Furthermore
+   CGO admits a certain degree of parallelisability. Supporting leaky
+   pipes requires an OR to first verify the cell using the the dynamic key
+   material and if the cell is unrecognised it goes on to process the cell
+   with the static key material. The important thing to note (see for
+   instance Section 3.1.2) is that the initial processing of the cell
+   using the static key material is almost identical to the verification
+   using the dynamic key material, and the two computations are
+   independent of each other. As such, although in Section 3 these were
+   described as being evaluated sequentially, they can in fact be computed
+   in parallel. In particular the two polynomial hashes could be computed
+   in parallel by using the new vectorised VPCMULQDQ instruction.
+
+   We are currently looking into further optimisations of the scheme as
+   presented here. One such optimisation is the possibility of removing
+   KDf_I and KDb_I while retaining forward security. This would further
+   improve the efficiency of the scheme by reducing the amount of dynamic
+   key material that needs to be updated with every cell that is processed.
+
+
+References
+
+[ADL17] Tomer Ashur, Orr Dunkelman, Atul Luykx, "Boosting Authenticated
+Encryption Robustness with Minimal Modifications", CRYPTO 2017.
+
+[BY03] Mihir Bellare, Bennett Yee, "Forward-Security in Private-Key
+Cryptography", CT-RSA 2003.
+
+[DS18] Jean Paul Degabriele, Martijn Stam, "Untagging Tor: A Formal
+Treatment of Onion Encryption", EUROCRYPT 2018.
+
+[GLL18] Shay Gueron, Adam Langley, Yehuda Lindell, "AES-GCM-SIV: Nonce
+Misuse-Resistant Authenticated Encryption", RFC 8452, April 2019.
+
+[ST13] Thomas Shrimpton, R. Seth Terashima, "A Modular Framework for
+Building Variable-Input Length Tweakable Ciphers", ASIACRYPT 2013.
