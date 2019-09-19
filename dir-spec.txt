@@ -634,10 +634,10 @@
 
         The "Method" describes how a Bridge address is distributed by
         BridgeDB. Recognized methods are: "none", "any", "https", "email",
-        "moat", "hyphae". If set to "none", BridgeDB will avoid distributing
-        your bridge address. If set to "any", BridgeDB will choose how to
-        distribute your bridge address. Choosing any of the other methods will
-        tell BridgeDB to distribute your bridge via a specific method:
+        "moat". If set to "none", BridgeDB will avoid distributing your bridge
+        address. If set to "any", BridgeDB will choose how to distribute your
+        bridge address. Choosing any of the other methods will tell BridgeDB to
+        distribute your bridge via a specific method:
 
           - "https" specifies distribution via the web interface at
              https://bridges.torproject.org;
@@ -645,8 +645,6 @@
             bridges@torproject.org;
           - "moat" specifies distribution via an interactive menu inside Tor
             Browser; and
-          - "hyphae" specifies distribution via a cryptographically-secure,
-            invitation-based system.
 
         Potential future "Method" specifiers must be as follows:
             Method = (KeywordChar | "_") +
