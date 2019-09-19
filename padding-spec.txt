@@ -543,7 +543,7 @@ A. Acknowledgments
 14. http://www.ntop.org/wp-content/uploads/2013/03/nProbe_UserGuide.pdf
 15. http://arxiv.org/pdf/1512.00524
 16. https://www.cs.kau.se/pulls/hot/thebasketcase-ape/
-17. XXX-dev-doc
+17. https://github.com/torproject/tor/tree/master/doc/HACKING/CircuitPaddingDevelopment.md
 18. https://www.usenix.org/node/190967
     https://blog.torproject.org/technical-summary-usenix-fingerprinting-paper
 
