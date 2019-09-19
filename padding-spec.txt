@@ -10,8 +10,6 @@ various traffic patterns from external and internal observers. Other
 implementations MAY take other approaches, but implementors should be aware of
 the anonymity and load-balancing implications of their choices.
 
-                          THIS SPEC ISN'T DONE YET.
-
       The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
       NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
       "OPTIONAL" in this document are to be interpreted as described in
@@ -528,8 +526,6 @@ A. Acknowledgments
 
   This research was supported in part by NSF grants CNS-1111539,
   CNS-1314637, CNS-1526306, CNS-1619454, and CNS-1640548.
-
-  XXX: There's more CNS numbers now..
 
 1. https://en.wikipedia.org/wiki/NetFlow
 2. http://infodoc.alcatel-lucent.com/html/0_add-h-f/93-0073-10-01/7750_SR_OS_Router_Configuration_Guide/Cflowd-CLI.html
