@@ -1,6 +1,6 @@
                          Tor Padding Specification
 
-                                Mike Perry
+                        Mike Perry, George Kadianakis
 
 Note: This is an attempt to specify Tor as currently implemented.  Future
 versions of Tor will implement improved algorithms.
@@ -9,8 +9,6 @@ This document tries to cover how Tor chooses to use cover traffic to obscure
 various traffic patterns from external and internal observers. Other
 implementations MAY take other approaches, but implementors should be aware of
 the anonymity and load-balancing implications of their choices.
-
-                          THIS SPEC ISN'T DONE YET.
 
       The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
       NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
@@ -35,9 +33,15 @@ the anonymity and load-balancing implications of their choices.
   padding to be sent to any intermediate node in a circuit (as per Section
   6.1 of tor-spec.txt).
 
-  Currently, only single-hop CELL_PADDING is used by Tor. It is described in
-  Section 2. At a later date, further sections will be added to this document
-  to describe various uses of multi-hop circuit-level padding.
+  Tor uses both connection level and circuit level padding. Connection
+  level padding is described in section 2. Circuit level padding is
+  described in section 3.
+
+  The circuit-level padding system is completely orthogonal to the
+  connection-level padding. The connection-level padding system regards
+  circuit-level padding as normal data traffic, and hence the connection-level
+  padding system will not add any additional overhead while the circuit-level
+  padding system is actively padding.
 
 
 2. Connection-level padding
@@ -274,6 +278,250 @@ the anonymity and load-balancing implications of their choices.
         open.
       - Default: 3600
 
+
+3. Circuit-level padding
+
+  The circuit padding system in Tor is an extension of the WTF-PAD
+  event-driven state machine design[15]. At a high level, this design places
+  one or more padding state machines at the client, and one or more padding
+  state machines at a relay, on each circuit.
+
+  State transition and histogram generation has been generalized to be fully
+  programmable, and probability distribution support was added to support more
+  compact representations like APE[16]. Additionally, packet count limits,
+  rate limiting, and circuit application conditions have been added.
+
+  At present, Tor uses this system to deploy two pairs of circuit padding
+  machines, to obscure differences between the setup phase of client-side
+  onion service circuits, up to the first 10 cells.
+
+  This specification covers only the resulting behavior of these padding
+  machines, and thus does not cover the state machine implementation details or
+  operation. For full details on using the circuit padding system to develop
+  future padding defenses, see the research developer documentation[17].
+
+3.1. Circuit Padding Negotiation
+
+  Circuit padding machines are advertised as "Padding" subprotocol versions
+  (see tor-spec.txt Section 9). The onion service circuit padding machines are
+  advertised as "Padding=2".
+
+  Because circuit padding machines only become active at certain points in
+  circuit lifetime, and because more than one padding machine may be active at
+  any given point in circuit lifetime, there is also a padding negotiation cell,
+  with fields as follows:
+
+     const CIRCPAD_COMMAND_STOP = 1;
+     const CIRCPAD_COMMAND_START = 2;
+
+     const CIRCPAD_RESPONSE_OK = 1;
+     const CIRCPAD_RESPONSE_ERR = 2;
+
+     const CIRCPAD_MACHINE_CIRC_SETUP = 1;
+
+     struct circpad_negotiate {
+       u8 version IN [0];
+       u8 command IN [CIRCPAD_COMMAND_START, CIRCPAD_COMMAND_STOP];
+
+       u8 machine_type IN [CIRCPAD_MACHINE_CIRC_SETUP];
+     };
+
+  When a client wants to start a circuit padding machine, it first checks that
+  the desired destination hop advertises the appropriate subprotocol version for
+  that machine. It then sends a circpad_negotiate cell to that hop with
+  command=CIRCPAD_COMMAND_START, and machine_type=CIRCPAD_MACHINE_CIRC_SETUP (for
+  the circ setup machine, the destination hop is the second hop in the circuit).
+
+  When a relay receives a circpad_negotiate cell, it checks that it supports
+  the requested machine, and sends a circpad_negotiated cell, which is formatted
+  as follows:
+
+     struct circpad_negotiated {
+       u8 version IN [0];
+       u8 command IN [CIRCPAD_COMMAND_START, CIRCPAD_COMMAND_STOP];
+       u8 response IN [CIRCPAD_RESPONSE_OK, CIRCPAD_RESPONSE_ERR];
+
+       u8 machine_type IN [CIRCPAD_MACHINE_CIRC_SETUP];
+     };
+
+  If the machine is supported, the response field will contain
+  CIRCPAD_RESPONSE_OK. If it is not, it will contain CIRCPAD_RESPONSE_ERR.
+
+  Either side may send a CIRCPAD_COMMAND_STOP to shut down the padding machines
+  (clients MUST only send circpad_negotiate, and relays MUST only send
+  circpad_negotiated for this purpose).
+
+3.2. Circuit Padding Machine Message Management
+
+  Clients MAY send padding cells towards the relay before receiving the
+  circpad_negotiated response, to allow for outbound cover traffic before
+  negotiation completes.
+
+  Clients MAY send another circpad_negotiate cell before receiving the
+  circpad_negotiated response, to allow for rapid machine changes.
+
+  Relays MUST NOT send padding cells or circpad_negotiated cells, unless a
+  padding machine is active. Any padding-related cells that arrive at the client
+  from unexpected relay sources are protocol violations, and clients MAY
+  immediately tear down such circuits to avoid side channel risk.
+
+3.3. Obfuscating client-side onion service circuit setup
+
+  The circuit padding currently deployed in Tor attempts to hide client-side
+  onion service circuit setup. Service-side setup is not covered, because doing
+  so would involve significantly more overhead, and/or require interaction with
+  the application layer.
+
+  The approach taken aims to make client-side introduction and rendezvous
+  circuits match the cell direction sequence and cell count of 3 hop general
+  circuits used for normal web traffic, for the first 10 cells only. The
+  lifespan of introduction circuits is also made to match the lifespan
+  of general circuits.
+
+  Note that inter-arrival timing is not obfuscated by this defense.
+
+3.3.1. Common general circuit construction sequences
+
+  Most general Tor circuits used to surf the web or download directory
+  information start with the following 6-cell relay cell sequence (cells
+  surrounded in [brackets] are outgoing, the others are incoming):
+
+    [EXTEND2] -> EXTENDED2 -> [EXTEND2] -> EXTENDED2 -> [BEGIN] -> CONNECTED
+
+  When this is done, the client has established a 3-hop circuit and also opened
+  a stream to the other end. Usually after this comes a series of DATA cell that
+  either fetches pages, establishes an SSL connection or fetches directory
+  information:
+
+    [DATA] -> [DATA] -> DATA -> DATA...(inbound cells continue)
+
+  The above stream of 10 relay cells defines the grand majority of general
+  circuits that come out of Tor browser during our testing, and it's what we use
+  to make introduction and rendezvous circuits blend in.
+
+  Please note that in this section we only investigate relay cells and not
+  connection-level cells like CREATE/CREATED or AUTHENTICATE/etc. that are used
+  during the link-layer handshake. The rationale is that connection-level cells
+  depend on the type of guard used and are not an effective fingerprint for a
+  network/guard-level adversary.
+
+3.3.2 Client-side onion service introduction circuit obfuscation
+
+  Two circuit padding machines work to hide client-side introduction circuits:
+  one machine at the origin, and one machine at the second hop of the circuit.
+  Each machine sends padding towards the other. The padding from the origin-side
+  machine terminates at the second hop and does not get forwarded to the actual
+  introduction point.
+
+  From Section 3.3.1 above, most general circuits have the following initial
+  relay cell sequence (outgoing cells marked in [brackets]):
+
+  [EXTEND2] -> EXTENDED2 -> [EXTEND2] -> EXTENDED2 -> [BEGIN] -> CONNECTED
+    -> [DATA] -> [DATA] -> DATA -> DATA...(inbound data cells continue)
+
+  Whereas normal introduction circuits usually look like:
+
+  [EXTEND2] -> EXTENDED2 -> [EXTEND2] -> EXTENDED2 -> [EXTEND2] -> EXTENDED2
+    -> [INTRO1] -> INTRODUCE_ACK
+
+  This means that up to the sixth cell (first line of each sequence above),
+  both general and intro circuits have identical cell sequences. After that
+  we want to mimic the second line sequence of
+    -> [DATA] -> [DATA] -> DATA -> DATA...(inbound data cells continue)
+
+  We achieve this by starting padding INTRODUCE1 has been sent. With padding
+  negotiation cells, in the common case of the second line looks like:
+    -> [INTRO1] -> [PADDING_NEGOTIATE] -> PADDING_NEGOTIATED -> INTRO_ACK
+
+  Then, the middle node will send between INTRO_MACHINE_MINIMUM_PADDING (7) and
+  INTRO_MACHINE_MAXIMUM_PADDING (10) cells, to match the "...(inbound data cells
+  continue)" portion of the trace (aka the rest of an HTTPS response body).
+
+  We also set a special flag which keeps the circuit open even after the
+  introduction is performed. With this feature the circuit will stay alive for
+  the same duration as normal web circuits before they expire (usually 10
+  minutes).
+
+3.3.3. Client-side rendezvous circuit hiding
+
+  Following a similar argument as for intro circuits, we are aiming for padded
+  rendezvous circuits to blend in with the initial cell sequence of general
+  circuits which usually look like this:
+
+  [EXTEND2] -> EXTENDED2 -> [EXTEND2] -> EXTENDED2 -> [BEGIN] -> CONNECTED
+     -> [DATA] -> [DATA] -> DATA -> DATA...(incoming cells continue)
+
+  Whereas normal rendezvous circuits usually look like:
+
+  [EXTEND2] -> EXTENDED2 -> [EXTEND2] -> EXTENDED2 -> [EST_REND] -> REND_EST
+     -> REND2 -> [BEGIN]
+
+  This means that up to the sixth cell (the first line), both general and
+  rend circuits have identical cell sequences.
+
+  After that we want to mimic a [DATA] -> [DATA] -> DATA -> DATA sequence.
+
+  With padding negotiation right after the REND_ESTABLISHED, the sequence
+  becomes:
+
+  [EXTEND2] -> EXTENDED2 -> [EXTEND2] -> EXTENDED2 -> [EST_REND] -> REND_EST
+     -> [PADDING_NEGOTIATE] -> [DROP] -> PADDING_NEGOTIATED -> DROP...
+
+  After which normal application DATA cells continue on the circuit.
+
+  Hence this way we make rendezvous circuits look like general circuits up
+  till the end of the circuit setup.
+
+  After that our machine gets deactivated, and we let the actual rendezvous
+  circuit shape the traffic flow. Since rendezvous circuits usually imitate
+  general circuits (their purpose is to surf the web), we can expect that they
+  will look alike.
+
+3.3.4. Circuit setup machine overhead
+
+  For the intro circuit case, we see that the origin-side machine just sends a
+  single [PADDING_NEGOTIATE] cell, whereas the origin-side machine sends a
+  PADDING_NEGOTIATED cell and between 7 to 10 DROP cells. This means that the
+  average overhead of this machine is 11 padding cells per introduction circuit.
+
+  For the rend circuit case, this machine is quite light. Both sides send 2
+  padding cells, for a total of 4 padding cells.
+
+3.4. Circuit padding consensus parameters
+
+  The circuit padding system has a handful of consensus parameters that can
+  either disable circuit padding entirely, or rate limit the total overhead
+  at relays and clients.
+
+  * circpad_padding_disabled
+    - If set to 1, no circuit padding machines will negotiate, and all
+      current padding machines will cease padding immediately.
+    - Default: 0
+
+  * circpad_padding_reduced
+    - If set to 1, only circuit padding machines marked as "reduced"/"low
+      overhead" will be used. (Currently no such machines are marked
+      as "reduced overhead").
+    - Default: 0
+
+  * circpad_global_allowed_cells
+    - This is the number of padding cells that must be sent before
+      the 'circpad_global_max_padding_percent' parameter is applied.
+    - Default: 0
+
+  * circpad_global_max_padding_percent
+    - This is the maximum ratio of padding cells to total cells, specified
+      as a percent. If the global ratio of padding cells to total cells
+      across all circuits exceeds this percent value, no more padding is sent
+      until the ratio becomes lower. 0 means no limit.
+    - Default: 0
+
+  * circpad_max_circ_queued_cells
+    - This is the maximum number of cells that can be in the circuitmux queue
+      before padding stops being sent on that circuit.
+    - Default: CIRCWINDOW_START_MAX (1000)
+
+
 A. Acknowledgments
 
   This research was supported in part by NSF grants CNS-1111539,
@@ -293,3 +541,9 @@ A. Acknowledgments
 12. http://freehaven.net/anonbib/cache/murdoch-pet2007.pdf
 13. https://gitweb.torproject.org/torspec.git/tree/proposals/188-bridge-guards.txt
 14. http://www.ntop.org/wp-content/uploads/2013/03/nProbe_UserGuide.pdf
+15. http://arxiv.org/pdf/1512.00524
+16. https://www.cs.kau.se/pulls/hot/thebasketcase-ape/
+17. https://github.com/torproject/tor/tree/master/doc/HACKING/CircuitPaddingDevelopment.md
+18. https://www.usenix.org/node/190967
+    https://blog.torproject.org/technical-summary-usenix-fingerprinting-paper
+

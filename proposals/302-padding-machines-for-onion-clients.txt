@@ -2,8 +2,10 @@ Filename: 302-padding-machines-for-onion-clients.txt
 Title: Hiding onion service clients using padding
 Author: George Kadianakis, Mike Perry
 Created: Thursday 16 May 2019
-Status: Accepted
-Ticket: #28634
+Status: Closed
+Implemented-In: 0.4.1.1-alpha
+
+NOTE: Please look at section 3 of padding-spec.txt now, not this document.
 
 0. Overview
 
