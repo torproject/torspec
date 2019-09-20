@@ -2105,7 +2105,13 @@
       "650" SP "STREAM" SP StreamID SP StreamStatus SP CircuitID SP Target
           [SP "REASON=" Reason [ SP "REMOTE_REASON=" Reason ]]
           [SP "SOURCE=" Source] [ SP "SOURCE_ADDR=" Address ":" Port ]
-          [SP "PURPOSE=" Purpose]
+          [SP "PURPOSE=" Purpose] [SP "SOCKS_USERNAME=" EscapedUsername]
+          [SP "SOCKS_PASSWORD=" EscapedPassword]
+          [SP "CLIENT_PROTOCOL=" ClientProtocol] SP "NYM_EPOCH=" NymEpoch
+          SP "SESSION_GROUP=" SessionGroup SP "ISO_DESTPORT=" IsoDestPort
+          SP "ISO_DESTADDR=" IsoDestAddr SP "ISO_SOCKSAUTH=" IsoSocksAuth
+          SP "ISO_CLIENTPROTO=" IsoClientProto
+          SP "ISO_CLIENTADDR=" IsoClientAddr
           CRLF
 
       StreamStatus =
@@ -2122,6 +2128,26 @@
        Target = TargetAddress ":" Port
        Port = an integer from 0 to 65535 inclusive
        TargetAddress = Address / "(Tor_internal)"
+
+       EscapedUsername = QuotedString
+       EscapedPassword = QuotedString
+
+       ClientProtocol =
+               "SOCKS4"  /
+               "SOCKS5"  /
+               "TRANS"   /
+               "NATD"    /
+               "DNS"     /
+               "UNKNOWN"
+
+       NymEpoch = a nonnegative integer
+       SessionGroup = an integer
+
+       IsoDestPort = a Boolean
+       IsoDestAddr = a Boolean
+       IsoSocksAuth = a Boolean
+       IsoClientProto = a Boolean
+       IsoClientAddr = a Boolean
 
   The circuit ID designates which circuit this stream is attached to.  If
   the stream is unattached, the circuit ID "0" is given.  The target
@@ -2179,6 +2205,34 @@
        "DNS_REQUEST" -- A user-initiated DNS request.
        "USER" -- This stream is handling user traffic, OR it's internal
          to Tor, but it doesn't match one of the purposes above.
+
+   The "SOCKS_USERNAME" and "SOCKS_PASSWORD" fields indicate the credentials
+   that were used by a SOCKS client to connect to Tor's SOCKS port and
+   initiate this stream. (Streams for SOCKS clients connected with different
+   usernames and/or passwords are isolated on separate circuits if the
+   IsolateSOCKSAuth flag is active; see Proposal 171.)
+
+   The "CLIENT_PROTOCOL" field indicates the protocol that was used by a client
+   to initiate this stream. (Streams for clients connected with different
+   protocols are isolated on separate circuits if the IsolateClientProtocol
+   flag is active.)
+
+   The "NYM_EPOCH" field indicates the nym epoch that was active when a client
+   initiated this stream. The epoch increments when the NEWNYM signal is
+   received. (Streams with different nym epochs are isolated on separate
+   circuits.)
+
+   The "SESSION_GROUP" field indicates the session group of the listener port
+   that a client used to initiate this stream. By default, the session group is
+   different for each listener port, but this can be overridden for a listener
+   via the "SessionGroup" option in torrc. (Streams with different session
+   groups are isolated on separate circuits.)
+
+   The "ISO_DESTPORT", "ISO_DESTADDR", "ISO_SOCKSAUTH", "ISO_CLIENTPROTO", and
+   "ISO_CLIENTADDR" fields indicate the values of the "IsolateDestPort",
+   "IsolateDestAddr", "IsolateSOCKSAuth", "IsolateClientProtocol", and
+   "IsolateClientAddr" flags for the listener port that a client used to
+   initiate this stream.
 
 4.1.3. OR Connection status changed
 
