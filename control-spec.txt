@@ -1972,6 +1972,17 @@
           [SP "REASON=" Reason [SP "REMOTE_REASON=" Reason]]
           [SP "SOCKS_USERNAME=" EscapedUsername]
           [SP "SOCKS_PASSWORD=" EscapedPassword]
+          [SP "UNUSABLE_FOR_NEW_CONNS=" UnusableForNewConnections]
+          [SP "IDLE_TIMEOUT=" IdleTimeout]
+          [SP "EARLY_CELLS_SENT=" RelayEarlyCellsSent]
+          [SP "REMAINING_RELAY_EARLY_CELLS=" RemainingRelayEarlyCells]
+          [SP "PADDING_NEGOTIATION_FAILED=" PaddingNegotiationFailed]
+          [SP "PATH_STATE=" PathState]
+          [SP "HAS_RELAXED_TIMEOUT=" HasRelaxedTimeout]
+          [SP "IS_ANCIENT=" IsAncient]
+          [SP "HAS_OPENED=" HasOpened]
+          [SP "HS_HAS_TIMED_OUT=" HsHasTimedOut]
+          [SP "PREPEND_POLICY=" PrependPolicies]
           CRLF
 
       CircStatus =
@@ -2018,6 +2029,32 @@
                "OR_IDENTITY" / "OR_CONN_CLOSED" / "TIMEOUT" /
                "FINISHED" / "DESTROYED" / "NOPATH" / "NOSUCHSERVICE" /
                "MEASUREMENT_EXPIRED"
+
+      UnusableForNewConnections = Boolean
+
+      IdleTimeout = Boolean
+
+      RelayEarlyCellsSent = 1*DIGIT
+
+      RemainingRelayEarlyCells = 1*DIGIT
+
+      PaddingNegotiationFailed = Boolean
+
+      PathState = "NEW" / "BUILD_ATTEMPTED" / "BUILD_SUCCEEDED" /
+                  "USE_ATTEMPTED" / "USE_SUCCEEDED" / "USE_FAILED" /
+                  "ALREADY_COUNTED"
+
+      HasRelaxedTimeout = Boolean
+
+      IsAncient = Boolean
+
+      HasOpened = Boolean
+
+      HsHasTimedOut = Boolean
+
+      PrependPolicies = PrependPolicy *("," PrependPolicy)
+
+      PrependPolicy =  ("ACCEPT" / "REJECT") "_" Address ":" Port "-" Port
 
    The path is provided only when the circuit has been extended at least one
    hop.
@@ -2097,6 +2134,69 @@
    TRUNCATE cell, and only if extended events are enabled.  It contains the
    actual reason given by the remote OR for closing the circuit. Clients MUST
    accept reasons not listed above.  Reasons are as listed in tor-spec.txt.
+
+   The "UNUSABLE_FOR_NEW_CONNS" field is provided only in versions 0.4.3 and
+   later. UNUSABLE_FOR_NEW_CONNS is a boolean digit set to 1 if no new
+   connection can be opened on the circuit or 0 if further connections can be
+   opened. The circuit can be tagged as such in case of a broken connection or
+   if the circuit is too old.
+
+   The "IDLE_TIMEOUT" field is provided only in versions 0.4.3 and later.
+   IDLE_TIMEOUT describes the configured number of seconds before the circuit
+   will be closed if it remains idle, once built. Please note that this field
+   is not a countdown.
+
+   The "EARLY_CELLS_SENT" field is provided only in versions 0.4.3
+   and later. EARLY_CELLS_SENT is an integer value representing
+   the number of RELAY_EARLY commands already sent on this circuit.
+
+   The "REMAINING_RELAY_EARLY_CELLS" field is provided only in versions 0.4.3
+   and later. REMAINING_RELAY_EARLY_CELLS is an integer value representing
+   the number of RELAY_EARLY commands still available to send on this circuit.
+
+   The "PADDING_NEGOTIATION_FAILED" field is provided only in versions 0.4.3
+   and later. PADDING_NEGOTIATION_FAILED is a boolean digit set to 1 if the
+   negotiation for circuit padding has failed.
+
+   The "PATH_STATE" field is provided only in versions 0.4.3
+   and later. PATH_STATE describe the current circuit building process state.
+   This field is used for computing the rate of failures in circuit building
+   through nodes, in order to avoid attacks from malevolent nodes.
+   The states are described as follows:
+      NEW               (The circuit has not yet completed a first hop)
+      BUILD_ATTEMPTED   (The circuit has completed one or two hops)
+      BUILD_SUCCEEDED   (The circuit has been successfully built)
+      USE_ATTEMPTED     (An attempt to attach SOCKS streams or
+                         hidserv introductions has been made)
+      USE_SUCCEEDED     (An attachment succeeded on the circuit)
+      USE_FAILED        (Special state indicating a corrupted relay cell
+                         on the circuit)
+      ALREADY_COUNTED   (Special state to indicating that this circuit has
+                         already been counted in the path bias computation)
+      UNKNOWN           (We could not determine the path state)
+
+    The "HAS_RELAXED_TIMEOUT" field is provided only in versions 0.4.3
+    and later. HAS_RELAXED_TIMEOUT is a boolean set to 1 if the circuit did
+    timeout during its construction but was kept nonetheless.
+
+    The "IS_ANCIENT" field is provided only in versions 0.4.3 and later.
+    IS_ANCIENT is a boolean set to 1 if the circuit is old but do not
+    apply to being closed by tor, e.g. server-side intro circuits or
+    server-side rend joined circuits.
+
+    The "HAS_OPENED" field is provided only in versions 0.4.3 and later.
+    HAS_OPENED is a boolean set to 1 once the circuit has been opened.
+
+    The "HS_HAS_TIMED_OUT" field is provided only in versions 0.4.3 and later.
+    HS_HAS_TIMED_OUT is a boolean set to 1 when the circuit build time did time
+    out, but does not apply to being closed as the connection to an hidden
+    service might finish.
+
+    The "PREPEND_POLICY" field is provided only in versions 0.4.3 and later.
+    PREPEND_POLICY is a list of address policies set specifically for this
+    circuit. This list is mainly filled from the exit policy failures, filtering
+    addresses that are rejected by the exit node. However its use may evolve in
+    the future.
 
 4.1.2. Stream status changed
 
