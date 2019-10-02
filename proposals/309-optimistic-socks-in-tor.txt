@@ -1,0 +1,78 @@
+Filename: 309-optimistic-socks-in-tor.txt
+Title: Optimistic SOCKS Data
+Author: Tom Ritter
+Created: 21-June-2019
+Status: Draft
+Ticket: #5915
+
+0. Abstract
+
+   We propose that tor should have a SocksPort option that causes it to lie
+   to the application that the SOCKS Handshake has succeeded immediately,
+   allowing the application to begin sending data optimistically.
+
+1. Introduction
+
+   In the past, Tor Browser had a patch that allowed it to send data
+   optimistically. This effectively eliminated a round trip through the
+   entire circuit, reducing latency.
+
+   This feature was buggy, and specifically caused problems with MOAT, as
+   described in [0] and Tor Messenger as described in [1]. It is possible
+   that the other issues observed with it were the same issue, it is
+   possible they were different.
+
+   Rather than trying to identify and fix the problem in Tor Browser, an
+   alternate idea is to have tor lie to the application, causing it to send
+   the data optimistically. This can benefit all users of tor. This
+   proposal documents that idea.
+
+   [0] https://trac.torproject.org/projects/tor/ticket/24432#comment:19
+   [1] https://trac.torproject.org/projects/tor/ticket/19910#comment:3
+
+2. Proposal
+
+2.1. Behavior
+
+   When the SocksPort flag defined below is present, Tor will immediately
+   report a successful SOCKS handshake subject for non-onion connections.
+   If, later, tor recieves an end cell rather than a connected cell, it
+   will hang up the SOCKS connection.
+
+   The requirement to omit this for onion connections is because in
+   #30382 we implemented a mechanism to return a special SOCKS error code
+   if we are connecting to an onion site that requires authentication.
+   Returning an early success would prevent this from working.
+
+   Redesigning the mechanism to communicate auth-required onion sites to
+   the browser, while also supporting optimistic data, are left to a future
+   proposal.
+
+2.2. New SocksPort Flag
+
+   In order to have backward compatibility with third party applications that
+   do not support or do not want to use optimistic data, we propose a new
+   SocksPort flag that needs to be set in the tor configuration file in order
+   for the optimistic beahvior to occur.
+
+   The new SocksPort flag is:
+
+      "OptimisticData" -- Tor will immediately report a successful SOCKS
+                          handshake subject for non-onion connections and
+                          hang up if it gets an end cell rather than a
+                          connected cell.
+
+3. Application Error Handling
+
+   This behavior will cause the application talking to Tor to potentially
+   behave abnormally as it will believe that it has completed a TCP
+   connection. If no such connection can be made by tor, the program may
+   behave in a way that does not accurately represent the behavior of the
+   connection.
+
+   Applications SHOULD test various connection failure modes and ensure their
+   behavior is acceptable before using this feature. 
+
+References:
+
+[RFC1928] https://www.ietf.org/rfc/rfc1928.txt
