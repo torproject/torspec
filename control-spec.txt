@@ -1610,7 +1610,8 @@
 
     KeyBlob =
      "BEST"    / ; The server should generate a key using the "best"
-                   supported algorithm (KeyType == "NEW")
+                   supported algorithm (KeyType == "NEW").
+                   [As of 0.4.2.3-alpha, ED25519-V3 is used]
      "RSA1024" / ; The server should generate a 1024 bit RSA key
                    (KeyType == "NEW")
      "ED25519-V3"; The server should generate an ed25519 private key
@@ -1708,10 +1709,6 @@
   private keys as seeds, so we store the secret scalar alongside the
   PRF secret, and just pay the cost of recomputing the public key when
   importing an ED25519-V3 key.]
-
-  (The "NEW:BEST" option obeys the HiddenServiceVersion torrc option default
-  value. Since 0.3.5.1-alpha, it is 3. For Tor versions before 0.3.5.1-alpha,
-  default HiddenServiceVersion is 2.)
 
   Examples:
      C: ADD_ONION NEW:BEST Flags=DiscardPK Port=80
