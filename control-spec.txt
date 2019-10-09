@@ -2107,8 +2107,8 @@
           [SP "SOURCE=" Source] [ SP "SOURCE_ADDR=" Address ":" Port ]
           [SP "PURPOSE=" Purpose] [SP "SOCKS_USERNAME=" EscapedUsername]
           [SP "SOCKS_PASSWORD=" EscapedPassword]
-          [SP "CLIENT_PROTOCOL=" ClientProtocol] SP "NYM_EPOCH=" NymEpoch
-          SP "SESSION_GROUP=" SessionGroup SP "ISO_FIELDS=" IsoFields
+          [SP "CLIENT_PROTOCOL=" ClientProtocol] [SP "NYM_EPOCH=" NymEpoch]
+          [SP "SESSION_GROUP=" SessionGroup] [SP "ISO_FIELDS=" IsoFields]
           CRLF
 
       StreamStatus =
