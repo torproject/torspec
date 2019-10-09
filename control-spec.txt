@@ -2215,7 +2215,7 @@
    The "CLIENT_PROTOCOL" field indicates the protocol that was used by a client
    to initiate this stream. (Streams for clients connected with different
    protocols are isolated on separate circuits if the IsolateClientProtocol
-   flag is active.)
+   flag is active.)  Controllers MUST tolerate unrecognized client protocols.
 
    The "NYM_EPOCH" field indicates the nym epoch that was active when a client
    initiated this stream. The epoch increments when the NEWNYM signal is
