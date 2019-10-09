@@ -1624,7 +1624,7 @@
      "Detach"    / ; Do not associate the newly created Onion Service
                      to the current control connection.
      "BasicAuth" / ; Client authorization is required using the "basic"
-                     method.
+                     method (v2 only).
      "NonAnonymous" /; Add a non-anonymous Single Onion Service. Tor
                        checks this flag matches its configured hidden
                        service anonymity mode.
@@ -1668,11 +1668,11 @@
   way to recreate the generated keypair and the corresponding Onion
   Service at a later date).
 
-  If client authorization is enabled using the "BasicAuth" flag, the
-  service will not be accessible to clients without valid authorization
-  data (configured with the "HidServAuth" option).  The list of authorized
-  clients is specified with one or more "ClientAuth" parameters.  If
-  "ClientBlob" is not specified for a client, a new credential will be
+  If client authorization is enabled using the "BasicAuth" flag (which is v2
+  only), the service will not be accessible to clients without valid
+  authorization data (configured with the "HidServAuth" option).  The list of
+  authorized clients is specified with one or more "ClientAuth" parameters.
+  If "ClientBlob" is not specified for a client, a new credential will be
   randomly generated and returned.
 
   Tor instances can either be in anonymous hidden service mode, or
@@ -1724,7 +1724,7 @@
      S: 250-PrivateKey=RSA1024:[Blob Redacted]
      S: 250 OK
 
-     C: ADD_ONION NEW:BEST Flags=DiscardPK,BasicAuth Port=22
+     C: ADD_ONION NEW:RSA1024 Flags=DiscardPK,BasicAuth Port=22
         ClientAuth=alice:[Blob Redacted] ClientAuth=bob
      S: 250-ServiceID=testonion1234567
      S: 250-ClientAuth=bob:[Blob Redacted]
