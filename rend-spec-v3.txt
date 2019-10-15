@@ -468,8 +468,6 @@ Table of contents:
    optional client authorization is enabled, the service may additionally
    require the client to prove knowledge of a pre-shared private key.
 
-   (NOTE: client authorization is not implemented as of 0.3.2.1-alpha.)
-
 1.4. In more detail: Distributing hidden service descriptors. [IMD:DIST]
 
    Periodically, hidden service descriptors become stored at different
@@ -645,7 +643,7 @@ Table of contents:
 
    [TODO: Also specify stealth client authorization.]
 
-   (NOTE: client authorization is not implemented as of 0.3.2.1-alpha.)
+   (NOTE: client authorization is implemented as of 0.3.5.1-alpha.)
 
 2. Generating and publishing hidden service descriptors [HSDIR]
 
@@ -1193,8 +1191,6 @@ Table of contents:
      "auth-client" SP client-id SP iv SP encrypted-cookie
 
       [Any number]
-
-      (NOTE: client authorization is not implemented as of 0.3.2.1-alpha.)
 
       When client authorization is enabled, the hidden service inserts an
       "auth-client" line for each of its authorized clients. If client
@@ -2341,7 +2337,7 @@ Appendix F. Hidden service directory format [HIDSERVDIR-FORMAT]
 
    See section [CLIENT-AUTH-MGMT] for more details and the format of the client file.
 
-   (NOTE: client authorization is not implemented as of 0.3.2.1-alpha.)
+   (NOTE: client authorization is implemented as of 0.3.5.1-alpha.)
 
 Appendix G. Managing authorized client data [CLIENT-AUTH-MGMT]
 
@@ -2350,7 +2346,7 @@ Appendix G. Managing authorized client data [CLIENT-AUTH-MGMT]
   scheme for configuring client authorization. Please see appendix
   [HIDSERVDIR-FORMAT] for more information about relevant hidden service files.
 
-  (NOTE: client authorization is not implemented as of 0.3.2.1-alpha.)
+  (NOTE: client authorization is implemented as of 0.3.5.1-alpha.)
 
   G.1. Configuring client authorization using torrc
 
