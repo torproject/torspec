@@ -94,7 +94,7 @@ Status: Draft
                         (indexing starts at 1)
    INT(X)               Translate string X into an unsigned integer
 
-2.2. Security parameters %%%REVISE
+2.2. Security parameters
 
    POLY_HASH_LEN -- The length of the polynomial hash function's output,
    in bytes. For POLYVAL, POLY_HASH_LEN = 16.
@@ -112,11 +112,11 @@ Status: Draft
 
 2.3. Primitives
 
-   The polynomial hash function is POLYVAL with a HASH_KEY_LEN-bit key. We
+   The polynomial hash function is POLYVAL with a HASH_KEY_LEN-byte key. We
    write this as PH(H, M) where H is the key and M the message to be hashed.
 
-   We use AES with a BC_KEY_LEN-bit key. For AES encryption (resp.,
-   decryption) we write E(K, X) (resp., D(K, X)) where K is a BC_KEY_LEN-bit
+   We use AES with a BC_KEY_LEN-byte key. For AES encryption (resp.,
+   decryption) we write E(K, X) (resp., D(K, X)) where K is a BC_KEY_LEN-byte
    key and X the block to be encrypted (resp., decrypted). For an integer
    j, we use <j> to denote the string of length BC_BLOCK_LEN representing
    that integer.
@@ -227,7 +227,7 @@ Status: Draft
    Cf_n = M ^ Z
    X_n = PH(HDf_n, (LNf_n | Cf_n))
    Y_n = Nf_n ^ X_n
-   Tf_n = E(KDf_n, Y_n) ^ X_n)
+   Tf_n = E(KDf_n, Y_n) ^ X_n
 
    and updates its state by overwriting the old variables with the new
    ones.
@@ -247,7 +247,7 @@ Status: Draft
      % BC_BLOCK_LEN = 16
      Cf_I = Cf_{I+1} ^ Z[1, 509]
      X_I = PH(HSf_n, (LTf_{I+1} | Cf_I))
-     Y_I = Tf_I ^ X_I
+     Y_I = Tf_{I+1} ^ X_I
      Tf_I = E(KSf_I, Y_I) ^ X_I
      LTf_{I+1} = Tf_{I+1}
 
