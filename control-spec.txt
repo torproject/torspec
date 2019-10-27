@@ -2130,11 +2130,12 @@
        EscapedPassword = QuotedString
 
        ClientProtocol =
-               "SOCKS4"  /
-               "SOCKS5"  /
-               "TRANS"   /
-               "NATD"    /
-               "DNS"     /
+               "SOCKS4"      /
+               "SOCKS5"      /
+               "TRANS"       /
+               "NATD"        /
+               "DNS"         /
+               "HTTPCONNECT" /
                "UNKNOWN"
 
        NymEpoch = a nonnegative integer
