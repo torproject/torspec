@@ -224,7 +224,7 @@ Proposals by number:
 301  Don't include package fingerprints in consensus documents [ACCEPTED]
 302  Hiding onion service clients using padding [CLOSED]
 303  When and how to remove support for protocol versions [DRAFT]
-304  Extending SOCKS5 Onion Service Error Codes [ACCEPTED]
+304  Extending SOCKS5 Onion Service Error Codes [CLOSED]
 305  ESTABLISH_INTRO Cell DoS Defense Extension [DRAFT]
 306  A Tor Implementation of IPv6 Happy Eyeballs [OPEN]
 307  Onion Balance Support for Onion Service v3 [DRAFT]
@@ -275,7 +275,6 @@ Proposals by status:
    288  Privacy-Preserving Statistics with Privcount in Tor (Shamir version)
    292  Mesh-based vanguards
    301  Don't include package fingerprints in consensus documents
-   304  Extending SOCKS5 Onion Service Error Codes
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process
@@ -378,6 +377,7 @@ Proposals by status:
    297  Relaxing the protover-based shutdown rules [for 0.3.5.x] [in 0.4.0.x]
    298  Putting family lines in canonical form [for 0.3.6.x] [in 0.4.0.1-alpha]
    302  Hiding onion service clients using padding [in 0.4.1.1-alpha]
+   304  Extending SOCKS5 Onion Service Error Codes
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration
