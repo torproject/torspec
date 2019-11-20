@@ -42,6 +42,10 @@ Tor's extensions to the SOCKS protocol
     username/password fields of this message to be empty. This technically
     violates RFC1929 [4], but ensures interoperability with somewhat broken
     SOCKS5 client implementations.
+  - Custom reply error code. The "REP" fields, as per the RFC[3], has
+    unassigned values which are used to describe Tor internal errors. See
+    ExtendedErrors in the tor.1 man page for more details. It is only sent
+    back if this SocksPort flag is set.
 
   (For more information on stream isolation, see IsolateSOCKSAuth on the Tor
   manpage.)
