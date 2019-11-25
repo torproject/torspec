@@ -1834,9 +1834,11 @@
 
   FLAGS is a comma-separated tuple of flags for this new client. For now, the
   currently supported flags are:
-    "Permanent" - This client's credentials should be stored in the filesystem.
-                  If this is not set, the client's credentials are epheremal
-                  and stored in memory.
+
+    "Permanent" - This client's credentials should be stored in the filesystem
+                  as indicated by the ClientOnionAuthDir torrc option.  If this
+                  flag is not set, the client's credentials are epheremal and
+                  stored in memory.
 
   If client auth credentials already existed for this service, replace them
   with the new ones.
