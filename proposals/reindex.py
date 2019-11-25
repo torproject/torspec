@@ -23,6 +23,7 @@ def indexed(seq):
 
 def readProposal(fn):
     fields = { }
+    print(fn)
     f = open(fn, 'r')
     lastField = None
     try:
@@ -69,10 +70,9 @@ def checkProposal(fn, fields):
             need_fields.remove("Ticket")
 
     for f in need_fields:
-        if not fields.has_key(f):
+        if f not in fields:
             raise Error("%s has no %s field"%(fn, f))
     if fn != fields['Filename']:
-        print `fn`, `fields['Filename']`
         raise Error("Mismatched Filename field in %s"%fn)
     if fields['Title'][-1] == '.':
         fields['Title'] = fields['Title'][:-1]
@@ -82,7 +82,7 @@ def checkProposal(fn, fields):
         raise Error("I've never heard of status %s in %s"%(status,fn))
     if status in [ "SUPERSEDED", "DEAD" ]:
         for f in [ 'Implemented-In', 'Target' ]:
-            if fields.has_key(f): del fields[f]
+            if f in fields: del fields[f]
 
 def readProposals():
     res = []
@@ -121,9 +121,9 @@ def writeIndexFile(proposals):
         for prop in proposals:
             if s == prop['Status']:
                 out.write("   %(num)s  %(Title)s"%prop)
-                if prop.has_key('Target'):
+                if "Target" in prop:
                     out.write(" [for %(Target)s]"%prop)
-                if prop.has_key('Implemented-In'):
+                if "Implemented-In" in prop:
                     out.write(" [in %(Implemented-In)s]"%prop)
                 out.write("\n")
     out.close()
