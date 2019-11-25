@@ -1,0 +1,95 @@
+Filename: 310-bandaid-on-guard-selection.txt
+Title: Towards load-balancing in Prop 271
+Author:  Florentin Rochet, Aaron Johnson et al.
+Created: 2019-10-27
+Supersedes: 271
+Status: Open
+
+1. Motivation and Context
+
+  Prop 271 causes guards to be selected with probabilities different than their
+  weights due to the way it samples many guards and then chooses primary guards
+  from that sample. We are suggesting a straightforward fix to the problem, which
+  is, roughly speaking, to choose primary guards in the order in which they were
+  sampled.
+
+  In more detail, Prop 271 chooses guards via a multi-step process: 
+    1. It chooses 20 distinct guards (and sometimes more) by sampling without
+       replacement with probability proportional to consensus weight.
+    2. It produces two subsets of the sample: (1) "filtered" guards, which are
+       guards that satisfy various torrc constraints and path bias, and (2)
+       "confirmed" guards, which are guards through which a circuit has been
+       constructed. 
+    3. The "primary" guards (i.e. the actual guards used for circuits) are
+       chosen from the confirmed and/or filtered subsets.  I'm ignoring the
+       additional "usable" subsets for clarity. This description is based on
+       Section 4.6 of the specification
+       (https://gitweb.torproject.org/torspec.git/tree/guard-spec.txt).
+
+
+1.1 Picturing the problem when Tor starts the first time
+
+  The primary guards are selected *uniformly at random* from the filtered guards
+  when no confirmed guards exist. No confirmed guards appear to exist until some
+  primary guards have been selected, and so when Tor is started the first time
+  the primary guards always come only from the filtered set. The uniformly-random
+  selection causes a bias in primary-guard selection away from consensus weights
+  and towards a more uniform selection of guards. As just an example of the
+  problem, if there were only 20 guards in the network, the sampled set would be
+  all guards and primary guard selection would be entirely uniformly random,
+  ignoring weights entirely. This bias is worse the larger the sampled set is
+  relative to the entire set of guards, and it has a significant effect on Tor
+  simulations in Shadow, which are typically on smaller networks.
+
+2. Solution Design
+
+  We propose a solution that fits well within the existing guard-selection
+  algorithm. Our solution is to select primary guards in the order they were
+  sampled. This ordering should be applied after the filtering and/or confirmed
+  guard sets are constructed as normal. That is, primary guards should be
+  selected from the filtered guards (if no guards are both confirmed and
+  filtered) or from the set of confirmed and filtered guards (if such guards
+  exist) in the order they were initially sampled. This solution guarantees that
+  each primary guard is selected (without replacement) from all guards with a
+  probability that is proportional to its consensus weight.
+
+2.1 Performance implications
+
+  This proposal is a straightforward fix to the unbalanced network that may arise
+  from the uniform selection of sampled relays. It solves the performance
+  correctness in Shadow for which simulations live on a small timeframe. However,
+  it does not solve all the load-balancing problems of Proposal 271. One other
+  load-balancing issue comes when we choose our guards on a date but then make
+  decisions about them on a different date.  Building a sampled list of relays at
+  day 0 that we intend to use in a long time for most of them is taking the risk
+  to slowly make the network unbalanced.
+
+2.2 Security implications
+
+  This proposal solves the following problems: Prop271 reduces Tor's security by
+  increasing the number of clients that an adversary running small relays can
+  observe. In addition, an adversary has to wait less time than it should after
+  it starts a malicious guard to be chosen by a client. This weakness occurs
+  because the malicious guard only needs to enter the sampled list to have a
+  chance to be chosen as primary, rather than having to wait until all
+  previously-sampled guards have already expired.
+
+2.3 Implementation notes
+
+  The code used for ordering the confirmed list by confirmed idx should be
+  removed, and a sampled order should be applied throughout the various lists.
+  The next sampled idx should be recalculed from the state file, and the
+  sampled_idx values should be recalculated to be a dense array when we save the
+  state.
+
+3. Going Further -- Let's not choose our History (future work)
+
+  A deeper refactoring of Prop 271 would try to solve the load balancing problem
+  of choosing guards on a date but then making decisions about them on a
+  different date. One suggestion is to remove the sampled list, which we can
+  picture as a "forward history" and to have instead a real history of previously
+  sampled guards. When moving to the next guard, we could consider *current*
+  weights and make the decision. The history should resist attacks that try to
+  force clients onto compromised guards, using relays that are part of the
+  history if they're still available (in sampled order), and by tracking its
+  size. This should maintain the initial goals of Prop 271.

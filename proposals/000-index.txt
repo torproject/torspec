@@ -230,6 +230,7 @@ Proposals by number:
 307  Onion Balance Support for Onion Service v3 [DRAFT]
 308  Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography [DRAFT]
 309  Optimistic SOCKS Data [DRAFT]
+310  Towards load-balancing in Prop 271 [OPEN]
 
 
 Proposals by status:
@@ -267,6 +268,7 @@ Proposals by status:
    296  Have Directory Authorities expose raw bandwidth list files
    299  Preferring IPv4 or IPv6 based on IP Version Failure Count
    306  A Tor Implementation of IPv6 Happy Eyeballs
+   310  Towards load-balancing in Prop 271
  ACCEPTED:
    188  Bridge Guards and other anti-enumeration defenses
    249  Allow CREATE cells with >505 bytes of handshake data
