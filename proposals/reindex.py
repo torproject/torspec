@@ -23,7 +23,6 @@ def indexed(seq):
 
 def readProposal(fn):
     fields = { }
-    print(fn)
     f = open(fn, 'r')
     lastField = None
     try:
