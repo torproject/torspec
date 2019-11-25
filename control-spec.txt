@@ -1822,7 +1822,6 @@
   The syntax is:
     "ONION_CLIENT_AUTH_ADD" SP HSAddress
                             SP KeyType ":" PrivateKeyBlob
-                            [SP "ClientName=" Nickname]
                             [SP "Flags=" TYPE] CRLF
 
     HSAddress = 56*Base32Character
@@ -1831,8 +1830,7 @@
 
   Tells the connected Tor to add client-side v3 client auth credentials for the
   onion service with "HSAddress". The "PrivateKeyBlob" is the x25519 private
-  key that should be used for this client, and "Nickname" is an optional
-  nickname for the client.
+  key that should be used for this client.
 
   FLAGS is a comma-separated tuple of flags for this new client. For now, the
   currently supported flags are:
@@ -1850,9 +1848,9 @@
   On success, "250 OK" is returned. Otherwise, the following error codes exist:
     251 - Client auth credentials for this onion service already existed and replaced.
     252 - Added client auth credentials and successfully decrypted a cached descriptor.
-    512 - Syntax error in "HSAddress", or "PrivateKeyBlob" or "Nickname"
-    551 - Client with with this "Nickname" already exists
+    512 - Syntax error in "HSAddress", or "PrivateKeyBlob".
     552 - Unrecognized KeyType
+    553 - Unable to permanently store credentials
 
 3.31. ONION_CLIENT_AUTH_REMOVE
 
@@ -1880,16 +1878,11 @@
   The server reply format is:
     "250-ONION_CLIENT_AUTH_VIEW" [SP HSAddress] CRLF
     *("250-CLIENT" SP KeyType ":" PrivateKeyBlob
-                  [SP "ClientName=" Nickname]
                   [SP "Flags=" FLAGS] CRLF)
     "250 OK" CRLF
 
     KeyType = "x25519" is the only one supported right now
     PrivateKeyBlob = base64 encoding of x25519 key
-
-  "Nickname" is an optional nickname for this client, which can be set either
-  through the ONION_CLIENT_AUTH_ADD command, or it's the filename of this
-  client if the credentials are stored in the filesystem.
 
   FLAGS is a comma-separated field of flags for this client, the currently
   supported flags are:
