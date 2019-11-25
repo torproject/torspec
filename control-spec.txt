@@ -2152,20 +2152,22 @@
    that were used by a SOCKS client to connect to Tor's SOCKS port and
    initiate this circuit. (Streams for SOCKS clients connected with different
    usernames and/or passwords are isolated on separate circuits if the
-   IsolateSOCKSAuth flag is active; see Proposal 171.)
+   IsolateSOCKSAuth flag is active; see Proposal 171.) [Added in Tor
+   0.4.3.1-alpha.]
 
    The "REND_QUERY" field is provided only for hidden-service-related
    circuits, and only in versions 0.2.3.11-alpha and later.  Clients
    MUST accept hidden service addresses in formats other than that
-   specified above.
+   specified above. [Added in Tor 0.4.3.1-alpha.]
 
    The "TIME_CREATED" field is provided only in versions 0.2.3.11-alpha and
    later.  TIME_CREATED is the time at which the circuit was created or
-   cannibalized.
+   cannibalized. [Added in Tor 0.4.3.1-alpha.]
 
    The "REASON" field is provided only for FAILED and CLOSED events, and only
    if extended events are enabled (see 3.19).  Clients MUST accept reasons
-   not listed above.  Reasons are as given in tor-spec.txt, except for:
+   not listed above. [Added in Tor 0.4.3.1-alpha.]  Reasons are as given in
+   tor-spec.txt, except for:
 
       NOPATH              (Not enough nodes to make circuit)
       MEASUREMENT_EXPIRED (As "TIMEOUT", except that we had left the circuit
@@ -2176,6 +2178,7 @@
    TRUNCATE cell, and only if extended events are enabled.  It contains the
    actual reason given by the remote OR for closing the circuit. Clients MUST
    accept reasons not listed above.  Reasons are as listed in tor-spec.txt.
+   [Added in Tor 0.4.3.1-alpha.]
 
 4.1.2. Stream status changed
 
