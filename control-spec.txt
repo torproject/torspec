@@ -1864,6 +1864,9 @@
   Tells the connected Tor to remove the client-side v3 client auth credentials
   for the onion service with "HSAddress".
 
+  If the client auth credentials are stored on disk, this command will also
+  remove them from disk.
+
   On success "250 OK" is returned. Otherwise, the following error codes exist:
     512 - Syntax error in "HSAddress".
     251 - Client credentials for "HSAddress" did not exist.
