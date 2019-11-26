@@ -1,3 +1,4 @@
+
                      Tor Rendezvous Specification - Version 3
 
 This document specifies how the hidden service version 3 protocol works.  This

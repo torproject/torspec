@@ -1,5 +1,4 @@
 
-
                    TC: A Tor control protocol (Version 1)
 
 0. Scope
