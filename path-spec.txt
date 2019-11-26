@@ -672,7 +672,7 @@ of their choices.
   threat model. It also allows targeted attacks aimed at monitoring
   the activity of specific users, bridges, or Guard nodes.
 
-  There are two points where path selection can be manipulated: 
+  There are two points where path selection can be manipulated:
   during construction, and during usage. Circuit construction
   can be manipulated by inducing circuit failures during circuit
   extend steps, which causes the Tor client to transparently retry

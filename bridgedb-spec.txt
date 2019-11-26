@@ -231,11 +231,11 @@
     are fulfilled as possible within the first few bridges. This list is then
     truncated to N bridges, if possible. N is currently defined as a
     piecewise function of the number of bridges in the ring such that:
-              
+
              /
             |  1,   if len(ring) < 20
             |
-        N = |  2,   if 20 <= len(ring) <= 100 
+        N = |  2,   if 20 <= len(ring) <= 100
             |
             |  3,   if 100 <= len(ring)
              \
