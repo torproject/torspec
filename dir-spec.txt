@@ -2104,6 +2104,11 @@
                                        Min: 0. Max: 255. Default 0. First
                                        appeared: 0.4.1.1-alpha.
 
+        "HiddenServiceEnableIntroDoSDefense" -- This parameter makes tor start
+        using this new proposed extension if available by the introduction
+        point (for protover HSIntro=5). Min: 0. Max: 1. Default: 0. First
+        appeared: 0.4.2.1-alpha.
+
     "shared-rand-previous-value" SP NumReveals SP Value NL
 
         [At most once]

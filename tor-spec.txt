@@ -2097,6 +2097,9 @@ see tor-design.pdf.
    "4" -- support ed25519 authentication keys which is defined by the HS v3
           protocol as part of proposal 224 in Tor 0.3.0.4-alpha.
 
+   "5" -- support ESTABLISH_INTRO cell DoS parameters extension for onion
+          service version 3 only in Tor 0.4.2.1-alpha.
+
 9.5. "HSRend"
 
    The "HSRend" protocol handles rendezvous points.
