@@ -30,7 +30,7 @@
  GetTor instance.  Security and privacy considerations should be described on a
  per transport basis.
 
-2.1 Reference implementation
+2.1. Reference implementation
 
  We have implemented[0] a compliant GetTor that supports SMTP as a transport.
 
@@ -43,14 +43,14 @@
  it should offer the software as a list of packages and their subsequent
  descriptions.
 
-3.1 SMTP transport security considerations
+3.1. SMTP transport security considerations
 
  Any GetTor instance that offers SMTP as a transport should optionally
  implement the checking of DKIM signatures to ensure that email is not forged.
  Optionally GetTor should take an OpenPGP key from the user and encrypt the
  response with a blinded message.
 
-3.2 SMTP transport privacy considerations
+3.2. SMTP transport privacy considerations
 
  Any GetTor instance that offers SMTP as a transport must at least store the
  requester's address for the time that it takes to process a response. This

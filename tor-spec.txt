@@ -1907,7 +1907,7 @@ see tor-design.pdf.
    RELAY_DATA cell within one increment window. In other word, every 100 cells
    (increment), random bytes should be introduced in at least one cell.
 
-7.3.1 SENDME Cell Format
+7.3.1. SENDME Cell Format
 
    A circuit-level RELAY_SENDME cell always has its StreamID=0.
 

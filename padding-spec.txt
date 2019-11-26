@@ -406,7 +406,7 @@ the anonymity and load-balancing implications of their choices.
   depend on the type of guard used and are not an effective fingerprint for a
   network/guard-level adversary.
 
-3.3.2 Client-side onion service introduction circuit obfuscation
+3.3.2. Client-side onion service introduction circuit obfuscation
 
   Two circuit padding machines work to hide client-side introduction circuits:
   one machine at the origin, and one machine at the second hop of the circuit.

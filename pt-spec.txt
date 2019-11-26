@@ -626,7 +626,7 @@ Table of Contents
 
       LOG SEVERITY=debug MESSAGE="Connected to bridge A"
 
-3.3.5 Pluggable Transport Status Message
+3.3.5. Pluggable Transport Status Message
 
    This message is for a client or server PT to be able to signal back to the
    parent process via stdout or stderr any status messages.

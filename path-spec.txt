@@ -363,7 +363,7 @@ of their choices.
    Since version 0.2.2.8-alpha, Tor attempts to learn when to give up on
    circuits based on network conditions.
 
-2.4.1 Distribution choice and parameter estimation
+2.4.1. Distribution choice and parameter estimation
 
    Based on studies of build times, we found that the distribution of
    circuit build times appears to be a Frechet distribution. However,

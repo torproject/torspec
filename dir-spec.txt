@@ -2674,7 +2674,7 @@
    IPv4 addresses (two /8 networks) were blocked.  The list is encoded
    as described in section 3.8.2.
 
-3.4.3 Serving bandwidth list files
+3.4.3. Serving bandwidth list files
 
    If an authority has used a bandwidth list file to generate a vote
    document it SHOULD make it available at
@@ -2969,7 +2969,7 @@
     half of the total authorities, and we do not already have it listed with
     some <id-Ed>, include it, but do not consider its Ed identity canonical.
 
-3.8.0.2 Deciding which descriptors to include
+3.8.0.2. Deciding which descriptors to include
 
    Deciding which descriptors to include.
 

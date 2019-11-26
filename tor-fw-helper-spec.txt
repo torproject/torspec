@@ -20,7 +20,7 @@
  tor-fw-helper is a program that implements basic port forwarding requests; it
  may be used alone or called from Tor itself.
 
-2.1 Output format
+2.1. Output format
 
 2.1.1. Motivation
 

@@ -224,7 +224,7 @@ Tor works. This text used to be proposal 250-commit-reveal-consensus.txt.
 
    Now we go through the phases of the protocol:
 
-3.1 Commitment Phase [COMMITMENTPHASE]
+3.1. Commitment Phase [COMMITMENTPHASE]
 
    The commit phase lasts from 00:00UTC to 12:00UTC.
 
@@ -257,7 +257,7 @@ Tor works. This text used to be proposal 250-commit-reveal-consensus.txt.
    authoritative commits they have received from each authority. Only one commit
    per authority must be considered trusted and active at a given time.
 
-3.2 Reveal Phase
+3.2. Reveal Phase
 
    The reveal phase lasts from 12:00UTC to 00:00UTC.
 

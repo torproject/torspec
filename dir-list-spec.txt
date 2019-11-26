@@ -162,7 +162,7 @@
    The list header consists of a number of key-value pairs, embedded in
    C-style comments.
 
-2.2.1 List Header Format
+2.2.1. List Header Format
 
      "/*" SP+ "type=" Keyword SP+ "*/" SP* NL
 
@@ -234,7 +234,7 @@
    Future releases may arbitrarily change the content of this section.
    Parsers MUST NOT rely on a version increment when the format changes.
 
-2.3.1 List Generation Format
+2.3.1. List Generation Format
 
    In general, parsers MUST NOT rely on the format of this section.
 
@@ -261,7 +261,7 @@
    these lists after parsing them, and applies the DirAuthorityFallbackRate
    to their weights.)
 
-2.4.1 Directory Entry Format
+2.4.1. Directory Entry Format
 
      If a directory entry does not conform to this format, the entry SHOULD
      be ignored by parsers.

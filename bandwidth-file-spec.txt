@@ -33,7 +33,7 @@
     Nick Mathewson (nickm)
     Iain Learmonth (irl)
 
-1.3 Outline
+1.3. Outline
 
   The Tor directory protocol (dir-spec.txt [3]) sections 3.4.1
   and 3.4.2, use the term bandwidth measurements, to refer to what
@@ -644,7 +644,7 @@
 
 2.4. Implementation details
 
-2.4.1 Writing bandwidth files atomically
+2.4.1. Writing bandwidth files atomically
 
   To avoid inconsistent reads, implementations SHOULD write bandwidth files
   atomically. If the file is transferred from another host, it SHOULD be
