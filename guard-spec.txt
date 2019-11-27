@@ -268,6 +268,7 @@
 
    We maintain another set, {set:FILTERED_GUARDS}, that does not
    persist. It is derived from:
+
        - {SAMPLED_GUARDS}
        - our current configuration,
        - the path bias information.
@@ -417,6 +418,7 @@
 4.6. Selecting guards for circuits. [Section:SELECTING]
 
   Every origin circuit is now in one of these states:
+
      <state:usable_on_completion>,
      <state:usable_if_no_better_guard>,
      <state:waiting_for_better_guard>, or
@@ -494,6 +496,7 @@
 
   We're getting to the core of the algorithm here.  Our main goals are to
   make sure that
+
     1. If it's possible to use a primary guard, we do.
     2. We probably use the first primary guard.
 

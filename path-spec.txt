@@ -233,6 +233,7 @@ of their choices.
    We choose the path for each new circuit before we build it.  We choose the
    exit node first, followed by the other nodes in the circuit.  All paths
    we generate obey the following constraints:
+
      - We do not choose the same router twice for the same path.
      - We do not choose any router in the same family as another in the same
        path. (Two routers are in the same family if each one lists the other
@@ -595,6 +596,7 @@ of their choices.
    client as appropriate (e.g., by closing the SOCKS connection).
 
    XXX Timeouts and when Tor auto-retries.
+
     * What stream-end-reasons are appropriate for retrying.
 
    If no reply to BEGIN/RESOLVE, then the stream will timeout and fail.
@@ -631,6 +633,7 @@ of their choices.
   increasing w.r.t. the router's non-guard bandwidth and bandwidth weight
   (calculated without taking the guard flag into account).  From proposal
   #236:
+
     |
     | Let Wpf denote the weight from the 'bandwidth-weights' line a
     | client would apply to N for position p if it had the guard
@@ -888,6 +891,7 @@ X.3. Some stuff that worries me about entry guards. 2006 Jun, Nickm.
   Observing a user is sufficient to learn its entry guards.  So, as we move
   around, entry guards make us linkable.  If we want to change guards when
   our location (IP? subnet?) changes, we have two bad options.  We could
+
     - Drop the old guards.  But if we go back to our old location,
       we'll not use our old guards.  For a laptop that sometimes gets used
       from work and sometimes from home, this is pretty fatal.

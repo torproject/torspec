@@ -4,7 +4,9 @@
 1. The Old Way
 
  Before 0.1.0, versions were of the format:
+
      MAJOR.MINOR.MICRO(status(PATCHLEVEL))?(-cvs)?
+
  where MAJOR, MINOR, MICRO, and PATCHLEVEL are numbers, status is one
  of "pre" (for an alpha release), "rc" (for a release candidate), or
  "." for a release.  As a special case, "a.b.c" was equivalent to
@@ -21,7 +23,9 @@
 2. The New Way
 
  After 0.1.0, versions are of the format:
+
     MAJOR.MINOR.MICRO[.PATCHLEVEL][-STATUS_TAG][ (EXTRA_INFO)]*
+
  The stuff in parentheses is optional.  As before, MAJOR, MINOR, MICRO,
  and PATCHLEVEL are numbers, with an absent number equivalent to 0.
  All versions should be distinguishable purely by those four

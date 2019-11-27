@@ -428,10 +428,12 @@ the anonymity and load-balancing implications of their choices.
   This means that up to the sixth cell (first line of each sequence above),
   both general and intro circuits have identical cell sequences. After that
   we want to mimic the second line sequence of
+
     -> [DATA] -> [DATA] -> DATA -> DATA...(inbound data cells continue)
 
   We achieve this by starting padding INTRODUCE1 has been sent. With padding
   negotiation cells, in the common case of the second line looks like:
+
     -> [INTRO1] -> [PADDING_NEGOTIATE] -> PADDING_NEGOTIATED -> INTRO_ACK
 
   Then, the middle node will send between INTRO_MACHINE_MINIMUM_PADDING (7) and

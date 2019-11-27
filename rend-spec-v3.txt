@@ -316,6 +316,7 @@ Table of contents:
 0.6. Acknowledgments
 
    This design includes ideas from many people, including
+
      Christopher Baines,
      Daniel J. Bernstein,
      Matthew Finkel,
@@ -333,6 +334,7 @@ Table of contents:
    It's based on Tor's original hidden service design by Roger
    Dingledine, Nick Mathewson, and Paul Syverson, and on improvements to
    that design over the years by people including
+
      Tobias Kamm,
      Thomas Lauterbach,
      Karsten Loesing,
@@ -344,20 +346,24 @@ Table of contents:
 
    We wouldn't be able to do any of this work without good attack
    designs from researchers including
+
      Alex Biryukov,
      Lasse Øverlier,
      Ivan Pustogarov,
      Paul Syverson
      Ralf-Philipp Weinmann,
+
    See [ATTACK-REFS] for their papers.
 
    Several of these ideas have come from conversations with
+
       Christian Grothoff,
       Brian Warner,
       Zooko Wilcox-O'Hearn,
 
    And if this document makes any sense at all, it's thanks to
    editing help from
+
       Matthew Finkel
       George Kadianakis,
       Peter Palfrader,
@@ -1488,6 +1494,7 @@ Table of contents:
 
    Single Onion Services attempt to build a non-anonymous single-hop circuit,
    but use an anonymous 3-hop circuit if:
+
      * the intro point is on an address that is configured as unreachable via
        a direct connection, or
      * the initial attempt to connect to the intro point over a single-hop
@@ -1737,6 +1744,7 @@ Table of contents:
        EXT_FIELD      [EXT_FIELD_LEN bytes]
 
    Recognized status values are:
+
      [00 00] -- Success: cell relayed to hidden service host.
      [00 01] -- Failure: service ID not recognized
      [00 02] -- Bad message format
@@ -1864,8 +1872,11 @@ Table of contents:
    To make an INTRODUCE1 cell, the client must know a public encryption
    key B for the hidden service on this introduction circuit. The client
    generates a single-use keypair:
+
              x,X = KEYGEN()
+
    and computes:
+
              intro_secret_hs_input = EXP(B,x) | AUTH_KEY | X | B | PROTOID
              info = m_hsexpand | subcredential
              hs_keys = KDF(intro_secret_hs_input | t_hsenc | info, S_KEY_LEN+MAC_LEN)
@@ -1938,6 +1949,7 @@ Table of contents:
       (The above are used to finish the ntor handshake.)
 
    The server's handshake reply is:
+
        SERVER_PK   Y                         [PK_PUBKEY_LEN bytes]
        AUTH        AUTH_INPUT_MAC            [MAC_LEN bytes]
 
@@ -1996,6 +2008,7 @@ Table of contents:
 
    Single Onion Services attempt to build a non-anonymous single-hop circuit,
    but use an anonymous 3-hop circuit if:
+
      * the rend point is on an address that is configured as unreachable via
        a direct connection, or
      * the initial attempt to connect to the rend point over a single-hop
@@ -2257,6 +2270,7 @@ A.2. Tor's key derivation scheme
   clear writeup.)
 
   Let B be the ed25519 basepoint as found in section 5 of [ED25519-B-REF]:
+
       B = (15112221349535400772501151409588531511454012693041857206046113283949847762202,
            46316835694926478169428394003475163141307993866256225615783033603165251855960)
 

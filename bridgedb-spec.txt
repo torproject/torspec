@@ -209,6 +209,7 @@
    the requirements. This ring is then used to select bridges as described.
 
    "Mapping X to Y based on an HMAC" above means one of the following:
+
       - We keep all of the elements of Y in some order, with a mapping
         from all 160-bit strings to positions in Y.
       - We take an HMAC of X using some fixed string as a key to get a
@@ -219,6 +220,7 @@
    BridgeDB may be configured to "Give out at least L bridges with port
    443, and at least M bridges with Stable, and at most N bridges
    total."  To do this, BridgeDB combines to the results:
+
       - The first L bridges in the ring after the position that have the
         port 443, and
       - The first M bridges in the ring after the position that have the
@@ -299,6 +301,7 @@
 
    To map previously unseen email addresses to a set of bridges, BridgeDB
    proceeds as follows:
+
      - It normalizes the email address as above, by stripping out dots,
        removing all of the localpart after the +, and putting it all
        in lowercase.  (Example: "John.Doe+bridges@example.COM" becomes

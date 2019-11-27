@@ -102,6 +102,7 @@
 2. Format Details
 
    Directory lists contain the following sections:
+
      - List Header (exactly once)
      - List Generation (exactly once, may be empty)
      - Directory Entry (zero or more times)
@@ -421,6 +422,7 @@
 
    Libraries that require high-uptime availablility of Tor directory
    information should investigate the following options:
+
      * OnionOO: https://metrics.torproject.org/onionoo.html
        * Third-party OnionOO mirrors are also available
      * CollecTor: https://collector.torproject.org/
