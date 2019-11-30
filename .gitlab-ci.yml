@@ -1,11 +1,27 @@
 
+variables:
+  HEADER: |
+    <!DOCTYPE html>
+    <html lang="en-US">
+    <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width\=device-width, initial-scale=1">
+    <meta name="author" content="The Tor Project, Inc.">
+    <title>torspec</title>
+    <link href="https://2019.www.torproject.org/css/master.min.css" rel="stylesheet">
+    </head>
+    <body>
+    <div id="wrap"><div id="content"><div id="maincol">
+  FOOTER: "</div></div></div></body></html>"
+
 pages:
   image: debian:buster
   script:
     - apt-get update
     - apt-get -qy install --no-install-recommends pandoc
     - test -d public || mkdir public
-    - printf '<!DOCTYPE html>\n\n<html><body><h1>%s</h1><ul>' $CI_PROJECT_PATH > public/index.html
+    - printf "${HEADER}<h1>%s</h1><ul>" $CI_PROJECT_PATH > public/index.html
     - for f in *.txt; do
         set -x;
         name=`echo $f | sed s,\.txt$,,`;
@@ -21,11 +37,14 @@ pages:
         printf "\n---\n\noriginal source\x3a [$f](https://gitweb.torproject.org/torspec.git/tree/$f)\n" >> $md;
         title=`sed -En '0,/^# /s/^# (.*)/\1/p' $md`;
         printf "<li><a href=\"${name}.html\"><tt>$name</tt>&colon; $title</a></li>" >> public/index.html;
-        pandoc --from=markdown $md --output=public/${name}.html;
+        pandoc --from=markdown $md --output=${name}.html;
+        printf "$HEADER" > public/${name}.html;
+        cat ${name}.html >> public/${name}.html;
+        printf "$FOOTER" >> public/${name}.html;
         mkdir public/$name;
         cp public/${name}.html public/$name/index.html;
       done
-    - printf '</ul></body></html>' >> public/index.html
+    - printf "</ul>$FOOTER" >> public/index.html
   artifacts:
     paths:
     - public
