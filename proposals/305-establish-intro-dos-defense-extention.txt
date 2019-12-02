@@ -2,7 +2,7 @@ Filename: 305-establish-intro-dos-defense-extention.txt
 Title: ESTABLISH_INTRO Cell DoS Defense Extension
 Author: David Goulet, George Kadianakis
 Created: 06-June-2019
-Status: Draft
+Status: Closed
 
 0. Abstract
 

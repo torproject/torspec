@@ -225,7 +225,7 @@ Proposals by number:
 302  Hiding onion service clients using padding [CLOSED]
 303  When and how to remove support for protocol versions [DRAFT]
 304  Extending SOCKS5 Onion Service Error Codes [CLOSED]
-305  ESTABLISH_INTRO Cell DoS Defense Extension [DRAFT]
+305  ESTABLISH_INTRO Cell DoS Defense Extension [CLOSED]
 306  A Tor Implementation of IPv6 Happy Eyeballs [OPEN]
 307  Onion Balance Support for Onion Service v3 [DRAFT]
 308  Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography [DRAFT]
@@ -241,7 +241,6 @@ Proposals by status:
    294  TLS 1.3 Migration
    300  Walking Onions: Scaling and Saving Bandwidth
    303  When and how to remove support for protocol versions
-   305  ESTABLISH_INTRO Cell DoS Defense Extension
    307  Onion Balance Support for Onion Service v3
    308  Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography
    309  Optimistic SOCKS Data
@@ -380,6 +379,7 @@ Proposals by status:
    298  Putting family lines in canonical form [for 0.3.6.x] [in 0.4.0.1-alpha]
    302  Hiding onion service clients using padding [in 0.4.1.1-alpha]
    304  Extending SOCKS5 Onion Service Error Codes
+   305  ESTABLISH_INTRO Cell DoS Defense Extension
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration
