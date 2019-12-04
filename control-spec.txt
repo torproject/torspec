@@ -1878,11 +1878,12 @@
 
   The server reply format is:
     "250-ONION_CLIENT_AUTH_VIEW" [SP HSAddress] CRLF
-    *("250-CLIENT" SP KeyType ":" PrivateKeyBlob
+    *("250-CLIENT" SP HSAddress SP KeyType ":" PrivateKeyBlob
                   [SP "ClientName=" Nickname]
                   [SP "Flags=" FLAGS] CRLF)
     "250 OK" CRLF
 
+    HSAddress = The onion address under which this credential is stored
     KeyType = "x25519" is the only one supported right now
     PrivateKeyBlob = base64 encoding of x25519 key
 
