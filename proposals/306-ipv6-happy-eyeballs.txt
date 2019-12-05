@@ -9,15 +9,15 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
 1. Introduction
 
    As IPv4 address space becomes scarce, ISPs and organizations will deploy
-   IPv6 in their networks. Right now, Tor clients connect to guards using
+   IPv6 in their networks. Right now, Tor clients connect to entry nodes using
    IPv4 connectivity by default.
 
    When networks first transition to IPv6, both IPv4 and IPv6 will be enabled
    on most networks in a so-called "dual-stack" configuration. This is to not
    break existing IPv4-only applications while enabling IPv6 connectivity.
    However, IPv6 connectivity may be unreliable and clients should be able
-   to connect to the guard using the most reliable technology, whether IPv4
-   or IPv6.
+   to connect to the entry node using the most reliable technology, whether
+   IPv4 or IPv6.
 
    In ticket #27490, we introduced the option ClientAutoIPv6ORPort which
    lets a client randomly choose between IPv4 or IPv6. However, this
@@ -48,11 +48,24 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
    This section describes the necessary changes for address selection to
    implement Prop306.
 
-2.1. Extend Info Structure Changes
+2.1. Address Handling Changes
 
    To be able to handle Happy Eyeballs in Tor, we will need to modify the
-   data structures used for connections to guards, namely the extend info
+   data structures used for connections to entry nodes, namely the extend info
    structure.
+
+   Entry nodes are usually guards, but some clients don't use guards:
+
+     * bootstrapping clients can connect to fallback directory mirrors or
+       authorities,
+
+     * v3 single onion services can use IPv4 or IPv6 addresses to connect
+       to introduction and rendezvous points, and
+
+     * clients can be configured to disable entry guards.
+
+   Bridges are out of scope for this proposal, because Tor does not support
+   multiple IP addresses in a single bridge line.
 
    The extend info structure should contain both an IPv4 and an IPv6 address.
    This will allow us to try IPv4 and the IPv6 addresses should both be
@@ -64,25 +77,33 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
    we should fill in the address for preferred family and leave the alternate
    family null.
 
-2.2. Relay Selection Changes
+2.2. Guard Selection Changes
 
-   In Proposal 283, we have allowed microdescriptor consensus documents to
-   contain IPv6 addresses. As clients download microdescriptors, Prop283
-   makes it possible to implement Prop306.
+   In Proposal 283, we have allowed microdescriptor consensus documents
+   to contain IPv6 addresses. Most clients download microdescriptor
+   consensuses, Prop283 makes it possible to implement Prop306.
 
-   When we select candidates for the entry guard, we should select at least
-   one relay with an IPv6 address. This makes it possible for an IPv6-only
-   client to bootstrap. Otherwise we would have failures if all the selected
-   guard candidates only have IPv4 addresses.
+   When we select candidates for the entry node, we should have a consensus
+   parameter for the number of entry guards. The parameter is as follows:
+
+     * NumIPv6Guards NUM
+
+   If UseEntryGuards is set to 1, we will try to pick NUM routers that support
+   IPv6 for our primary guard list, which is the set of routers we strongly
+   prefer when connecting to the Tor network. If NUM is 0, we try to learn the
+   number from the guard-n-primary-guards-ipv6 consensus parameter, and default
+   to 1 if the consensus parameter isn’t set.
+
+   The default value for NumIPv6Guards should be 0.
 
 3. Relay Connections
 
-   If there is an existing authenticated connection, we should use it
-   similar to how we used it pre-Prop306.
+   If there is an existing authenticated connection, we must use it similar
+   to how we used it pre-Prop306.
 
-   If there is no existing authenticated connection for an extend info,
-   we should attempt to connect using the first available, allowed, and
-   preferred address.
+   If there is no existing authenticated connection for an entry node, we
+   must attempt to connect using the first available, allowed, and preferred
+   address.
 
    We should also allow falling back to the alternate address. For this,
    three alternate designs will be given.
@@ -104,67 +125,45 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
       but reduces perceived performance, particularly at bootstrap time
       (pre-emptive circuits hide these delays after bootstrap).
 
-   The proposed designs are as listed as follows:
+   The preferred designs are is listed below:
 
-    * Section 3.1.1: First Successful Authentication
+    * Section 3.1.1: TCP Connection to Preferred Address On First TCP Success
 
-    * Section 3.1.2: TCP Connection to Preferred Address On First Authenticated
+   Alternative Happy Eyeballs designs will be in the following sections in the
+   Appendix:
+
+    * Section A.1.1: First Successful Authentication
+
+    * Section A.1.2: TCP Connection to Preferred Address On First Authenticated
       Connection
 
-    * Section 3.1.3: TCP Connection to Preferred Address On First TCP Success
+3.1.1. TCP Connection to Preferred Address On First TCP Success
 
-3.1.1. First Successful Authentication
+   In this design, we will connect via TCP to the first preferred address.
+   On a failure or after a 250 ms delay, we attempt to connect via TCP to
+   the alternate address. On a success, Tor attempts to authenticate and
+   closes the other connection.
 
-   In this design, Tor will first connect to the preferred address and
-   attempt to authenticate. After a 1.5 second delay (based on Onionperf
-   data), Tor will connect to the alternate address and try to authenticate.
-   On the first successful authenticated connection, we close the other
-   connection.
-
-   This design places the least connection load on the network, but might
-   add extra TLS load.
-
-3.1.2. TCP Connection to Preferred Address On First Authenticated Connection
-
-   This design attempts a TCP connection to a preferred address. On a failure
-   or a 1.5 second delay, we try the alternative address.
-
-   On the first successful TCP connection Tor attempts to authenticate
-   immediately. On the first authentication success, Tor closes the other
-   connection.
-
-   This design is the most reliable for clients, but increases the connection
-   load on dual-stack guards and authorities. For instance, this can be used
-   to amplify a DoS attack on the Tor network.
-
-3.1.3. TCP Connection to Preferred Address On First TCP Success
-
-   In this design, we will connect via TCP to the first preferred address. On
-   a failure or after a 1.5 second delay, we attempt to connect via TCP to the
-   alternate address. On a success, Tor attempts to authenticate and closes
-   the other connection.
-
-   This design is the closest to RFC 8305 and is similar to how Happy Eyeballs
-   is implemented in a web browser.
+   This design is the closest to RFC 8305 and is similar to how Happy
+   Eyeballs is implemented in a web browser.
 
 3.2. Recommendations for Implementation of Section 3.1 Proposals
 
-   We should start with implementing and testing the implementation as
-   described in Section 3.1.1 (First Successful Authentication), and then
-   doing the same for the implementations described in 3.1.2 and 3.1.3 if
-   desired or required.
+   We should start with implementing and testing the design as described in
+   Section 3.1.1. If desired, we could also implement and test the Section
+   A.1.1 and A.1.2 designs.
 
 3.3. Handling Connection Successes And Failures
 
-   Should a connection to a guard succeed and is authenticated via TLS, we
-   can then use the connection. In this case, we should cancel all other
+   Should a connection to a entry node succeed and is authenticated via TLS,
+   we can then use the connection. In this case, we should cancel all other
    connection timers and in-progress connections. Cancelling the timers is
    necessary so we don't attempt new unnecessary connections when our
    existing connection is successful, preventing denial-of-service risks.
 
    However, if we fail all available and allowed connections, we should tell
    the rest of Tor that the connection has failed. This is so we can attempt
-   another guard relay.
+   another entry node.
 
 3.4. Connection Attempt Delays
 
@@ -175,8 +174,12 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
 
    The Minimum Connection Attempt Delay should not be dynamically adjusted
    as it adds privacy risks. This value should be fixed at 10 ms as per
-   RFC 8305 and could be adjusted using a proposed consensus parameter called
-   ConnectionAttemptDelay. ConnectionAttemptDelay should be in milliseconds.
+   RFC 8305 and could be adjusted using this proposed consensus parameter:
+
+     * ConnectionAttemptDelay N msec
+
+   Where N is the number of milliseconds for the network-wide Minimum
+   Connection Attempt Delay.
 
    The Maximum Connection Attempt Delay should also not be dynamically adjusted
    for privacy reasons, but the maximum should be higher than the RFC 8305
@@ -203,6 +206,9 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
 
     * ClientPreferIPv6ORPort as 0 (for load-balancing reasons so we don't
       overload IPv6-only guards)
+
+    * ConnectionAttemptDelay 10 (for 10 msec, the minimum delay between
+      IPv4 and IPv6)
 
    One thing to note is that clients should be able to connect with the above
    options on IPv4-only, dual-stack, and IPv6-only networks, and they should
@@ -298,3 +304,33 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
    [P299-TRAC]: https://trac.torproject.org/projects/tor/ticket/29801
 
    [TEOR-P306-REP]: https://lists.torproject.org/pipermail/tor-dev/2019-July/013919.html
+
+A. Appendix
+
+A.1. Alternative Happy Eyeballs Designs
+
+A.1.1. First Successful Authentication
+
+   In this design, Tor will first connect to the preferred address and
+   attempt to authenticate. After a 250 ms second delay (based on the RFC
+   8305 defaults), Tor will connect to the alternate address and try to
+   authenticate. On the first successful authenticated connection, we
+   close the other connection.
+
+   This design places the least connection load on the network, but might
+   add extra TLS load.
+
+A.1.2. TCP Connection to Preferred Address On First Authenticated Connection
+
+   This design attempts a TCP connection to a preferred address. On a failure
+   or a 1.5 second delay, we try the alternative address.
+
+   On the first successful TCP connection Tor attempts to authenticate
+   immediately. On the first authentication success, Tor closes the other
+   connection.
+
+   This design is the most reliable for clients, but increases the connection
+   load on dual-stack entry nodes and authorities. For instance, this can be
+   used to amplify a DoS attack on the Tor network.
+
+
