@@ -41,7 +41,7 @@
    terminating NULL. Entries in directory lists do not include the
    FallbackDir torrc option. These are handled by the including C code.
 
-   Directlry lists also include C-style comments and whitespace. The
+   Directory lists also include C-style comments and whitespace. The
    presence of whitespace may be significant, but the amount of whitespace
    is never significant. The type of whitespace is not significant to the
    C compiler or Tor C string parser. However, other parsers MAY rely on
