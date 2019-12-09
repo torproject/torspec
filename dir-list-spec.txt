@@ -85,6 +85,8 @@
 
    2.1.0 - Adds a source list comment to the header.
 
+   3.0.0 - Modifies the format of the source list comment.
+
 1.4. Future Plans
 
    Tor also has an auth_dirs.inc file, but it is not yet in this format.
@@ -199,19 +201,31 @@
 
        The current timestamp format is YYYYMMDDHHMMSS, as an integer.
 
-     "/*" SP+ "source=" Keyword SP+ "*/" SP* NL
+     "/*" SP+ "source=" Keyword ("," Keyword)* SP+ "*/" SP* NL
 
        [Zero or one time.]
 
-       The source of the directory entries in the list.
+       A list of the sources of the directory entries in the list.
 
-       As of version 2.1.0, the sources are:
-         * "whitelist" - the fallback.whitelist file in the fallback-scripts
-                         repository. This is the default.
-         * "fallback"  - a fallback_dirs.inc file from a tor repository.
-                         Used in check_existing mode.
+       As of version 3.0.0, the possible sources are:
+         * "offer-list" - the fallback_offer_list file in the fallback-scripts
+                          repository.
+         * "descriptor" - one or more signed descriptors, each containing an
+                          "offer-fallback-dir" line. This feature will be
+                          implemented in ticket #24839.
+         * "fallback"   - a fallback_dirs.inc file from a tor repository.
+                          Used in check_existing mode.
 
-       This line was added in version 2.1.0 of this specification.
+       Before #24839 is implemented, the default is "offer-list". During the
+       transition to signed offers, it will be "descriptor,offer-list".
+       Afterwards, it will be "descriptor".
+
+       In version 2.1.0, only one source name was allowed after "source=",
+       and the deprecated "whitelist" source name was used instead of
+       "offer-list".
+
+       This line was added in version 2.1.0 of this specification. The format
+       of this line was modified in version 3.0.0 of this specification.
 
      "/*" SP+ key_value SP+ "*/" SP* NL
 
