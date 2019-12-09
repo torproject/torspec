@@ -18,6 +18,10 @@
    The hard-coded fallback directory list is located in the tor source
    repository at:
 
+       src/app/config/fallback_dirs.inc
+
+   In Tor 0.3.4 and earlier, the list is located at:
+
        src/or/fallback_dirs.inc
 
    This document describes version 2.0.0 and later of the directory list
