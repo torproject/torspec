@@ -291,6 +291,10 @@ NOTE: Please look at section 3 of padding-spec.txt now, not this document.
    circuits, and also what other classifiers can be built using deep learning
    and whatnot.
 
+A. Acknowledgements
+
+   This research was supported by NSF grants CNS-1526306 and CNS-1619454.
+
 ---
 
    [0]: https://www.usenix.org/node/190967

@@ -499,6 +499,8 @@ A.1. Acknowledgments
    Thanks to David Goulet, Teor, and George Kadianakis for commentary on
    earlier versions of this draft.
 
+   This research was supported by NSF grants CNS-1526306 and CNS-1619454.
+
 A.2. Additional ideas
 
    Teor notes that there are ways to try to get this idea to apply to

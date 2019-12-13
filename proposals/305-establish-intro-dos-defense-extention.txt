@@ -191,6 +191,10 @@ Status: Closed
    or very popular which could mean time to increase or disable the denial of
    service defenses.
 
+A. Acknowledgements
+
+   This research was supported by NSF grants CNS-1526306 and CNS-1619454.
+
 References:
 
 [1] https://lists.torproject.org/pipermail/tor-dev/2019-May/013837.html
