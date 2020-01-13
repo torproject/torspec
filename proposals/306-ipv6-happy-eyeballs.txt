@@ -186,7 +186,8 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
 
    When the majority of clients and relay are IPv6-capable, we could set the
    default value of ClientPreferIPv6ORPort to 1, in order to take advantage
-   of IPv6.
+   of IPv6. We could add a ClientPreferIPv6ORPort consensus parameter, so we
+   can make this change network-wide.
 
 5. Relay Statistics
 
@@ -233,7 +234,8 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
       optional.)
 
     * A default setup capable of both IPv4 and IPv6 connections with the
-      options described in Section 4.1
+      options described in Section 4. (The ClientPreferIPv6ORPort consensus
+      parameter is optional.)
 
 8. Optional Features
 
@@ -254,6 +256,8 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
       this option if the Connection Attempt Delay needs to be manually
       adjusted, for instance, if clients often fail IPv6 connections.
       (Section 3.3.)
+
+    * ClientPreferIPv6ORPort consensus parameter. (Section 4.)
 
     * IPv4, IPv6, and Prop306 connection Statistics. While optional, this may
       be useful for debugging and reliability testing, and metrics on IPv4 vs
