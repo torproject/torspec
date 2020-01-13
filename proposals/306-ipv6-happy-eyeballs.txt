@@ -133,7 +133,7 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
    default to 1.
 
    The default value for NumIPv6Guards should be -1. (Use the consensus
-   parameter, or the default value.)
+   parameter, or the underlying default value of 1.)
 
    As of September 2019, approximately 20% of Tor's guards supported IPv6,
    by consensus weight. (Excluding exits that are also guards, because
@@ -151,8 +151,11 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
    IPv6, NumIPv6Guards can become a minimum requirement, rather than an exact
    requirement.
 
-   The minimum value of NumIPv6Guards is 0. (Guards will be chosen at
-   random, regardless of their IPv6 ORPorts.)
+   The minimum configurable value of NumIPv6Guards is -1. (Use the consensus
+   parameter, or the underlying default.)
+
+   The minimum resulting value of NumIPv6Guards is 0. (Guards will be chosen
+   at random, regardless of their IPv6 ORPorts.)
 
    The maximum value of NumIPv6Guards should be the configured value of
    NumPrimaryGuards. (Every guard must have an IPv6 ORPort. This setting is
