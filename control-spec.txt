@@ -313,9 +313,12 @@
 
   If all of the listed keywords exist in the Tor configuration, Tor replies
   with a series of reply lines of the form:
+
       250 keyword=value
+
   If any option is set to a 'default' value semantically different from an
   empty string, Tor may reply with a reply line of the form:
+
       250 keyword
 
   Value may be a raw value or a quoted string.  Tor will try to use unquoted
@@ -363,10 +366,12 @@
 3.5. AUTHENTICATE
 
   Sent from the client to the server.  The syntax is:
+
      "AUTHENTICATE" [ SP 1*HEXDIG / QuotedString ] CRLF
 
   This command is used to authenticate to the server. The provided string is
   one of the following:
+
      * (For the HASHEDPASSWORD authentication method; see 3.21)
        The original password represented as a QuotedString.
 
@@ -404,6 +409,7 @@
 3.6. SAVECONF
 
   Sent from the client to the server.  The syntax is:
+
      "SAVECONF" [SP "FORCE"] CRLF
 
   Instructs the server to write out its config options into its torrc. Server
@@ -482,6 +488,7 @@
   address should be replaced with connections to the specified replacement
   address.  If the addresses are well-formed, and the server is able to
   fulfill the request, the server replies with a 250 message:
+
     250-OldAddress1=NewAddress1
     250 OldAddress2=NewAddress2
 
@@ -504,6 +511,7 @@
   address.
 
   Example:
+
     C: MAPADDRESS 0.0.0.0=torproject.org 1.2.3.4=tor.freehaven.net
     S: 250-127.192.10.10=torproject.org
     S: 250 1.2.3.4=tor.freehaven.net
@@ -511,6 +519,7 @@
   {Note: This feature is designed to be used to help Tor-ify applications
   that need to use SOCKS4 or hostname-less SOCKS5.  There are three
   approaches to doing this:
+
      1. Somehow make them use SOCKS4a or SOCKS5-with-hostnames instead.
      2. Use tor-resolve (or another interface to Tor's resolve-over-SOCKS
         feature) to resolve the hostname remotely.  This doesn't work
@@ -518,6 +527,7 @@
      3. Use MAPADDRESS to map an IP address to the desired hostname, and then
         arrange to fool the application into thinking that the hostname
         has resolved to that IP.
+
   This functionality is designed to help implement the 3rd approach.}
 
   Mappings set by the controller last until the Tor process exits:
@@ -528,14 +538,17 @@
 3.9. GETINFO
 
   Sent from the client to the server.  The syntax is as for GETCONF:
+
     "GETINFO" 1*(SP keyword) CRLF
 
   Unlike GETCONF, this message is used for data that are not stored in the Tor
   configuration file, and that may be longer than a single line.  On success,
   one ReplyLine is sent for each requested value, followed by a final 250 OK
   ReplyLine.  If a value fits on a single line, the format is:
+
       250-keyword=value
   If a value must be split over multiple lines, the format is:
+
       250+keyword=
       value
       .
@@ -1140,6 +1153,7 @@
       the MaxMemInQueues option. (Introduced in 0.2.5.4-alpha)
 
   Examples:
+
      C: GETINFO version desc/name/moria1
      S: 250+desc/name/moria=
      S: [Descriptor for moria]
@@ -1150,6 +1164,7 @@
 3.10. EXTENDCIRCUIT
 
   Sent from the client to the server.  The format is:
+
       "EXTENDCIRCUIT" SP CircuitID
                       [SP ServerSpec *("," ServerSpec)]
                       [SP "purpose=" Purpose] CRLF
@@ -1176,6 +1191,7 @@
 3.11. SETCIRCUITPURPOSE
 
   Sent from the client to the server.  The format is:
+
       "SETCIRCUITPURPOSE" SP CircuitID SP "purpose=" Purpose CRLF
 
   This changes the circuit's purpose. See EXTENDCIRCUIT above for details.
@@ -1183,6 +1199,7 @@
 3.12. SETROUTERPURPOSE
 
   Sent from the client to the server.  The format is:
+
       "SETROUTERPURPOSE" SP NicknameOrKey SP Purpose CRLF
 
   This changes the descriptor's purpose. See +POSTDESCRIPTOR below
@@ -1195,6 +1212,7 @@
 3.13. ATTACHSTREAM
 
   Sent from the client to the server.  The syntax is:
+
      "ATTACHSTREAM" SP StreamID SP CircuitID [SP "HOP=" HopNum] CRLF
 
   This message informs the server that the specified stream should be
@@ -1234,6 +1252,7 @@
 3.14. POSTDESCRIPTOR
 
   Sent from the client to the server. The syntax is:
+
     "+POSTDESCRIPTOR" [SP "purpose=" Purpose] [SP "cache=" Cache]
                       CRLF Descriptor CRLF "." CRLF
 
@@ -1258,6 +1277,7 @@
 3.15. REDIRECTSTREAM
 
   Sent from the client to the server. The syntax is:
+
     "REDIRECTSTREAM" SP StreamID SP Address [SP Port] CRLF
 
   Tells the server to change the exit address on the specified stream.  If
@@ -1287,6 +1307,7 @@
 3.17. CLOSECIRCUIT
 
    The syntax is:
+
      "CLOSECIRCUIT" SP CircuitID *(SP Flag) CRLF
      Flag = "IfUnused"
 
@@ -1351,6 +1372,7 @@
 3.20. RESOLVE
 
   The syntax is
+
     "RESOLVE" *Option *Address CRLF
     Option = "mode=reverse"
     Address = a hostname or IPv4 address
@@ -1365,9 +1387,11 @@
 3.21. PROTOCOLINFO
 
   The syntax is:
+
     "PROTOCOLINFO" *(SP PIVERSION) CRLF
 
   The server reply format is:
+
     "250-PROTOCOLINFO" SP PIVERSION CRLF *InfoLine "250 OK" CRLF
 
     InfoLine = AuthLine / VersionLine / OtherLine
@@ -1436,6 +1460,7 @@
 3.22. LOADCONF
 
   The syntax is:
+
     "+LOADCONF" CRLF ConfigText CRLF "." CRLF
 
   This command allows a controller to upload the text of a config file
@@ -1447,6 +1472,7 @@
 3.23. TAKEOWNERSHIP
 
   The syntax is:
+
     "TAKEOWNERSHIP" CRLF
 
   This command instructs Tor to shut down when this control
@@ -1492,6 +1518,7 @@
 3.24. AUTHCHALLENGE
 
   The syntax is:
+
     "AUTHCHALLENGE" SP "SAFECOOKIE"
                     SP ClientNonce
                     CRLF
@@ -1502,6 +1529,7 @@
   SAFECOOKIE method of authentication.
 
   If the server accepts the command, the server reply format is:
+
     "250 AUTHCHALLENGE"
             SP "SERVERHASH=" ServerHash
             SP "SERVERNONCE=" ServerNonce
@@ -1515,14 +1543,17 @@
   AUTHENTICATE command.  ServerNonce MUST be 32 bytes long.
 
   ServerHash is computed as:
+
     HMAC-SHA256("Tor safe cookie authentication server-to-controller hash",
                 CookieString | ClientNonce | ServerNonce)
+
   (with the HMAC key as its first argument)
 
   After a controller sends a successful AUTHCHALLENGE command, the
   next command sent on the connection must be an AUTHENTICATE command,
   and the only authentication string which that AUTHENTICATE command
   will accept is:
+
     HMAC-SHA256("Tor safe cookie authentication controller-to-server hash",
                 CookieString | ClientNonce | ServerNonce)
 
@@ -1534,6 +1565,7 @@
 3.25. DROPGUARDS
 
   The syntax is:
+
     "DROPGUARDS" CRLF
 
   Tells the server to drop all guard nodes. Do not invoke this command
@@ -1546,6 +1578,7 @@
 3.26. HSFETCH
 
   The syntax is:
+
     "HSFETCH" SP (HSAddress / "v" Version "-" DescId)
               *[SP "SERVER=" Server] CRLF
 
@@ -1579,6 +1612,7 @@
   SERVER is specified then events are emitted for each location.
 
   Examples are:
+
      C: HSFETCH v2-gezdgnbvgy3tqolbmjrwizlgm5ugs2tl
         SERVER=9695DFC35FFEB861329B9F1AB04C46397020CE31
      S: 250 OK
@@ -1595,6 +1629,7 @@
 3.27. ADD_ONION
 
   The syntax is:
+
     "ADD_ONION" SP KeyType ":" KeyBlob
             [SP "Flags=" Flag *("," Flag)]
             [SP "MaxStreams=" NumStreams]
@@ -1648,6 +1683,7 @@
                  specific to the authorization method (v2 only).
 
   The server reply format is:
+
     "250-ServiceID=" ServiceID CRLF
     ["250-PrivateKey=" KeyType ":" KeyBlob CRLF]
     *("250-ClientAuth=" ClientName ":" ClientBlob CRLF)
@@ -1711,6 +1747,7 @@
   importing an ED25519-V3 key.]
 
   Examples:
+
      C: ADD_ONION NEW:BEST Flags=DiscardPK Port=80
      S: 250-ServiceID=exampleoniont2pqglbny66wpovyvao3ylc23eileodtevc4b75ikpad
      S: 250 OK
@@ -1757,6 +1794,7 @@
 3.28. DEL_ONION
 
   The syntax is:
+
     "DEL_ONION" SP ServiceID CRLF
 
     ServiceID = The Onion Service address without the trailing ".onion"
@@ -1784,6 +1822,7 @@
 3.29. HSPOST
 
   The syntax is:
+
     "+HSPOST" *[SP "SERVER=" Server] [SP "HSADDRESS=" HSAddress]
               CRLF Descriptor CRLF "." CRLF
 
@@ -1809,6 +1848,7 @@
   this with a HS_DESC event with the result for each upload location.
 
   Examples are:
+
      C: +HSPOST SERVER=9695DFC35FFEB861329B9F1AB04C46397020CE31
         [DESCRIPTOR]
         .
@@ -1819,6 +1859,7 @@
 3.30. ONION_CLIENT_AUTH_ADD
 
   The syntax is:
+
     "ONION_CLIENT_AUTH_ADD" SP HSAddress
                             SP KeyType ":" PrivateKeyBlob
                             [SP "ClientName=" Nickname]
@@ -1835,6 +1876,7 @@
 
   FLAGS is a comma-separated tuple of flags for this new client. For now, the
   currently supported flags are:
+
     "Permanent" - This client's credentials should be stored in the filesystem.
                   If this is not set, the client's credentials are epheremal
                   and stored in memory.
@@ -1847,6 +1889,7 @@
   decrypt those descriptors as soon as this command succeeds.
 
   On success, "250 OK" is returned. Otherwise, the following error codes exist:
+
     251 - Client auth credentials for this onion service already existed and replaced.
     252 - Added client auth credentials and successfully decrypted a cached descriptor.
     512 - Syntax error in "HSAddress", or "PrivateKeyBlob" or "Nickname"
@@ -1856,6 +1899,7 @@
 3.31. ONION_CLIENT_AUTH_REMOVE
 
   The syntax is:
+
     "ONION_CLIENT_AUTH_REMOVE" SP HSAddress
 
    KeyType = "x25519" is the only one supported right now
@@ -1864,12 +1908,14 @@
   for the onion service with "HSAddress".
 
   On success "250 OK" is returned. Otherwise, the following error codes exist:
+
     512 - Syntax error in "HSAddress".
     251 - Client credentials for "HSAddress" did not exist.
 
 3.32. ONION_CLIENT_AUTH_VIEW
 
   The syntax is:
+
     "ONION_CLIENT_AUTH_VIEW" [SP HSAddress] CRLF
 
   Tells the connected Tor to list all the stored client-side v3 client auth
@@ -1877,6 +1923,7 @@
   stored client-side v3 client auth credentials.
 
   The server reply format is:
+
     "250-ONION_CLIENT_AUTH_VIEW" [SP HSAddress] CRLF
     *("250-CLIENT" SP HSAddress SP KeyType ":" PrivateKeyBlob
                   [SP "ClientName=" Nickname]
@@ -1893,14 +1940,17 @@
 
   FLAGS is a comma-separated field of flags for this client, the currently
   supported flags are:
+
       "Permanent" - This client's credentials are stored in the filesystem.
 
   On success "250 OK" is returned. Otherwise, the following error codes exist:
+
     512 - Syntax error in "HSAddress".
 
 3.33. DROPOWNERSHIP
 
   The syntax is:
+
     "DROPOWNERSHIP" CRLF
 
   This command instructs Tor to relinquish ownership of its control
@@ -2003,6 +2053,7 @@
      S: 250 ORPORT=0
 
   But this sequence is disallowed:
+
      C: SETEVENTS CIRC
      S: 250 OK
      C: GETCONF SOCKSPORT ORPORT
@@ -2013,8 +2064,11 @@
   Clients MUST tolerate more arguments in an asynchronous reply than
   expected, and MUST tolerate more lines in an asynchronous reply than
   expected.  For instance, a client that expects a CIRC message like:
+
       650 CIRC 1000 EXTENDED moria1,moria2
+
   must tolerate:
+
       650-CIRC 1000 EXTENDED moria1,moria2 0xBEEF
       650-EXTRAMAGIC=99
       650 ANONYMITY=high
@@ -2024,8 +2078,11 @@
   Tor 0.2.2.x and later), then each event line as specified below may be
   followed by additional arguments and additional lines.  Additional
   lines will be of the form:
+
       "650" ("-"/" ") KEYWORD ["=" ARGUMENTS] CRLF
+
   Additional arguments will be of the form
+
       SP KEYWORD ["=" ( QuotedString / * NonSpDquote ) ]
 
   Clients MUST tolerate events with arguments and keywords they do not
@@ -2261,7 +2318,9 @@
    reasons not listed above.  Reasons are as listed in tor-spec.txt.
 
    "REMAP" events include a Source if extended events are enabled:
+
       Source = "CACHE" / "EXIT"
+
    Clients MUST accept sources not listed above.  "CACHE" is given if
    the Tor client decided to remap the address because of a cached
    answer, and "EXIT" is given if the remote node we queried gave us
@@ -2353,6 +2412,7 @@
   NumCircuits counts both established and pending circuits.
 
   The ORStatus values are as follows:
+
      NEW -- We have received a new incoming OR connection, and are starting
        the server-side handshake.
      LAUNCHED -- We have launched a new outgoing OR connection, and are
@@ -2363,6 +2423,7 @@
      CLOSED -- The OR connection closed in an unremarkable way.
 
   The Reason values for closed/failed OR connections are:
+
      DONE -- The OR connection has shut down cleanly.
      CONNECTREFUSED -- We got an ECONNREFUSED while connecting to the target
         OR.
@@ -2386,6 +2447,7 @@
 4.1.4. Bandwidth used in the last second
 
   The syntax is:
+
      "650" SP "BW" SP BytesRead SP BytesWritten *(SP Type "=" Num) CRLF
      BytesRead = 1*DIGIT
      BytesWritten = 1*DIGIT
@@ -2399,8 +2461,11 @@
 4.1.5. Log messages
 
   The syntax is:
+
      "650" SP Severity SP ReplyText CRLF
+
   or
+
      "650+" Severity CRLF Data 650 SP "OK" CRLF
 
      Severity = "DEBUG" / "INFO" / "NOTICE" / "WARN"/ "ERR"
@@ -2419,6 +2484,7 @@
   extrainfos or anything else) are received.
 
   Syntax:
+
      "650" SP "NEWDESC" 1*(SP LongName) CRLF
         ; In Tor versions 0.1.2.2-alpha through 0.2.2.1-alpha with feature
         ; VERBOSE_NAMES turned off and before version 0.1.2.2-alpha, it
@@ -2435,6 +2501,7 @@
   TrackHostExits feature.
 
   Syntax:
+
      "650" SP "ADDRMAP" SP Address SP NewAddress SP Expiry
        [SP "error=" ErrorCode] [SP "EXPIRES=" UTCExpiry] [SP "CACHED=" Cached]
        CRLF
@@ -2467,6 +2534,7 @@
   somebody has just uploaded a server descriptor.
 
   Syntax:
+
      "650" "+" "AUTHDIR_NEWDESCS" CRLF Action CRLF Message CRLF
        Descriptor CRLF "." CRLF "650" SP "OK" CRLF
      Action = "ACCEPTED" / "DROPPED" / "REJECTED"
@@ -2483,6 +2551,7 @@
 4.1.9. Our descriptor changed
 
   Syntax:
+
      "650" SP "DESCCHANGED" CRLF
 
   [First added in 0.1.2.2-alpha.]
@@ -2496,6 +2565,7 @@
   specified interface.
 
   Syntax:
+
      "650" SP StatusType SP StatusSeverity SP StatusAction
                                          [SP StatusArguments] CRLF
 
@@ -2926,6 +2996,7 @@
 4.1.11. Our set of guard nodes has changed
 
   Syntax:
+
      "650" SP "GUARD" SP Type SP Name SP Status ... CRLF
      Type = "ENTRY"
      Name = ServerSpec
@@ -2936,6 +3007,7 @@
   network.
 
   The Status values are:
+
     "NEW"  -- This node was not previously used as a guard; now we have
               picked it as one.
     "DROPPED" -- This node is one we previously picked as a guard; we
@@ -2952,6 +3024,7 @@
 4.1.12. Network status has changed
 
   Syntax:
+
      "650" "+" "NS" CRLF 1*NetworkStatus "." CRLF "650" SP "OK" CRLF
 
   The event is used whenever our local view of a relay status changes.
@@ -2965,6 +3038,7 @@
 4.1.13. Bandwidth used on an application stream
 
   The syntax is:
+
      "650" SP "STREAM_BW" SP StreamID SP BytesWritten SP BytesRead SP
               Time CRLF
      BytesWritten = 1*DIGIT
@@ -2989,6 +3063,7 @@
 4.1.14. Per-country client stats
 
   The syntax is:
+
      "650" SP "CLIENTS_SEEN" SP TimeStarted SP CountrySummary SP
      IPVersions CRLF
 
@@ -3021,6 +3096,7 @@
 4.1.15. New consensus networkstatus has arrived
 
   The syntax is:
+
      "650" "+" "NEWCONSENSUS" CRLF 1*NetworkStatus "." CRLF "650" SP
      "OK" CRLF
 
@@ -3034,6 +3110,7 @@
 4.1.16. New circuit buildtime has been set
 
   The syntax is:
+
      "650" SP "BUILDTIMEOUT_SET" SP Type SP "TOTAL_TIMES=" Total SP
         "TIMEOUT_MS=" Timeout SP "XM=" Xm SP "ALPHA=" Alpha SP
         "CUTOFF_QUANTILE=" Quantile SP "TIMEOUT_RATE=" TimeoutRate SP
@@ -3071,6 +3148,7 @@
 4.1.17. Signal received
 
   The syntax is:
+
      "650" SP "SIGNAL" SP Signal CRLF
 
      Signal = "RELOAD" / "DUMP" / "DEBUG" / "NEWNYM" / "CLEARDNSCACHE"
@@ -3092,6 +3170,7 @@
 4.1.18. Configuration changed
 
   The syntax is:
+
      StartReplyLine *(MidReplyLine) EndReplyLine
 
      StartReplyLine = "650-CONF_CHANGED" CRLF
@@ -3144,6 +3223,7 @@
 4.1.21. Bandwidth used on an OR or DIR or EXIT connection
 
   The syntax is:
+
      "650" SP "CONN_BW" SP "ID=" ConnID SP "TYPE=" ConnType
               SP "READ=" BytesRead SP "WRITTEN=" BytesWritten CRLF
 
@@ -3172,6 +3252,7 @@
 4.1.22. Bandwidth used by all streams attached to a circuit
 
   The syntax is:
+
      "650" SP "CIRC_BW" SP "ID=" CircuitID SP "READ=" BytesRead SP
               "WRITTEN=" BytesWritten SP "TIME=" Time SP
               "DELIVERED_READ=" DeliveredBytesRead SP
@@ -3223,6 +3304,7 @@
 4.1.23. Per-circuit cell stats
 
   The syntax is:
+
      "650" SP "CELL_STATS"
               [ SP "ID=" CircuitID ]
               [ SP "InboundQueue=" QueueID SP "InboundConn=" ConnID ]
@@ -3238,6 +3320,7 @@
      CellType = 1*( "a" - "z" / "0" - "9" / "_" )
 
   Examples are:
+
      650 CELL_STATS ID=14 OutboundQueue=19403 OutboundConn=15
          OutboundAdded=create_fast:1,relay_early:2
          OutboundRemoved=create_fast:1,relay_early:2
@@ -3289,6 +3372,7 @@
 4.1.24. Token buckets refilled
 
   The syntax is:
+
      "650" SP "TB_EMPTY" SP BucketName [ SP "ID=" ConnID ] SP
               "READ=" ReadBucketEmpty SP "WRITTEN=" WriteBucketEmpty SP
               "LAST=" LastRefill CRLF
@@ -3299,6 +3383,7 @@
      LastRefill = 1*DIGIT
 
   Examples are:
+
      650 TB_EMPTY ORCONN ID=16 READ=0 WRITTEN=0 LAST=100
      650 TB_EMPTY GLOBAL READ=93 WRITTEN=93 LAST=100
      650 TB_EMPTY RELAY READ=93 WRITTEN=93 LAST=100
@@ -3436,6 +3521,7 @@
 4.1.27. Network liveness has changed
 
   Syntax:
+
      "650" SP "NETWORK_LIVENESS" SP Status CRLF
      Status = "UP" /  ; The network now seems to be reachable.
               "DOWN" /  ; The network now seems to be unreachable.
@@ -3447,6 +3533,7 @@
 4.1.28. Pluggable Transport Logs
 
    Syntax:
+
       "650" SP "PT_LOG" SP PT=Program SP Message
 
       Program = The program path as defined in the *TransportPlugin
@@ -3470,6 +3557,7 @@
 4.1.29. Pluggable Transport Status
 
    Syntax:
+
       "650" SP "PT_STATUS" SP PT=Program SP TRANSPORT=Transport SP Message
 
       Program = The program path as defined in the *TransportPlugin
@@ -3507,6 +3595,7 @@
   contents of the cookie file:
 
   * Current versions of Tor support cookie authentication
+
     using the "COOKIE" authentication method: the controller sends the
     contents of the cookie file, encoded in hexadecimal.  This
     authentication method exposes the user running a controller to an
@@ -3520,6 +3609,7 @@
     Tor before some future version of Tor.
 
   * 0.2.2.x versions of Tor starting with 0.2.2.36, and all versions of
+
     Tor after 0.2.3.12-alpha, support cookie authentication using the
     "SAFECOOKIE" authentication method, which discloses much less
     information about the contents of the cookie file.
@@ -3529,12 +3619,16 @@
   S2K algorithm in RFC 2440 (OpenPGP), and prefixed with the s2k specifier.
   This is then encoded in hexadecimal, prefixed by the indicator sequence
   "16:".  Thus, for example, the password 'foo' could encode to:
+
      16:660537E3E1CD49996044A3BF558097A981F539FEA2F9DA662B4626C1C2
         ++++++++++++++++**^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
            salt                       hashed value
                        indicator
+
   You can generate the salt of a password by calling
+
            'tor --hash-password <password>'
+
   or by using the example code in the Python and Java controller libraries.
   To authenticate under this scheme, the controller sends Tor the original
   secret that was used to generate the password, either as a quoted string

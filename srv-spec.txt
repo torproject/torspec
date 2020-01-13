@@ -197,6 +197,7 @@ Tor works. This text used to be proposal 250-commit-reveal-consensus.txt.
 2.5. Protocol Illustration
 
    An illustration for better understanding the protocol can be found here:
+
          https://people.torproject.org/~asn/hs_notes/shared_rand.jpg
 
    It reads left-to-right.
@@ -365,7 +366,9 @@ Tor works. This text used to be proposal 250-commit-reveal-consensus.txt.
    optional.
 
    Participating authorities need to include the line:
+
                  "shared-rand-participate"
+
    in their votes to announce that they take part in the protocol.
 
 4.1.1. Computing commitments and reveals [COMMITREVEAL]

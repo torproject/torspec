@@ -262,12 +262,19 @@
    For forward compatibility, each item MUST allow extra arguments at the
    end of the line unless otherwise noted.  So if an item's description below
    is given as:
+
        "thing" int int int NL
+
    then implementations SHOULD accept this string as well:
+
        "thing 5 9 11 13 16 12" NL
+
    but not this string:
+
        "thing 5" NL
+
    and not this string:
+
        "thing 5 10 thing" NL
    .
 
@@ -1429,6 +1436,7 @@
    If the authority _does_ have a descriptor with the same public key, the
    newly uploaded descriptor is remembered if its publication time is more
    recent than the most recent old descriptor for that router, and either:
+
       - There are non-cosmetic differences between the old descriptor and the
         new one.
       - Enough time has passed between the descriptors' publication times.
@@ -1628,8 +1636,11 @@
    An authority SHOULD publish its vote immediately at the start of each voting
    period (minus VoteSeconds+DistSeconds).  It does this by making it
    available at
+
      http://<hostname>/tor/status-vote/next/authority.z
+
    and sending it in an HTTP POST request to each other authority at the URL
+
      http://<hostname>/tor/post/vote
 
    If, at the start of the voting period, minus DistSeconds, an authority
@@ -1638,10 +1649,14 @@
 
    Once an authority has a vote from another authority, it makes it available
    at
+
       http://<hostname>/tor/status-vote/next/<fp>.z
+
    where <fp> is the fingerprint of the other authority's identity key.
    And at
+
       http://<hostname>/tor/status-vote/next/d/<d>.z
+
    where <d> is the digest of the vote document.
 
    Also, once an authority receives a vote from another authority, it
@@ -2566,10 +2581,12 @@
    "Running" -- A router is 'Running' if the authority managed to connect to
    it successfully within the last 45 minutes on all its published ORPorts.
    Authorities check reachability on:
+
      * the IPv4 ORPort in the "r" line, and
      * the IPv6 ORPort considered for the "a" line, if:
        * the router advertises at least one IPv6 ORPort, and
        * AuthDirHasIPv6Connectivity 1 is set on the authority.
+
    A minority of voting authorities that set AuthDirHasIPv6Connectivity will
    drop unreachable IPv6 ORPorts from the full consensus. Consensus method 27
    in 0.3.3.x puts IPv6 ORPorts in the microdesc consensus, so that
@@ -2600,6 +2617,7 @@
    the top 7/8ths for known active routers or at least 100KB/s.
 
    "Guard" -- A router is a possible Guard if all of the following apply:
+
        - It is Fast,
        - It is Stable,
        - Its Weighted Fractional Uptime is at least the median for "familiar"
@@ -2757,6 +2775,7 @@
 
    The consensus status, along with as many signatures as the server
    currently knows (see section 3.10 below), should be available at
+
       http://<hostname>/tor/status-vote/next/consensus.z
 
    The contents of the consensus document are as follows:
@@ -3000,6 +3019,7 @@
    To achieve this, authorities list in their votes their supported methods
    for generating consensuses from votes.  Later methods will be assigned
    higher numbers.  Currently specified methods:
+
      "1" -- The first implemented version.
      "2" -- Added support for the Unnamed flag.
      "3" -- Added legacy ID key support to aid in authority ID key rollovers
@@ -3051,6 +3071,7 @@
 
    The following methods have incorrect implementations; authorities SHOULD
    NOT advertise support for them:
+
      "21" -- Did not correctly enable support for ed25519 key collation.
 
 3.8.2. Encoding port lists
@@ -3236,9 +3257,11 @@
   assignments:
 
   Directory requests use middle weights:
+
      Wbd=Wmd, Wbg=Wmg, Wbe=Wme, Wbm=Wmm
 
   Handle bridges and strange exit policies:
+
      Wgm=Wgg, Wem=Wee, Weg=Wed
 
 3.9. Computing consensus flavors
@@ -3256,6 +3279,7 @@
    instead wouldn't be too onerous.
 
    Examples for consensus flavors include:
+
       - Publishing hashes of microdescriptors instead of hashes of
         full descriptors (see section 3.9.2).
       - Including different digests of descriptors, instead of the
@@ -3359,12 +3383,14 @@
    Once an authority has computed and signed a consensus network status, it
    should send its detached signature to each other authority in an HTTP POST
    request to the URL:
+
       http://<hostname>/tor/post/consensus-signature
 
    [XXX Note why we support push-and-then-pull.]
 
    All of the detached signatures it knows for consensus status should be
    available at:
+
       http://<hostname>/tor/status-vote/next/consensus-signatures.z
 
    Assuming full connectivity, every authority should compute and sign the
@@ -3431,9 +3457,13 @@
    The voting period ends at the valid-after time. If the consensus has
    been signed by a majority of authorities, these documents are made
    available at
+
       http://<hostname>/tor/status-vote/current/consensus.z
+
    and
+
       http://<hostname>/tor/status-vote/current/consensus-signatures.z
+
    [XXX current/consensus-signatures is not currently implemented, as it
     is not used in the voting protocol.]
 
@@ -3441,14 +3471,17 @@
     consensuses.]
 
    The other vote documents are analogously made available under
+
      http://<hostname>/tor/status-vote/current/authority.z
      http://<hostname>/tor/status-vote/current/<fp>.z
      http://<hostname>/tor/status-vote/current/d/<d>.z
      http://<hostname>/tor/status-vote/current/bandwidth.z
+
    once the voting period ends, regardless of the number of signatures.
 
    The authorities serve another consensus of each flavor "F" from the
    locations
+
       /tor/status-vote/(current|next)/consensus-F.z. and
       /tor/status-vote/(current|next)/consensus-F/<FP1>+....z.
 
@@ -3463,8 +3496,10 @@
    All directory caches try to keep a recent
    network-status consensus document to serve to clients.  A cache ALWAYS
    downloads a network-status consensus if any of the following are true:
+
      - The cache has no consensus document.
      - The cache's consensus document is no longer valid.
+
    Otherwise, the cache downloads a new consensus document at a randomly
    chosen time in the first half-interval after its current consensus
    stops being fresh.  (This time is chosen at random to avoid swarming
@@ -3512,6 +3547,7 @@
 
    The microdescriptors with base64 hashes <D1>,<D2>,<D3> are available
    at:
+
      http://<hostname>/tor/micro/d/<D1>-<D2>-<D3>[.z]
 
    <Dn> are base64 encoded with trailing =s omitted for size and for
@@ -3556,6 +3592,7 @@
    The first line is "network-status-diff-version 1" NL
 
    The second line is
+
            "hash" SP FromDigest SP ToDigest NL
 
    where FromDigest is the hex-encoded SHA3-256 digest of the _signed
@@ -3676,10 +3713,12 @@
 
    Clients try to have the best descriptor for each router.  A descriptor is
    "best" if:
+
       * It is listed in the consensus network-status document.
 
    Periodically (currently every 10 seconds) clients check whether there are
    any "downloadable" descriptors.  A descriptor is downloadable if:
+
       - It is the "best" descriptor for some router.
       - The descriptor was published at least 10 minutes in the past.
         (This prevents clients from trying to fetch descriptors that the
@@ -3696,6 +3735,7 @@
 
    When downloading multiple server descriptors, the client chooses multiple
    mirrors so that:
+
      - At least 3 different mirrors are used, except when this would result
        in more than one request for under 4 descriptors.
      - No more than 128 descriptors are requested from a single mirror.
@@ -3814,6 +3854,7 @@
 
   Servers SHOULD set Content-Encoding to the algorithm used to compress the
   document(s) being served.  Recognized algorithms are:
+
      - "identity"     -- RFC2616 section 3.5
      - "deflate"      -- RFC2616 section 3.5
      - "gzip"         -- RFC2616 section 3.5
@@ -3894,12 +3935,15 @@ B. General-use HTTP URLs
    "Fingerprints" in these URLs are base16-encoded SHA1 hashes.
 
    The most recent v3 consensus should be available at:
+
       http://<hostname>/tor/status-vote/current/consensus.z
 
    Similarly, the v3 microdescriptor consensus should be available at:
+
       http://<hostname>/tor/status-vote/current/consensus-microdesc.z
 
    Starting with Tor version 0.2.1.1-alpha is also available at:
+
       http://<hostname>/tor/status-vote/current/consensus/<F1>+<F2>+<F3>.z
 
    (NOTE: Due to squid proxy url limitations at most 96 fingerprints can be
@@ -3921,18 +3965,22 @@ B. General-use HTTP URLs
 
    A concatenated set of all the current key certificates should be available
    at:
+
       http://<hostname>/tor/keys/all.z
 
    The key certificate for this server (if it is an authority) should be
    available at:
+
       http://<hostname>/tor/keys/authority.z
 
    The key certificate for an authority whose authority identity fingerprint
    is <F> should be available at:
+
       http://<hostname>/tor/keys/fp/<F>.z
 
    The key certificate whose signing key fingerprint is <F> should be
    available at:
+
       http://<hostname>/tor/keys/sk/<F>.z
 
    The key certificate whose identity key fingerprint is <F> and whose signing
@@ -3941,15 +3989,19 @@ B. General-use HTTP URLs
       http://<hostname>/tor/keys/fp-sk/<F>-<S>.z
 
    (As usual, clients may request multiple certificates using:
+
        http://<hostname>/tor/keys/fp-sk/<F1>-<S1>+<F2>-<S2>.z  )
+
    [The above fp-sk format was not supported before Tor 0.2.1.9-alpha.]
 
    The most recent descriptor for a server whose identity key has a
    fingerprint of <F> should be available at:
+
       http://<hostname>/tor/server/fp/<F>.z
 
    The most recent descriptors for servers with identity fingerprints
    <F1>,<F2>,<F3> should be available at:
+
       http://<hostname>/tor/server/fp/<F1>+<F2>+<F3>.z
 
    (NOTE: Due to squid proxy url limitations at most 96 fingerprints can be
@@ -3962,14 +4014,18 @@ B. General-use HTTP URLs
 
    The server descriptor with (descriptor) digest <D> (in hex) should be
    available at:
+
       http://<hostname>/tor/server/d/<D>.z
 
    The most recent descriptors with digests <D1>,<D2>,<D3> should be
    available at:
+
       http://<hostname>/tor/server/d/<D1>+<D2>+<D3>.z
 
    The most recent descriptor for this server should be at:
+
       http://<hostname>/tor/server/authority.z
+
     [Nothing in the Tor protocol uses this resource yet, but it is useful
      for debugging purposes. Also, the official Tor implementations
      (starting at 0.1.1.x) use this resource to test whether a server's
@@ -3977,9 +4033,11 @@ B. General-use HTTP URLs
 
    A concatenated set of the most recent descriptors for all known servers
    should be available at:
+
       http://<hostname>/tor/server/all.z
 
    Extra-info documents are available at the URLS
+
       http://<hostname>/tor/extra/d/...
       http://<hostname>/tor/extra/fp/...
       http://<hostname>/tor/extra/all[.z]
@@ -4086,6 +4144,7 @@ E. Limited ed diff format
    ed commands.
 
    We support the following ed commands, each on a line by itself:
+
     - "<n1>d"          Delete line n1
     - "<n1>,<n2>d"     Delete lines n1 through n2, inclusive
     - "<n1>,$d"        Delete line n1 through the end of the file, inclusive.
