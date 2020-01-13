@@ -88,8 +88,8 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
 
      * NumIPv6Guards NUM
 
-   If UseEntryGuards is set to 1, we will try to pick NUM relays that support
-   IPv6 for our primary guard list, which is the set of relays we strongly
+   If UseEntryGuards is set to 1, we will select exactly this number of IPv6
+   relays for our primary guard list, which is the set of relays we strongly
    prefer when connecting to the Tor network. (This number should also apply
    to all of Tor's other guard lists, scaled up based on the relative size of
    the list.)
@@ -99,9 +99,33 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
    default to 1.
 
    The default value for NumIPv6Guards should be -1. (Use the consensus
-   parameter, or the default value.)
+   parameter, or the underlying default value of 1.)
 
-   The default value for NumIPv6Guards should be 0.
+   As of September 2019, approximately 20% of Tor's guards supported IPv6,
+   by consensus weight. (Excluding exits that are also guards, because
+   clients avoid choosing exits in their guard lists.)
+
+   If all Tor clients implement NumIPv6Guards, then these 20% of guards will
+   handle approximately 33% of Tor's traffic. (Because the default value of
+   NumPrimaryGuards is 3.) This may have a significant impact on Tor's
+   load-balancing. Therefore, we should deploy this feature gradually, and try
+   to increase the number of relays that support IPv6 to at least 33%.
+
+   To minimise the impact on load-balancing, IPv6 support should only be
+   required for exactly NumIPv6Guards during guard list selection. All other
+   guards should be IPv4-only guards. Once approximately 50% of guards support
+   IPv6, NumIPv6Guards can become a minimum requirement, rather than an exact
+   requirement.
+
+   The minimum configurable value of NumIPv6Guards is -1. (Use the consensus
+   parameter, or the underlying default.)
+
+   The minimum resulting value of NumIPv6Guards is 0. (Guards will be chosen
+   at random, regardless of their IPv6 ORPorts.)
+
+   The maximum value of NumIPv6Guards should be the configured value of
+   NumPrimaryGuards. (Every guard must have an IPv6 ORPort. This setting is
+   equivalent to ClientPreferIPv6ORPort 1.)
 
 3. Relay Connections
 
@@ -224,8 +248,11 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
 
    The mimumum viable product for Prop306 must include the following:
 
-    * Implementation of the algorithm in Section 3.1 along with the changes
-      described in Sections 2.1 and 2.2
+    * The address handling and entry guard changes described in
+      Section 2. (Single Onion Services are optional, Bridge Clients are out
+      of scope. The consensus parameter and torrc options are optional.)
+
+    * The alternative address retry algorithm in Section 3.1.
 
     * The Connection Success/Failure mechanism in Section 3.2.
 
