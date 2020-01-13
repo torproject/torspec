@@ -145,17 +145,15 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
    connections should be 250 msec. This is to avoid the overhead from tunneled
    IPv6 connections.
 
-   The Minimum Connection Attempt Delay should not be dynamically adjusted
-   as it adds privacy risks. This value should be fixed at 10 ms as per
-   RFC 8305 and could be adjusted using this proposed consensus parameter:
+   The Connection Attempt Delay should not be dynamically adjusted, as it adds
+   privacy risks. This value should be fixed, and could be manually adjusted
+   using this torrc option or consensus parameter:
 
-     * ConnectionAttemptDelay N msec
+     * ConnectionAttemptDelay N [msec|second]
 
-   Where N is the number of milliseconds for the network-wide Minimum
-   Connection Attempt Delay.
-
-   The Maximum Connection Attempt Delay should also not be dynamically adjusted
-   for privacy reasons, but the maximum should be higher than the RFC 8305
+   The Minimum and Maximum Connection Attempt Delays should also not be
+   dynamically adjusted for privacy reasons. The Minimum should be fixed at
+   10 msec as per RFC 8305. But the maximum should be higher than the RFC 8305
    recommendation of 2 seconds. For Tor, we should make this timeout value 30
    seconds to match Tor's existing timeout.
 
@@ -178,8 +176,8 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
     * ClientPreferIPv6ORPort 0 (for load-balancing reasons so we don't
       overload IPv6-only guards)
 
-    * ConnectionAttemptDelay 10 (for 10 msec, the minimum delay between
-      IPv4 and IPv6)
+    * ConnectionAttemptDelay 250 msec (the recommended delay between IPv4
+      and IPv6, as per RFC 8305)
 
    One thing to note is that clients should be able to connect with the above
    options on IPv4-only, dual-stack, and IPv6-only networks, and they should
@@ -252,9 +250,10 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
       option if the proposed default doesn't work for some clients.
       (Section 2.3.)
 
-    * Consensus Parameter ConnectionAttemptDelay (Section 3.3) - We will need
-      this if the Minimum Connection Attempt Delay needs to be dynamically
-      adjusted, for instance, if clients often fail IPv6 connections
+    * ConnectionAttemptDelay torrc option and consensus parameter. We will need
+      this option if the Connection Attempt Delay needs to be manually
+      adjusted, for instance, if clients often fail IPv6 connections.
+      (Section 3.3.)
 
     * IPv4, IPv6, and Prop306 connection Statistics. While optional, this may
       be useful for debugging and reliability testing, and metrics on IPv4 vs
