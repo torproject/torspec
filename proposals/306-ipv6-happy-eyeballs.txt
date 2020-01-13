@@ -80,8 +80,42 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
    IPv4 and IPv6 address if both are available. If only one family is
    available for a relay (IPv4 or IPv6), we should leave the other family null.
 
-2.2. Guard Selection Changes
+2.2 Bootstrap Changes
 
+   Tor's hard-coded authority and fallback directory mirror lists contain
+   some entries with IPv6 ORPorts. As of January 2020, 56% of authorities and
+   47% of fallback directories have IPv6.
+
+   During bootstrapping, we should have an option for the maximum number of
+   IPv4-only nodes, before the next node must have an IPv6 ORPort. The
+   parameter is as follows:
+
+     * MaxNumIPv4BootstrapAttempts NUM
+
+   During bootstrap, the minimum fraction of nodes with IPv6 ORPorts will be
+   1/(1 + MaxNumIPv4BootstrapAttempts). And the average fraction will be
+   larger than both minimum fraction, and the actual proportion of IPv6
+   ORPorts in the fallback directory list. (Clients mainly use fallback
+   directories for bootstrapping.)
+
+   Since this option is used during bootstrapping, it can not have a
+   corresponding consensus parameter.
+
+   The default value for MaxNumIPv4BootstrapAttempts should be 2. This
+   means that every third bootstrap node must have an IPv6 ORPort. And on
+   average, just over half of bootstrap nodes chosen by clients will have an
+   IPv6 ORPort. This change won't have much impact on load-balancing, because
+   almost half the fallback directory mirrors have IPv6 ORPorts.
+
+   The minimum value of MaxNumIPv4BootstrapAttempts is 0. (Every bootstrap
+   node must have an IPv6 ORPort. This setting is equivalent to
+   ClientPreferIPv6ORPort 1.)
+
+   The maximum value of MaxNumIPv4BootstrapAttempts should be 100. (Since
+   most clients only make a few bootstrap connections, bootstrap nodes will
+   be chosen at random, regardless of their IPv6 ORPorts.)
+
+2.3. Guard Selection Changes
 
    When we select guard candidates, we should have an option for the number of
    primary IPv6 entry guards. The parameter is as follows:
@@ -245,7 +279,7 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
 
    The mimumum viable product for Prop306 must include the following:
 
-    * The address handling and entry guard changes described in
+    * The address handling, bootstrap, and entry guard changes described in
       Section 2. (Single Onion Services are optional, Bridge Clients are out
       of scope. The consensus parameter and torrc options are optional.)
 
@@ -271,6 +305,9 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
     * Bridge clients are out of scope: they would require bridge line format
       changes, internal bridge data structure changes, and extend info address
       changes. (Section 2.1.)
+
+    * MaxNumIPv4BootstrapAttempts torrc option. We may need this option if
+      the proposed default doesn't work for some clients. (Section 2.2.)
 
     * NumIPv6Guards torrc option and consensus parameter. We may need this
       option if the proposed default doesn't work for some clients.
