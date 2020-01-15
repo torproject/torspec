@@ -253,9 +253,13 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
 
      * Number of successful connections
 
-     * Number of unsuccessful or cancelled connections
+     * Number of extra Prop306 connections (unsuccessful or cancelled)
        * Client closes the connection before completing TLS
        * Client closes the connection before sending any circuit or data cells
+
+     * Number of client and relay connections
+       * We can distinguish between authenticated (relay, authority
+         reachability) and unauthenticated (client, bridge) connections
 
    Should we implement Section 5:
 
@@ -264,6 +268,8 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
 
      * We should consider the privacy implications of these statistics, and
        how much noise we need to add to them
+
+     * We can include these statistics in the Heartbeat logs
 
 6. Initial Feasibility Testing
 
@@ -323,9 +329,9 @@ Ticket: https://trac.torproject.org/projects/tor/ticket/29801
 
     * ClientPreferIPv6ORPort consensus parameter. (Section 4.)
 
-    * IPv4, IPv6, and Prop306 connection Statistics. While optional, this may
-      be useful for debugging and reliability testing, and metrics on IPv4 vs
-      IPv6. (Section 5.)
+    * IPv4, IPv6, client, relay, and extra Prop306 connection statistics.
+      While optional, these statistics may be useful for debugging and
+      reliability testing, and metrics on IPv4 vs IPv6. (Section 5.)
 
 9. Acknowledgments
 
