@@ -2961,8 +2961,14 @@
         * If consensus method 27 or later is used, the microdesc consensus
           may include an "a" line for each router, listing an IPv6 OR port.
 
+        [ As of 0.4.3.1-alpha, authorities no longer advertise or negotiate
+          any consensus methods lower than 28. ]
+
         * If consensus method 28 or later is used, microdescriptors no longer
           include "a" lines.
+
+        * If consensus method 29 or later is used, microdescriptor "family"
+          lines are canonicalized to improve compression.
 
      The signatures at the end of a consensus document are sorted in
      ascending order by identity digest.
