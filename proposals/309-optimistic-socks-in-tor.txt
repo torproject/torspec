@@ -71,7 +71,7 @@ Ticket: #5915
    connection.
 
    Applications SHOULD test various connection failure modes and ensure their
-   behavior is acceptable before using this feature. 
+   behavior is acceptable before using this feature.
 
 References:
 
