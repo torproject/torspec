@@ -636,9 +636,9 @@ References:
 
 [Proposal 306]: One possible design for automatic client IPv4 and IPv6 connections is at https://gitweb.torproject.org/torspec.git/tree/proposals/306-ipv6-happy-eyeballs.txt (TODO: modify to include bridge changes with client changes)
 
-[Proposal 312]: https://gitweb.torproject.org/torspec.git/tree/proposals/312-auto-relay-ipv6-orports.txt (TODO)
+[Proposal 312]: https://gitweb.torproject.org/torspec.git/tree/proposals/312-auto-relay-ipv6.txt (TODO)
 
-[Proposal 313]: https://gitweb.torproject.org/torspec.git/tree/proposals/313-relay-ipv6-statistics.txt (TODO)
+[Proposal 313]: https://gitweb.torproject.org/torspec.git/tree/proposals/313-relay-ipv6-stats.txt (TODO)
 
 [Relay Search] https://metrics.torproject.org/rs.html
 
