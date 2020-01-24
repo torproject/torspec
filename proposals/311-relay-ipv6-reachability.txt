@@ -1,0 +1,645 @@
+Filename: 311-relay-ipv6-reachability.txt
+Title: Tor Relay IPv6 Reachability
+Author: teor
+Created: 22-January-2020
+Status: Draft
+Ticket: #24404
+
+0. Abstract
+
+   We propose that Tor relays and bridges should check the reachability of
+   their IPv6 ORPort, before publishing their descriptor. To check IPv6 ORPort
+   reachability, relays and bridges need to be able to extend circuits via
+   other relays, and back to their own IPv6 ORPort.
+
+1. Introduction
+
+   Tor relays and bridges currently check the reachability of their IPv4
+   ORPort and DirPort before publishing them in their descriptor. But relays
+   and bridges do not test the reachability of their IPv6 ORPorts.
+
+   However, Directory Authorities make direct connections to relay IPv4 and
+   IPv6 ORPorts, to test each relay's reachability. Once a relay has been
+   confirmed as reachable by a majority of authorities, it is included in the
+   consensus. (Currently, 6 out of 9 Directory Authorities perform IPv4 and
+   IPv6 reachability checks. The others just check IPv4.)
+
+   The Bridge authority makes direct connections to bridge IPv4 ORPorts, to
+   test each bridge's reachability. Depending on its configuration, it may also
+   test IPv6 ORPorts. Once a bridge has been confirmed as reachable by the
+   bridge authority, it is included in the bridge networkstatus used by
+   BridgeDB.
+
+   Many relay and bridge operators don't know when their relay's IPv6 ORPort is
+   unreachable. They may not find out until they check [Relay Search], or
+   their traffic may drop. For new operators, it might just look like Tor
+   simply isn't working, or it isn't using much traffic. IPv6 ORPort issues
+   are a significant source of relay and bridge operator support requests.
+
+   Implementing IPv6 ORPort reachability checks will provide immediate, direct
+   feedback to operators in the relay or bridge's logs. It also enables future
+   work, such as automatically discovering relay and bridge addresses for IPv6
+   ORPorts (see [Proposal 312]).
+
+2. Scope
+
+   This proposal modifies Tor's behaviour as follows:
+
+   Relays:
+   * circuit extension,
+   * OR connections for circuit extension,
+   * reachability testing.
+
+   Bridges:
+   * reachability testing only.
+
+   This proposal does not change client behaviour.
+
+   When this proposal describes Tor's current behaviour, it covers all
+   supported Tor versions (0.3.5.7 to 0.4.2.5), as of January 2020.
+
+3. Allow Relay IPv6 Extends
+
+   To check IPv6 ORPort reachability, relays and bridges need to be able to
+   extend circuits via other relays, and back to their own IPv6 ORPort.
+
+   We propose that relays start to extend some circuits over IPv6 connections.
+   We do not propose any changes to bridge extend behaviour.
+
+3.1. Current IPv6 ORPort Implementation
+
+   Currently, all relays and bridges must have an IPv4 ORPort. IPv6 ORPorts
+   are optional for relays and bridges.
+
+   Tor supports making direct IPv6 OR connections:
+     * from directory authorities to relay ORPorts,
+     * from the bridge authority to bridge ORPorts,
+     * from clients to relay and bridge ORPorts.
+
+   Tor relays and bridges accept IPv6 ORPort connections. But IPv6 ORPorts are
+   not currently included in extend requests to other relays. And even if an
+   extend cell contains an IPv6 ORPort, bridges and relays will not extend
+   via an IPv6 connection to another relay.
+
+   Instead, relays will extend circuits:
+     * Using an existing authenticated connection to the requested relay
+       (which is typically over IPv4), or
+     * Over a new connection via the IPv4 ORPort in an extend cell.
+
+   If a relay receives an extend cell that only contains an IPv6 ORPort, the
+   extend typically fails.
+
+3.2. Relays Extend to IPv6 ORPorts
+
+   We propose that relays make some connections via the IPv6 ORPorts in
+   extend cells.
+
+   Relays will extend circuits:
+     * using an existing authenticated connection to the requested relay
+       (which may be over IPv4 or IPv6), or
+     * over a new connection via the IPv4 or IPv6 ORPort in an extend cell.
+
+   Since bridges try to imitate client behaviour, they will not adopt this new
+   behaviour, until clients begin routinely connecting via IPv6. (See
+   [Proposal 306].)
+
+3.2.1. Making IPv6 ORPort Extend Connections
+
+   Relays can make a new connection over IPv6 when:
+     * there is no existing authenticated connection to the requested relay,
+       and
+     * the extend cell contains an IPv6 ORPort.
+
+   If these conditions are satisfied, and the extend cell also contains an
+   IPv4 ORPort, we propose that the relay choose between an IPv4 and an IPv6
+   connection at random.
+
+   If the extend cell does not contain an IPv4 ORPort, we propose that the
+   relay connects over IPv6. (Relays should support IPv6-only extend cells,
+   even though they are not used to test relay reachability in this proposal.)
+
+   A successful IPv6 connection also requires that:
+     * the requested relay has an IPv6 ORPort.
+   But extending relays must not check the consensus for other relays' IPv6
+   information. Consensuses may be out of date, particularly when relays are
+   doing reachability checks for new IPv6 ORPorts.
+
+   See section 3.3.2 for other situations where IPv6 information may be
+   incorrect or unavailable.
+
+3.2.2. No Tor Client Changes
+
+   Tor clients currently include IPv4 ORPorts in their extend cells, but they
+   do not include IPv6 ORPorts.
+
+   We do not propose any client IPv6 extend cell changes at this time.
+
+   The Tor network needs more IPv6 relays, before clients can safely use
+   IPv6 extends. (Relays do not require anonymity, so they can safely use
+   IPv6 extends to test their own reachability.)
+
+   We also recommend prioritising client to relay IPv6 connections
+   (see [Proposal 306]) over relay to relay IPv6 connections. Because client
+   IPv6 connections have a direct impact on users.
+
+3.3. Alternative Extend Designs
+
+   We briefly mention some potential extend designs, and the reasons that
+   they were not used in this proposal.
+
+   (Some designs may be proposed for future Tor versions, but are not necessary
+   at this time.)
+
+3.3.1. Future Relay IPv6 Extend Behaviour
+
+   Random selection of extend ORPorts is a simple design, which supports IPv6
+   ORPort reachability checks.
+
+   However, it is not the most efficient design when:
+     * both relays meet the requirements for IPv4 and IPv6 extends,
+     * a new connection is required,
+     * the relays have either IPv4 or IPv6 connectivity, but not both.
+
+   In this very specific case, this proposal results in an average of 1
+   circuit extend failure per new connection. (Because relays do not try to
+   connect to the other ORPort when the first one fails.)
+
+   If relays try both the IPv4 and IPv6 ORPorts, then the circuit would
+   succeed. For example, relays could try the alternative port after a 250ms
+   delay, as in [Proposal 306]. This design results in an average circuit delay
+   of up to 125ms per new connection, rather than failure.
+
+   However, partial relay connectivity should be uncommon. And relays keep
+   connections open long-term, so new relay connections are a small proportion
+   of extend requests.
+
+   Therefore, we defer implementing any more complex designs. Since we propose
+   to use IPv6 extends to test relay reachability, occasional circuit extend
+   failures have a very minor impact.
+
+3.3.2. Future Bridge IPv6 Extend Behaviour
+
+   When clients automatically connect to relay IPv4 and IPv6 ORPorts by
+   default, bridges should also adopt this behaviour. (For example,
+   see [Proposal 306].)
+
+3.3.3. Rejected Extend Designs
+
+   Some designs may never be suitable for the Tor network.
+
+   We rejected designs where relays check the consensus to see if other
+   relays support IPv6, because:
+     * relays may have different consensuses,
+     * the extend cell may have been created using a version of the
+       [Onion Service Protocol] which supports IPv6, or
+     * the extend cell may be from a relay that has just added IPv6, and is
+       testing the reachability of its own ORPort (see Section 4).
+
+   We avoided designs where relays try to learn if other relays support IPv6,
+   because these designs:
+     * are more complex than random selection,
+     * potentially leak information between different client circuits,
+     * may enable denial of service attacks, where a flood of incorrect extend
+       cells causes a relay to believe that another relay is unreachable on an
+       ORPort that actually works, and
+     * require careful tuning to match the typical interval at which network
+       connectivity is actually changing.
+
+4. Check Relay and Bridge IPv6 ORPort Reachability
+
+   We propose that relays and bridges check their own IPv6 ORPort reachability.
+
+   To check IPv6 ORPort reachability, relays and bridges extend circuits via
+   other relays, and back to their own IPv6 ORPort.
+
+   IPv6 reachability failures may result in a relay or bridge refusing to
+   publish its descriptor, if enough existing relays support IPv6 extends.
+
+4.1. Current Reachability Implementation
+
+   Relays and bridges check the reachability of their IPv4 ORPorts and
+   DirPorts, and refuse to publish their descriptor if either reachability
+   check fails.
+
+   IPv4 ORPort reachability checks succeed when any create cell is received on
+   any inbound OR connection. The check succeeds, even if the cell is from an
+   IPv6 ORPort, or a circuit built by a client.
+
+   Directory Authorities make direct connections to relay IPv4 and IPv6
+   ORPorts, to test each relay's reachability. Relays that fail either
+   reachability test, on enough directory authorities, are excluded from the
+   consensus.
+
+   The Bridge authority makes direct connections to bridge IPv4 ORPorts, to
+   test each bridge's reachability. Depending on its configuration, it may also
+   test IPv6 ORPorts. Bridges that fail either reachability test are excluded
+   from BridgeDB.
+
+4.2. Checking IPv6 ORPort Reachability
+
+   We propose that testing relays (and bridges) select some IPv6 extend-capable
+   relays for their reachability circuits, and include their own IPv4 and IPv6
+   ORPorts in the final extend cells on those circuits.
+
+   The final extending relay will extend to the testing relay:
+     * using an existing authenticated connection to the testing relay
+       (which may be over IPv4 or IPv6), or
+     * over a new connection via the IPv4 or IPv6 ORPort in the extend cell.
+
+   The testing relay will confirm that test circuits can extend to both its
+   IPv4 and IPv6 ORPorts.
+
+4.2.1. Selecting the Final Extending Relay
+
+   IPv6 ORPort reachability checks require an IPv6 extend-capable relay as
+   the second-last hop of reachability circuits. (The testing relay is the
+   last hop.)
+
+   IPv6-extend capable relays must have:
+     * Relay subprotocol version 3 (or later), and
+     * an IPv6 ORPort.
+   (See section 5.1 for the definition of Relay subprotocol version 3.)
+
+   The other relays in the path do not require any particular protocol
+   versions.
+
+4.2.2. Extending from the Second-Last Hop
+
+   IPv6 ORPort reachability circuits should put the IPv4 and IPv6 ORPorts in
+   the extend cell for the final extend in reachability circuits.
+
+   Supplying both ORPorts makes these extend cells indistinguishable from
+   future client extend cells.
+
+   If reachability succeeds, the testing relay (or bridge) will accept the
+   final extend on one of its ORPorts, selected at random by the extending
+   relay (see section 3.2.1).
+
+4.2.3. Separate IPv4 and IPv6 Reachability Flags
+
+   Testing relays (and bridges) will record reachability separately for IPv4
+   and IPv6 ORPorts, based on the ORPort that the test circuit was received on.
+
+4.2.4. No Changes to DirPort Reachability
+
+   We do not propose any changes to relay IPv4 DirPort reachability checks at
+   this time.
+
+   The following configurations are currently not supported:
+     * bridge DirPorts, and
+     * relay IPv6 DirPorts.
+   Therefore, they are also out of scope for this proposal.
+
+4.3. Refuse to Publish Descriptor if IPv6 ORPort is Unreachable
+
+   If an IPv6 ORPort reachability check fails, relays (and bridges) should log
+   a warning.
+
+   In addition, if IPv6ORPort reachability checks are reliable, based on the
+   number of relays in the network that support IPv6 extends, relays should
+   refuse to publish their descriptor.
+
+4.3.1. Refusing to Publish the Descriptor
+
+   We set a threshold of consensus relays for reliable IPv6 ORPort checks:
+     * at least 30 relays, and
+     * at least 1% of the total consensus weight,
+   must support IPv6 extends.
+
+   We chose these parameters so that the number of relays is triple the
+   number of directory authorities, and the consensus weight is high enough
+   to support occasional reachability circuits.
+
+   In small networks with:
+     * less than 2000 relays, or
+     * a total consensus weight of zero,
+   the threshold should be the minimum tor network size to test reachability:
+     * at least 2 relays, excluding this relay.
+   (Note: we may increase this threshold to 3 or 4 relays if we discover a
+   higher minimum during testing.)
+
+   If the current consensus satisfies this threshold, testing relays (and
+   bridges) that fail IPv6 ORPort reachability checks should refuse to publish
+   their descriptors.
+
+   To ensure an accurate threshold, testing relays should exclude:
+     * the testing relay itself, and
+     * relays that they will not use in testing circuits,
+   from the:
+     * relay count, and
+     * the numerator of the threshold percentage.
+
+   Typically, relays will be excluded if they are in the testing relay's:
+     * family,
+     * IPv4 address /16 network,
+     * IPv6 address /32 network (a requirement as of Tor 0.4.0.1-alpha),
+   unless EnforceDistinctSubnets is 0.
+
+   As a useful side-effect, these different thresholds for each relay family
+   will reduce the likelihood of the network flapping around the threshold.
+
+   If flapping has an impact on the network health, directory authorities
+   should set the AssumeIPv6Reachable consensus parameter. (See the next
+   section.)
+
+4.3.2. Add AssumeIPv6Reachable Option
+
+   We add an AssumeIPv6Reachable torrc option and consensus parameter.
+
+   If IPv6 ORPort checks have bugs that impact the health of the network,
+   they can be disabled by setting AssumeIPv6Reachable=1 in the consensus
+   parameters.
+
+   If IPv6 ORPort checks have bugs that impact a particular relay (or bridge),
+   they can be disabled by setting "AssumeIPv6Reachable 1" in the relay's
+   torrc.
+
+   This option disables IPv6 ORPort reachability checks, so relays publish
+   their descriptors if their IPv4 ORPort reachability checks succeed.
+
+   The default for the torrc option is "auto", which checks the consensus
+   parameter. If the consensus parameter is not set, the default is "0".
+
+   "AssumeReachable 1" overrides all values of "AssumeIPv6Reachable",
+   disabling both IPv4 and IPv6 ORPort reachability checks.
+
+4.4. Optional Efficiency and Reliability Changes
+
+   We propose some optional changes for efficiency and reliability, and
+   describe their impact.
+
+   Some of these changes may be more appropriate in future releases, or
+   along with other proposed features.
+
+4.4.1. Extend IPv6 From All Supported Second-Last Hops
+
+   The testing relay (or bridge) puts both IPv4 and IPv6 ORPorts in its final
+   extend cell, and the receiving ORPort is selected at random by the
+   extending relay (see sections 3.2.1 and 4.2). Therefore, approximately half
+   of IPv6 ORPort reachability circuits will actually end up confirming IPv4
+   ORPort reachability.
+
+   We propose this optional change, to improve the rate of IPv6 ORPort
+   reachability checks:
+
+   If the second-last hop of an IPv4 ORPort reachability circuit supports IPv6
+   extends, testing relays may put the IPv4 and IPv6 ORPorts in the extend
+   cell for the final extend.
+
+   As the number of relays that support IPv6 extends increases, this change
+   will increase the number of IPv6 reachability confirmations. In the ideal
+   case, where the entire network supports IPv4 and IPv6 extends, IPv4 and IPv6
+   ORPort reachability checks would require a similar number of circuits.
+
+4.4.2. Close Existing Connections Before Testing Reachability
+
+   When a busy relay is performing reachability checks, it may already have
+   established inbound or outbound connections to the second-last hop in its
+   reachability test circuits. The extending relay may use these connections
+   for the extend, rather than opening a connection to the target ORPort
+   (see sections 3.2 and 4.2.2).
+
+   Bridges only establish outbound connections to other relays, and only over
+   IPv4 (except for reachability test circuits). So they are still potentially
+   affected by this issue.
+
+   We propose these optional changes, to improve the efficiency of IPv4 and
+   IPv6 ORPort reachability checks:
+
+   Testing relays (and bridges):
+     * close any outbound connections to the second-last hop of reachability
+       circuits, and
+     * close inbound connections to the second-last hop of reachability
+       circuits, if those connections are not using the target ORPort.
+
+   Even though it is unlikely that bridges will have inbound connections to
+   a non-target ORPort, bridges should still do inbound connection checks, for
+   consistency.
+
+   These changes are particularly important if a relay is connected to all
+   other relays in the network, but only over IPv4. (Or in the future, only
+   over IPv6.)
+
+   We expect that these changes will slightly increase the number of relay
+   re-connections, but reduce the number of reachability test circuits
+   required to confirm reachability.
+
+4.4.3. Accurately Identifying Test Circuits
+
+   The testing relay (or bridge) may confirm that the create cells it is
+   receiving are from its own test circuits, and that test circuits are
+   capable of returning create cells to the origin.
+
+   Currently, relays confirm reachability if any create cell is received on
+   any inbound connection (see section 4.1). Relays do not check that the
+   circuit is a reachability test circuit, and they do not wait to receive the
+   return created cell. This behaviour has resulted in difficult to diagnose
+   bugs on some rare relay configurations.
+
+   We propose these optional changes, to improve the efficiency of IPv4 and
+   IPv6 ORPort reachability checks:
+
+   Testing relays may:
+     * check that the create cell is received from a test circuit
+       (by comparing the received cell to the cells sent by test circuits),
+     * check that the create cell is received on an inbound connection
+       (this is existing behaviour),
+     * if the create cell from a test circuit is received on an outbound
+       connection, destroy the circuit (rather than returning a created cell),
+       and
+     * check that the created cell is returned to the relay on a test circuit
+       (by comparing the remote address of the final hop on the circuit, to
+       the local IPv4 and IPv6 ORPort addresses).
+
+   TODO: work out how to efficiently match inbound create cells to test
+         circuits.
+
+4.4.4. Allowing More Relay IPv6 Extends
+
+   Currently, clients, relays, and bridges do not include IPv6 ORPorts in their
+   extend cells.
+
+   In this proposal, we only make relays (and bridges) extend over IPv6 on
+   the final hop of test circuits. This limited use of IPv6 extends means that
+   IPv6 connections will still be uncommon.
+
+   We propose these optional changes, to increase the number of IPv6
+   connections between relays:
+
+   To increase the number of IPv6 connections, relays that support IPv6
+   extends may want to use them for all hops of their own circuits. Relays
+   make their own circuits for reachability tests, bandwidth tests, and
+   ongoing preemptive circuits. (Bridges can not change their behaviour,
+   because they try to imitate clients.)
+
+   We propose a torrc option and consensus parameter SendIPv6CircuitExtends,
+   which is only supported on relays (and not bridges or clients). This option
+   makes relays send IPv4 and IPv6 ORPorts in all their extend cells, when
+   supported by the extending and receiving relay. (See section 3.2.1.)
+
+   TODO: Is there a shorter name, that isn't easily confused with enabling
+         support for other nodes to perform IPv6 extends via this relay?
+
+   The default value for this option is "auto", which checks the consensus
+   parameter. If the consensus parameter is not set, it defaults to "0" in
+   the initial release.
+
+   Once IPv6 extends have had enough testing, we may enable
+   SendIPv6CircuitExtends on the network. The consensus parameter will be set
+   to 1. The default will be changed to "1" (if the consensus parameter is not
+   set).
+
+   We defer any client (and bridge) changes to a separate proposal, to be
+   implemented when there are more IPv6 relays in the network. But we note
+   that relay IPv6 extends will provide some cover traffic when clients
+   eventually use IPv6 extends in their circuits.
+
+   As a useful side effect, increasing the number of IPv6 connections in the
+   network makes it more likely that an existing connection can be used for
+   the final hop of a relay IPv6 ORPort reachability check.
+
+4.5. Alternate Reachability Designs
+
+   We briefly mention some potential reachability designs, and the reasons that
+   they were not used in this proposal.
+
+4.5.1. Removing IPv4 ORPorts from Extend Cells
+
+   We avoid designs that only include IPv6 ORPorts in extend cells, and remove
+   IPv4 ORPorts.
+
+   Only including the IPv6 ORPort would provide slightly more specific
+   reachability check circuits. However, we don't need IPv6-only designs,
+   because relays continue trying different reachability circuits until they
+   confirm reachability.
+
+   IPv6-only designs also make it easy to distinguish relay reachability extend
+   cells from other extend cells. This distinguisher will become more of an
+   issue as IPv6 extends become more common in the network (see sections 4.2.2
+   and 4.4.4).
+
+   Removing the IPv4 ORPort also provides no fallback, if the IPv6 ORPort is
+   actually unreachable. IPv6-only failures do not affect reachability checks,
+   but they will become important in the future, as other circuit types start
+   using IPv6 extends.
+
+   IPv6-only reachability designs also increase the number of special cases in
+   the implementation. (And the likelihood of subtle bugs.)
+
+   These designs may be appropriate in future, when there are IPv6-only bridges
+   or relays.
+
+5. New Relay Subprotocol Version
+
+   We reserve Tor subprotocol "Relay=3" for:
+     * relays that support for IPv6 extends, and
+     * relays and bridges that support IPv6 ORPort reachability checks,
+   as described in this proposal.
+
+5.1. Tor Specification Changes
+
+   We propose the following changes to the [Tor Specification], once this
+   proposal is implemented.
+
+   Adding a new Relay subprotocol version lets testing relays identify other
+   relays that support IPv6 extends. It also allows us to eventually recommend
+   or require support for IPv6 extends on all relays (and bridges).
+
+   Append to the Relay version 2 subprotocol specification:
+
+          Relay=2 has limited IPv6 support:
+            * Clients do not include IPv6 ORPorts in EXTEND2 cells.
+            * Relays do not not initiate IPv6 connections in response to
+              EXTEND2 cells containing IPv6 ORPorts.
+          However, relays accept inbound connections to their IPv6 ORPorts,
+          and will extend circuits via those connections.
+
+   "3" -- relays support extending over IPv6 connections in response to an
+          EXTEND2 cell containing an IPv6 ORPort. Relays and bridges perform
+          IPv6 ORPort reachability checks. Client behaviour does not change.
+
+          This subprotocol is advertised by all relays and bridges, regardless
+          of their configured ORPorts. But relays without a configured IPv6
+          ORPort may refuse to extend over IPv6. And bridges always refuse to
+          extend over IPv6, because they try to imitate client behaviour.
+
+          A successful IPv6 extend requires:
+            * Relay subprotocol version 3 (or later) and an IPv6 ORPort on the
+              extending relay,
+            * an IPv6 ORPort in the EXTEND2 cell, and
+            * an IPv6 ORPort on the accepting relay.
+          (Because different tor instances can have different views of the
+          network, these checks should be done when the path is selected.
+          Extending relays should only check local IPv6 information, before
+          attempting the extend.)
+
+          This subprotocol version is described in proposal 311, and
+          implemented in Tor 0.4.4.1-alpha. (TODO: check version after code is
+          merged).
+
+6. Test Plan
+
+   We provide a quick summary of our testing plans.
+
+6.1. Test IPv6 ORPort Reachability and Extends
+
+   We propose to test these changes using chutney networks with AssumeReachable
+   disabled. (Chutney currently enables AssumeReachable by default.)
+
+   We also propose to test these changes on the public network with a small
+   number of relays and bridges.
+
+   Once these changes are merged, volunteer relay and bridge operators will be
+   able to test them by:
+     * compiling from source,
+     * running nightly builds, or
+     * running alpha releases.
+
+6.2. Test Existing Features
+
+   We will modify and test these existing features:
+     * IPv4 ORPort reachability checks
+
+   We do not plan on modifying these existing features:
+     * Relay reachability retries
+       TODO: Do relays re-check their own reachability? How often?
+     * Relay canonical connections
+     * "Too many connections" warning logs
+   But we will test that they continue to function correctly, and fix any bugs
+   triggered by the modifications in this proposal.
+
+6.3. Test Legacy Relay Compatibility
+
+   We will also test IPv6 extends from newer relays (which implement this
+   proposal) to older relays (which do not). Although this proposal does not
+   create these kinds of circuits, we need to check for bugs and excessive
+   logs in older tor versions.
+
+8. Ongoing Monitoring
+
+   To monitor the impact of these changes, relays should collect basic IPv4
+   and IPv6 connection and bandwidth statistics (see [Proposal 313]).
+
+   We may also collect separate statistics on connections from:
+     * clients (and bridges, because they act like clients), and
+     * other relays (and authorities, because they act like relays).
+
+   We do not propose to collect additional statistics on:
+     * bridges,
+     * circuit counts, or
+     * failure rates.
+   Collecting statistics like these could impact user privacy.
+
+References:
+
+[Onion Service Protocol]: In particular, Version 3 of the Onion Service Protocol supports IPv6: https://gitweb.torproject.org/torspec.git/tree/rend-spec-v3.txt
+
+[Proposal 306]: One possible design for automatic client IPv4 and IPv6 connections is at https://gitweb.torproject.org/torspec.git/tree/proposals/306-ipv6-happy-eyeballs.txt (TODO: modify to include bridge changes with client changes)
+
+[Proposal 312]: https://gitweb.torproject.org/torspec.git/tree/proposals/312-auto-relay-ipv6-orports.txt (TODO)
+
+[Proposal 313]: https://gitweb.torproject.org/torspec.git/tree/proposals/313-relay-ipv6-statistics.txt (TODO)
+
+[Relay Search] https://metrics.torproject.org/rs.html
+
+[Tor Specification]: https://gitweb.torproject.org/torspec.git/tree/tor-spec.txt
