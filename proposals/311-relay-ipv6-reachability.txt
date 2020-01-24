@@ -39,7 +39,7 @@ Ticket: #24404
    Implementing IPv6 ORPort reachability checks will provide immediate, direct
    feedback to operators in the relay or bridge's logs. It also enables future
    work, such as automatically discovering relay and bridge addresses for IPv6
-   ORPorts (see [Proposal 312]).
+   ORPorts (see [Proposal 312: Relay Auto IPv6 Address]).
 
 2. Scope
 
@@ -101,7 +101,7 @@ Ticket: #24404
 
    Since bridges try to imitate client behaviour, they will not adopt this new
    behaviour, until clients begin routinely connecting via IPv6. (See
-   [Proposal 306].)
+   [Proposal 306: Client Auto IPv6 Connections].)
 
 3.2.1. Making IPv6 ORPort Extend Connections
 
@@ -139,8 +139,8 @@ Ticket: #24404
    IPv6 extends to test their own reachability.)
 
    We also recommend prioritising client to relay IPv6 connections
-   (see [Proposal 306]) over relay to relay IPv6 connections. Because client
-   IPv6 connections have a direct impact on users.
+   (see [Proposal 306: Client Auto IPv6 Connections]) over relay to relay IPv6
+   connections. Because client IPv6 connections have a direct impact on users.
 
 3.3. Alternative Extend Designs
 
@@ -166,8 +166,9 @@ Ticket: #24404
 
    If relays try both the IPv4 and IPv6 ORPorts, then the circuit would
    succeed. For example, relays could try the alternative port after a 250ms
-   delay, as in [Proposal 306]. This design results in an average circuit delay
-   of up to 125ms per new connection, rather than failure.
+   delay, as in [Proposal 306: Client Auto IPv6 Connections]. This design
+   results in an average circuit delay of up to 125ms per new connection,
+   rather than failure.
 
    However, partial relay connectivity should be uncommon. And relays keep
    connections open long-term, so new relay connections are a small proportion
@@ -181,7 +182,7 @@ Ticket: #24404
 
    When clients automatically connect to relay IPv4 and IPv6 ORPorts by
    default, bridges should also adopt this behaviour. (For example,
-   see [Proposal 306].)
+   see [Proposal 306: Client Auto IPv6 Connections].)
 
 3.3.3. Rejected Extend Designs
 
@@ -618,7 +619,8 @@ Ticket: #24404
 8. Ongoing Monitoring
 
    To monitor the impact of these changes, relays should collect basic IPv4
-   and IPv6 connection and bandwidth statistics (see [Proposal 313]).
+   and IPv6 connection and bandwidth statistics (see [Proposal 313: Relay IPv6
+   Statistics]).
 
    We may also collect separate statistics on connections from:
      * clients (and bridges, because they act like clients), and
@@ -634,11 +636,11 @@ References:
 
 [Onion Service Protocol]: In particular, Version 3 of the Onion Service Protocol supports IPv6: https://gitweb.torproject.org/torspec.git/tree/rend-spec-v3.txt
 
-[Proposal 306]: One possible design for automatic client IPv4 and IPv6 connections is at https://gitweb.torproject.org/torspec.git/tree/proposals/306-ipv6-happy-eyeballs.txt (TODO: modify to include bridge changes with client changes)
+[Proposal 306: Client Auto IPv6 Connections]: One possible design for automatic client IPv4 and IPv6 connections is at https://gitweb.torproject.org/torspec.git/tree/proposals/306-ipv6-happy-eyeballs.txt (TODO: modify to include bridge changes with client changes)
 
-[Proposal 312]: https://gitweb.torproject.org/torspec.git/tree/proposals/312-auto-relay-ipv6-orports.txt (TODO)
+[Proposal 312: Relay Auto IPv6 Address]: https://gitweb.torproject.org/torspec.git/tree/proposals/312-relay-auto-ipv6-addr.txt (TODO)
 
-[Proposal 313]: https://gitweb.torproject.org/torspec.git/tree/proposals/313-relay-ipv6-statistics.txt (TODO)
+[Proposal 313: Relay IPv6 Statistics]: https://gitweb.torproject.org/torspec.git/tree/proposals/313-relay-ipv6-stats.txt (TODO)
 
 [Relay Search] https://metrics.torproject.org/rs.html
 
