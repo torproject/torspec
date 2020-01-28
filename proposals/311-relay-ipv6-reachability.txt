@@ -645,6 +645,9 @@ Ticket: #24404
      * clients (and bridges, because they act like clients), and
      * other relays (and authorities, because they act like relays).
 
+   Some of these statistics may be included in tor's heartbeat logs, making
+   them accessible to relay operators.
+
    We do not propose to collect additional statistics on:
      * bridges,
      * circuit counts, or
