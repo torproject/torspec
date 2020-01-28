@@ -621,10 +621,10 @@ Ticket: #24404
      * IPv4 ORPort reachability checks
 
    We do not plan on modifying these existing features:
-     * Relay reachability retries
+     * relay reachability retries
        TODO: Do relays re-check their own reachability? How often?
-     * Relay canonical connections
-     * "Too many connections" warning logs
+     * relay canonical connections
+     * "too many connections" warning logs
    But we will test that they continue to function correctly, and fix any bugs
    triggered by the modifications in this proposal.
 
