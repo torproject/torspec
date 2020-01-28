@@ -569,7 +569,7 @@ Ticket: #24404
 
           Relay=2 has limited IPv6 support:
             * Clients do not include IPv6 ORPorts in EXTEND2 cells.
-            * Relays do not not initiate IPv6 connections in response to
+            * Relays do not initiate IPv6 connections in response to
               EXTEND2 cells containing IPv6 ORPorts.
           However, relays accept inbound connections to their IPv6 ORPorts,
           and will extend circuits via those connections.
