@@ -172,9 +172,9 @@ Ticket: #24404
 
    If relays try both the IPv4 and IPv6 ORPorts, then the circuit would
    succeed. For example, relays could try the alternative port after a 250ms
-   delay, as in [Proposal 306: Client Auto IPv6 Connections]. This design
-   results in an average circuit delay of up to 125ms per new connection,
-   rather than failure.
+   delay, as in [Proposal 306: Client Auto IPv6 Connections]. The design in
+   this proposal results in an average circuit delay of up to 125ms
+   (250ms / 2) per new connection, rather than failure.
 
    However, partial relay connectivity should be uncommon. And relays keep
    connections open long-term, so new relay connections are a small proportion
@@ -650,6 +650,12 @@ Ticket: #24404
      * circuit counts, or
      * failure rates.
    Collecting statistics like these could impact user privacy.
+
+9. Changes to Other Proposals
+
+   [Proposal 306: Client Auto IPv6 Connections] needs to be modified to keep
+   bridge IPv6 behaviour in sync with client IPv6 behaviour. (See section
+   3.3.2.)
 
 References:
 
