@@ -45,7 +45,7 @@ Ticket: #24404
 
    This proposal modifies Tor's behaviour as follows:
 
-   Relays:
+   Relays (including directory authorities):
    * circuit extension,
    * OR connections for circuit extension,
    * reachability testing.
@@ -54,6 +54,11 @@ Ticket: #24404
    * reachability testing only.
 
    This proposal does not change client behaviour.
+
+   Throughout this proposal, "relays" includes directory authorities, except
+   where they are specifically excluded. "relays" does not include bridges,
+   except where they are specifically included. (The first mention of "relays"
+   in each section should specifically exclude or include these other roles.)
 
    When this proposal describes Tor's current behaviour, it covers all
    supported Tor versions (0.3.5.7 to 0.4.2.5), as of January 2020.
@@ -215,12 +220,15 @@ Ticket: #24404
 
    IPv6 reachability failures may result in a relay or bridge refusing to
    publish its descriptor, if enough existing relays support IPv6 extends.
+   (Except for directory authorities: they perform reachability checks, and
+   warn if they fail. But they always publish their descriptors.)
 
 4.1. Current Reachability Implementation
 
    Relays and bridges check the reachability of their IPv4 ORPorts and
    DirPorts, and refuse to publish their descriptor if either reachability
-   check fails.
+   check fails. (Directory authorities test their own reachability, but they
+   only warn, and publish their descriptor regardless of reachability.)
 
    IPv4 ORPort reachability checks succeed when any create cell is received on
    any inbound OR connection. The check succeeds, even if the cell is from an
@@ -300,6 +308,9 @@ Ticket: #24404
    number of relays in the network that support IPv6 extends, relays should
    refuse to publish their descriptor.
 
+   Directory authorities should perform reachability checks, and warn if they
+   fail. But directory authorities should always publish their descriptors.
+
 4.3.1. Refusing to Publish the Descriptor
 
    We set a threshold of consensus relays for reliable IPv6 ORPort checks:
@@ -320,8 +331,8 @@ Ticket: #24404
    higher minimum during testing.)
 
    If the current consensus satisfies this threshold, testing relays (and
-   bridges) that fail IPv6 ORPort reachability checks should refuse to publish
-   their descriptors.
+   bridges, but not directory authorities) that fail IPv6 ORPort reachability
+   checks should refuse to publish their descriptors.
 
    To ensure an accurate threshold, testing relays should exclude:
      * the testing relay itself, and
@@ -357,12 +368,19 @@ Ticket: #24404
 
    This option disables IPv6 ORPort reachability checks, so relays publish
    their descriptors if their IPv4 ORPort reachability checks succeed.
+   (Unlike AssumeReachable, AssumeIPv6Reachable has no effect on the existing
+   dirauth IPv6 reachability checks, which connect directly to relay ORPorts.)
 
    The default for the torrc option is "auto", which checks the consensus
    parameter. If the consensus parameter is not set, the default is "0".
 
    "AssumeReachable 1" overrides all values of "AssumeIPv6Reachable",
-   disabling both IPv4 and IPv6 ORPort reachability checks.
+   disabling both IPv4 and IPv6 ORPort reachability checks. Tor should warn if
+   AssumeReachable is 1, but AssumeIPv6Reachable is 0. (On directory
+   authorities, "AssumeReachable 1" also disables dirauth IPv4 and IPv6
+   reachability checks, which connect directly to relay ORPorts.
+   AssumeIPv6Reachable does not disable directory authority to relay IPv6
+   checks.)
 
 4.4. Optional Efficiency and Reliability Changes
 
