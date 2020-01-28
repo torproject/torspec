@@ -18,10 +18,10 @@ Ticket: #24404
    ORPort and DirPort before publishing them in their descriptor. But relays
    and bridges do not test the reachability of their IPv6 ORPorts.
 
-   However, Directory Authorities make direct connections to relay IPv4 and
+   However, directory authorities make direct connections to relay IPv4 and
    IPv6 ORPorts, to test each relay's reachability. Once a relay has been
    confirmed as reachable by a majority of authorities, it is included in the
-   consensus. (Currently, 6 out of 9 Directory Authorities perform IPv4 and
+   consensus. (Currently, 6 out of 9 directory authorities perform IPv4 and
    IPv6 reachability checks. The others just check IPv4.)
 
    The Bridge authority makes direct connections to bridge IPv4 ORPorts, to
@@ -235,7 +235,7 @@ Ticket: #24404
    any inbound OR connection. The check succeeds, even if the cell is from an
    IPv6 ORPort, or a circuit built by a client.
 
-   Directory Authorities make direct connections to relay IPv4 and IPv6
+   Directory authorities make direct connections to relay IPv4 and IPv6
    ORPorts, to test each relay's reachability. Relays that fail either
    reachability test, on enough directory authorities, are excluded from the
    consensus.
