@@ -61,7 +61,8 @@ Ticket: #24404
    in each section should specifically exclude or include these other roles.)
 
    When this proposal describes Tor's current behaviour, it covers all
-   supported Tor versions (0.3.5.7 to 0.4.2.5), as of January 2020.
+   supported Tor versions (0.3.5.7 to 0.4.2.5), as of January 2020, except
+   where another version is specifically mentioned.
 
 3. Allow Relay IPv6 Extends
 
