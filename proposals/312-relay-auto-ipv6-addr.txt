@@ -1,0 +1,900 @@
+Filename: 312-relay-auto-ipv6-addr.txt
+Title: Tor Relays Automatically Find Their IPv6 Address
+Author: teor
+Created: 28-January-2020
+Status: Draft
+Ticket: #33073
+
+0. Abstract
+
+   We propose that Tor relays (and bridges) should automatically find their
+   IPv6 address, and use it to publish an IPv6 ORPort. For some relays to find
+   their IPv6 address, they may need to fetch some directory documents from
+   directory authorities over IPv6. (For anonymity reasons, bridges are unable
+   to fetch directory documents over IPv6, until clients start to do so.)
+
+1. Introduction
+
+   Tor relays (and bridges) currently find their IPv4 address, and use it as
+   their ORPort and DirPort address when publishing their descriptor. But
+   relays and bridges do not automatically find their IPv6 address.
+
+   However, relay operators can manually configure an ORPort with an IPv6
+   address, and that ORPort is published in their descriptor in an "or-address"
+   line (see [Tor Directory Protocol]).
+
+   Many relay operators don't know their relay's IPv4 or IPv6 addresses. So
+   they rely on Tor's IPv4 auto-detection, and don't configure an IPv6
+   address. When operators do configure an IPv6 address, it's easy for them to
+   make mistakes. IPv6 ORPort issues are a significant source of relay
+   operator support requests.
+
+   Implementing IPv6 address auto-detection, and IPv6 ORPort reachability
+   checks (see [Proposal 311: Relay IPv6 Reachability]) will increase the
+   number of working IPv6-capable relays in the tor network.
+
+2. Scope
+
+   This proposal modifies Tor's behaviour as follows:
+
+   Relays, bridges, and directory authorities:
+     * automatically find their IPv6 address, and
+     * for consistency between IPv4 and IPv6 detection:
+       * start using IPv4 ORPort and DirPort for IPv4 address detection, and
+       * re-order IPv4 address detection methods.
+
+   Relays and directory authorities (but not bridges):
+     * fetch some directory documents over IPv6.
+   For anonymity reasons, bridges are unable to fetch directory documents over
+   IPv6, until clients start to do so. (See
+   [Proposal 306: Client Auto IPv6 Connections].)
+
+   This proposal makes a small, optional change to existing client behaviour:
+     * clients also check IPv6 addresses when rotating TLS keys for new
+       networks.
+   In addition to the changes to IPv4 address resolution, most of which won't
+   affect clients. (Because they do not set Address, ORPort, or DirPort.)
+
+   Throughout this proposal, "relays" includes directory authorities, except
+   where they are specifically excluded. "relays" does not include bridges,
+   except where they are specifically included. (The first mention of "relays"
+   in each section should specifically exclude or include these other roles.)
+
+   When this proposal describes Tor's current behaviour, it covers all
+   supported Tor versions (0.3.5.7 to 0.4.2.5), as of January 2020, except
+   where another version is specifically mentioned.
+
+3. Finding Relay IPv6 Addresses
+
+   We propose that tor relays (and bridges) automatically find their IPv6
+   address, and use it to publish an IPv6 ORPort.
+
+   For some relays to find their IPv6 address, they may need to fetch some
+   directory documents from directory authorities over IPv6. (For anonymity
+   reasons, bridges are unable to fetch directory documents over IPv6, until
+   clients start to do so.)
+
+3.1. Current Relay IPv4 Address Implementation
+
+   Currently, all relays (and bridges) must have an IPv4 address. IPv6
+   addresses are optional for relays.
+
+   Tor currently tries to find relay IPv4 addresses in this order:
+     1. the Address torrc option
+     2. the address of the hostname (resolved using DNS, if needed)
+     3. a local interface address
+        (by making a self-connected socket, if needed)
+     4. an address reported by a directory server (using X-Your-Address-Is)
+
+   When using the Address option, or the hostname, tor supports:
+     * an IPv4 address literal, or
+     * resolving an IPv4 address from a hostname.
+
+   If tor is running on the public network, and an address isn't globally
+   routable, tor ignores it. (If it was explicitly set in Address, tor logs an
+   error.)
+
+   If there are multiple valid addresses, tor chooses:
+     * the first address returned by the resolver,
+     * the first address returned by the local interface API, or
+     * the latest address returned by a directory server.
+
+3.2. Finding Relay IPv6 Addresses
+
+   We propose that relays (and bridges) try to find their IPv6 address. For
+   consistency, we also propose to change the address resolution order for
+   IPv4 addresses.
+
+   We use the following general principles to choose the order of IP address
+   methods:
+     * Explicit is better than Implicit,
+     * Local Information is better than a Remote Dependency,
+     * Trusted is better than Untrusted, and
+     * Reliable is better than Unreliable.
+   Within these constraints, we try to find the simplest working design.
+
+   Therefore, we propose that tor tries to find relay IPv4 and IPv6 addresses
+   in this order:
+     1. the Address torrc option
+     2. the advertised ORPort address
+     3. the advertised DirPort address (IPv4 only; relays, not bridges)
+     4. a local interface address
+        (by making a self-connected socket, if needed)
+     5. the address of the host's own hostname (resolved using DNS, if needed)
+     6. an address reported by a directory server (using X-Your-Address-Is)
+
+   (Each of these address resolution steps is described in more detail, in its
+   own subsection.)
+
+   While making these changes, we want to preserve tor's existing behaviour:
+     * resolve Address using the local resolver, if needed,
+     * ignore private addresses on public tor networks, and
+     * when there are multiple valid addresses, choose the first or latest
+       address, as appropriate.
+
+3.2.1. Make the Address torrc Option Support IPv6
+
+   First, we propose that relays (and bridges) use the Address torrc option
+   to find their IPv4 and IPv6 addresses.
+
+   There are two cases we need to cover:
+
+     1. Explicit IP addresses:
+        * allow the option to be specified up to two times,
+        * use the IPv4 address for IPv4,
+        * use the IPv6 address for IPv6.
+        Configuring two addresses in the same address family is a config error.
+
+     2. Hostnames / DNS names:
+        * allow the option to be specified up to two times,
+        * look up the configured name,
+        * use the first IPv4 and IPv6 address returned by the resolver, and
+        Resolving multiple addresses in the same address family is not a
+        runtime error, but only the first address from each family will be
+        used.
+
+   These lookups should ignore private addresses on public tor networks. If
+   multiple IPv4 or IPv6 addresses are returned, the first public address from
+   each family should be used.
+
+   We should also support the following combinations:
+     A. IPv4 Address / hostname (for IPv6 only),
+     B. IPv6 Address / hostname (for IPv4 only),
+     C. IPv4 Address only / try to guess IPv6, then check its reachability
+        (see section 4.3.1 in [Proposal 311: Relay IPv6 Reachability]), and
+     D. IPv6 Address only / guess IPv4, then its reachability must succeed.
+   There are also similar configurations where a hostname is configured, but it
+   only provides IPv4 or IPv6 addresses.
+
+   Combination C is the most common legacy configuration. We want to
+   support the following outcomes for legacy configurations:
+     * automatic upgrades to guessed and reachable IPv6 addresses,
+     * continuing to operate on IPv4 when the IPv6 address can't be guessed,
+       and
+     * continuing to operate on IPv4 when the IPv6 address has been guessed,
+       but it is unreachable.
+
+   At this time, we do not propose guessing multiple IPv4 or IPv6 addresses
+   and testing their reachability (see section 3.4.2).
+
+   It is an error to configure an Address option with a private IPv4 or IPv6
+   address, or with a hostname that does not resolve to any publicly routable
+   IPv4 or IPv6 addresses.
+
+   If the Address option is not configured for IPv4 or IPv6, or the hostname
+   lookups do not provide both IPv4 and IPv6 addresses, address resolution
+   should go to the next step.
+
+3.2.2. Use the Advertised ORPort IPv4 and IPv6 Addresses
+
+   Next, we propose that relays (and bridges) use the first advertised ORPort
+   IPv4 and IPv6 addresses, as configured in their torrc.
+
+   The ORPort address may be a hostname. If it is, tor should try to use it to
+   resolve an IPv4 and IPv6 address, and open ORPorts on the first available
+   IPv4 and IPv6 address. Tor should respect the IPv4Only and IPv6Only port
+   flags, if specified. (Tor currently resolves IPv4 addresses in ORPort
+   lines. It might not look for an IPv6 address.)
+
+   Relays (and bridges) currently use the first advertised ORPort IPv6 address
+   as their IPv6 address. We propose to use the first advertised IPv4 ORPort
+   address in a similar way, for consistency.
+
+   Therefore, this change may affect existing relay IPv4 addressses. We expect
+   that a small number of relays may change IPv4 address, from a guessed IPv4
+   address, to their first advertised IPv4 ORPort address.
+
+   In rare cases, relays may have been using non-advertised ORPorts for their
+   addresses. This change may also change their addresses.
+
+   We propose ignoring private configured ORPort addresses on public tor
+   networks. (Binding to private ORPort addresses is supported, even on public
+   tor networks, for relays that use NAT to reach the Internet.) If an ORPort
+   address is private, address resolution should go to the next step.
+
+3.2.3. Use the Advertised DirPort IPv4 Address
+
+   Next, we propose that relays use the first advertised DirPort IPv4 address,
+   as configured in their torrc.
+
+   The following DirPort configurations can not be used for address
+   resolution, because they are not supported:
+     * bridge DirPorts, and
+     * advertised IPv6 DirPorts.
+
+   The DirPort address may be a hostname. If it is, tor should try to use it to
+   resolve an IPv4 address, and open a DirPort on the first available IPv4
+   address. Tor should only look for IPv6 addresses if the IPv6Only port flag
+   is specified. (Since advertised IPv6 DirPorts are not supported, a
+   working configuration may also require the NoAdvertise flag.)
+
+   Relays currently use the first advertised ORPort IPv6 address as their IPv6
+   address. We propose to use the first advertised IPv4 DirPort address in a
+   similar way, for consistency.
+
+   Therefore, this change may affect existing relay IPv4 addressses. We expect
+   that a very small number of relays may change IPv4 address, from a guessed
+   IPv4 address, to their first advertised IPv4 DirPort address. (But we expect
+   that most relays that change will be using their ORPort address.)
+
+   We propose ignoring private configured DirPort addresses on public relays.
+   (Binding to private DirPort addresses is supported, for networks that use
+   NAT.) If a DirPort address is private, address resolution should go to the
+   next step.
+
+3.2.4. Use Local Interface IPv6 Address
+
+   Next, we propose that relays (and bridges) use publicly routable addresses
+   from the OS interface addresses or routing table, as their IPv4 and IPv6
+   addresses.
+
+   Tor has local interface address resolution functions, which support most
+   major OSes. Tor uses these functions to guess its IPv4 address. We propose
+   using them to also guess tor's IPv6 address.
+
+   We also propose modifying the address resolution order, so interface
+   addresses are used before the local hostname. This decision is based
+   on our principles: interface addresses are local, trusted, and reliable;
+   hostname lookups may be remote, untrusted, and unreliable.
+
+   Some developer documentation also recommends using interface addresses,
+   rather than resolving the host's own hostname. For example, on recent
+   versions of macOS, the man pages tell developers to use interface addresses
+   (getifaddrs) rather than look up the host's own hostname (gethostname and
+   getaddrinfo). Unfortunately, these man pages don't seem to be available
+   online, except for short quotes (see [getaddrinfo man page] for the
+   relevant quote).
+
+   If the local interface addresses are unavailable, tor opens a self-connected
+   UDP socket to a publicly routable address, but doesn't actually send any
+   packets. Instead, it uses the socket APIs to discover the interface address
+   for the socket.
+
+   Tor already ignores private IPv4 interface addresses on public relays.
+   (Binding to private DirPort addresses is supported, for networks that use
+   NAT.) We propose to also ignore private IPv6 interface addresses. If all
+   IPv4 or IPv6 interface addresses are private, address resolution should go
+   to the next step.
+
+3.2.5. Use Own Hostname IPv6 Addresses
+
+   Next, we propose that relays (and bridges) get their local hostname, look
+   up its addresses, and use them as its IPv4 and IPv6 addresses.
+
+   We propose to use the same underlying lookup functions to look up the IPv4
+   and IPv6 addresses for:
+     * the Address torrc option (see section 3.2.1), and
+     * the local hostname.
+   However, OS APIs typically only return a single hostname.
+
+   Even though the hostname lookup may use remote DNS, we propose to use it on
+   directory authorities, to maintain compatibility with current
+   configurations. Even if it is remote, we expect the configured DNS to be
+   somewhat trusted by the operator.
+
+   The hostname lookup should ignore private addresses on public relays. If
+   multiple IPv4 or IPv6 addresses are returned, the first public address from
+   each family should be used. If all IPv4 or IPv6 hostname addresses are
+   private, address resolution should go to the next step.
+
+3.2.6. Use Directory Header IPv6 Addresses
+
+   Finally, we propose that relays get their IPv4 and IPv6 addresses from the
+   X-Your-Address-Is HTTP header in tor directory documents. To support this
+   change, we propose that relays start fetching directory documents over IPv4
+   and IPv6.
+
+   We propose that bridges continue to only fetch directory documents over
+   IPv4, because they try to imitate clients. (Most clients only fetch
+   directory documents over IPv4, a few clients are configured to only fetch
+   over IPv6.) When client behaviour changes to use both IPv4 and IPv6 for
+   directory fetches, bridge behaviour can also change to match. (See
+   section 3.4.1 and [Proposal 306: Client Auto IPv6 Connections].)
+
+   We propose that directory authorities should ignore addresses in directory
+   headers. Allowing other authorities (or relays?) to change a directory
+   authority's published IP address may lead to security issues. Instead,
+   if interface and hostname lookups fail, tor should stop address resolution,
+   and return a permanent error. (And issue a log to the operator, see below.)
+
+   We propose to use a simple load balancing scheme for IPv4 and IPv6
+   directory requests:
+     * choose between IPv4 and IPv6 directory requests at random.
+
+   We do not expect this change to have any load-balancing impact on the public
+   tor network, because the number of relays is much smaller than the number
+   of clients. However, the 6 directory authorities with IPv6 enabled may see
+   slightly more directory load, particularly over IPv6.
+
+   To support this change, tor should also change how it handles IPv6
+   directory failures on relays:
+     * avoid recording IPv6 directory failures as remote relay failures,
+       because they may actually be due to a lack of IPv6 connectivity on the
+       local relay, and
+     * issue IPv6 directory failure logs at notice level, and rate-limit them
+       to one per hour.
+
+   If a relay is:
+     * explicitly configured with an IPv6 address, or
+     * a publicly routable, reachable IPv6 address is discovered in an
+       earlier step,
+   tor should start issuing IPv6 directory failure logs at warning level.
+
+   (Alternately, tor could stop doing IPv6 directory requests entirely. But we
+   prefer designs where all relays behave in a similar way, regardless of their
+   internal state.)
+
+   For some more complex directory load-balancing schemes, see section 3.5.3.
+
+   Tor already ignores private IPv4 addresses in directory headers. We propose
+   to also ignore private IPv6 addresses in directory headers. If all IPv4 and
+   IPv6 addresses in directory headers are private, address resolution should
+   pause, and return a temporary error.
+
+   Whenever address resolution fails, tor should warn the operator to set the
+   Address torrc option for IPv4 and IPv6. (If IPv4 is available, and only
+   IPv6 is missing, the log should be at notice level.)
+
+   Address resolution should continue the next time tor receives a directory
+   header containing a public IPv4 or IPv6 address.
+
+3.2.7. Disabling IPv6 Address Resolution
+
+   Relays (and bridges) that have a reachable IPv6 address, but that address
+   is unsuitable for the relay, need to be able to disable IPv6 address
+   resolution.
+
+   Based on [Proposal 311: Relay IPv6 Reachability], and this proposal, those
+   relays would:
+     * discover their IPv6 address,
+     * open an IPv6 ORPort,
+     * find it reachable,
+     * publish a descriptor containing that IPv6 ORPort,
+     * have the directory authorities find it reachable,
+     * have it published in the consensus, and
+     * have it used by clients.
+
+   Currently, relays are required to have an IPv4 address. So if the guessed
+   IPv4 address is unsuitable, operators can set the Address option to a
+   suitable IPv4 address. But IPv6 addresses are optional, so relay operators
+   may need to disable IPv6 entirely.
+
+   We propose a new torrc-only option, AddressDisableIPv6. This option is set
+   to 0 by default. If the option is set to 1, tor disables IPv6 address
+   resolution, IPv6 ORPorts, IPv6 reachability checks, and publishing an IPv6
+   ORPort in its descriptor.
+
+3.2.8. Automatically Enabling an IPv6 ORPort
+
+   We propose that relays (and bridges) that discover their IPv6 address,
+   should open an ORPort on that address, and test its reachability (see
+   [Proposal 311: Relay IPv6 Reachability], particularly section 4.3.1).
+
+   The ORPort should be opened on the port configured in the relay's ORPort
+   torrc option. Relay operators can use the IPv4Only and IPv6Only options
+   to configure different ports for IPv4 and IPv6.
+
+   If both reachability checks succeed, relays should publish their IPv4 and
+   IPv6 ORPorts in their descriptor.
+
+   If only the IPv4 ORPort check succeeds, and the IPv6 address was guessed
+   (rather than being explicitly configured), then relays should publish their
+   IPv4 ORPort in their descriptor. (And log a notice about the failed IPv6
+   ORPort reachability check.)
+
+3.3. Consequential Tor Client Changes
+
+   We do not propose any required client address resolution changes at this
+   time.
+
+   However, clients will use the updated address resolution functions to detect
+   when they are on a new connection, and therefore need to rotate their TLS
+   keys.
+
+   This minor client change allows us to avoid keeping an outdated version of
+   the address resolution functions, which is only for client use.
+
+   Clients should skip address resolution steps that don't apply to them, such
+   as:
+     * the ORPort option,
+     * the DirPort option, and
+     * the Address option, if it becomes a relay module option.
+
+3.4. Alternative Address Resolution Designs
+
+   We briefly mention some potential address resolution designs, and the
+   reasons that they were not used in this proposal.
+
+   (Some designs may be proposed for future Tor versions, but are not necessary
+   at this time.)
+
+3.4.1. Future Bridge IPv6 Address Resolution Behaviour
+
+   When clients automatically fetch directory documents via relay IPv4 and
+   IPv6 ORPorts by default, bridges should also adopt this dual-stack
+   behaviour. (For example, see [Proposal 306: Client Auto IPv6 Connections].)
+
+   When bridges fetch directory documents via IPv6, they will be able to find
+   their IPv6 address using directory headers (see 3.2.6).
+
+3.4.2. Guessing Muliple IPv4 or IPv6 Addresses
+
+   We avoid designs which guess (or configure) multiple IPv4 or IPv6
+   addresses, test them all for reachability, and choose one that works.
+
+   Using multiple addresses is rare, and the code to handle it is complex. It
+   also requires careful design to avoid:
+     * conflicts between multiple relays (or bridges) on the same address
+       (tor allows up to 2 relays per IPv4 address),
+     * relay flapping,
+     * race conditions, and
+     * relay address switching.
+
+3.4.3. Rejected Address Resolution Designs
+
+   We reject designs that try all the different address resolution methods,
+   score addresses, and then choose the address with the highest score.
+
+   These designs are a generalisation of designs that try different methods in
+   a set order (like this proposal). They are more complex than required.
+   Complex designs can confuse operators, particularly when they fail.
+
+   Operators should not need complex address resolution in tor: most relay
+   (and bridge) addresses are fixed, or change occasionally. And most relays
+   can reliably discover their address using directory headers, if all other
+   methods fail. (Bridges won't discover their IPv6 address from directory
+   headers, see section 3.2.6.)
+
+   If complex address resolution is required, it can be configured using a
+   dynamic DNS name in the Address torrc option, or via the control port.
+
+   We also avoid designs that use any addresses other than the first
+   (or latest) valid IPv4 and IPv6 address. These designs are more complex, and
+   they don't have clear benefits:
+     * sort addresses numerically (avoid address flipping)
+     * sort addresses by length, then numerically
+       (also minimise consensus size)
+     * store a list of previous addresses in the state file, and use the most
+       recently used address that's currently available.
+   Operators who want to avoid address flipping should set the Address option
+   in the torrc. Operators who want to minimise the size of the consensus
+   should use all-zero IPv6 host identifiers.
+
+3.5. Optional Efficiency and Reliability Changes
+
+   We propose some optional changes for efficiency and reliability, and
+   describe their impact.
+
+   Some of these changes may be more appropriate in future releases, or
+   along with other proposed features.
+
+3.5.1. Only Use Authenticated Directory Header IPv4 and IPv6 Addresses
+
+   We propose this optional change, to improve relay (and bridge) address
+   accuracy and reliability.
+
+   Relays should only use authenticated directory fetches to discover their
+   own IPv4 and IPv6 addresses.
+
+   Tor supports authenticated, encrypted directory fetches using BEGINDIR over
+   ORPorts (see the [Tor Specification] for details).
+
+   Relays currently fetch unencrypted directory documents over DirPorts. The
+   directory document itself is signed, but the HTTP headers are not
+   authenticated. (Clients and bridges only fetch directory documents using
+   authenticated directory fetches.)
+
+   Using authenticated directory headers for relay addresses:
+     * avoids caches (or other machines) mangling X-Your-Address-Is headers in
+       transit, and
+     * avoids attacks where directories are deliberately given an incorrect IP
+       address.
+
+   To make this change, we need to modify two different parts of tor:
+     * when making directory requests, relays should fetch some directory
+       documents using BEGINDIR over ORPorts, and
+     * when using the X-Your-Address-Is HTTP header to guess their own IPv4 or
+       IPv6 addresses, relays ignore directory documents that were not fetched
+       using BEGINDIR over ORPorts.
+
+   See also sections 3.5.2 (for preferring addresses from directory
+   authorities) and 3.5.3 (for load-balancing).
+
+3.5.2. Preferring IPv4 and IPv6 Addresses from Directory Authorities
+
+   We propose this optional change, to improve relay (and bridge) address
+   accuracy and reliability.
+
+   Relays store the latest IPv4 and IPv6 addresses received from:
+     * a directory authority, and
+     * a directory mirror,
+   and prefer the address from a directory authority, as long as it is not
+   too old.
+
+   Relays should also store a timestamp for each address, and ignore addresses
+   where:
+     * the timestamp is too old, or
+     * the timestamp for the preferred address (from a directory authority)
+       is much older than the timestamp for the other address (from a directory
+       mirror).
+
+   Relays should try directory authorities often enough, that their addresses
+   usually do not become too old. (And if the addresses do become too old,
+   relays should try directory authorities more often.)
+
+   As an alternative, relays could ignore addresses from other relays:
+     * when using the X-Your-Address-Is HTTP header to guess their own IPv4 or
+       IPv6 addresses, relays ignore directory documents that were not fetched
+       from directory authorities.
+   However, this implementation is not ideal, because it is better for a relay
+   to use an address from a directory mirror, than have no address at all.
+
+   See also sections 3.5.1 (for only using addresses from authenticated
+   connections) and 3.5.3 (for load-balancing).
+
+3.5.3. Load Balancing
+
+   We propose some optional changes to improve load-balancing.
+
+3.5.3.1. Directory Authority Load Balancing
+
+   Ideally, we would like all relays (and bridges) to do frequent directory
+   fetches:
+     * using BEGINDIR over ORPorts,
+     * to directory authorities.
+   However, this change may be unsustainable during high network load
+   (see [Ticket 33018: Dir auths using an unsustainable 400+ mbit/s]).
+
+   Therefore, we propose a simple load-balancing scheme between address
+   resolution and non-address resolution requests:
+     * when relays do not know their own IP addresses, they should make as many
+       directory authority ORPort directory fetches as is sustainable, and
+     * when relays know their own IP addresses, they should make an occasional
+       directory authority ORPort directory fetch, to learn if their address
+       has changed.
+
+   We use the load-balancing criteria in section 3.5.3.3, to select the ratio
+   between:
+     * ORPort connections to directory authorities, and
+     * ORPort or DirPort connections to directory mirrors.
+
+   It should be possible for relays to choose between ORPort and DirPort
+   connections to directory mirrors at random: they typically have enough spare
+   CPU and bandwidth.
+
+   See also sections 3.5.1 (for only using addresses from authenticated
+   connections) and 3.5.2 (for preferring addresses from directory
+   authorities).
+
+3.5.3.2. Load Balancing Between IPv4 and IPv6 Directories
+
+   We propose this optional change, to improve the load-balancing between IPv4
+   and IPv6 directories, when used by relays to find their IPv4 and IPv6
+   addresses (see section 3.2.6).
+
+   This change may only be necessary if the following changes result in poor
+   load-balancing, or other relay issues:
+     * randomly selecting IPv4 or IPv6 directories (see section 3.2.6), or
+     * preferring directory header addresses, from directory authorities,
+     via an authenticated connection (see sections 3.5.1 and 3.5.2).
+
+   We propose a new torrc option and consensus parameter:
+   MaxNumIPv4DirectoryAttempts. This option limits the number of IPv4 directory
+   requests, before the relay makes an IPv6 directory request. It should only
+   apply to attempts that are expected to provide a usable IPv4 or IPv6
+   address in their directory header. (Based on sections 3.2.6, 3.5.1, and
+   3.5.2.)
+
+   The design is similar to MaxNumIPv4BootstrapAttempts in
+   [Proposal 306: Client Auto IPv6 Connections].
+
+   Here is a quick sketch of the design:
+    * when MaxNumIPv4DirectoryAttempts is reached, select an IPv6-capable
+      directory, and make an IPv6 connection attempt,
+    * use a directory authority, or an ORPort, if required (see sections
+      3.5.1 and 3.5.2),
+    * use a default value between 2 and 4:
+      * the ideal value for load-balancing is >= 2
+        (because 6/9 directory authorities are already on IPv6)
+      * the ideal value for minimising failures is ~4
+        (because relays won't waste too much CPU or bandwidth)
+    * choose the default value based on the load-balancing criteria in section
+      3.5.3.3.
+
+   Alternately, we could wait until
+   [Proposal 306: Client Auto IPv6 Connections] is implemented, and use the
+   directory fetch design from that proposal.
+
+3.5.3.3. General Load Balancing Criteria
+
+   We propose the following criteria for choosing load-balancing ratios:
+
+   The selected ratios should be chosen based on the following factors:
+     * the current number of directory fetches that a relay makes:
+       * when bootstrapping with an empty cache directory, and
+       * in a steady state (per hour, or per new consensus),
+       (these numbers aren't currently collected by tor, so we may need to
+       write some extra code to include them in the heartbeat logs),
+     * relays need to discover their IPv4 and IPv6 addresses to publish their
+       descriptors,
+     * it only takes one successful directory fetch from one authority for a
+       relay to discover its IP address (see section 3.5.2),
+     * relays will fall back to addresses from directory mirrors, if directory
+       authorities are unavailable (see section 3.5.2),
+     * BEGINDIR over ORPort requires and TLS connection, and some additional
+       tor cryptography, so it is more expensive for authorities than a
+       DirPort fetch (and it can not be cached by a HTTP cache)
+       (see section 3.5.1),
+     * minimising wasted CPU (and bandwidth) for IPv6 connection attempts on
+       IPv4-only relays, and
+     * other potential changes to relay directory fetches (see
+       [Ticket 33018: Dir auths using an unsustainable 400+ mbit/s])
+
+   The selected ratios should allow almost all relays to update both their IPv4
+   and IPv6 addresses:
+     * at least twice when they bootstrap (to allow for fetch failures),
+     * at least once per directory fetch (or per hour), and
+     * from a directory authority (if available).
+
+   In this proposal, relays choose between IPv4 and IPv6 directory fetches
+   at random (see section 3.2.6 for more detail).
+
+3.5.4. Detailed Address Resolution Logs
+
+   We propose this optional change, to help diagnose relay address resolution
+   issues.
+
+   Relays (and bridges) should  log the address chosen using each address
+   resolution method, when:
+     * address resolution succeeds,
+     * address resolution fails,
+     * reachability checks fail, or
+     * publishing the descriptor fails.
+   These logs should be rate-limited separately for successes and failures.
+
+   The logs should tell operators to set the Address torrc option for IPv4 and
+   IPv6 (if available).
+
+3.5.5. Add IPv6 Support to is_local_addr()
+
+   We propose this optional change, to improve the accuracy of IPv6 address
+   detection from directory documents.
+
+   Directory servers use is_local_addr() to detect if the requesting tor
+   instance is on the same local network. If it is, the directory server does
+   not include the X-Your-Address-Is HTTP header in directory documents.
+
+   Currently, is_local_addr() checks for:
+     * an internal IPv4 or IPv6 address, or
+     * the same IPv4 /24 as the directory server.
+
+   We propose also checking for:
+     * the same IPv6 /48 as the directory server.
+
+   We choose /48 because it is typically the smallest network in the global
+   IPv6 routing tables, and it was previously the recommended per-customer
+   network block. (See [RFC 6177: IPv6 End Site Address Assignment].)
+
+   Tor currently uses:
+     * IPv4 /8 and IPv6 /16 for port summaries,
+     * IPv4 /16 and IPv6 /32 for path selection (avoiding relays in the same
+       network block).
+
+3.5.6. Add IPv6 Support to AuthDirMaxServersPerAddr
+
+   We propose this optional change, to improve the health of the network, by
+   rejecting too many relays on the same IPv6 address.
+
+   Modify get_possible_sybil_list() so it takes an address family argument,
+   and returns a list of IPv4 or IPv6 sybils.
+
+   Use the modified get_possible_sybil_list() to exclude relays from the
+   authority's vote, if there are more than AuthDirMaxServersPerAddr on the
+   same IPv4 or IPv6 address.
+
+   Since these relay exclusions happen at voting time, they do not require a
+   new consensus method.
+
+3.5.7. Use a Local Interface Address on the Default Route
+
+   We propose this optional change, to improve the accuracy of local interface
+   IPv4 and IPv6 address detection (see section 3.2.4).
+
+   Rewrite the get_interface_address*() functions to choose an interface
+   address on the default route, or to sort default route addresses first in
+   the list of addresses. (If the platform API allows us to find the default
+   route.)
+
+   For more information, see [Ticket 12377: Prefer default route when checking
+   local interface addresses].
+
+   This change might not be necessary, because the directory header IP address
+   method will find the IP address of the default route, in most cases
+   (see section 3.2.6).
+
+3.5.8. Add IPv6 Support Using gethostbyname2()
+
+   We propose these optional changes, to add IPv6 support to hostname
+   resolution on older OSes. These changes affect:
+     * the Address torrc option, when it is a hostname (see section 3.2.1),
+       and
+     * automatic hostname resolution (see section 3.2.5).
+
+   Use gethostbyname2() to add IPv6 support to hostname resolution on older
+   OSes, which don't support getaddrinfo().
+
+   But this change may be unnecessary, because:
+     * Linux has used getaddrinfo() by default since glibc 2.20 (2014)
+     * macOS has recommended getaddrinfo() since before 2006
+     * since macOS adopts BSD changes, most BSDs would have switched to
+       getaddrinfo() in a similar timeframe
+     * Windows has supported getaddrinfo() since Windows Vista; tor's minimum
+       supported Windows version is Vista.
+   See [Tor Supported Platforms] for more details.
+
+   When looking up hostnames using gethostbyname() or gethostbyname2(), if the
+   first address is a private address, we may want to look at the entire list
+   of addresses. Some struct hostent versions (example: current macOS) also
+   have a h_addr_list rather than h_addr. (They define h_addr as
+   h_addr_list[0], for backwards compatibility.)
+
+   However, having private and public addresses resolving from the same
+   hostname is a rare configuration, so we might not need to make this change.
+   (On OSes that support getaddrinfo(), tor searches the list of addresses for
+   a publicly routable address.)
+
+   As an alternative, if we believe that all supported OSes have getaddrinfo(),
+   we could simply remove the gethostbyname() code, rather than trying to
+   modify it to work with IPv6.
+
+   Most relays can reliably discover their address using directory headers,
+   if all other methods fail. Or operators can set the Address torrc option to
+   an IPv4 or IPv6 literal.
+
+3.5.9. Change Relay OutboundBindAddress Defaults
+
+   We propose this optional change, to improve the reliability of
+   IP address-based filters in tor.
+
+   For example, the tor network treats relay IP addresses differently when:
+     * resisting denial of service, and
+     * selecting canonical, long-term connections.
+   (See [Ticket 33018: Dir auths using an unsustainable 400+ mbit/s] for the
+   initial motivation for this change: resisting significant bandwidth load
+   on directory authorities.)
+
+   Now that tor knows its own addresses, we propose that relays (and bridges)
+   set their IPv4 and IPv6 OutboundBindAddress to these discovered addresses,
+   by default. If binding fails, tor should fall back to an unbound socket.
+
+   Operators would still be able to set a custom IPv4 and IPv6
+   OutboundBindAddress, if needed.
+
+   Currently, tor doesn't bind to a specific address, unless
+   OutboundBindAddress is configured. So on relays with multiple IP addresses,
+   the outbound address comes from the chosen route (usually the default
+   route).
+
+4. Directory Protocol Specification Changes
+
+   We propose explicitly supporting IPv6 X-Your-Address-Is HTTP headers in the
+   tor directory protocol.
+
+   We propose the following changes to the [Tor Directory Protocol]
+   specification, in section 6.1:
+
+  Servers MAY include an X-Your-Address-Is: header, whose value is the
+  apparent IPv4 or IPv6 address of the client connecting to them. IPv6
+  addresses SHOULD/MAY (TODO) be formatted enclosed in square brackets.
+
+  TODO: require brackets? What does Tor currently do?
+
+  For directory connections tunneled over a BEGIN_DIR stream, servers SHOULD
+  report the IP from which the circuit carrying the BEGIN_DIR stream reached
+  them.
+
+  Servers SHOULD disable caching of multiple network statuses or multiple
+  server descriptors.  Servers MAY enable caching of single descriptors,
+  single network statuses, the list of all server descriptors, a v1
+  directory, or a v1 running routers document, with appropriate expiry times
+  (around 30 minutes). Servers SHOULD disable caching of X-Your-Address-Is
+  headers.
+
+5. Test Plan
+
+   We provide a quick summary of our testing plans.
+
+5.1. Test Find Relay IPv6 Addresses
+
+   We propose to test these changes using chutney networks. However, chutney
+   creates a limited number of configurations, so we also need to test these
+   changes with relay operators on the public network.
+
+   Therefore, we propose to test these changes on the public network with a
+   small number of relays and bridges.
+
+   Once these changes are merged, volunteer relay and bridge operators will be
+   able to test them by:
+     * compiling from source,
+     * running nightly builds, or
+     * running alpha releases.
+
+5.2. Test Existing Features
+
+   We will modify and test these existing features:
+     * Find Relay IPv4 Addresses
+
+   We do not plan on modifying these existing features:
+     * relay address retries
+     * existing warning logs
+   But we will test that they continue to function correctly, and fix any bugs
+   triggered by the modifications in this proposal.
+
+6. Ongoing Monitoring
+
+   To monitor the impact of these changes, relays should collect basic IPv4
+   and IPv6 connection and bandwidth statistics (see [Proposal 313: Relay IPv6
+   Statistics]).
+
+   We may also collect separate statistics on connections from:
+     * clients (and bridges, because they act like clients), and
+     * other relays (and authorities, because they act like relays).
+
+   Some of these statistics may be included in tor's heartbeat logs, making
+   them accessible to relay operators.
+
+   We do not propose to collect additional statistics on:
+     * bridges,
+     * address resolution,
+     * circuit counts, or
+     * failure rates.
+   Collecting statistics like these could impact user privacy, or relay
+   security.
+
+7. Changes to Other Proposals
+
+   [Proposal 306: Client Auto IPv6 Connections] needs to be modified to keep
+   bridge IPv6 behaviour in sync with client IPv6 behaviour. (See section
+   3.2.6.)
+
+References:
+
+[getaddrinfo man page]: See the quoted section in https://stackoverflow.com/a/42351676
+
+[Proposal 306: Client Auto IPv6 Connections]: One possible design for automatic client IPv4 and IPv6 connections is at https://gitweb.torproject.org/torspec.git/tree/proposals/306-ipv6-happy-eyeballs.txt (TODO: modify to include bridge changes with client changes)
+
+[Proposal 311: Relay IPv6 Reachability]: https://gitweb.torproject.org/torspec.git/tree/proposals/311-relay-ipv6-reachability.txt
+
+[Proposal 313: Relay IPv6 Statistics]: https://gitweb.torproject.org/torspec.git/tree/proposals/313-relay-ipv6-stats.txt (TODO)
+
+[RFC 6177: IPv6 End Site Address Assignment]: https://tools.ietf.org/html/rfc6177#page-7
+
+[Ticket 12377: Prefer default route when checking local interface addresses]: https://trac.torproject.org/projects/tor/ticket/12377
+
+[Ticket 33018: Dir auths using an unsustainable 400+ mbit/s]: https://trac.torproject.org/projects/tor/ticket/33018
+
+[Tor Directory Protocol]: (version 3) https://gitweb.torproject.org/torspec.git/tree/dir-spec.txt
+
+[Tor Specification]: https://gitweb.torproject.org/torspec.git/tree/tor-spec.txt
+
+[Tor Supported Platforms]: https://trac.torproject.org/projects/tor/wiki/org/teams/NetworkTeam/SupportedPlatforms#OSSupportlevels
