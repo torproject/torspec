@@ -7,14 +7,14 @@ Ticket: #24404
 
 0. Abstract
 
-   We propose that Tor relays and bridges should check the reachability of
+   We propose that Tor relays (and bridges) should check the reachability of
    their IPv6 ORPort, before publishing their descriptor. To check IPv6 ORPort
    reachability, relays and bridges need to be able to extend circuits via
    other relays, and back to their own IPv6 ORPort.
 
 1. Introduction
 
-   Tor relays and bridges currently check the reachability of their IPv4
+   Tor relays (and bridges) currently check the reachability of their IPv4
    ORPort and DirPort before publishing them in their descriptor. But relays
    and bridges do not test the reachability of their IPv6 ORPorts.
 
@@ -30,15 +30,15 @@ Ticket: #24404
    bridge authority, it is included in the bridge networkstatus used by
    BridgeDB.
 
-   Many relay and bridge operators don't know when their relay's IPv6 ORPort is
-   unreachable. They may not find out until they check [Relay Search], or
+   Many relay (and bridge) operators don't know when their relay's IPv6 ORPort
+   is unreachable. They may not find out until they check [Relay Search], or
    their traffic may drop. For new operators, it might just look like Tor
    simply isn't working, or it isn't using much traffic. IPv6 ORPort issues
-   are a significant source of relay and bridge operator support requests.
+   are a significant source of relay operator support requests.
 
    Implementing IPv6 ORPort reachability checks will provide immediate, direct
-   feedback to operators in the relay or bridge's logs. It also enables future
-   work, such as automatically discovering relay and bridge addresses for IPv6
+   feedback to operators in the relay's logs. It also enables future work,
+   such as automatically discovering relay and bridge addresses for IPv6
    ORPorts (see [Proposal 312: Relay Auto IPv6 Address]).
 
 2. Scope
@@ -74,8 +74,8 @@ Ticket: #24404
 
 3.1. Current IPv6 ORPort Implementation
 
-   Currently, all relays and bridges must have an IPv4 ORPort. IPv6 ORPorts
-   are optional for relays and bridges.
+   Currently, all relays (and bridges) must have an IPv4 ORPort. IPv6 ORPorts
+   are optional.
 
    Tor supports making direct IPv6 OR connections:
      * from directory authorities to relay ORPorts,
