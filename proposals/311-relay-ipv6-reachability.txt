@@ -8,9 +8,9 @@ Ticket: #24404
 0. Abstract
 
    We propose that Tor relays (and bridges) should check the reachability of
-   their IPv6 ORPort, before publishing their descriptor. To check IPv6 ORPort
-   reachability, relays and bridges need to be able to extend circuits via
-   other relays, and back to their own IPv6 ORPort.
+   their IPv6 ORPort, before deciding whether to publish their descriptor. To
+   check IPv6 ORPort reachability, relays and bridges need to be able to
+   extend circuits via other relays, and back to their own IPv6 ORPort.
 
 1. Introduction
 
@@ -214,15 +214,19 @@ Ticket: #24404
 
 4. Check Relay and Bridge IPv6 ORPort Reachability
 
-   We propose that relays and bridges check their own IPv6 ORPort reachability.
+   We propose that relays (and bridges) check their own IPv6 ORPort
+   reachability.
 
-   To check IPv6 ORPort reachability, relays and bridges extend circuits via
-   other relays, and back to their own IPv6 ORPort.
+   To check IPv6 ORPort reachability, relays (and bridges) extend circuits via
+   other relays (but not other bridges), and back to their own IPv6 ORPort.
 
-   IPv6 reachability failures may result in a relay or bridge refusing to
-   publish its descriptor, if enough existing relays support IPv6 extends.
-   (Except for directory authorities: they perform reachability checks, and
-   warn if they fail. But they always publish their descriptors.)
+   If IPv6 reachability checks fail, relays (and bridges) should refuse to
+   publish their descriptors, if they believe IPv6 reachability checks are
+   reliable, and their IPv6 address was explicitly configured. (See
+   [Proposal 312: Relay Auto IPv6 Address] for the ways relays can guess their
+   IPv6 addresses.)
+
+   Directory authorities always publish their descriptors.
 
 4.1. Current Reachability Implementation
 
@@ -300,19 +304,29 @@ Ticket: #24404
      * relay IPv6 DirPorts.
    Therefore, they are also out of scope for this proposal.
 
-4.3. Refuse to Publish Descriptor if IPv6 ORPort is Unreachable
+4.3. Refusing to Publish Descriptor if IPv6 ORPort is Unreachable
 
    If an IPv6 ORPort reachability check fails, relays (and bridges) should log
    a warning.
 
-   In addition, if IPv6ORPort reachability checks are reliable, based on the
-   number of relays in the network that support IPv6 extends, relays should
-   refuse to publish their descriptor.
+   If IPv6 reachability checks fail, relays (and bridges) should refuse to
+   publish their descriptors, if they believe IPv6 reachability checks are
+   reliable, and their IPv6 address was explicitly configured. (See
+   [Proposal 312: Relay Auto IPv6 Address] for the ways relays can guess their
+   IPv6 addresses.)
 
-   Directory authorities should perform reachability checks, and warn if they
-   fail. But directory authorities should always publish their descriptors.
+   Directory authorities always publish their descriptors.
 
 4.3.1. Refusing to Publish the Descriptor
+
+   If IPv6 reachability checks fail, relays (and bridges) should refuse to
+   publish their descriptors, if:
+     * enough existing relays support IPv6 extends, and
+     * the IPv6 address was explicitly configured by the operator
+       (rather than guessed using [Proposal 312: Relay Auto IPv6 Address]).
+
+   Directory authorities may perform reachability checks, and warn if those
+   checks fail. But they always publish their descriptors.
 
    We set a threshold of consensus relays for reliable IPv6 ORPort checks:
      * at least 30 relays, and
@@ -666,7 +680,7 @@ References:
 
 [Proposal 306: Client Auto IPv6 Connections]: One possible design for automatic client IPv4 and IPv6 connections is at https://gitweb.torproject.org/torspec.git/tree/proposals/306-ipv6-happy-eyeballs.txt (TODO: modify to include bridge changes with client changes)
 
-[Proposal 312: Relay Auto IPv6 Address]: https://gitweb.torproject.org/torspec.git/tree/proposals/312-relay-auto-ipv6-addr.txt (TODO)
+[Proposal 312: Relay Auto IPv6 Address]: https://gitweb.torproject.org/torspec.git/tree/proposals/312-relay-auto-ipv6-addr.txt
 
 [Proposal 313: Relay IPv6 Statistics]: https://gitweb.torproject.org/torspec.git/tree/proposals/313-relay-ipv6-stats.txt (TODO)
 
