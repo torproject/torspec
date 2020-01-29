@@ -194,7 +194,7 @@ Ticket: #33073
    resolve an IPv4 and IPv6 address, and open ORPorts on the first available
    IPv4 and IPv6 address. Tor should respect the IPv4Only and IPv6Only port
    flags, if specified. (Tor currently resolves IPv4 addresses in ORPort
-   lines. It may not look for an IPv6 address.)
+   lines. It might not look for an IPv6 address.)
 
    Relays (and bridges) currently use the first advertised ORPort IPv6 address
    as their IPv6 address. We propose to use the first advertised IPv4 ORPort
@@ -674,7 +674,7 @@ Ticket: #33073
    For more information, see [Ticket 12377: Prefer default route when checking
    local interface addresses].
 
-   This change may not be necessary, because the directory header IP address
+   This change might not be necessary, because the directory header IP address
    method will find the IP address of the default route, in most cases
    (see section 3.2.6).
 
@@ -705,7 +705,7 @@ Ticket: #33073
    h_addr_list[0], for backwards compatibility.)
 
    However, having private and public addresses resolving from the same
-   hostname is a rare configuration, so we may not need to make this change.
+   hostname is a rare configuration, so we might not need to make this change.
    (On OSes that support getaddrinfo(), tor searches the list of addresses for
    a publicly routable address.)
 
