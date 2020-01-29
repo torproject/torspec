@@ -307,9 +307,9 @@
 
 3.3. GETCONF
 
-  Request the value of a configuration variable.  The syntax is:
+  Request the value of a configuration variable(s).  The syntax is:
 
-    "GETCONF" 1*(SP keyword) CRLF
+    "GETCONF" *(SP keyword) CRLF
 
   If all of the listed keywords exist in the Tor configuration, Tor replies
   with a series of reply lines of the form:
