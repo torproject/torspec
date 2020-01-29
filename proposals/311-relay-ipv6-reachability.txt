@@ -191,7 +191,29 @@ Ticket: #24404
    default, bridges should also adopt this behaviour. (For example,
    see [Proposal 306: Client Auto IPv6 Connections].)
 
-3.3.3. Rejected Extend Designs
+3.3.3. Allowing Extends to Prefer IPv4 or IPv6
+
+   Here is an alternate design, which allows extending clients (or relays doing
+   reachability tests) to prefer either IPv4 or IPv6:
+
+   Suppose that a relay's extend cell contains the IPv4 address and the
+   IPv6 address in their _preferred order_.  So if the party generating
+   the extend cell would prefer an IPv4 connection, it puts the IPv4
+   addess first; if it would prefer an IPv6 connection, it puts the IPv6
+   address first.
+
+   The relay that receives the extend cell could respond in several ways:
+     * One possibility (similar to section 3.2.1) is to choose at random,
+       with a higher probability given to the first option.
+     * One possibility (similar to section 3.3.1) is to try the first, and
+       then try the second if the first one fails.
+
+   This scheme has some advantage, in that it lets the self-testing relay say
+   "please try IPv6 if you can" or "please try IPv4 if you can" in a reliable
+   way, and lets us migrate from the current behavior to the 3.3.1 behavior
+   down the road.
+
+3.4. Rejected Extend Designs
 
    Some designs may never be suitable for the Tor network.
 
