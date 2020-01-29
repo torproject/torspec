@@ -399,7 +399,8 @@ Ticket: #33073
 
    If only the IPv4 ORPort check succeeds, and the IPv6 address was guessed
    (rather than being explicitly configured), then relays should publish their
-   IPv4 ORPort in their descriptor.
+   IPv4 ORPort in their descriptor. (And log a notice about the failed IPv6
+   ORPort reachability check.)
 
 3.3. Consequential Tor Client Changes
 
@@ -443,10 +444,11 @@ Ticket: #33073
 
    Using multiple addresses is rare, and the code to handle it is complex. It
    also requires careful design to avoid:
-     * conflicts between multiple relays on the same address
-       (tor allows up to 2 relays per IPv4 address)
-         * flapping / race conditions / address switching
-         * rare
+     * conflicts between multiple relays (or bridges) on the same address
+       (tor allows up to 2 relays per IPv4 address),
+     * relay flapping,
+     * race conditions, and
+     * relay address switching.
 
 3.4.3. Rejected Address Resolution Designs
 
