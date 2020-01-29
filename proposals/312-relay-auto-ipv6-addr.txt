@@ -344,7 +344,7 @@ Ticket: #33073
    prefer designs where all relays behave in a similar way, regardless of their
    internal state.)
 
-   For some more complex directory load-balancing schemes, see section 3.5.2.
+   For some more complex directory load-balancing schemes, see section 3.5.3.
 
    Tor already ignores private IPv4 addresses in directory headers. We propose
    to also ignore private IPv6 addresses in directory headers. If all IPv4 and
@@ -485,14 +485,11 @@ Ticket: #33073
 
 3.5.1. Only Use Authenticated Directory Header IPv4 and IPv6 Addresses
 
-   We propose this optional change, to improve relay address accuracy and
-   reliability.
+   We propose this optional change, to improve relay (and bridge) address
+   accuracy and reliability.
 
-   Relays should only use:
-     * authenticated directory fetches,
-     * to directory authorities,
-   to discover their own IPv4 and IPv6 addresses. (Both changes are optional,
-   and they can be made separately.)
+   Relays should only use authenticated directory fetches to discover their
+   own IPv4 and IPv6 addresses.
 
    Tor supports authenticated, encrypted directory fetches using BEGINDIR over
    ORPorts (see the [Tor Specification] for details).
@@ -515,13 +512,50 @@ Ticket: #33073
        IPv6 addresses, relays ignore directory documents that were not fetched
        using BEGINDIR over ORPorts.
 
-   Optionally, relays should also ignore addresses from other relays:
+   See also sections 3.5.2 (for preferring addresses from directory
+   authorities) and 3.5.3 (for load-balancing).
+
+3.5.2. Preferring IPv4 and IPv6 Addresses from Directory Authorities
+
+   We propose this optional change, to improve relay (and bridge) address
+   accuracy and reliability.
+
+   Relays store the latest IPv4 and IPv6 addresses received from:
+     * a directory authority, and
+     * a directory mirror,
+   and prefer the address from a directory authority, as long as it is not
+   too old.
+
+   Relays should also store a timestamp for each address, and ignore addresses
+   where:
+     * the timestamp is too old, or
+     * the timestamp for the preferred address (from a directory authority)
+       is much older than the timestamp for the other address (from a directory
+       mirror).
+
+   Relays should try directory authorities often enough, that their addresses
+   usually do not become too old. (And if the addresses do become too old,
+   relays should try directory authorities more often.)
+
+   As an alternative, relays could ignore addresses from other relays:
      * when using the X-Your-Address-Is HTTP header to guess their own IPv4 or
        IPv6 addresses, relays ignore directory documents that were not fetched
        from directory authorities.
+   However, this implementation is not ideal, because it is better for a relay
+   to use an address from a directory mirror, than have no address at all.
 
-   Ideally, we would like all relays to do all their directory fetches:
-     * using BEGINDIR over ORPorts, and
+   See also sections 3.5.1 (for only using addresses from authenticated
+   connections) and 3.5.3 (for load-balancing).
+
+3.5.3. Load Balancing
+
+   We propose some optional changes to improve load-balancing.
+
+3.5.3.1. Directory Authority Load Balancing
+
+   Ideally, we would like all relays (and bridges) to do frequent directory
+   fetches:
+     * using BEGINDIR over ORPorts,
      * to directory authorities.
    However, this change may be unsustainable during high network load
    (see [Ticket 33018: Dir auths using an unsustainable 400+ mbit/s]).
@@ -529,17 +563,64 @@ Ticket: #33073
    Therefore, we propose a simple load-balancing scheme between address
    resolution and non-address resolution requests:
      * when relays do not know their own IP addresses, they should make as many
-       address resolution directory fetches as is sustainable, and
+       directory authority ORPort directory fetches as is sustainable, and
      * when relays know their own IP addresses, they should make an occasional
-       address resolution directory fetch, to learn if their address has
-       changed.
+       directory authority ORPort directory fetch, to learn if their address
+       has changed.
 
-   We use the load-balancing criteria in the next section, to select the ratio
+   We use the load-balancing criteria in section 3.5.3.3, to select the ratio
    between:
      * ORPort connections to directory authorities, and
-     * DirPort connections to directory mirrors.
+     * ORPort or DirPort connections to directory mirrors.
 
-3.5.1.1. General Load Balancing Criteria
+   It should be possible for relays to choose between ORPort and DirPort
+   connections to directory mirrors at random: they typically have enough spare
+   CPU and bandwidth.
+
+   See also sections 3.5.1 (for only using addresses from authenticated
+   connections) and 3.5.2 (for preferring addresses from directory
+   authorities).
+
+3.5.3.2. Load Balancing Between IPv4 and IPv6 Directories
+
+   We propose this optional change, to improve the load-balancing between IPv4
+   and IPv6 directories, when used by relays to find their IPv4 and IPv6
+   addresses (see section 3.2.6).
+
+   This change may only be necessary if the following changes result in poor
+   load-balancing, or other relay issues:
+     * randomly selecting IPv4 or IPv6 directories (see section 3.2.6), or
+     * preferring directory header addresses, from directory authorities,
+     via an authenticated connection (see sections 3.5.1 and 3.5.2).
+
+   We propose a new torrc option and consensus parameter:
+   MaxNumIPv4DirectoryAttempts. This option limits the number of IPv4 directory
+   requests, before the relay makes an IPv6 directory request. It should only
+   apply to attempts that are expected to provide a usable IPv4 or IPv6
+   address in their directory header. (Based on sections 3.2.6, 3.5.1, and
+   3.5.2.)
+
+   The design is similar to MaxNumIPv4BootstrapAttempts in
+   [Proposal 306: Client Auto IPv6 Connections].
+
+   Here is a quick sketch of the design:
+    * when MaxNumIPv4DirectoryAttempts is reached, select an IPv6-capable
+      directory, and make an IPv6 connection attempt,
+    * use a directory authority, or an ORPort, if required (see sections
+      3.5.1 and 3.5.2),
+    * use a default value between 2 and 4:
+      * the ideal value for load-balancing is >= 2
+        (because 6/9 directory authorities are already on IPv6)
+      * the ideal value for minimising failures is ~4
+        (because relays won't waste too much CPU or bandwidth)
+    * choose the default value based on the load-balancing criteria in section
+      3.5.3.3.
+
+   Alternately, we could wait until
+   [Proposal 306: Client Auto IPv6 Connections] is implemented, and use the
+   directory fetch design from that proposal.
+
+3.5.3.3. General Load Balancing Criteria
 
    We propose the following criteria for choosing load-balancing ratios:
 
@@ -549,63 +630,31 @@ Ticket: #33073
        * in a steady state (per hour, or per new consensus),
        (these numbers aren't currently collected by tor, so we may need to
        write some extra code to include them in the heartbeat logs),
-     * relays need to discover their IPv4 and IPv6 addresses to bootstrap,
+     * relays need to discover their IPv4 and IPv6 addresses to publish their
+       descriptors,
      * it only takes one successful directory fetch from one authority for a
-       relay to discover its IP address,
+       relay to discover its IP address (see section 3.5.2),
+     * relays will fall back to addresses from directory mirrors, if directory
+       authorities are unavailable (see section 3.5.2),
      * BEGINDIR over ORPort requires and TLS connection, and some additional
        tor cryptography, so it is more expensive for authorities than a
-       DirPort fetch (and it can not be cached by a HTTP cache),
-     * minimising wasted CPU (and bandwidth) on IPv4-only relays, and
+       DirPort fetch (and it can not be cached by a HTTP cache)
+       (see section 3.5.1),
+     * minimising wasted CPU (and bandwidth) for IPv6 connection attempts on
+       IPv4-only relays, and
      * other potential changes to relay directory fetches (see
        [Ticket 33018: Dir auths using an unsustainable 400+ mbit/s])
 
    The selected ratios should allow almost all relays to update both their IPv4
    and IPv6 addresses:
-     * at least twice when they bootstrap (to allow for fetch failures), and
-     * at least once per directory fetch (or per hour).
+     * at least twice when they bootstrap (to allow for fetch failures),
+     * at least once per directory fetch (or per hour), and
+     * from a directory authority (if available).
 
    In this proposal, relays choose between IPv4 and IPv6 directory fetches
-   at random (see section 3.2.6 for more detail). See the next section for
-   an alternative load-balancing scheme.
+   at random (see section 3.2.6 for more detail).
 
-3.5.2. Load Balancing Between IPv4 and IPv6 Directories
-
-   We propose this optional change, to improve the load-balancing between IPv4
-   and IPv6 directories, when used by relays to find their IPv4 and IPv6
-   addresses (see section 3.2.6).
-
-   This change may only be necessary if the following changes result in poor
-   load-balancing, or other relay issues:
-     * randomly selecting IPv4 or IPv6 directories (see section 3.2.6), or
-     * only using directory headers for addresses when they come from directory
-       authorities, via an authenticated connection (see section 3.5.1).
-
-   We propose a new torrc option and consensus parameter:
-   MaxNumIPv4DirectoryAttempts. This option limits the number of IPv4 directory
-   requests, before the relay makes an IPv6 directory request. It should only
-   apply to attempts that are expected to provide a usable IPv4 or IPv6
-   address in their directory header. (Based on sections 3.2.6 and 3.5.1.)
-
-   The design is similar to MaxNumIPv4BootstrapAttempts in
-   [Proposal 306: Client Auto IPv6 Connections].
-
-   Here is a quick sketch of the design:
-    * when MaxNumIPv4DirectoryAttempts is reached, select an IPv6-capable
-      directory, and make an IPv6 connection attempt,
-    * use a directory authority, or an ORPort, if required (see section 3.5.1),
-    * use a default value between 2 and 4:
-      * the ideal value for load-balancing is >= 2
-        (because 6/9 directory authorities are already on IPv6)
-      * the ideal value for minimising failures is ~4
-        (because relays won't waste too much CPU or bandwidth)
-    * choose the default value based on the load-balancing criteria in section
-      3.5.1.1.
-
-   Alternately, we could wait until
-   [Proposal 306: Client Auto IPv6 Connections] is implemented, and use the
-   directory fetch design from that proposal.
-
-3.5.3. Detailed Address Resolution Logs
+3.5.4. Detailed Address Resolution Logs
 
    We propose this optional change, to help diagnose relay address resolution
    issues.
@@ -621,7 +670,7 @@ Ticket: #33073
    The logs should tell operators to set the Address torrc option for IPv4 and
    IPv6 (if available).
 
-3.5.4. Add IPv6 Support to is_local_addr()
+3.5.5. Add IPv6 Support to is_local_addr()
 
    We propose this optional change, to improve the accuracy of IPv6 address
    detection from directory documents.
@@ -646,7 +695,7 @@ Ticket: #33073
      * IPv4 /16 and IPv6 /32 for path selection (avoiding relays in the same
        network block).
 
-3.5.5. Add IPv6 Support to AuthDirMaxServersPerAddr
+3.5.6. Add IPv6 Support to AuthDirMaxServersPerAddr
 
    We propose this optional change, to improve the health of the network, by
    rejecting too many relays on the same IPv6 address.
@@ -661,7 +710,7 @@ Ticket: #33073
    Since these relay exclusions happen at voting time, they do not require a
    new consensus method.
 
-3.5.6. Use a Local Interface Address on the Default Route
+3.5.7. Use a Local Interface Address on the Default Route
 
    We propose this optional change, to improve the accuracy of local interface
    IPv4 and IPv6 address detection (see section 3.2.4).
@@ -678,7 +727,7 @@ Ticket: #33073
    method will find the IP address of the default route, in most cases
    (see section 3.2.6).
 
-3.5.7. Add IPv6 Support Using gethostbyname2()
+3.5.8. Add IPv6 Support Using gethostbyname2()
 
    We propose these optional changes, to add IPv6 support to hostname
    resolution on older OSes. These changes affect:
@@ -717,7 +766,7 @@ Ticket: #33073
    if all other methods fail. Or operators can set the Address torrc option to
    an IPv4 or IPv6 literal.
 
-3.5.8. Change Relay OutboundBindAddress Defaults
+3.5.9. Change Relay OutboundBindAddress Defaults
 
    We propose this optional change, to improve the reliability of
    IP address-based filters in tor.
