@@ -536,13 +536,10 @@ Ticket: #24404
    ongoing preemptive circuits. (Bridges can not change their behaviour,
    because they try to imitate clients.)
 
-   We propose a torrc option and consensus parameter SendIPv6CircuitExtends,
+   We propose a torrc option and consensus parameter RelaySendIPv6Extends,
    which is only supported on relays (and not bridges or clients). This option
    makes relays send IPv4 and IPv6 ORPorts in all their extend cells, when
    supported by the extending and receiving relay. (See section 3.2.1.)
-
-   TODO: Is there a shorter name, that isn't easily confused with enabling
-         support for other nodes to perform IPv6 extends via this relay?
 
    The default value for this option is "auto", which checks the consensus
    parameter. If the consensus parameter is not set, it defaults to "0" in
