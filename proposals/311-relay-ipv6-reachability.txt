@@ -213,6 +213,14 @@ Ticket: #24404
    way, and lets us migrate from the current behavior to the 3.3.1 behavior
    down the road.
 
+   However, it might not be necessary: clients should not care if their
+   extends are over IPv4 or IPv6, they just want to get to an exit safely.
+   (And clients should not depend on using IPv4 or IPv6, because relays may
+   use an existing authenticated connection to extend.) The only use case
+   where extends might want to prefer IPv4 or IPv6 is relay reachability
+   tests. But we want our reachability test design to succeed, without
+   depending on the specific extend implementation.
+
 3.4. Rejected Extend Designs
 
    Some designs may never be suitable for the Tor network.
