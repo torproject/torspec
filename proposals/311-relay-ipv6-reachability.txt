@@ -31,7 +31,7 @@ Ticket: #24404
    BridgeDB.
 
    Many relay (and bridge) operators don't know when their relay's IPv6 ORPort
-   is unreachable. They may not find out until they check [Relay Search], or
+   is unreachable. They might not find out until they check [Relay Search], or
    their traffic may drop. For new operators, it might just look like Tor
    simply isn't working, or it isn't using much traffic. IPv6 ORPort issues
    are a significant source of relay operator support requests.
@@ -594,7 +594,7 @@ Ticket: #24404
 
    We reserve Tor subprotocol "Relay=3" for tor versions where:
      * relays may perform IPv6 extends, and
-     * bridges may not perform IPv6 extends,
+     * bridges might not perform IPv6 extends,
    if configured with an IPv6 ORPort, as described in this proposal.
 
 5.1. Tor Specification Changes
@@ -609,8 +609,8 @@ Ticket: #24404
    Append to the Relay version 2 subprotocol specification:
 
           Relay=2 has limited IPv6 support:
-            * Clients may not include IPv6 ORPorts in EXTEND2 cells.
-            * Relays (and bridges) may not initiate IPv6 connections in
+            * Clients might not include IPv6 ORPorts in EXTEND2 cells.
+            * Relays (and bridges) might not initiate IPv6 connections in
               response to EXTEND2 cells containing IPv6 ORPorts, even if they
               are configured with an IPv6 ORPort.
           However, relays accept inbound connections to their IPv6 ORPorts,
@@ -619,8 +619,8 @@ Ticket: #24404
    "3" -- relays support extending over IPv6 connections in response to an
           EXTEND2 cell containing an IPv6 ORPort.
 
-          Bridges may not extend over IPv6, because they try to imitate client
-          behaviour.
+          Bridges might not extend over IPv6, because they try to imitate
+          client behaviour.
 
           Relays without an IPv6 ORPort, and tor instances running in other
           roles, may:
