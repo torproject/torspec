@@ -1,6 +1,6 @@
 Filename: 311-relay-ipv6-reachability.txt
 Title: Tor Relay IPv6 Reachability
-Author: teor
+Author: teor, Nick Mathewson
 Created: 22-January-2020
 Status: Draft
 Ticket: #24404
@@ -111,7 +111,8 @@ Ticket: #24404
 
 3.2.1. Making IPv6 ORPort Extend Connections
 
-   Relays can make a new connection over IPv6 when:
+   Relays may make a new connection over IPv6 when:
+     * they are configured with an IPv6 ORPort,
      * there is no existing authenticated connection to the requested relay,
        and
      * the extend cell contains an IPv6 ORPort.
