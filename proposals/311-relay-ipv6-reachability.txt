@@ -508,8 +508,15 @@ Ticket: #24404
        (by comparing the remote address of the final hop on the circuit, to
        the local IPv4 and IPv6 ORPort addresses).
 
-   TODO: work out how to efficiently match inbound create cells to test
-         circuits.
+   Relays can efficiently match inbound create cells to test circuits by
+   storing a set of their test circuits' extend cells g^X values, and then
+   check incoming cells create cells against that set.
+
+   If we make these changes, relays should track whether they are
+   "maybe reachable" (under the current definition of 'reachable') and
+   "definitely reachable" (based on the new definition). They should log
+   different messages depending on whether they are "maybe reachable" but these
+   new tests fail, or whether they are completely unreachable.
 
 4.4.4. Allowing More Relay IPv6 Extends
 
