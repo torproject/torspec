@@ -320,7 +320,21 @@
    VA-DistSeconds-VoteSeconds: The authorities exchange votes.
 
    VA-DistSeconds-VoteSeconds/2: The authorities try to download any
-   votes they don't have.
+   votes they don't have. Furthermore, they stopped accepting vote posted to
+   them.
+
+      Note: The reason why the vote should be refused is to minimize the
+      chance of a consensus split if the authorities are under bandwidth
+      pressure. If an authority is struggling to upload its vote and finally
+      does it on a fraction of authorities after this period, they will
+      compute a consensus different from the others. By refusing the vote
+      after this period, we increase our chances that everyone will use the
+      same vote set.
+
+      It does not fix the problem entirely because the problem also exists if
+      N authorities are able to fetch a specific vote but M authorities fail
+      to do so. However, it is an improvement towards making sure each
+      authority has the same set of votes.
 
    VA-DistSeconds: The authorities calculate the consensus and exchange
    signatures.
