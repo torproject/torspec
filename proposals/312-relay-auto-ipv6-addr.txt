@@ -360,8 +360,9 @@ Ticket: #33073
 
 3.2.7. Disabling IPv6 Address Resolution
 
-   Relays that have a reachable IPv6 address, but that address is unsuitable
-   for the relay, need to be able to disable IPv6 address resolution.
+   Relays (and bridges) that have a reachable IPv6 address, but that address
+   is unsuitable for the relay, need to be able to disable IPv6 address
+   resolution.
 
    Based on [Proposal 311: Relay IPv6 Reachability], and this proposal, those
    relays would:
@@ -385,8 +386,8 @@ Ticket: #33073
 
 3.2.8. Automatically Enabling an IPv6 ORPort
 
-   We propose that relays that discover their IPv6 address, should open an
-   ORPort on that address, and test its reachability (see
+   We propose that relays (and bridges) that discover their IPv6 address,
+   should open an ORPort on that address, and test its reachability (see
    [Proposal 311: Relay IPv6 Reachability], particularly section 4.3.1).
 
    The ORPort should be opened on the port configured in the relay's ORPort
@@ -457,8 +458,10 @@ Ticket: #33073
    Complex designs can confuse operators, particularly when they fail.
 
    Operators should not need complex address resolution in tor: most relay
-   addresses are fixed, or change occasionally. And most relays can reliably
-   discover their address using directory headers, if all other methods fail.
+   (and bridge) addresses are fixed, or change occasionally. And most relays
+   can reliably discover their address using directory headers, if all other
+   methods fail. (Bridges won't discover their IPv6 address from directory
+   headers, see section 3.2.6.)
 
    If complex address resolution is required, it can be configured using a
    dynamic DNS name in the Address torrc option, or via the control port.
