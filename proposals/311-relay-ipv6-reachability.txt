@@ -592,10 +592,10 @@ Ticket: #24404
 
 5. New Relay Subprotocol Version
 
-   We reserve Tor subprotocol "Relay=3" for:
-     * relays that support for IPv6 extends, and
-     * relays and bridges that support IPv6 ORPort reachability checks,
-   as described in this proposal.
+   We reserve Tor subprotocol "Relay=3" for tor versions where:
+     * relays may perform IPv6 extends, and
+     * bridges may not perform IPv6 extends,
+   if configured with an IPv6 ORPort, as described in this proposal.
 
 5.1. Tor Specification Changes
 
@@ -604,25 +604,31 @@ Ticket: #24404
 
    Adding a new Relay subprotocol version lets testing relays identify other
    relays that support IPv6 extends. It also allows us to eventually recommend
-   or require support for IPv6 extends on all relays (and bridges).
+   or require support for IPv6 extends on all relays.
 
    Append to the Relay version 2 subprotocol specification:
 
           Relay=2 has limited IPv6 support:
-            * Clients do not include IPv6 ORPorts in EXTEND2 cells.
-            * Relays do not initiate IPv6 connections in response to
-              EXTEND2 cells containing IPv6 ORPorts.
+            * Clients may not include IPv6 ORPorts in EXTEND2 cells.
+            * Relays (and bridges) may not initiate IPv6 connections in
+              response to EXTEND2 cells containing IPv6 ORPorts, even if they
+              are configured with an IPv6 ORPort.
           However, relays accept inbound connections to their IPv6 ORPorts,
           and will extend circuits via those connections.
 
    "3" -- relays support extending over IPv6 connections in response to an
-          EXTEND2 cell containing an IPv6 ORPort. Relays and bridges perform
-          IPv6 ORPort reachability checks. Client behaviour does not change.
+          EXTEND2 cell containing an IPv6 ORPort.
 
-          This subprotocol is advertised by all relays and bridges, regardless
-          of their configured ORPorts. But relays without a configured IPv6
-          ORPort may refuse to extend over IPv6. And bridges always refuse to
-          extend over IPv6, because they try to imitate client behaviour.
+          Bridges may not extend over IPv6, because they try to imitate client
+          behaviour.
+
+          Relays without an IPv6 ORPort, and tor instances running in other
+          roles, may:
+            * advertise support for "Relay=3", and
+            * react to consensuses recommending or requiring support for
+              "Relay=3".
+          But their other behaviour is similar to tor versions supporting
+          "Relay=2".
 
           A successful IPv6 extend requires:
             * Relay subprotocol version 3 (or later) and an IPv6 ORPort on the
@@ -633,6 +639,11 @@ Ticket: #24404
           network, these checks should be done when the path is selected.
           Extending relays should only check local IPv6 information, before
           attempting the extend.)
+
+          When relays receive an EXTEND2 cell containing both an IPv4 and an
+          IPv6 ORPort, and there is no existing authenticated connection with
+          the target relay, the extending relay chooses between IPv4 and IPv6
+          at random. (TODO: check final behaviour after code is merged.)
 
           This subprotocol version is described in proposal 311, and
           implemented in Tor 0.4.4.1-alpha. (TODO: check version after code is
