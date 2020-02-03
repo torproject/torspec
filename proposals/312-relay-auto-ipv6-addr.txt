@@ -813,6 +813,54 @@ Ticket: #33073
    the outbound address comes from the chosen route for each TCP connection
    or UDP packet (usually the default route).
 
+3.5.10. IPv6 Address Privacy Extensions
+
+   We propose this optional change, to improve the reliability of relays that
+   use IPv6 address privacy extensions (see section 3.5 of
+   [RFC 4941: Privacy Extensions for IPv6]).
+
+   We propose that tor should avoid using IPv6 addresses generated using
+   privacy extensions, unless no other publicly routable addresses are
+   available.
+
+   In practice, each operating system has a different way of detecting IPv6
+   address privacy extensions. And some operating systems may not tell
+   applications if a particular address is using privacy extensions. So
+   implementing this change may be difficult.
+
+   However, even if we do not make this change, tor should be compatible with
+   the RFC 4941 defaults:
+     * a new IPv6 address is generated each day
+     * deprecated addresses are removed after one week
+     * temporary addresses should be disabled, unless an application opts in
+       to using them
+   (See sections 3.5 and  3.6 of [RFC 4941: Privacy Extensions for IPv6].)
+
+   In particular, it can take up to 4.5 hours for a client to receive a new
+   address for a relay. Here are the maximum times:
+     * 30 minutes for directory authorities to do reachability checks
+       (see TestingAuthDirTimeToLearnReachability in the [Tor Manual Page]).
+     * 1 hour for a reachable relay to be included in a vote
+     * 10 minutes for votes to be turned into a consensus
+     * 2 hours and 50 minutes for clients
+       (See the [Tor Directory Protocol], sections 1.4 and 5.1, and the
+       corresponding Directory Authority options in the [Tor Manual Page].)
+
+   But 4.5 hours is much less than 1 week, and even significantly less than 1
+   day. So clients and relays should be compatible with the IPv6 privacy
+   extensions defaults, even if they are used for all applications.
+
+   However, bandwidth authorities may reset a relay's bandwidth when its IPv6
+   address changes. (The tor network currently uses torflow and sbws as
+   bandwidth authorities, neither implementation resets bandwidth when IPv6
+   addresses change.) Since bandwidth authorities only scan the whole tor
+   network about once a day, resetting a relay's bandwidth causes a huge
+   penalty.
+
+   Therefore, we propose that sbws should not reset relay bandwidths when
+   IPv6 addresses change. (See
+   [Ticket 28725: Reset relay bandwidths when their IPv6 address changes].)
+
 4. Directory Protocol Specification Changes
 
    We propose explicitly supporting IPv6 X-Your-Address-Is HTTP headers in the
@@ -911,6 +959,9 @@ References:
 [Proposal 313: Relay IPv6 Statistics]:
    https://gitweb.torproject.org/torspec.git/tree/proposals/313-relay-ipv6-stats.txt (TODO)
 
+[RFC 4941: Privacy Extensions for IPv6]:
+   https://tools.ietf.org/html/rfc4941
+   Or the older RFC 3041: https://tools.ietf.org/html/rfc3041
 
 [RFC 6177: IPv6 End Site Address Assignment]:
    https://tools.ietf.org/html/rfc6177#page-7
@@ -918,12 +969,17 @@ References:
 [Ticket 12377: Prefer default route when checking local interface addresses]:
    https://trac.torproject.org/projects/tor/ticket/12377
 
+[Ticket 28725: Reset relay bandwidths when their IPv6 address changes]:
+   https://trac.torproject.org/projects/tor/ticket/29725#comment:3
 
 [Ticket 33018: Dir auths using an unsustainable 400+ mbit/s]:
    https://trac.torproject.org/projects/tor/ticket/33018
 
 [Tor Directory Protocol]:
    (version 3) https://gitweb.torproject.org/torspec.git/tree/dir-spec.txt
+
+[Tor Manual Page]:
+   https://2019.www.torproject.org/docs/tor-manual.html.en
 
 [Tor Specification]:
    https://gitweb.torproject.org/torspec.git/tree/tor-spec.txt
