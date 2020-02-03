@@ -307,7 +307,8 @@
 
 3.3. GETCONF
 
-  Request the value of a configuration variable(s).  The syntax is:
+  Request the value of zero or more configuration variable(s).
+  The syntax is:
 
     "GETCONF" *(SP keyword) CRLF
 
@@ -331,6 +332,8 @@
 
   If an option appears multiple times in the configuration, all of its
   key-value pairs are returned in order.
+
+  If no keywords were provided, Tor responds with "250 OK" message.
 
   Some options are context-sensitive, and depend on other options with
   different keywords.  These cannot be fetched directly.  Currently there
