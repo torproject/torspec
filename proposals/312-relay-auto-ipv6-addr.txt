@@ -870,6 +870,56 @@ Ticket: #33073
    IPv6 addresses change. (See
    [Ticket 28725: Reset relay bandwidths when their IPv6 address changes].)
 
+3.5.11. Quick Extends After Relay Restarts
+
+   We propose this optional change, to reduce client circuit failures, after a
+   relay restarts.
+
+   We propose that relays (and bridges) should open their ORPorts, and support
+   client extends, as soon as possible after they start up. (Clients may
+   already have the relay's addresses from a previous consensus.)
+
+   Automatically enabling an IPv6 ORPort creates a race condition with IPv6
+   extends (see section 3.2.8 of this proposal, and
+   [Proposal 311: Relay IPv6 Reachability]).
+
+   This race condition has the most impact when:
+     1. a relay has outbound IPv6 connectivity,
+     2. the relay detects a publicly routable IPv6 address,
+     3. the relay opens an IPv6 ORPort,
+     4. but the IPv6 ORPort is not reachable.
+
+   Between steps 3 and 4, the relay could successfully extend over IPv6, even
+   though its IPv6 ORPort is unreachable. However, we expect this case to be
+   rare.
+
+   A far more common case is that a working relay has just restarted, and
+   clients still have its addresses, therefore they continue to try to extend
+   through it. If the relay refused to extend, all these clients would have to
+   retry their circuits.
+
+   To support this case, tor relays should open IPv4 and IPv6 ORPorts, and
+   perform extends, as soon as they can after startup. Relays can extend to
+   other relays, as soon as they have validated the directory documents
+   containing other relays' public keys.
+
+   In particular, relays which automatically detect their IPv6 address, should
+   support IPv6 extends as soon as they detect an IPv6 address. (Relays may
+   also attempt to bind to all IPv6 addresses on all interfaces. If that bind
+   is successful, they may choose to extend over IPv6, even before they know
+   their own IPv6 address.)
+
+   Relays should not wait for reachable IPv4 or IPv6 ORPorts before they start
+   performing client extends.
+
+   DirPort requests are less critical, because relays and clients will retry
+   directory fetches using multiple mirrors. However, DirPorts may also open
+   as early as possible, for consistency. (And for simpler code.)
+
+   Tor's existing code handles this use case, so the code changes required to
+   support IPv6 may be quite small. But we should still test this use case for
+   clients connecting over IPv4 and IPv6, and extending over IPv4 and IPv6.
+
 4. Directory Protocol Specification Changes
 
    We propose explicitly supporting IPv6 X-Your-Address-Is HTTP headers in the
