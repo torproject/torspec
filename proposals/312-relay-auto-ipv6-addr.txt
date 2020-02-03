@@ -810,8 +810,8 @@ Ticket: #33073
 
    Currently, tor doesn't bind to a specific address, unless
    OutboundBindAddress is configured. So on relays with multiple IP addresses,
-   the outbound address comes from the chosen route (usually the default
-   route).
+   the outbound address comes from the chosen route for each TCP connection
+   or UDP packet (usually the default route).
 
 4. Directory Protocol Specification Changes
 
