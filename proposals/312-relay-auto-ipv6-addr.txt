@@ -890,7 +890,7 @@ Ticket: #33073
 
    We provide a quick summary of our testing plans.
 
-5.1. Test Find Relay IPv6 Addresses
+5.1. Testing Relay IPv6 Addresses Discovery
 
    We propose to test these changes using chutney networks. However, chutney
    creates a limited number of configurations, so we also need to test these
