@@ -112,7 +112,7 @@ Ticket: #24404
 3.2.1. Making IPv6 ORPort Extend Connections
 
    Relays may make a new connection over IPv6 when:
-     * they are configured with an IPv6 ORPort,
+     * they have an IPv6 ORPort,
      * there is no existing authenticated connection to the requested relay,
        and
      * the extend cell contains an IPv6 ORPort.
