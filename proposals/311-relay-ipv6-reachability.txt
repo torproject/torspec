@@ -603,7 +603,7 @@ Ticket: #24404
    We reserve Tor subprotocol "Relay=3" for tor versions where:
      * relays may perform IPv6 extends, and
      * bridges might not perform IPv6 extends,
-   if configured with an IPv6 ORPort, as described in this proposal.
+   as described in this proposal.
 
 5.1. Tor Specification Changes
 
@@ -630,18 +630,10 @@ Ticket: #24404
           Bridges might not extend over IPv6, because they try to imitate
           client behaviour.
 
-          Relays without an IPv6 ORPort, and tor instances running in other
-          roles, may:
-            * advertise support for "Relay=3", and
-            * react to consensuses recommending or requiring support for
-              "Relay=3".
-          But their other behaviour is similar to tor versions supporting
-          "Relay=2".
-
           A successful IPv6 extend requires:
-            * Relay subprotocol version 3 (or later) and an IPv6 ORPort on the
-              extending relay,
-            * an IPv6 ORPort in the EXTEND2 cell, and
+            * Relay subprotocol version 3 (or later) on the extending relay,
+            * an IPv6 ORPort on the extending relay,
+            * an IPv6 ORPort for the accepting relay in the EXTEND2 cell, and
             * an IPv6 ORPort on the accepting relay.
           (Because different tor instances can have different views of the
           network, these checks should be done when the path is selected.
@@ -650,12 +642,27 @@ Ticket: #24404
 
           When relays receive an EXTEND2 cell containing both an IPv4 and an
           IPv6 ORPort, and there is no existing authenticated connection with
-          the target relay, the extending relay chooses between IPv4 and IPv6
-          at random. (TODO: check final behaviour after code is merged.)
+          the target relay, the extending relay may choose between IPv4 and
+          IPv6 at random. The extending relay might not try the other address,
+          if the first connection fails.
+          (TODO: check final behaviour after code is merged.)
+
+          As is the case with other subprotocol versions, tor advertises,
+          recommends, or requires support for this protocol version, regardless
+          of its current configuration.
+
+          In particular:
+            * relays without an IPv6 ORPort, and
+            * tor instances that are not relays,
+          have the following behaviour, regardless of their configuration:
+            * advertise support for "Relay=3" in their descriptor
+              (if they are a relay, bridge, or directory authority), and
+            * react to consensuses recommending or requiring support for
+              "Relay=3".
 
           This subprotocol version is described in proposal 311, and
-          implemented in Tor 0.4.4.1-alpha. (TODO: check version after code is
-          merged).
+          implemented in Tor 0.4.4.1-alpha.
+          (TODO: check version after code is merged).
 
 6. Test Plan
 
