@@ -412,13 +412,22 @@ Ticket: #33073
    torrc option. Relay operators can use the IPv4Only and IPv6Only options
    to configure different ports for IPv4 and IPv6.
 
+   If an ORPort is configured, but there is no specific bind address, relays
+   may attempt to bind to all IPv4 and IPv6 addresses (or all interfaces).
+   Some operating systems expect applications to bind to IPv4 and IPv6
+   addresses using separate API calls. Others don't support binding only to
+   IPv4 or IPv6, and will bind to all addresses whenever there is no specified
+   IP address (in a single API call). Tor should support both styles of
+   networking API.
+
    If both reachability checks succeed, relays should publish their IPv4 and
    IPv6 ORPorts in their descriptor.
 
    If only the IPv4 ORPort check succeeds, and the IPv6 address was guessed
-   (rather than being explicitly configured), then relays should publish their
-   IPv4 ORPort in their descriptor. (And log a notice about the failed IPv6
-   ORPort reachability check.)
+   (rather than being explicitly configured), then relays should:
+     * publish their IPv4 ORPort in their descriptor,
+     * stop publishing their IPv6 ORPort in their descriptor, and
+     * log a notice about the failed IPv6 ORPort reachability check.
 
 3.3. Consequential Tor Client Changes
 
