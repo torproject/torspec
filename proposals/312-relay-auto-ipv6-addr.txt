@@ -879,22 +879,36 @@ Ticket: #33073
 
 References:
 
-[getaddrinfo man page]: See the quoted section in https://stackoverflow.com/a/42351676
+[getaddrinfo man page]: See the quoted section in:
+   https://stackoverflow.com/a/42351676
 
-[Proposal 306: Client Auto IPv6 Connections]: One possible design for automatic client IPv4 and IPv6 connections is at https://gitweb.torproject.org/torspec.git/tree/proposals/306-ipv6-happy-eyeballs.txt (TODO: modify to include bridge changes with client changes)
+[Proposal 306: Client Auto IPv6 Connections]: One possible design for
+   automatic client IPv4 and IPv6 connections is at
+   https://gitweb.torproject.org/torspec.git/tree/proposals/306-ipv6-happy-eyeballs.txt
+   (TODO: modify to include bridge changes with client changes)
 
-[Proposal 311: Relay IPv6 Reachability]: https://gitweb.torproject.org/torspec.git/tree/proposals/311-relay-ipv6-reachability.txt
+[Proposal 311: Relay IPv6 Reachability]:
+   https://gitweb.torproject.org/torspec.git/tree/proposals/311-relay-ipv6-reachability.txt
 
-[Proposal 313: Relay IPv6 Statistics]: https://gitweb.torproject.org/torspec.git/tree/proposals/313-relay-ipv6-stats.txt (TODO)
+[Proposal 313: Relay IPv6 Statistics]:
+   https://gitweb.torproject.org/torspec.git/tree/proposals/313-relay-ipv6-stats.txt (TODO)
 
-[RFC 6177: IPv6 End Site Address Assignment]: https://tools.ietf.org/html/rfc6177#page-7
 
-[Ticket 12377: Prefer default route when checking local interface addresses]: https://trac.torproject.org/projects/tor/ticket/12377
+[RFC 6177: IPv6 End Site Address Assignment]:
+   https://tools.ietf.org/html/rfc6177#page-7
 
-[Ticket 33018: Dir auths using an unsustainable 400+ mbit/s]: https://trac.torproject.org/projects/tor/ticket/33018
+[Ticket 12377: Prefer default route when checking local interface addresses]:
+   https://trac.torproject.org/projects/tor/ticket/12377
 
-[Tor Directory Protocol]: (version 3) https://gitweb.torproject.org/torspec.git/tree/dir-spec.txt
 
-[Tor Specification]: https://gitweb.torproject.org/torspec.git/tree/tor-spec.txt
+[Ticket 33018: Dir auths using an unsustainable 400+ mbit/s]:
+   https://trac.torproject.org/projects/tor/ticket/33018
 
-[Tor Supported Platforms]: https://trac.torproject.org/projects/tor/wiki/org/teams/NetworkTeam/SupportedPlatforms#OSSupportlevels
+[Tor Directory Protocol]:
+   (version 3) https://gitweb.torproject.org/torspec.git/tree/dir-spec.txt
+
+[Tor Specification]:
+   https://gitweb.torproject.org/torspec.git/tree/tor-spec.txt
+
+[Tor Supported Platforms]:
+   https://trac.torproject.org/projects/tor/wiki/org/teams/NetworkTeam/SupportedPlatforms#OSSupportlevels
