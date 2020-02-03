@@ -178,8 +178,10 @@ Ticket: #33073
    and testing their reachability (see section 3.4.2).
 
    It is an error to configure an Address option with a private IPv4 or IPv6
-   address, or with a hostname that does not resolve to any publicly routable
-   IPv4 or IPv6 addresses.
+   address. Tor should warn if a configured Address hostname does not resolve
+   to any publicly routable IPv4 or IPv6 addresses. (In both these cases, if
+   tor is configured with a custom set of directory authorities, private
+   addresses should be allowed, with a notice-level log.)
 
    If the Address option is not configured for IPv4 or IPv6, or the hostname
    lookups do not provide both IPv4 and IPv6 addresses, address resolution
@@ -207,10 +209,11 @@ Ticket: #33073
    In rare cases, relays may have been using non-advertised ORPorts for their
    addresses. This change may also change their addresses.
 
-   We propose ignoring private configured ORPort addresses on public tor
-   networks. (Binding to private ORPort addresses is supported, even on public
-   tor networks, for relays that use NAT to reach the Internet.) If an ORPort
-   address is private, address resolution should go to the next step.
+   For the purposes of address resolution, tor should ignore private
+   configured ORPort addresses on public tor networks. (Binding to private
+   ORPort addresses is supported, even on public tor networks, for relays that
+   use NAT to reach the Internet.) If an ORPort address is private, address
+   resolution should go to the next step.
 
 3.2.3. Use the Advertised DirPort IPv4 Address
 
@@ -237,10 +240,10 @@ Ticket: #33073
    IPv4 address, to their first advertised IPv4 DirPort address. (But we expect
    that most relays that change will be using their ORPort address.)
 
-   We propose ignoring private configured DirPort addresses on public relays.
-   (Binding to private DirPort addresses is supported, for networks that use
-   NAT.) If a DirPort address is private, address resolution should go to the
-   next step.
+   For the purposes of address resolution, tor should also ignore private
+   configured DirPort addresses on public tor networks. (See the previous
+   section for details.) If a DirPort address is private, address resolution
+   should go to the next step.
 
 3.2.4. Use Local Interface IPv6 Address
 
