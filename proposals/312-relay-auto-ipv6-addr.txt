@@ -114,8 +114,9 @@ Ticket: #33073
 
    If there are multiple valid addresses, tor chooses:
      * the first address returned by the resolver,
-     * the first address returned by the local interface API, or
-     * the latest address returned by a directory server.
+     * the first address returned by the local interface API, and
+     * the latest address(es) returned by a directory server, DNS, or the
+       local interface API.
 
 3.2. Finding Relay IPv6 Addresses
 
@@ -157,8 +158,10 @@ Ticket: #33073
    While making these changes, we want to preserve tor's existing behaviour:
      * resolve Address using the local resolver, if needed,
      * ignore private addresses on public tor networks, and
-     * when there are multiple valid addresses, choose the first or latest
-       address, as appropriate.
+     * when there are multiple valid addresses:
+       * if a list of addresses is received, choose the first address, and
+       * if different addresses are received over time, choose the most recent
+         address.
 
 3.2.1. Make the Address torrc Option Support IPv6
 
