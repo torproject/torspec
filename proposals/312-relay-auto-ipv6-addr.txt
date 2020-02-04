@@ -368,14 +368,16 @@ Ticket: #33073
    Tor already ignores private IPv4 addresses in directory headers. We propose
    to also ignore private IPv6 addresses in directory headers. If all IPv4 and
    IPv6 addresses in directory headers are private, address resolution should
-   pause, and return a temporary error.
+   return a temporary error.
 
    Whenever address resolution fails, tor should warn the operator to set the
    Address torrc option for IPv4 and IPv6. (If IPv4 is available, and only
-   IPv6 is missing, the log should be at notice level.)
+   IPv6 is missing, the log should be at notice level.) These logs may need to
+   be rate-limited.
 
-   Address resolution should continue the next time tor receives a directory
-   header containing a public IPv4 or IPv6 address.
+   The next time tor receives a directory header containing a public IPv4 or
+   IPv6 address, tor should use that address for reachability checks. If the
+   reachability checks succeed, tor should use that address in its descriptor.
 
 3.2.6. Disabling IPv6 Address Resolution
 
