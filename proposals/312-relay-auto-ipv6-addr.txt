@@ -972,6 +972,7 @@ Ticket: #33073
      * IPv4 /8 and IPv6 /16 for port summaries,
      * IPv4 /16 and IPv6 /32 for path selection (avoiding relays in the same
        network block).
+   See also the next section, which uses IPv6 /64 for sybils.
 
 3.5.6. Add IPv6 Support to AuthDirMaxServersPerAddr
 
@@ -982,8 +983,36 @@ Ticket: #33073
    and returns a list of IPv4 or IPv6 sybils.
 
    Use the modified get_possible_sybil_list() to exclude relays from the
-   authority's vote, if there are more than AuthDirMaxServersPerAddr on the
-   same IPv4 or IPv6 address.
+   authority's vote, if there are more than:
+     * AuthDirMaxServersPerAddr on the same IPv4 address, or
+     * AuthDirMaxServersPerIPv6Site in the same IPv6 /64.
+
+   We choose IPv6 /64 as the IPv6 site size, because:
+     * provider site allocations range between /48 and /64
+       (with a recommendation of /56),
+     * /64 is the typical host allocation
+       (see [RFC 6177: IPv6 End Site Address Assignment]),
+     * we don't want to discourage IPv6 address adoption on the tor network.
+
+   Tor currently uses:
+     * IPv4 /8 and IPv6 /16 for port summaries,
+     * IPv4 /16 and IPv6 /32 for path selection (avoiding relays in the same
+       network block).
+   See also the previous section, which uses IPv6 /48 for the local network.
+
+   This change allows:
+     * up to AuthDirMaxServersPerIPv6Site relays on the smallest IPv6 site
+       (/64, which is also the typical IPv6 host), and
+     * thousands of relays on the recommended IPv6 site size of /56.
+   The number of relays in an IPv6 block was previously unlimited, and sybils
+   were only limited by the scarcity of IPv4 addresses.
+
+   We propose choosing a default value for AuthDirMaxServersPerIPv6Site by
+   analysing the current IPv6 addresses on the tor network. Reasonable
+   default values are likely in the range 4 to 50.
+
+   If tor every allows IPv6-only relays, we should review the default value
+   of AuthDirMaxServersPerIPv6Site.
 
    Since these relay exclusions happen at voting time, they do not require a
    new consensus method.
