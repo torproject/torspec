@@ -50,11 +50,15 @@ Ticket: #33073
        * start using IPv4 ORPort for IPv4 address detection, and
        * re-order IPv4 address detection methods.
 
-   Relays and directory authorities (but not bridges):
+   Relays (but not bridges, or directory authorities):
      * fetch some directory documents over IPv6.
+
    For anonymity reasons, bridges are unable to fetch directory documents over
    IPv6, until clients start to do so. (See
    [Proposal 306: Client Auto IPv6 Connections].)
+
+   For security reasons, directory authorities must only use addresses that
+   are explicitly configured in their torrc.
 
    This proposal makes a small, optional change to existing client behaviour:
      * clients also check IPv6 addresses when rotating TLS keys for new
@@ -90,7 +94,9 @@ Ticket: #33073
 
    To discover their IPv6 address, some relays may fetch directory documents
    over IPv6. (For anonymity reasons, bridges are unable to fetch directory
-   documents over IPv6, until clients start to do so.)
+   documents over IPv6, until clients start to do so. For security reasons,
+   directory authorities only use addresses that are explicitly configured in
+   their torrc.)
 
 3.1. Current Relay IPv4 Address Implementation
 
@@ -137,10 +143,13 @@ Ticket: #33073
    the traffic without the relay's private keys, but they can monitor traffic
    patterns.
 
-   Therefore, we only use untrusted address discovery methods, if every other
-   method has failed. Any method that uses DNS is potentially untrusted,
-   because DNS is often a remote, unauthenticated service. And addresses
-   provided by other directory servers are also untrusted.
+   Therefore, relays should only use untrusted address discovery methods, if
+   every other method has failed. Any method that uses DNS is potentially
+   untrusted, because DNS is often a remote, unauthenticated service. And
+   addresses provided by other directory servers are also untrusted.
+
+   For security reasons, directory authorities only use addresses that are
+   explicitly configured in their torrc.
 
    Based on these principles, we propose that tor tries to find relay IPv4 and
    IPv6 addresses in this order:
@@ -224,6 +233,12 @@ Ticket: #33073
    tor is configured with a custom set of directory authorities, private
    addresses should be allowed, with a notice-level log.)
 
+   For security reasons, directory authorities only use addresses that are
+   explicitly configured in their torrc. Therefore, we propose that directory
+   authorities only accept IPv4 or IPv6 address literals in their Address
+   option. They must not attempt to resolve their Address using DNS. It is a
+   config error to provide a hostname as a directory authority's Address.
+
    If the Address option is not configured for IPv4 or IPv6, or the hostname
    lookups do not provide both IPv4 and IPv6 addresses, address resolution
    should go to the next step.
@@ -249,6 +264,19 @@ Ticket: #33073
 
    In rare cases, relays may have been using non-advertised ORPorts for their
    addresses. This change may also change their addresses.
+
+   For security reasons, directory authorities only use addresses that are
+   explicitly configured in their torrc. Therefore, we propose that directory
+   authorities only accept IPv4 or IPv6 address literals in the address part
+   of the ORPort and DirPort options. They must not attempt to resolve these
+   addresses using DNS. It is a config error to provide a hostname as a
+   directory authority's ORPort or DirPort.
+
+   If directory authorities don't have an IPv4 address literal in their
+   Address or ORPort, they should issue a configuration error, and refuse to
+   launch. If directory authorities don't have an IPv6 address literal in their
+   Address or ORPort, they should issue a notice-level log, and fall back to
+   only using IPv4.
 
    For the purposes of address resolution, tor should ignore private
    configured ORPort addresses on public tor networks. (Binding to private
@@ -285,6 +313,12 @@ Ticket: #33073
    socket. (UDP is used because it is stateless, so the OS will not send any
    packets to open a connection.)
 
+   For security reasons, directory authorities only use addresses that are
+   explicitly configured in their torrc. Since local interface addresses are
+   implicit, and may depend on DHCP, directory authorities do not use this
+   address resolution method (or any of the other, lower-priority address
+   resolution methods).
+
    Relays that use NAT to reach the Internet may have no publicly routable
    local interface addresses, even on the public tor network. The NAT box has
    the publicly routable addresses, and it may be a separate machine.
@@ -310,10 +344,9 @@ Ticket: #33073
      * the local hostname.
    However, OS APIs typically only return a single hostname.
 
-   Even though the hostname lookup may use remote DNS, we propose to use it on
-   directory authorities, to maintain compatibility with current
-   configurations. Even if it is remote, we expect the configured DNS to be
-   somewhat trusted by the operator.
+   For security reasons, directory authorities only use addresses that are
+   explicitly configured in their torrc. Since hostname lookups may use DNS,
+   directory authorities do not use this address resolution method.
 
    The hostname lookup should ignore private addresses on public relays. If
    multiple IPv4 or IPv6 addresses are returned, the first public address from
@@ -334,11 +367,10 @@ Ticket: #33073
    directory fetches, bridge behaviour can also change to match. (See
    section 3.4.1 and [Proposal 306: Client Auto IPv6 Connections].)
 
-   We propose that directory authorities should ignore addresses in directory
-   headers. Allowing other authorities (or relays) to change a directory
-   authority's published IP address may lead to security issues. Instead,
-   if interface and hostname lookups fail, tor should stop address resolution,
-   and return a permanent error. (And issue a log to the operator, see below.)
+   For security reasons, directory authorities only use addresses that are
+   explicitly configured in their torrc. Since directory headers are provided
+   by other directory servers, directory authorities do not use this address
+   resolution method.
 
    We propose to use a simple load balancing scheme for IPv4 and IPv6
    directory requests:
@@ -606,6 +638,11 @@ Ticket: #33073
    See section 3.5 for some factors to consider when making this design
    decision.
 
+   For security reasons, directory authorities only use addresses that are
+   explicitly configured in their torrc. Since directory headers are provided
+   by other directory servers, directory authorities do not use this address
+   resolution method.
+
    For anonymity reasons, bridges are unable to fetch directory documents over
    IPv6, until clients start to do so. (See
    [Proposal 306: Client Auto IPv6 Connections].)
@@ -680,6 +717,11 @@ Ticket: #33073
    relays will be forced to make new connections when their address changes,
    then tor may be able to stop using X-Your-Address-Is HTTP headers.
 
+   For security reasons, directory authorities only use addresses that are
+   explicitly configured in their torrc. Since NETINFO cells are provided
+   by other directory servers, directory authorities do not use this address
+   resolution method.
+
    Bridges only make OR connections, and those OR connections are only over
    IPv4, to imitate default client behaviour.
 
@@ -702,6 +744,9 @@ Ticket: #33073
    Relays prefer IPv4 and IPv6 address suggestions received from Directory
    Authorities.
 
+   Directory authorities do not use these address detection methods to
+   discover their own addresses, for security reasons.
+
    When they receive an address suggestion from a directory mirror, relays can:
      * ignore the address, or
      * use the address as the lowest priority address method.
@@ -723,6 +768,9 @@ Ticket: #33073
    We propose some optional changes to improve relay (and bridge)
    load-balancing across directory authorities.
 
+   Directory authorities do not use these address detection methods to
+   discover their own addresses, for security reasons.
+
 3.5.3.1. Directory Authority Load Balancing
 
    Relays may prefer:
@@ -732,6 +780,9 @@ Ticket: #33073
      * connecting to Directory Authorities (section 3.5.2).
 
    Both these changes are optional, so they might not be implemented.
+
+   Directory authorities do not use these address detection methods to
+   discover their own addresses, for security reasons.
 
    If both changes are implemented, we would like all relays (and bridges) to
    do frequent directory fetches:
@@ -813,6 +864,9 @@ Ticket: #33073
    IPv6, until clients start to do so. (See
    [Proposal 306: Client Auto IPv6 Connections].)
 
+   Directory authorities do not use these address detection methods to
+   discover their own addresses, for security reasons.
+
    This change may only be necessary if the following changes result in poor
    load-balancing, or other relay issues:
      * randomly selecting IPv4 or IPv6 directories (see section 3.2.5), or
@@ -870,6 +924,9 @@ Ticket: #33073
    For anonymity reasons, bridges are unable to make regular connections over
    IPv6, until clients start to do so. (See
    [Proposal 306: Client Auto IPv6 Connections].)
+
+   Directory authorities do not use these address detection methods to
+   discover their own addresses, for security reasons.
 
    In this proposal, relays choose between IPv4 and IPv6 directory fetches
    at random (see section 3.2.5 for more detail). But if this change causes
@@ -937,6 +994,9 @@ Ticket: #33073
    IPv4 and IPv6 address detection (see section 3.2.3), on relays
    (and bridges).
 
+   Directory authorities do not use this address detection method to
+   discover their own addresses, for security reasons.
+
    Rewrite the get_interface_address*() functions to choose an interface
    address on the default route, or to sort default route addresses first in
    the list of addresses. (If the platform API allows us to find the default
@@ -957,6 +1017,9 @@ Ticket: #33073
        and
      * automatic hostname resolution (see section 3.2.4),
    on relays and bridges.
+
+   Directory authorities do not use this address detection method to
+   discover their own addresses, for security reasons.
 
    Use gethostbyname2() to add IPv6 support to hostname resolution on older
    OSes, which don't support getaddrinfo().
@@ -1020,6 +1083,12 @@ Ticket: #33073
    We propose this optional change, to improve the reliability of relays (and
    bridges) that use IPv6 address privacy extensions (see section 3.5 of
    [RFC 4941: Privacy Extensions for IPv6]).
+
+   Directory authorities:
+     * should not use IPv6 address privacy extensions, because their addresses
+       need to stay the same over time, and
+     * do not use address detection methods that would automatically select
+       an IPv6 address with privacy extensions, for security reasons.
 
    We propose that tor should avoid using IPv6 addresses generated using
    privacy extensions, unless no other publicly routable addresses are
@@ -1123,6 +1192,11 @@ Ticket: #33073
    relay (and bridge) address detection. (And to reduce user confusion about
    firewall notifications which show a strange IP address, particularly on
    clients.)
+
+   Directory authorities do not use a UDP socket to discover their own
+   addresses, for security reasons. Therefore, we are free to use any
+   directory address for this check, without the risk of a directory authority
+   making a UDP socket to itself, and discovering its own private address.
 
    We propose that tor should use a directory authority IPv4 and IPv6 address,
    for any sockets that it opens to detect local interface addresses (see
