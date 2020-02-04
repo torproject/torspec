@@ -391,7 +391,8 @@ Ticket: #33073
      * publish a descriptor containing that IPv6 ORPort,
      * have the directory authorities find it reachable,
      * have it published in the consensus, and
-     * have it used by clients.
+     * have it used by clients,
+   regardless of how the operator configures their tor instance.
 
    Currently, relays are required to have an IPv4 address. So if the guessed
    IPv4 address is unsuitable, operators can set the Address option to a
