@@ -154,6 +154,10 @@ Ticket: #33073
    Each of these address resolution steps is described in more detail, in its
    own subsection.
 
+   For anonymity reasons, bridges are unable to fetch directory documents over
+   IPv6, until clients start to do so. (See
+   [Proposal 306: Client Auto IPv6 Connections].)
+
    We avoid using advertised DirPorts for address resolution, because:
      * they are not supported on bridges,
      * they are not supported on IPv6,
@@ -930,7 +934,8 @@ Ticket: #33073
 3.5.7. Use a Local Interface Address on the Default Route
 
    We propose this optional change, to improve the accuracy of local interface
-   IPv4 and IPv6 address detection (see section 3.2.3).
+   IPv4 and IPv6 address detection (see section 3.2.3), on relays
+   (and bridges).
 
    Rewrite the get_interface_address*() functions to choose an interface
    address on the default route, or to sort default route addresses first in
@@ -950,7 +955,8 @@ Ticket: #33073
    resolution on older OSes. These changes affect:
      * the Address torrc option, when it is a hostname (see section 3.2.1),
        and
-     * automatic hostname resolution (see section 3.2.4).
+     * automatic hostname resolution (see section 3.2.4),
+   on relays and bridges.
 
    Use gethostbyname2() to add IPv6 support to hostname resolution on older
    OSes, which don't support getaddrinfo().
@@ -986,7 +992,9 @@ Ticket: #33073
 3.5.9. Change Relay OutboundBindAddress Defaults
 
    We propose this optional change, to improve the reliability of
-   IP address-based filters in tor.
+   IP address-based filters in tor. These filters typically affect relays and
+   directory authorities. But we propose that bridges and clients also make
+   this change, for consistency.
 
    For example, the tor network treats relay IP addresses differently when:
      * resisting denial of service, and
@@ -1009,8 +1017,8 @@ Ticket: #33073
 
 3.5.10. IPv6 Address Privacy Extensions
 
-   We propose this optional change, to improve the reliability of relays that
-   use IPv6 address privacy extensions (see section 3.5 of
+   We propose this optional change, to improve the reliability of relays (and
+   bridges) that use IPv6 address privacy extensions (see section 3.5 of
    [RFC 4941: Privacy Extensions for IPv6]).
 
    We propose that tor should avoid using IPv6 addresses generated using
@@ -1105,11 +1113,16 @@ Ticket: #33073
    support IPv6 may be quite small. But we should still test this use case for
    clients connecting over IPv4 and IPv6, and extending over IPv4 and IPv6.
 
+   Directory authorities do not rely on their own reachability checks, so they
+   should be able to perform extends (and serve cached directory documents)
+   shortly after startup.
+
 3.5.12. Using Authority Addresses for Socket-Based Address Detection
 
    We propose this optional change, to avoid issues with firewalls during
-   address detection. (And to reduce user confusion about firewall
-   notifications which show a strange IP address.)
+   relay (and bridge) address detection. (And to reduce user confusion about
+   firewall notifications which show a strange IP address, particularly on
+   clients.)
 
    We propose that tor should use a directory authority IPv4 and IPv6 address,
    for any sockets that it opens to detect local interface addresses (see
