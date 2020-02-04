@@ -101,7 +101,7 @@ Ticket: #33073
      1. the Address torrc option
      2. the address of the hostname (resolved using DNS, if needed)
      3. a local interface address
-        (by making a self-connected socket, if needed)
+        (by making an unused socket, if needed)
      4. an address reported by a directory server (using X-Your-Address-Is)
 
    When using the Address option, or the hostname, tor supports:
@@ -147,7 +147,7 @@ Ticket: #33073
      1. the Address torrc option
      2. the advertised ORPort address
      3. a local interface address
-        (by making a self-connected socket, if needed)
+        (by making an unused socket, if needed)
      4. the address of the host's own hostname (resolved using DNS, if needed)
      5. an address reported by a directory server (using X-Your-Address-Is)
 
@@ -275,10 +275,11 @@ Ticket: #33073
    online, except for short quotes (see [getaddrinfo man page] for the
    relevant quote).
 
-   If the local interface addresses are unavailable, tor opens a self-connected
-   UDP socket to a publicly routable address, but doesn't actually send any
-   packets. Instead, it uses the socket APIs to discover the interface address
-   for the socket.
+   If the local interface addresses are unavailable, tor opens a UDP socket to
+   a publicly routable address, but doesn't actually send any packets.
+   Instead, it uses the socket APIs to discover the interface address for the
+   socket. (UDP is used because it is stateless, so the OS will not send any
+   packets to open a connection.)
 
    Relays that use NAT to reach the Internet may have no publicly routable
    local interface addresses, even on the public tor network. The NAT box has
