@@ -280,11 +280,19 @@ Ticket: #33073
    packets. Instead, it uses the socket APIs to discover the interface address
    for the socket.
 
-   Tor already ignores private IPv4 interface addresses on public relays.
-   (Binding to private DirPort addresses is supported, for networks that use
-   NAT.) We propose to also ignore private IPv6 interface addresses. If all
-   IPv4 or IPv6 interface addresses are private, address resolution should go
-   to the next step.
+   Relays that use NAT to reach the Internet may have no publicly routable
+   local interface addresses, even on the public tor network. The NAT box has
+   the publicly routable addresses, and it may be a separate machine.
+
+   Relays may also be unable to detect any local interface addresses. The
+   required APIs may be unavailable, due to:
+     * missing OS or library features, or
+     * local security policies.
+
+   Tor already ignores private IPv4 interface addresses on public relays. We
+   propose to also ignore private IPv6 interface addresses. If all IPv4 or
+   IPv6 interface addresses are private, address resolution should go to the
+   next step.
 
 3.2.4. Use Own Hostname IPv6 Addresses
 
