@@ -519,6 +519,7 @@ Ticket: #33073
        (also minimise consensus size)
      * store a list of previous addresses in the state file, and use the most
        recently used address that's currently available.
+
    Operators who want to avoid address flipping should set the Address option
    in the torrc. Operators who want to minimise the size of the consensus
    should use all-zero IPv6 host identifiers.
@@ -531,13 +532,46 @@ Ticket: #33073
    Some of these changes may be more appropriate in future releases, or
    along with other proposed features.
 
-3.5.1. Only Use Authenticated Directory Header IPv4 and IPv6 Addresses
+   Some of these changes make tor ignore some potential IP addresses.
+
+   Ignoring addresses risks relays having no available ORPort addresses, and
+   refusing to publish their descriptor. So before we ignore any addresses, we
+   should make sure that:
+     * tor's other address detection methods are robust and reliable, and
+     * we would prefer relays to shut down, rather than use the ignored
+       address.
+
+   As a less severe alternative, low-quality methods can be put last in the
+   address resolution order. (See section 3.2.)
+
+   If relays prefer addresses from particular sources (for example: ORPorts),
+   they should try these sources regularly, so that their addresses do not
+   become too old.
+
+   If relays ignore addresses from some sources (for example: DirPorts), they
+   must regularly try other sources (for example: ORPorts).
+
+3.5.1. Using Authenticated IPv4 and IPv6 Addresses
 
    We propose this optional change, to improve relay (and bridge) address
    accuracy and reliability.
 
-   Relays should only use authenticated directory fetches to discover their
-   own IPv4 and IPv6 addresses.
+   Relays should try to use authenticated connections to discover their own
+   IPv4 and IPv6 addresses.
+
+   Tor supports two kinds of authenticated address information:
+     * authenticated directory connections, and
+     * authenticated NETINFO cells.
+   See the following sections for more details.
+
+   See also sections 3.5.2 (for preferring addresses from directory
+   authorities) and 3.5.3 (for load-balancing).
+
+3.5.1.1. Authenticated Directory Connections
+
+   We propose this optional change, to improve relay address accuracy and
+   reliability. (Bridges are not affected, because they already use
+   authenticated directory connections, just like clients.)
 
    Tor supports authenticated, encrypted directory fetches using BEGINDIR over
    ORPorts (see the [Tor Specification] for details).
@@ -548,82 +582,216 @@ Ticket: #33073
    authenticated directory fetches.)
 
    Using authenticated directory headers for relay addresses:
-     * avoids caches (or other machines) mangling X-Your-Address-Is headers in
-       transit, and
-     * avoids attacks where directories are deliberately given an incorrect IP
-       address.
+     * provides authenticated address information,
+     * reduces the number of attackers that can deliberately give a relay an
+       incorrect IP address, and
+     * avoids caches (or other machines) accidentally mangling, deleting, or
+       repeating X-Your-Address-Is headers.
 
-   To make this change, we need to modify two different parts of tor:
+   To make this change, we need to modify tor's directory connection code:
      * when making directory requests, relays should fetch some directory
-       documents using BEGINDIR over ORPorts, and
-     * when using the X-Your-Address-Is HTTP header to guess their own IPv4 or
-       IPv6 addresses, relays ignore directory documents that were not fetched
-       using BEGINDIR over ORPorts.
+       documents using BEGINDIR over ORPorts.
 
-   See also sections 3.5.2 (for preferring addresses from directory
-   authorities) and 3.5.3 (for load-balancing).
+   Once tor regularly gets authenticated X-Your-Address-Is headers, relays can
+   change how they handle unauthenticated addresses. When they receive an
+   unauthenticated address suggestion, relays can:
+     * ignore the address, or
+     * use the address as the lowest priority address method.
+   See section 3.5 for some factors to consider when making this design
+   decision.
+
+   For anonymity reasons, bridges are unable to fetch directory documents over
+   IPv6, until clients start to do so. (See
+   [Proposal 306: Client Auto IPv6 Connections].)
+
+   Bridges currently use authenticated IPv4 connections for all their
+   directory fetches, to imitate default client behaviour.
+
+   We describe a related change, which is also optional:
+
+   We can increase the number of ORPort directory fetches:
+     * if tor has an existing ORPort connection to a relay that it has selected
+       for a directory fetch, it should use an ORPort fetch, rather than
+       opening an additional DirPort connection.
+
+   Using an existing ORPort connection:
+     * saves one DirPort connection and file descriptor,
+     * but slightly increases the cryptographic processing done by the relay,
+       and by the directory server it is connecting to.
+   However, the most expensive cryptographic operations have already happened,
+   when the ORPort connection was opened.
+
+   This change does not increase the number of NETINFO cells, because it
+   re-uses existing OR connections. See the next section for more details.
+
+3.5.1.2. Authenticated NETINFO Cells
+
+   We propose this optional change, to improve relay (and bridge) address
+   accuracy and reliability. (Bridge IPv6 addresses are not affected, because
+   bridges only make OR connections over IPv4, to imitate default client
+   behaviour.)
+
+   Tor supports authenticated IPv4 and IPv6 address information, using the
+   NETINFO cells exchanged at the beginning of each ORPort connection (see the
+   [Tor Specification] for details).
+
+   Relays do not currently use any address information from NETINFO cells.
+
+   Using authenticated NETINFO cells for relay addresses:
+     * provides authenticated address information,
+     * reduces the number of attackers that can deliberately give a relay an
+       incorrect IP address, and
+     * does not require a directory fetch (NETINFO cells are sent during
+       connection setup).
+
+   To make this change, we need to modify tor's cell processing:
+     * when processing NETINFO cells, tor should store the OTHERADDR field,
+       like it currently does for X-Your-Address-Is HTTP headers, and
+     * IPv4 and IPv6 addresses should be stored separately.
+   See the previous section, and section 3.2.5 for more details about the
+   X-Your-Address-Is HTTP header.
+
+   Once tor uses NETINFO cell addresses, relays can change how they handle
+   unauthenticated X-Your-Address-Is headers. When they receive an
+   unauthenticated address suggestion, relays can:
+     * ignore the address, or
+     * use the address as the lowest priority address method.
+   See section 3.5 for some factors to consider when making this design
+   decision.
+
+   We propose that tor continues to use the X-Your-Address-Is header, and adds
+   support for addresses in NETINFO cells. X-Your-Address-Is headers are sent
+   once per directory document fetch, but NETINFO cells are only sent once per
+   OR connection.
+
+   If a relay:
+     * only gets addresses from NETINFO cells from authorities, and
+     * has an existing, long-term connection to every authority,
+   then it may struggle to detect address changes.
+
+   Once all supported tor versions use NETINFO cells for address detection, we
+   should review this design decision. If we are confident that almost all
+   relays will be forced to make new connections when their address changes,
+   then tor may be able to stop using X-Your-Address-Is HTTP headers.
+
+   Bridges only make OR connections, and those OR connections are only over
+   IPv4, to imitate default client behaviour.
+
+   For anonymity reasons, bridges are unable to make regular connections over
+   IPv4 and IPv6, until clients start to do so. (See
+   [Proposal 306: Client Auto IPv6 Connections].)
+
+   As an alternative design, if tor's addresses are stale, it could close some
+   of its open directory authority connections. (Similar to section 4.4.2
+   in [Proposal 311: Relay IPv6 Reachability], where relays close existing OR
+   connections, before testing their own reachability.) However, this design is
+   more complicated, because it involves tracking address age, as well as the
+   address itself.
 
 3.5.2. Preferring IPv4 and IPv6 Addresses from Directory Authorities
 
-   We propose this optional change, to improve relay (and bridge) address
+   We propose this optional change, to improve relay (but not bridge) address
    accuracy and reliability.
 
-   Relays store the latest IPv4 and IPv6 addresses received from:
-     * a directory authority, and
-     * a directory mirror,
-   and prefer the address from a directory authority, as long as it is not
-   too old.
+   Relays prefer IPv4 and IPv6 address suggestions received from Directory
+   Authorities.
 
-   Relays should also store a timestamp for each address, and ignore addresses
-   where:
-     * the timestamp is too old, or
-     * the timestamp for the preferred address (from a directory authority)
-       is much older than the timestamp for the other address (from a directory
-       mirror).
+   When they receive an address suggestion from a directory mirror, relays can:
+     * ignore the address, or
+     * use the address as the lowest priority address method.
+   See section 3.5 for some factors to consider when making this design
+   decision.
 
-   Relays should try directory authorities often enough, that their addresses
-   usually do not become too old. (And if the addresses do become too old,
-   relays should try directory authorities more often.)
+   Bridges only make OR connections, and those OR connections are only over
+   IPv4, to imitate default client behaviour.
 
-   As an alternative, relays could ignore addresses from other relays:
-     * when using the X-Your-Address-Is HTTP header to guess their own IPv4 or
-       IPv6 addresses, relays ignore directory documents that were not fetched
-       from directory authorities.
-   However, this implementation is not ideal, because it is better for a relay
-   to use an address from a directory mirror, than have no address at all.
+   For anonymity reasons, bridges are unable to make regular connections over
+   IPv6, until clients start to do so. (See
+   [Proposal 306: Client Auto IPv6 Connections].)
 
    See also sections 3.5.1 (for only using addresses from authenticated
    connections) and 3.5.3 (for load-balancing).
 
 3.5.3. Load Balancing
 
-   We propose some optional changes to improve load-balancing.
+   We propose some optional changes to improve relay (and bridge)
+   load-balancing across directory authorities.
 
 3.5.3.1. Directory Authority Load Balancing
 
-   Ideally, we would like all relays (and bridges) to do frequent directory
-   fetches:
+   Relays may prefer:
+     * authenticated connections (section 3.5.1).
+
+   Relays and bridges may prefer:
+     * connecting to Directory Authorities (section 3.5.2).
+
+   Both these changes are optional, so they might not be implemented.
+
+   If both changes are implemented, we would like all relays (and bridges) to
+   do frequent directory fetches:
      * using BEGINDIR over ORPorts,
      * to directory authorities.
-   However, this change may be unsustainable during high network load
-   (see [Ticket 33018: Dir auths using an unsustainable 400+ mbit/s]).
+   However, this extra load from relays may be unsustainable during high
+   network load (see
+   [Ticket 33018: Dir auths using an unsustainable 400+ mbit/s]).
+
+   For anonymity reasons, bridges should avoid connecting to directory
+   authorities too frequently, to imitate default client behaviour.
 
    Therefore, we propose a simple load-balancing scheme between address
    resolution and non-address resolution requests:
-     * when relays do not know their own IP addresses, they should make as many
-       directory authority ORPort directory fetches as is sustainable, and
-     * when relays know their own IP addresses, they should make an occasional
-       directory authority ORPort directory fetch, to learn if their address
-       has changed.
+     * when relays first start up, they should make two directory authority
+       ORPort fetch attempts, one on IPv4, and one on IPv6,
+     * relays should also make occasional directory authority ORPort directory
+       fetch attempts, on IPv4 and IPv6, to learn if their addresses have
+       changed.
 
-   We use the load-balancing criteria in section 3.5.3.3, to select the ratio
-   between:
-     * ORPort connections to directory authorities, and
-     * ORPort or DirPort connections to directory mirrors.
+   We propose a new torrc option and consensus parameter:
 
-   It should be possible for relays to choose between ORPort and DirPort
-   connections to directory mirrors at random: they typically have enough spare
-   CPU and bandwidth.
+    RelayMaxIntervalWithoutAddressDetectionRequest N seconds|minutes|hours
+
+    Relays make most of their directory requests via directory mirror DirPorts,
+    to reduce the load on directory authorities.
+
+    When this amount of time has passed since a relay last connected to a
+    directory authority ORPort, the relay makes its next directory request via
+    a directory authority ORPort. (Default: 15 minutes)
+
+   The final name and description for this option will depend on which optional
+   changes are actually implemented in tor. In particular, this option should
+   only consider requests that tor may use to discover its IP addresses.
+   For example:
+     * if tor uses NETINFO cells for addresses (section 3.5.1.2), then all
+       OR connections to an authority should be considered,
+     * if tor does not use NETINFO cells for addresses, and only uses
+       X-Your-Address-Is headers, then only directory fetches from authorities
+       should be considered.
+
+   We set the default value of this option to 15 minutes, because:
+     * tor's reachability tests fail if the ORPort is unreachable after 20
+       minutes. So we want to do at least two address detection requests in
+       the first 20 minutes;
+     * the minimum consensus period is 30 minutes, and we want to do at least
+       one address detection per consensus period. (Consensuses are usually
+       created every hour. But if there is no fresh consensus, directory
+       authorities will try to create a consensus every 30 minutes); and
+     * the default value for TestingAuthDirTimeToLearnReachability is 30
+       minutes. So directory authorities will make reachability test OR
+       connections to each relay, at least every 30 minutes. Therefore, relays
+       will see NETINFO cells from directory authorities about this often.
+       (Relays may use NETINFO cells for address detection, see section
+       3.5.1.2.)
+
+   See also section 3.5.3.3, for some general load balancing criteria, that
+   may help when tuning the address detection interval.
+
+   We propose a related change, which is also optional:
+
+   If relays use address suggestions from directory mirrors, they may choose
+   between ORPort and DirPort connections to directory mirrors at random.
+   Directory mirrors typically have enough spare CPU and bandwidth to handle
+   ORPort directory requests. (And the most expensive cryptography happens
+   when the ORPort connection is opened.)
 
    See also sections 3.5.1 (for only using addresses from authenticated
    connections) and 3.5.2 (for preferring addresses from directory
@@ -633,36 +801,34 @@ Ticket: #33073
 
    We propose this optional change, to improve the load-balancing between IPv4
    and IPv6 directories, when used by relays to find their IPv4 and IPv6
-   addresses (see section 3.2.6).
+   addresses (see section 3.2.5).
+
+   For anonymity reasons, bridges are unable to make regular connections over
+   IPv6, until clients start to do so. (See
+   [Proposal 306: Client Auto IPv6 Connections].)
 
    This change may only be necessary if the following changes result in poor
    load-balancing, or other relay issues:
-     * randomly selecting IPv4 or IPv6 directories (see section 3.2.6), or
-     * preferring directory header addresses, from directory authorities,
-     via an authenticated connection (see sections 3.5.1 and 3.5.2).
+     * randomly selecting IPv4 or IPv6 directories (see section 3.2.5), or
+     * preferring addresses from directory authorities, via an authenticated
+       connection (see sections 3.5.1 and 3.5.2).
 
-   We propose a new torrc option and consensus parameter:
-   MaxNumIPv4DirectoryAttempts. This option limits the number of IPv4 directory
-   requests, before the relay makes an IPv6 directory request. It should only
-   apply to attempts that are expected to provide a usable IPv4 or IPv6
-   address in their directory header. (Based on sections 3.2.6, 3.5.1, and
-   3.5.2.)
+   We propose that the RelayMaxIntervalWithoutAddressDetection option is
+   counted separately for IPv4 and IPv6 (see the previous section for details).
 
-   The design is similar to MaxNumIPv4BootstrapAttempts in
-   [Proposal 306: Client Auto IPv6 Connections].
+   For example:
+     * if 30 minutes has elapsed since the last IPv4 address detection request,
+       then the next directory request should be an IPv4 address detection
+       request, and
+     * if 30 minutes has elapsed since the last IPv6 address detection request,
+       then the next directory request should be an IPv6 address detection
+       request.
 
-   Here is a quick sketch of the design:
-    * when MaxNumIPv4DirectoryAttempts is reached, select an IPv6-capable
-      directory, and make an IPv6 connection attempt,
-    * use a directory authority, or an ORPort, if required (see sections
-      3.5.1 and 3.5.2),
-    * use a default value between 2 and 4:
-      * the ideal value for load-balancing is >= 2
-        (because 6/9 directory authorities are already on IPv6)
-      * the ideal value for minimising failures is ~4
-        (because relays won't waste too much CPU or bandwidth)
-    * choose the default value based on the load-balancing criteria in section
-      3.5.3.3.
+   If both intervals have elapsed at the same time, the relay should choose
+   between IPv4 and IPv6 at random.
+
+   See also section 3.5.3.3, for some general load balancing criteria, that
+   may help when tuning the address detection interval.
 
    Alternately, we could wait until
    [Proposal 306: Client Auto IPv6 Connections] is implemented, and use the
@@ -670,20 +836,15 @@ Ticket: #33073
 
 3.5.3.3. General Load Balancing Criteria
 
-   We propose the following criteria for choosing load-balancing ratios:
+   We propose the following criteria for choosing load-balancing intervals:
 
-   The selected ratios should be chosen based on the following factors:
-     * the current number of directory fetches that a relay makes:
-       * when bootstrapping with an empty cache directory, and
-       * in a steady state (per hour, or per new consensus),
-       (these numbers aren't currently collected by tor, so we may need to
-       write some extra code to include them in the heartbeat logs),
+   The selected interval should be chosen based on the following factors:
      * relays need to discover their IPv4 and IPv6 addresses to publish their
        descriptors,
      * it only takes one successful directory fetch from one authority for a
        relay to discover its IP address (see section 3.5.2),
-     * relays will fall back to addresses from directory mirrors, if directory
-       authorities are unavailable (see section 3.5.2),
+     * if relays fall back to addresses discovered from directory mirrors,
+       when directory authorities are unavailable (see section 3.5.2),
      * BEGINDIR over ORPort requires and TLS connection, and some additional
        tor cryptography, so it is more expensive for authorities than a
        DirPort fetch (and it can not be cached by a HTTP cache)
@@ -693,14 +854,20 @@ Ticket: #33073
      * other potential changes to relay directory fetches (see
        [Ticket 33018: Dir auths using an unsustainable 400+ mbit/s])
 
-   The selected ratios should allow almost all relays to update both their IPv4
-   and IPv6 addresses:
-     * at least twice when they bootstrap (to allow for fetch failures),
-     * at least once per directory fetch (or per hour), and
-     * from a directory authority (if available).
+   The selected interval should allow almost all relays to update both their
+   IPv4 and IPv6 addresses:
+     * at least twice when they bootstrap and test reachability (to allow for
+       fetch failures),
+     * at least once per consensus interval (that is, every 30 minutes), and
+     * from a directory authority (if required).
+
+   For anonymity reasons, bridges are unable to make regular connections over
+   IPv6, until clients start to do so. (See
+   [Proposal 306: Client Auto IPv6 Connections].)
 
    In this proposal, relays choose between IPv4 and IPv6 directory fetches
-   at random (see section 3.2.6 for more detail).
+   at random (see section 3.2.5 for more detail). But if this change causes
+   issues on IPv4-only relays, we may have to try IPv6 less often.
 
 3.5.4. Detailed Address Resolution Logs
 
