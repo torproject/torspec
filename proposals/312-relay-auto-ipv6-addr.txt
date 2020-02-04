@@ -422,8 +422,8 @@ Ticket: #33073
    enable IPv6 address resolution on this similar, very common configuration:
      * ORPort 1.1.1.1:9999
 
-   Therefore, we avoid designs that change the meaning of existing flags or
-   options.
+   Therefore, we avoid this design, becuase it changes the meaning of existing
+   flags and options.
 
 3.2.7. Automatically Enabling an IPv6 ORPort
 
