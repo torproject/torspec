@@ -935,6 +935,35 @@ Ticket: #33073
    support IPv6 may be quite small. But we should still test this use case for
    clients connecting over IPv4 and IPv6, and extending over IPv4 and IPv6.
 
+3.5.12. Using Authority Addresses for Socket-Based Address Detection
+
+   We propose this optional change, to avoid issues with firewalls during
+   address detection. (And to reduce user confusion about firewall
+   notifications which show a strange IP address.)
+
+   We propose that tor should use a directory authority IPv4 and IPv6 address,
+   for any sockets that it opens to detect local interface addresses (see
+   section 3.2.3). We propose that this change is applied regardless of the
+   role of the current tor instance (relay, bridge, directory authority, or
+   client).
+
+   Tor currently uses the arbitrary IP addresses 18.0.0.1 and [2002::], which
+   may be blocked by firewalls. These addresses may also cause user confusion,
+   when they appear in logs or notifications.
+
+   The relevant function is get_interface_address6_via_udp_socket_hack() in
+   lib/net. The hard-coded addresses are in app/config. Directly using these
+   addresses would break tor's module layering rules, so we propose:
+     * copying one directory authority's hard-coded IPv4 and IPv6 addresses to
+       an ADDRESS_PRIVATE macro or variable in lib/net/address.h
+     * writing a unit test that makes sure that the address used by
+       get_interface_address6_via_udp_socket_hack() is still in the list of
+       hard-coded directory authority addresses.
+
+   When we choose the directory authority, we should avoid using a directory
+   authority that has different hard-coded and advertised IP addresses. (To
+   avoid user confusion.)
+
 4. Directory Protocol Specification Changes
 
    We propose explicitly supporting IPv6 X-Your-Address-Is HTTP headers in the
