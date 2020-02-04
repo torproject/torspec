@@ -8,10 +8,17 @@ Ticket: #33073
 0. Abstract
 
    We propose that Tor relays (and bridges) should automatically find their
-   IPv6 address, and use it to publish an IPv6 ORPort. For some relays to find
-   their IPv6 address, they may need to fetch some directory documents from
-   directory authorities over IPv6. (For anonymity reasons, bridges are unable
-   to fetch directory documents over IPv6, until clients start to do so.)
+   IPv6 address.
+
+   Like tor's existing IPv4 address auto-detection, the chosen IPv6 address
+   will be published as an IPv6 ORPort in the relay's descriptor. Clients,
+   relays, and authorities connect to relay descriptor IP addresses.
+   Therefore, IP addresses in descriptors need to be publicly routable. (If
+   the relay is running on the public tor network.)
+
+   To discover their IPv6 address, some relays may fetch directory documents
+   over IPv6. (For anonymity reasons, bridges are unable to fetch directory
+   documents over IPv6, until clients start to do so.)
 
 1. Introduction
 
@@ -66,13 +73,24 @@ Ticket: #33073
 
 3. Finding Relay IPv6 Addresses
 
-   We propose that tor relays (and bridges) automatically find their IPv6
-   address, and use it to publish an IPv6 ORPort.
+   We propose that Tor relays (and bridges) should automatically find their
+   IPv6 address.
 
-   For some relays to find their IPv6 address, they may need to fetch some
-   directory documents from directory authorities over IPv6. (For anonymity
-   reasons, bridges are unable to fetch directory documents over IPv6, until
-   clients start to do so.)
+   Like tor's existing IPv4 address auto-detection, the chosen IPv6 address
+   will be published as an IPv6 ORPort in the relay's descriptor. Clients,
+   relays, and authorities connect to relay descriptor IP addresses.
+   Therefore, IP addresses in descriptors need to be publicly routable. (If
+   the relay is running on the public tor network.)
+
+   Relays should ignore any addresses that are reserved for private networks,
+   and check the reachability of addresses that appear to be public (see
+   [Proposal 311: Relay IPv6 Reachability]). Relays should only publish IP
+   addresses in their descriptor, if they are public and reachable. (If the
+   relay is not running on the public tor network, it may use any IP address.)
+
+   To discover their IPv6 address, some relays may fetch directory documents
+   over IPv6. (For anonymity reasons, bridges are unable to fetch directory
+   documents over IPv6, until clients start to do so.)
 
 3.1. Current Relay IPv4 Address Implementation
 
@@ -315,7 +333,7 @@ Ticket: #33073
    section 3.4.1 and [Proposal 306: Client Auto IPv6 Connections].)
 
    We propose that directory authorities should ignore addresses in directory
-   headers. Allowing other authorities (or relays?) to change a directory
+   headers. Allowing other authorities (or relays) to change a directory
    authority's published IP address may lead to security issues. Instead,
    if interface and hostname lookups fail, tor should stop address resolution,
    and return a permanent error. (And issue a log to the operator, see below.)
