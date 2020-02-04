@@ -1,6 +1,6 @@
 Filename: 312-relay-auto-ipv6-addr.txt
 Title: Tor Relays Automatically Find Their IPv6 Address
-Author: teor
+Author: teor, Nick Mathewson
 Created: 28-January-2020
 Status: Draft
 Ticket: #33073
@@ -131,8 +131,18 @@ Ticket: #33073
      * Reliable is better than Unreliable.
    Within these constraints, we try to find the simplest working design.
 
-   Therefore, we propose that tor tries to find relay IPv4 and IPv6 addresses
-   in this order:
+   If a relay is given the wrong address by an attacker, the attacker can
+   direct all inbound relay traffic to their own address. They can't decrypt
+   the traffic without the relay's private keys, but they can monitor traffic
+   patterns.
+
+   Therefore, we only use untrusted address discovery methods, if every other
+   method has failed. Any method that uses DNS is potentially untrusted,
+   because DNS is often a remote, unauthenticated service. And addresses
+   provided by other directory servers are also untrusted.
+
+   Based on these principles, we propose that tor tries to find relay IPv4 and
+   IPv6 addresses in this order:
      1. the Address torrc option
      2. the advertised ORPort address
      3. the advertised DirPort address (IPv4 only; relays, not bridges)
