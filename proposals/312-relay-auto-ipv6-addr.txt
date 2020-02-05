@@ -1286,6 +1286,13 @@ Ticket: #33073
    applications if a particular address is using privacy extensions. So
    implementing this change may be difficult.
 
+   On operating systems that provide IPv6 address privacy extension state,
+   IPv6 addresses may be:
+     * "public" - these addresses do not change
+     * "temporary" - these addresses change due to IPv6 privacy extensions.
+   Therefore, tor should prefer "public" IPv6 addresses, when they are
+   available.
+
    However, even if we do not make this change, tor should be compatible with
    the RFC 4941 defaults:
      * a new IPv6 address is generated each day
