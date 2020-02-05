@@ -399,7 +399,7 @@ Ticket: #33073
    prefer designs where all relays behave in a similar way, regardless of their
    internal state.)
 
-   For some more complex directory load-balancing schemes, see section 3.5.3.
+   For some more complex directory load-balancing schemes, see section 3.5.4.
 
    Tor already ignores private IPv4 addresses in directory headers. We propose
    to also ignore private IPv6 addresses in directory headers. If all IPv4 and
@@ -602,8 +602,7 @@ Ticket: #33073
      * authenticated NETINFO cells.
    See the following sections for more details.
 
-   See also sections 3.5.2 (for preferring addresses from directory
-   authorities) and 3.5.3 (for load-balancing).
+   See also sections 3.5.2 to 3.5.4.
 
 3.5.1.1. Authenticated Directory Connections
 
@@ -760,10 +759,33 @@ Ticket: #33073
    IPv6, until clients start to do so. (See
    [Proposal 306: Client Auto IPv6 Connections].)
 
-   See also sections 3.5.1 (for only using addresses from authenticated
-   connections) and 3.5.3 (for load-balancing).
+   See also sections 3.5.1 to 3.5.4.
 
-3.5.3. Load Balancing
+3.5.3. Ignoring Addresses on Inbound Connections
+
+   We propose this optional change, to improve relay (and bridge) address
+   accuracy and reliability.
+
+   Relays ignore IPv4 and IPv6 address suggestions received on inbound
+   connections.
+
+   We make this change, because we want to detect the IP addresses of the
+   relay's outbound routes, rather than the addresses that that other relays
+   believe they are connecting to for inbound connections.
+
+   If we make this change, relays may need to close some inbound connections,
+   before doing address detection. If we also make the changes in sections
+   3.5.1 and 3.5.2, busy relays could have persistent, inbound OR connections
+   from all directory authorities. (Currently, there are 9 directory
+   authorities with IPv4 addresses, and 6 directory authorities with IPv6
+   addresses.)
+
+   Directory authorities do not use these address detection methods to
+   discover their own addresses, for security reasons.
+
+   See also sections 3.5.1 to 3.5.4.
+
+3.5.4. Load Balancing
 
    We propose some optional changes to improve relay (and bridge)
    load-balancing across directory authorities.
@@ -771,15 +793,20 @@ Ticket: #33073
    Directory authorities do not use these address detection methods to
    discover their own addresses, for security reasons.
 
-3.5.3.1. Directory Authority Load Balancing
+   See also sections 3.5.1 to 3.5.3.
+
+3.5.4.1. Directory Authority Load Balancing
 
    Relays may prefer:
      * authenticated connections (section 3.5.1).
 
    Relays and bridges may prefer:
-     * connecting to Directory Authorities (section 3.5.2).
+     * connecting to Directory Authorities (section 3.5.2), or
+     * ignoring addresses on inbound connections (section 3.5.3)
+       (and therefore, they may close some inbound connections,
+       leading to extra connection re-establishment load).
 
-   Both these changes are optional, so they might not be implemented.
+   All these changes are optional, so they might not be implemented.
 
    Directory authorities do not use these address detection methods to
    discover their own addresses, for security reasons.
@@ -839,7 +866,7 @@ Ticket: #33073
        (Relays may use NETINFO cells for address detection, see section
        3.5.1.2.)
 
-   See also section 3.5.3.3, for some general load balancing criteria, that
+   See also section 3.5.4.3, for some general load balancing criteria, that
    may help when tuning the address detection interval.
 
    We propose a related change, which is also optional:
@@ -850,11 +877,9 @@ Ticket: #33073
    ORPort directory requests. (And the most expensive cryptography happens
    when the ORPort connection is opened.)
 
-   See also sections 3.5.1 (for only using addresses from authenticated
-   connections) and 3.5.2 (for preferring addresses from directory
-   authorities).
+   See also sections 3.5.1 to 3.5.3.
 
-3.5.3.2. Load Balancing Between IPv4 and IPv6 Directories
+3.5.4.2. Load Balancing Between IPv4 and IPv6 Directories
 
    We propose this optional change, to improve the load-balancing between IPv4
    and IPv6 directories, when used by relays to find their IPv4 and IPv6
@@ -869,9 +894,11 @@ Ticket: #33073
 
    This change may only be necessary if the following changes result in poor
    load-balancing, or other relay issues:
-     * randomly selecting IPv4 or IPv6 directories (see section 3.2.5), or
+     * randomly selecting IPv4 or IPv6 directories (see section 3.2.5),
      * preferring addresses from directory authorities, via an authenticated
-       connection (see sections 3.5.1 and 3.5.2).
+       connection (see sections 3.5.1 and 3.5.2), or
+     * ignoring addresses on inbound connections, and therefore closing and
+       re-opening some connections (see section 3.5.3).
 
    We propose that the RelayMaxIntervalWithoutAddressDetection option is
    counted separately for IPv4 and IPv6 (see the previous section for details).
@@ -887,14 +914,16 @@ Ticket: #33073
    If both intervals have elapsed at the same time, the relay should choose
    between IPv4 and IPv6 at random.
 
-   See also section 3.5.3.3, for some general load balancing criteria, that
+   See also section 3.5.4.3, for some general load balancing criteria, that
    may help when tuning the address detection interval.
 
    Alternately, we could wait until
    [Proposal 306: Client Auto IPv6 Connections] is implemented, and use the
    directory fetch design from that proposal.
 
-3.5.3.3. General Load Balancing Criteria
+   See also sections 3.5.1 to 3.5.3.
+
+3.5.4.3. General Load Balancing Criteria
 
    We propose the following criteria for choosing load-balancing intervals:
 
@@ -909,6 +938,7 @@ Ticket: #33073
        tor cryptography, so it is more expensive for authorities than a
        DirPort fetch (and it can not be cached by a HTTP cache)
        (see section 3.5.1),
+     * closing and re-opening some OR connections (see section 3.5.3),
      * minimising wasted CPU (and bandwidth) for IPv6 connection attempts on
        IPv4-only relays, and
      * other potential changes to relay directory fetches (see
@@ -932,7 +962,9 @@ Ticket: #33073
    at random (see section 3.2.5 for more detail). But if this change causes
    issues on IPv4-only relays, we may have to try IPv6 less often.
 
-3.5.4. Detailed Address Resolution Logs
+   See also sections 3.5.1 to 3.5.3.
+
+3.5.5. Detailed Address Resolution Logs
 
    We propose this optional change, to help diagnose relay address resolution
    issues.
@@ -948,7 +980,7 @@ Ticket: #33073
    The logs should tell operators to set the Address torrc option for IPv4 and
    IPv6 (if available).
 
-3.5.5. Add IPv6 Support to is_local_addr()
+3.5.6. Add IPv6 Support to is_local_addr()
 
    We propose this optional change, to improve the accuracy of IPv6 address
    detection from directory documents.
@@ -974,7 +1006,7 @@ Ticket: #33073
        network block).
    See also the next section, which uses IPv6 /64 for sybils.
 
-3.5.6. Add IPv6 Support to AuthDirMaxServersPerAddr
+3.5.7. Add IPv6 Support to AuthDirMaxServersPerAddr
 
    We propose this optional change, to improve the health of the network, by
    rejecting too many relays on the same IPv6 address.
@@ -1017,7 +1049,7 @@ Ticket: #33073
    Since these relay exclusions happen at voting time, they do not require a
    new consensus method.
 
-3.5.7. Use a Local Interface Address on the Default Route
+3.5.8. Use a Local Interface Address on the Default Route
 
    We propose this optional change, to improve the accuracy of local interface
    IPv4 and IPv6 address detection (see section 3.2.3), on relays
@@ -1038,7 +1070,7 @@ Ticket: #33073
    method will find the IP address of the default route, in most cases
    (see section 3.2.5).
 
-3.5.8. Add IPv6 Support Using gethostbyname2()
+3.5.9. Add IPv6 Support Using gethostbyname2()
 
    We propose these optional changes, to add IPv6 support to hostname
    resolution on older OSes. These changes affect:
@@ -1081,7 +1113,7 @@ Ticket: #33073
    if all other methods fail. Or operators can set the Address torrc option to
    an IPv4 or IPv6 literal.
 
-3.5.9. Change Relay OutboundBindAddress Defaults
+3.5.10. Change Relay OutboundBindAddress Defaults
 
    We propose this optional change, to improve the reliability of
    IP address-based filters in tor. These filters typically affect relays and
@@ -1107,7 +1139,7 @@ Ticket: #33073
    the outbound address comes from the chosen route for each TCP connection
    or UDP packet (usually the default route).
 
-3.5.10. IPv6 Address Privacy Extensions
+3.5.11. IPv6 Address Privacy Extensions
 
    We propose this optional change, to improve the reliability of relays (and
    bridges) that use IPv6 address privacy extensions (see section 3.5 of
@@ -1161,7 +1193,7 @@ Ticket: #33073
    IPv6 addresses change. (See
    [Ticket 28725: Reset relay bandwidths when their IPv6 address changes].)
 
-3.5.11. Quick Extends After Relay Restarts
+3.5.12. Quick Extends After Relay Restarts
 
    We propose this optional change, to reduce client circuit failures, after a
    relay restarts.
@@ -1215,7 +1247,7 @@ Ticket: #33073
    should be able to perform extends (and serve cached directory documents)
    shortly after startup.
 
-3.5.12. Using Authority Addresses for Socket-Based Address Detection
+3.5.13. Using Authority Addresses for Socket-Based Address Detection
 
    We propose this optional change, to avoid issues with firewalls during
    relay (and bridge) address detection. (And to reduce user confusion about
