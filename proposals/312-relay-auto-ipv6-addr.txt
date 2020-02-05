@@ -580,6 +580,7 @@ Ticket: #33073
 
    For security reasons, directory authorities only use addresses that are
    explicitly configured in their torrc. Therefore, they stop after step 2.
+   (And don't use the "hostname" variants in steps 1 and 2.)
 
    For anonymity reasons, bridges are unable to fetch directory documents over
    IPv6, until clients start to do so. (See
