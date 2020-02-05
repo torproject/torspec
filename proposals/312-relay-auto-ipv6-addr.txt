@@ -1070,7 +1070,7 @@ Ticket: #33073
    method will find the IP address of the default route, in most cases
    (see section 3.2.5).
 
-3.5.9. Add IPv6 Support Using gethostbyname2()
+3.5.9. Add IPv6 Support via Other DNS APIs
 
    We propose these optional changes, to add IPv6 support to hostname
    resolution on older OSes. These changes affect:
@@ -1082,8 +1082,14 @@ Ticket: #33073
    Directory authorities do not use this address detection method to
    discover their own addresses, for security reasons.
 
-   Use gethostbyname2() to add IPv6 support to hostname resolution on older
-   OSes, which don't support getaddrinfo().
+   Tor currently uses getaddrinfo() on most systems, which supports IPv6 DNS.
+   But tor also supports the legacy gethostbyname() DNS API, which does not
+   support IPv6.
+
+   There are two alternative APIs we could use for IPv6 DNS, if getaddrinfo()
+   is not available:
+     * libevent DNS API, and
+     * gethostbyname2().
 
    But this change may be unnecessary, because:
      * Linux has used getaddrinfo() by default since glibc 2.20 (2014)
@@ -1092,7 +1098,23 @@ Ticket: #33073
        getaddrinfo() in a similar timeframe
      * Windows has supported getaddrinfo() since Windows Vista; tor's minimum
        supported Windows version is Vista.
-   See [Tor Supported Platforms] for more details.
+   See [Tor Supported Platforms] for more detai
+
+   If a large number of systems do not support getaddrinfo(), we propose
+   implementing one of these alternatives:
+
+   The libevent DNS API supports IPv6 DNS, and tor already has a dependency on
+   libevent. Therefore, we should prefer the libevent DNS API. (Unless we find
+   it difficult to implement.)
+
+   We could also use gethostbyname2() to add IPv6 support to hostname
+   resolution on older OSes, which don't support getaddrinfo().
+
+   Handling multiple addresses:
+
+   When looking up hostnames using libevent, the DNS callbacks provide a list
+   of all addresses received. Therefore, we should ignore any private
+   addresses, and then choose the first address in the list.
 
    When looking up hostnames using gethostbyname() or gethostbyname2(), if the
    first address is a private address, we may want to look at the entire list
@@ -1104,6 +1126,8 @@ Ticket: #33073
    hostname is a rare configuration, so we might not need to make this change.
    (On OSes that support getaddrinfo(), tor searches the list of addresses for
    a publicly routable address.)
+
+   Alternative change: remove gethostbyname():
 
    As an alternative, if we believe that all supported OSes have getaddrinfo(),
    we could simply remove the gethostbyname() code, rather than trying to
