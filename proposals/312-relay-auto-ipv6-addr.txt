@@ -98,7 +98,7 @@ Ticket: #33073
    directory authorities only use addresses that are explicitly configured in
    their torrc.)
 
-3.1. Current Relay IPv4 Address Implementation
+3.1. Current Relay IPv4 Address Discovery
 
    Currently, all relays (and bridges) must have an IPv4 address. IPv6
    addresses are optional for relays.
@@ -123,6 +123,66 @@ Ticket: #33073
      * the first address returned by the local interface API, and
      * the latest address(es) returned by a directory server, DNS, or the
        local interface API.
+
+3.1.1. Current Relay IPv4 and IPv6 Address State Management
+
+   Currently, relays (and bridges) manage their IPv4 address discovery state,
+   as described in the following table:
+
+                       a b c d e f
+   1. Address literal  . . . . . .
+   1. Address hostname S N . . . T
+   2. auto hostname    S N . . F T
+   3. auto interface   ? ? . . F ?
+   3. auto socket      ? ? . . F ?
+   4. auto dir header  D N D D F A
+
+   IPv6 address discovery only uses the first IPv6 ORPort address:
+
+                       a b c d e f
+   1. ORPort listener  . . C . F .
+   1. ORPort literal   . . C C F .
+   1. ORPort hostname  S N C C F T
+
+   The tables are structured as follows:
+     * rows are address resolution stage variants
+       * each address resolution stage has a number, and a description
+       * the description includes any variants
+         (for example: IP address literal, or hostname)
+    * columns describe each variant's state management.
+
+   The state management key is:
+    a. What kind of API is used to perform the address resolution?
+      * . a CPU-bound API
+      * S a synchronous query API
+      * ? an API that is probably CPU-bound, but may be synchronous on some
+          platforms
+      * D tor automatically updates the stored directory address, whenever a
+          directory document is received
+    b. What does the API depend on?
+      * . a CPU-bound API
+      * N a network-bound API
+      * ? an API that is probably CPU-bound, but may be network-bound on some
+          platforms
+    c. How are any discovered addresses stored?
+      * . addresses are not stored
+          (but they may be cached by some higher-level tor modules)
+      * D addresses are stored in the directory address suggestion variable
+      * C addresses are stored in the port config listener list
+    d. What event makes the address resolution happen?
+      * . when tor wants to know its own address
+      * D when a directory document is received
+      * C when tor parses its config at startup, and during reconfiguration
+    e. What conditions make tor attempt this address resolution method?
+      * . this method is always attempted
+      * F this method is only attempted when all other higher-priority
+          methods fail to return an address
+    f. Can this method timeout?
+      * . can't time out
+      * T might time out
+      * ? probably doesn't time out, but might time out on some platforms
+      * A can't time out, because it is asynchronous. If a stored address
+          is available, it is returned immediately.
 
 3.2. Finding Relay IPv6 Addresses
 
@@ -251,8 +311,8 @@ Ticket: #33073
    The ORPort address may be a hostname. If it is, tor should try to use it to
    resolve an IPv4 and IPv6 address, and open ORPorts on the first available
    IPv4 and IPv6 address. Tor should respect the IPv4Only and IPv6Only port
-   flags, if specified. (Tor currently resolves IPv4 addresses in ORPort
-   lines. It might not look for an IPv6 address.)
+   flags, if specified. (Tor currently resolves IPv4 and IPv6 addresses from
+   hostnames in ORPort lines.)
 
    Relays (and bridges) currently use the first advertised ORPort IPv6 address
    as their IPv6 address. We propose to use the first advertised IPv4 ORPort
@@ -264,6 +324,18 @@ Ticket: #33073
 
    In rare cases, relays may have been using non-advertised ORPorts for their
    addresses. This change may also change their addresses.
+
+   Tor currently uses its listener port list to look up its IPv6 ORPort for
+   its descriptor. We propose that tor's address discovery uses the  listener
+   port list for both IPv4 and IPv6. (And does not attempt to independently
+   parse or resolve ORPort configs.)
+
+   This design decouples ORPort option parsing, ORPort listener opening, and
+   address discovery. It also implements a form of caching: IPv4 and IPv6
+   addresses resolved from hostnames are stored in the listener port list,
+   then used to open listeners. Therefore, tor should continue to use the same
+   address, while the listener remains open. (See also sections 3.2.7 and
+   3.2.8.)
 
    For security reasons, directory authorities only use addresses that are
    explicitly configured in their torrc. Therefore, we propose that directory
@@ -460,15 +532,18 @@ Ticket: #33073
 3.2.7. Automatically Enabling an IPv6 ORPort
 
    We propose that relays (and bridges) that discover their IPv6 address,
-   should open an ORPort on that address, and test its reachability (see
+   should open an IPv6 ORPort, and test its reachability (see
    [Proposal 311: Relay IPv6 Reachability], particularly section 4.3.1).
 
    The ORPort should be opened on the port configured in the relay's ORPort
    torrc option. Relay operators can use the IPv4Only and IPv6Only options
    to configure different ports for IPv4 and IPv6.
 
-   If an ORPort is configured, but there is no specific bind address, relays
-   may attempt to bind to all IPv4 and IPv6 addresses (or all interfaces).
+   If the ORPort is auto-detected, there will not be any specific bind
+   address. (And the detected address may actually be on a NAT box, rather
+   than the local machine.) Therefore, relays should attempt to bind to all
+   IPv4 and IPv6 addresses (or all interfaces).
+
    Some operating systems expect applications to bind to IPv4 and IPv6
    addresses using separate API calls. Others don't support binding only to
    IPv4 or IPv6, and will bind to all addresses whenever there is no specified
@@ -483,6 +558,32 @@ Ticket: #33073
      * publish their IPv4 ORPort in their descriptor,
      * stop publishing their IPv6 ORPort in their descriptor, and
      * log a notice about the failed IPv6 ORPort reachability check.
+
+3.2.8. Proposed Relay IPv4 and IPv6 Address State Management
+
+   We propose that relays (and bridges) manage their IPv4 and IPv6 address
+   discovery state, as described in the following table:
+
+                       a b c d e f
+   1. Address literal  . . . . . .
+   1. Address hostname S N . . . T
+   2. ORPort listener  . . C . F .
+   2. ORPort literal   . . C C F .
+   2. ORPort hostname  S N C C F T
+   3. auto interface   ? ? . . F ?
+   3. auto socket      ? ? . . F ?
+   4. auto hostname    S N . . F T
+   5. auto dir header  D N D D F A
+
+   See section 3.1.1 for a description and key for this table. See the rest of
+   section 3.2 for a detailed description of each method and variant.
+
+   For security reasons, directory authorities only use addresses that are
+   explicitly configured in their torrc. Therefore, they stop after step 2.
+
+   For anonymity reasons, bridges are unable to fetch directory documents over
+   IPv6, until clients start to do so. (See
+   [Proposal 306: Client Auto IPv6 Connections].)
 
 3.3. Consequential Tor Client Changes
 
