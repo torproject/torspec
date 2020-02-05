@@ -1,5 +1,5 @@
 Filename: 312-relay-auto-ipv6-addr.txt
-Title: Tor Relays Automatically Find Their IPv6 Address
+Title: Tor Relay Automatic IPv6 Address Discovery
 Author: teor, Nick Mathewson, s7r
 Created: 28-January-2020
 Status: Draft
