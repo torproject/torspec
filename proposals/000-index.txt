@@ -231,6 +231,8 @@ Proposals by number:
 308  Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography [DRAFT]
 309  Optimistic SOCKS Data [DRAFT]
 310  Towards load-balancing in Prop 271 [OPEN]
+311  Tor Relay IPv6 Reachability [DRAFT]
+312  Tor Relay Automatic IPv6 Address Discovery [DRAFT]
 
 
 Proposals by status:
@@ -244,6 +246,8 @@ Proposals by status:
    307  Onion Balance Support for Onion Service v3
    308  Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography
    309  Optimistic SOCKS Data
+   311  Tor Relay IPv6 Reachability
+   312  Tor Relay Automatic IPv6 Address Discovery
  NEEDS-REVISION:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
