@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 
-import re, os
+# Future imports for Python 2.7, mandatory in 3.0
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+import codecs, re, os
 class Error(Exception): pass
 
 STATUSES = """DRAFT NEEDS-REVISION NEEDS-RESEARCH OPEN ACCEPTED META FINISHED
@@ -23,7 +28,7 @@ def indexed(seq):
 
 def readProposal(fn):
     fields = { }
-    f = open(fn, 'r')
+    f = codecs.open(fn, 'r', encoding='utf-8')
     lastField = None
     try:
         for lineno, line in indexed(f):
