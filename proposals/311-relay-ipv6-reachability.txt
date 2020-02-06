@@ -702,7 +702,7 @@ Ticket: #24404
    create these kinds of circuits, we need to check for bugs and excessive
    logs in older tor versions.
 
-8. Ongoing Monitoring
+7. Ongoing Monitoring
 
    To monitor the impact of these changes, relays should collect basic IPv4
    and IPv6 connection and bandwidth statistics (see [Proposal 313: Relay IPv6
@@ -721,7 +721,7 @@ Ticket: #24404
      * failure rates.
    Collecting statistics like these could impact user privacy.
 
-9. Changes to Other Proposals
+8. Changes to Other Proposals
 
    [Proposal 306: Client Auto IPv6 Connections] needs to be modified to keep
    bridge IPv6 behaviour in sync with client IPv6 behaviour. (See section
