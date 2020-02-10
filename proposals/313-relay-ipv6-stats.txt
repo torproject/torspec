@@ -1,0 +1,399 @@
+Filename: 313-relay-ipv6-stats.txt
+Title: Relay IPv6 Statistics
+Author: teor
+Created: 10-February-2020
+Status: Draft
+Ticket: #33159
+
+0. Abstract
+
+   We propose that Tor relays (and bridges) should log the number of relays in
+   the consensus that support IPv6 extends, and IPv6 client connections.
+
+   We also propose that Tor relays (and bridges) should collect statistics on
+   IPv6 connections and consumed bandwidth. Like tor's existing connection
+   and consumed bandwidth statistics, these new IPv6 statistics will be
+   published in each relay's extra-info descriptor.
+
+1. Introduction
+
+   Tor relays (and bridges) can accept IPv6 client connections via their
+   ORPort. But current versions of tor need to have an explicitly configured
+   IPv6 address (see [Proposal 312: Relay Auto IPv6 Address]), and they don't
+   perform IPv6 reachability self-checks (see
+   [Proposal 311: Relay IPv6 Reachability]).
+
+   As we implement these new IPv6 features in tor, we want to monitor their
+   impact on the IPv6 connections and bandwidth in the tor network.
+
+   Tor developers also need to know how many relays support these new IPv6
+   features, so they can test tor's IPv6 reachability checks. (In particular,
+   see section 4.3.1 in [Proposal 311: Relay IPv6 Reachability]:  Refusing to
+   Publish the Descriptor.)
+
+2. Scope
+
+   This proposal modifies Tor's behaviour as follows:
+
+   Relays, bridges, and directory authorities log the number of relays that
+   support IPv6 clients, and IPv6 relay reachability checks. They also log the
+   corresponding consensus weight fractions.
+
+   As an optional change, tor clients may also log this information.
+
+   Relays, bridges, and directory authorities collect statistics on:
+     * IPv6 connections, and
+     * IPv6 consumed bandwidth.
+   The design of these statistics will be based on tor's existing connection
+   and consumed bandwidth statistics.
+
+   Tor's existing consumed bandwidth statistics truncate their totals to the
+   nearest kilobyte. The existing connection statistics do not perform any
+   binning.
+
+   We do not proposed to add any extra noise or binning to these statistics.
+   Instead, we expect to leave these changes until we have a consistent
+   privacy-preserving statistics framwework for tor. As an example of this
+   kind of framework, see
+   [Proposal 288: Privacy-Preserving Stats with Privcount (Shamir version)].
+
+   We avoid:
+     * splitting connection statistics into clients and relays, and
+     * collecting circuit statistics.
+   These statistics are more sensitive, so we want to implement
+   privacy-preserving statistics, before we consider adding them.
+
+   Throughout this proposal, "relays" includes directory authorities, except
+   where they are specifically excluded. "relays" does not include bridges,
+   except where they are specifically included. (The first mention of "relays"
+   in each section should specifically exclude or include these other roles.)
+
+   Tor clients do not collect any statistics for public reporting. Therefore,
+   clients are out of scope in this proposal. (Except for some optional changes
+   to client logs, where they log the number of IPv6 relays in the consensus).
+
+   When this proposal describes Tor's current behaviour, it covers all
+   supported Tor versions (0.3.5.7 to 0.4.2.5), as of January 2020, except
+   where another version is specifically mentioned.
+
+3. Logging IPv6 Relays in the Consensus
+
+   We propose that relays (and bridges) log:
+     * the number of relays, and
+     * the consensus weight fraction of relays,
+   in the consensus that:
+     * have an IPv6 ORPort,
+     * support IPv6 reachability checks, and
+     * support IPv6 clients.
+
+   In order to test these changes, and provide easy access to these
+   statistics, we propose implementing a script that:
+     * downloads a consensus, and
+     * calculates and reports these statistics.
+
+   As well as the statistics listed above, this script should also report the
+   following relay statistic:
+     * support IPv6 reachability checks and IPv6 clients.
+
+   The following consensus weight fractions should divide by the total
+   consensus weight:
+     * have an IPv6 ORPort (all relays have an IPv4 ORPort), and
+     * support IPv6 reachability checks (all relays support IPv4 reachability).
+
+   The following consensus weight fractions should divide by the
+   "usable Guard" consensus weight:
+     * support IPv6 clients, and
+     * support IPv6 reachability checks and IPv6 clients.
+
+   "Usable Guards" have the Guard flag, but do not have the Exit flag. If the
+   Guard also has the BadExit flag, the Exit flag should be ignored.
+
+   We propose that these logs happen whenever tor:
+     * receives a consensus from a directory server, or
+     * loads a live, valid, cached consensus from disk.
+
+   As an optional change, tor clients may also log this information. Some of
+   this information is not directly relevant to clients, but these logs may
+   help developers (and users).
+
+4. Collecting IPv6 Consumed Bandwidth Statistics
+
+   We propose that relays (and bridges) collect IPv6 consumed bandwidth
+   statistics.
+
+   To minimise development and testing effort, we propose re-using the existing
+   "bw_array" code in rephist.c.
+
+   In particular, tor currently counts these bandwidth statistics:
+     * read,
+     * write,
+     * dir_read, and
+     * dir_write.
+
+   We propose adding the following bandwidth statistics:
+     * ipv6_read, and
+     * ipv6_write.
+   (The IPv4 statistics can be calculated by subtracting the IPv6 statistics
+   from the existing total consumed bandwidth statistics.)
+
+   We propose adding a new BandwidthStatistics torrc option and consensus
+   parameter, which activates reporting of all these statistics. Currently,
+   the existing statistics are controlled by ExtraInfoStatistics, but we
+   propose using the new BandwidthStatistics option for them as well.
+
+   The default value of this option should be "auto", which checks the
+   consensus parameter. If there is no consensus parameter, the default should
+   be 1. (The existing bandwidth statistics are reported by default.)
+
+   TODO: Should we collect IPv6 bandwidth statistics on bridges?
+         On bridges, should bandwidth statistics be on or off by default?
+
+         If we do want to collect bridge statistics, and we think it's safe,
+         modify proposals 311 and 312 to allow bridge statistics.
+
+5. Collecting IPv6 Connection Statistics
+
+   We propose that relays (and bridges) collect IPv6 connection statistics.
+
+   To minimise development and testing effort, we propose re-using the existing
+   "bidi" code in rephist.c. (This code may require some refactoring, because
+   the "bidi" totals are globals, rather than a struct.)
+
+   In particular, tor currently counts these connection statistics:
+     * below threshold,
+     * mostly read,
+     * mostly written, and
+     * both read and written.
+
+   We propose adding IPv6 variants of all these statistics. (The IPv4
+   statistics can be calculated by subtracting the IPv6 statistics from the
+   existing total connection statistics.)
+
+   We propose using the existing ConnDirectionStatistics torrc option, and
+   adding a consensus parameter with the same name. This option will control
+   the new and existing connection statistics.
+
+   The default value of this option should be "auto", which checks the
+   consensus parameter. If there is no consensus parameter, the default should
+   be 0. (The existing connection direction statistics are reported by
+   default.)
+
+   TODO: Do enough relays report ConnDirectionStatistics, for accurate IPv6
+   connection statistics?
+     * at least 25% of relays have IPv6
+     * at the end of the project, we expect at least 33% of relays to have
+       deployed tor 0.4.4-stable
+
+   If not, we should turn on ConnDirectionStatistics by default. (Or set the
+   consensus parameter for a few days, to collect these statistics.)
+
+6. Directory Protocol Specification Changes
+
+   We propose adding IPv6 variants of the consumed bandwidth and connection
+   direction statistics to the tor directory protocol.
+
+   We propose the following additions to the [Tor Directory Protocol]
+   specification, in section 2.1.2. Each addition should be inserted below the
+   existing consumed bandwidth and connection direction specifications.
+
+    "ipv6-read-history" YYYY-MM-DD HH:MM:SS (NSEC s) NUM,NUM,NUM... NL
+        [At most once]
+    "ipv6-write-history" YYYY-MM-DD HH:MM:SS (NSEC s) NUM,NUM,NUM... NL
+        [At most once]
+
+        Declare how much bandwidth the OR has used recently, on IPv6
+        connections. See "read-history" and "write-history" for more details.
+        (The migration notes do not apply to IPv6.)
+
+    "ipv6-conn-bi-direct" YYYY-MM-DD HH:MM:SS (NSEC s) BELOW,READ,WRITE,BOTH NL
+        [At most once]
+
+        Number of IPv6 connections, that are used uni-directionally or
+        bi-directionally. See "conn-bi-direct" for more details.
+
+   We also propose the following replacement, in the same section:
+
+    "dirreq-read-history" YYYY-MM-DD HH:MM:SS (NSEC s) NUM,NUM,NUM... NL
+        [At most once]
+    "dirreq-write-history" YYYY-MM-DD HH:MM:SS (NSEC s) NUM,NUM,NUM... NL
+        [At most once]
+
+        Declare how much bandwidth the OR has spent on answering directory
+        requests. See "read-history" and "write-history" for more details.
+        (The migration notes do not apply to dirreq.)
+
+   This replacement is optional, but it may avoid the 3 *read-history
+   definitions getting out of sync.
+
+7. Optional Changes
+
+   We propose some optional changes to help relay operators, tor developers,
+   and tor's network health. We also expect that these changes will drive IPv6
+   relay adoption.
+
+   Some of these changes may be more appropriate as future work, or along with
+   other proposed features.
+
+7.1. Log IPv6 Statistics in Tor's Heartbeat Logs
+
+   We propose this optional change, so relay operators can see their own IPv6
+   statistics:
+
+   We propose that tor logs its IPv6 consumed bandwidth and connection
+   statistics in its regular "heartbeat" logs.
+
+   These heartbeat statistics should be collected over the lifetime of the tor
+   process, rather than using the state file, like the statistics in sections
+   4 and 5.
+
+   Tor's existing heartbeat logs already show its consumed bandwidth and
+   connections (in the link protocol counts).
+
+   We may also want to show IPv6 consumed bandwidth and connections as a
+   propotion of the total consumed bandwidth and connections.
+
+   These statistics only show a relay's local bandwidth usage, so they can't
+   be used for reporting.
+
+7.2. Show IPv6 Statistics on Consensus Health
+
+   The [Consensus Health] website displays a wide rage of tor statistics,
+   based on the most recent consensus.
+
+   We propose this optional change, to:
+     * help relay operators diagnose issues with IPv6 on their relays, and
+     * to drive IPv6 adoption on tor relays.
+
+   Consensus Health adds an IPv6 section, with the following relay statistics:
+     * have an IPv6 ORPort,
+     * support IPv6 reachability checks,
+     * support IPv6 clients, and
+     * support IPv6 reachability checks and IPv6 clients.
+
+   The definitions of these statistics are in section 3.
+
+   These changes can be tested using the script proposed in section 3.
+
+7.3. Add an IPv6 Reachability Pseudo-Flag on Relay Search
+
+   The [Relay Search] website displays tor relay information, based on the
+   current consensus and relay descriptors.
+
+   We propose this optional change, to:
+     * help relay operators diagnose issues with IPv6 on their relays, and
+     * drive IPv6 adoption on tor relays.
+
+   Relay Search adds a pseudo-flag for relay IPv6 reachability support.
+
+   This pseudo-flag should be given to relays that have:
+     * a reachable IPv6 ORPort (in the consensus), and
+     * support tor subprotocol version "Relay=3" (or later).
+   See [Proposal 311: Relay IPv6 Reachability] for details.
+
+   TODO: Is this a useful change?
+         Are there better ways of driving IPv6 adoption?
+
+7.4. Add IPv6 Connections and Consumed Bandwidth Graphs to Tor Metrics
+
+   The [Tor Metrics: Traffic] website displays connection and bandwidth
+   information for the tor network, based on relay extra-info descriptors.
+
+   We propose these optional changes, to:
+     * help tor developers improve IPv6 support on the tor network,
+     * help diagnose issues with IPv6 on the tor network, and
+     * drive IPv6 adoption on tor relays.
+
+   Tor Metrics adds the following information to the graphs on the Traffic
+   page:
+
+   Consumed Bandwidth by IP version
+     * added to the existing [Tor Metrics: Advertised bandwidth by IP version]
+       page
+     * as a stacked graph, like
+       [Tor Metrics: Advertised and consumed bandwidth by relay flags]
+
+   Fraction of connections used uni-/bidirectionally by IP version
+     * added to the existing
+       [Tor Metrics: Fraction of connections used uni-/bidirectionally] page
+     * as a stacked graph, like
+       [Tor Metrics: Advertised and consumed bandwidth by relay flags]
+
+8. Test Plan
+
+   We provide a quick summary of our testing plans.
+
+8.1. Testing IPv6 Relay Consensus Count Logging
+
+   We propose to test these changes using chutney networks. However, chutney
+   creates a limited number of relays, so we also need to test these changes
+   on the public tor network.
+
+   Therefore, we propose to test these changes on the public network with a
+   small number of relays and bridges.
+
+   We can use the script and the tor logs to cross-check these calculations.
+   The Tor Metrics team may also independently check these calculations.
+
+   Once these changes are merged, they will be monitored by tor developers, as
+   more volunteer relay operators deploy the relevant tor versions. (And as the
+   number of IPv6 relays in the consensus increases.)
+
+8.2. Testing IPv6 Extra-Info Statistics
+
+   We propose to test the connection and consumed bandwidth statistics using
+   chutney networks. However, chutney runs for a short amount of time, and
+   creates a limited amount of traffic, so we also need to test these changes
+   on the public tor network.
+
+   In particular, we have struggled to test statistics using chutney, because
+   tor's hard-coded statistics period is 24 hours. (And most chutney networks
+   run for under 1 minute.)
+
+   Therefore, we propose to test these changes on the public network with a
+   small number of relays and bridges.
+
+   During 2020, the Tor Metrics team will analyse these statistics on the
+   public tor network, and provide IPv6 progress reports. We expect that we may
+   discover some bugs during the first analysis.
+
+   Once these changes are merged, they will be monitored by tor developers, as
+   more volunteer relay operators deploy the relevant tor versions. (And as the
+   number of IPv6 relays in the consensus increases.)
+
+References:
+
+[Consensus Health]:
+   https://consensus-health.torproject.org/
+
+[Proposal 288: Privacy-Preserving Stats with Privcount (Shamir version)]:
+   https://gitweb.torproject.org/torspec.git/tree/proposals/288-privcount-with-shamir.txt
+
+[Proposal 311: Relay IPv6 Reachability]:
+   https://gitweb.torproject.org/torspec.git/tree/proposals/311-relay-ipv6-reachability.txt
+
+[Proposal 312: Relay Auto IPv6 Address]:
+   https://gitweb.torproject.org/torspec.git/tree/proposals/312-relay-auto-ipv6-addr.txt
+
+[Relay Search]:
+   https://metrics.torproject.org/rs.html
+
+[Tor Directory Protocol]:
+   (version 3) https://gitweb.torproject.org/torspec.git/tree/dir-spec.txt
+
+[Tor Manual Page]:
+   https://2019.www.torproject.org/docs/tor-manual.html.en
+
+[Tor Metrics: Advertised and consumed bandwidth by relay flags]:
+   https://metrics.torproject.org/bandwidth-flags.html
+
+[Tor Metrics: Advertised bandwidth by IP version]:
+   https://metrics.torproject.org/advbw-ipv6.html
+
+[Tor Metrics: Fraction of connections used uni-/bidirectionally]:
+   https://metrics.torproject.org/connbidirect.html
+
+[Tor Metrics: Traffic]:
+   https://metrics.torproject.org/bandwidth-flags.html
+
+[Tor Specification]:
+   https://gitweb.torproject.org/torspec.git/tree/tor-spec.txt
