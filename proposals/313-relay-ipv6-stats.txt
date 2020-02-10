@@ -143,7 +143,10 @@ Ticket: #33159
 
 5. Collecting IPv6 Connection Statistics
 
-   We propose that relays (and bridges) collect IPv6 connection statistics.
+   We propose that relays (but not bridges) collect IPv6 connection statistics.
+
+   Bridges refuse to collect the existing ConnDirectionStatistics, so we do not
+   believe it is safe to collect the smaller IPv6 totals on bridges.
 
    To minimise development and testing effort, we propose re-using the existing
    "bidi" code in rephist.c. (This code may require some refactoring, because
@@ -159,23 +162,8 @@ Ticket: #33159
    statistics can be calculated by subtracting the IPv6 statistics from the
    existing total connection statistics.)
 
-   We propose using the existing ConnDirectionStatistics torrc option, and
-   adding a consensus parameter with the same name. This option will control
-   the new and existing connection statistics.
-
-   The default value of this option should be "auto", which checks the
-   consensus parameter. If there is no consensus parameter, the default should
-   be 0. (The existing connection direction statistics are reported by
-   default.)
-
-   TODO: Do enough relays report ConnDirectionStatistics, for accurate IPv6
-   connection statistics?
-     * at least 25% of relays have IPv6
-     * at the end of the project, we expect at least 33% of relays to have
-       deployed tor 0.4.4-stable
-
-   If not, we should turn on ConnDirectionStatistics by default. (Or set the
-   consensus parameter for a few days, to collect these statistics.)
+   See also section 7.6, which adds a ConnDirectionStatistics consensus
+   parameter. This consensus paramter is an optional change.
 
 6. Directory Protocol Specification Changes
 
@@ -319,6 +307,30 @@ Ticket: #33159
    consensus parameter. If there is no consensus parameter, the default should
    be 1. (The existing bandwidth statistics are reported by default.)
 
+7.6. Add a ConnDirectionStatistics consensus parameter
+
+   We propose using the existing ConnDirectionStatistics torrc option, and
+   adding a consensus parameter with the same name. This option will control
+   the new and existing connection statistics.
+
+   The default value of this option should be "auto", which checks the
+   consensus parameter. If there is no consensus parameter, the default should
+   be 0.
+
+   Bridges refuse to collect the existing ConnDirectionStatistics, so we do not
+   believe it is safe to collect the smaller IPv6 totals on bridges. The new
+   consensus parameter should also be ignored on bridges.
+
+   The existing connection direction statistics are not reported by default,
+   but almost all relays actually report them. For more details, see:
+   [Ticket 33214: ConnDirectionStatistics is off by default, but most relays
+   report it].
+
+   If we fix the ConnDirectionStatistics default in Tor 0.4.4, we should also
+   implement the ConnDirectionStatistics consensus parameter. Then we can set
+   the consensus parameter to 1 for a week or two, so we can collect these
+   statistics.
+
 8. Test Plan
 
    We provide a quick summary of our testing plans.
@@ -379,6 +391,9 @@ References:
 
 [Relay Search]:
    https://metrics.torproject.org/rs.html
+
+[Ticket 33214: ConnDirectionStatistics is off by default, but most relays report it]:
+   https://trac.torproject.org/projects/tor/ticket/12377
 
 [Tor Directory Protocol]:
    (version 3) https://gitweb.torproject.org/torspec.git/tree/dir-spec.txt
