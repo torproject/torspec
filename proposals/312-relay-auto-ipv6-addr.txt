@@ -465,7 +465,9 @@ Ticket: #33073
      * explicitly configured with an IPv6 address, or
      * a publicly routable, reachable IPv6 address is discovered in an
        earlier step,
-   tor should start issuing IPv6 directory failure logs at warning level.
+   tor should start issuing IPv6 directory failure logs at warning level. Tor
+   may also record these directory failures as remote relay failures. (Rather
+   than ignoring them, as described in the previous paragraph.)
 
    (Alternately, tor could stop doing IPv6 directory requests entirely. But we
    prefer designs where all relays behave in a similar way, regardless of their
