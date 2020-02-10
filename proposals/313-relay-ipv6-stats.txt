@@ -1,5 +1,5 @@
 Filename: 313-relay-ipv6-stats.txt
-Title: Relay IPv6 Statistics
+Title: Tor Relay IPv6 Statistics
 Author: teor
 Created: 10-February-2020
 Status: Draft
