@@ -1518,7 +1518,7 @@ References:
    https://gitweb.torproject.org/torspec.git/tree/proposals/311-relay-ipv6-reachability.txt
 
 [Proposal 313: Relay IPv6 Statistics]:
-   https://gitweb.torproject.org/torspec.git/tree/proposals/313-relay-ipv6-stats.txt (TODO)
+   https://gitweb.torproject.org/torspec.git/tree/proposals/313-relay-ipv6-stats.txt
 
 [RFC 4941: Privacy Extensions for IPv6]:
    https://tools.ietf.org/html/rfc4941

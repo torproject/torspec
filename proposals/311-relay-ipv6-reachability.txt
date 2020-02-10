@@ -770,7 +770,6 @@ References:
 
 [Proposal 313: Relay IPv6 Statistics]:
    https://gitweb.torproject.org/torspec.git/tree/proposals/313-relay-ipv6-stats.txt
-   (TODO)
 
 [Relay Search]:
    https://metrics.torproject.org/rs.html
