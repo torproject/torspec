@@ -294,6 +294,12 @@ Ticket: #24404
    The testing relay will confirm that test circuits can extend to both its
    IPv4 and IPv6 ORPorts.
 
+   Checking IPv6 ORPort reachability will create extra IPv6 connections on the
+   tor network. (See [Proposal 313: Relay IPv6 Statistics].) It won't directly
+   create much extra traffic, because reachability circuits don't send many
+   cells. But some client circuits may use the IPv6 connections created by
+   relay reachability self-tests.
+
 4.2.1. Selecting the Final Extending Relay
 
    IPv6 ORPort reachability checks require an IPv6 extend-capable relay as

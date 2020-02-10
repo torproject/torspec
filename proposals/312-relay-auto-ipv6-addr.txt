@@ -487,6 +487,11 @@ Ticket: #33073
    IPv6 address, tor should use that address for reachability checks. If the
    reachability checks succeed, tor should use that address in its descriptor.
 
+   Doing relay directory fetches over IPv6 will create extra IPv6 connections
+   and IPv6 bandwidth on the tor network. (See
+   [Proposal 313: Relay IPv6 Statistics].) In addition, some client circuits
+   may use the IPv6 connections created by relay directory fetches.
+
 3.2.6. Disabling IPv6 Address Resolution
 
    Relays (and bridges) that have a reachable IPv6 address, but that address
