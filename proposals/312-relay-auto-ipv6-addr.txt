@@ -1479,24 +1479,22 @@ Ticket: #33073
 
 6. Ongoing Monitoring
 
-   To monitor the impact of these changes, relays should collect basic IPv4
-   and IPv6 connection and bandwidth statistics (see [Proposal 313: Relay IPv6
-   Statistics]).
-
-   We may also collect separate statistics on connections from:
-     * clients (and bridges, because they act like clients), and
-     * other relays (and authorities, because they act like relays).
+   To monitor the impact of these changes:
+     * relays should collect basic IPv6 connection statistics, and
+     * relays and bridges should collect basic IPv6 bandwidth statistics.
+   (See [Proposal 313: Relay IPv6 Statistics]).
 
    Some of these statistics may be included in tor's heartbeat logs, making
    them accessible to relay operators.
 
    We do not propose to collect additional statistics on:
-     * bridges,
-     * address resolution,
      * circuit counts, or
      * failure rates.
-   Collecting statistics like these could impact user privacy, or relay
-   security.
+   Collecting statistics like these could impact user privacy.
+
+   We also plan to write a script to calculate the number of IPv6 relays in
+   the consensus. This script will help us monitor the network during the
+   deployment of these new IPv6 features.
 
 7. Changes to Other Proposals
 
