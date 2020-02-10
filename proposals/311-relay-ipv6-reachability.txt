@@ -573,6 +573,27 @@ Ticket: #24404
    network makes it more likely that an existing connection can be used for
    the final hop of a relay IPv6 ORPort reachability check.
 
+4.4.5. Relay Bandwidth Self-Tests Over IPv4 and IPv6
+
+   In this proposal, we only make relays (and bridges) use IPv6 for their
+   reachability self-tests.
+
+   We propose this optional change, to improve the accuracy of relay (and
+   bridge) bandwidth self-tests:
+
+   Relays (and bridges) perform bandwidth self-tests over IPv4 and IPv6.
+
+   If we implement good abstractions for relay self-tests, then this change
+   will not need much extra code.
+
+   If we implement IPv6 extends for all relay circuits (see section 4.4.4),
+   then this change will effectively be redundant.
+
+   Doing relay bandwidth self-tests over IPv6 will create extra IPv6
+   connections and IPv6 bandwidth on the tor network. (See
+   [Proposal 313: Relay IPv6 Statistics].) In addition, some client circuits
+   may use the IPv6 connections created by relay bandwidth self-tests.
+
 4.5. Alternate Reachability Designs
 
    We briefly mention some potential reachability designs, and the reasons that
