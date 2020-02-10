@@ -7,13 +7,19 @@ Ticket: #33159
 
 0. Abstract
 
-   We propose that Tor relays (and bridges) should log the number of relays in
-   the consensus that support IPv6 extends, and IPv6 client connections.
+   We propose that:
+     * tor relays should collect statistics on IPv6 connections, and
+     * tor relays and bridges should collect statistics on consumed bandwidth.
+   Like tor's existing connection and consumed bandwidth statistics, these new
+   IPv6 statistics will be published in each relay's extra-info descriptor.
 
-   We also propose that Tor relays (and bridges) should collect statistics on
-   IPv6 connections and consumed bandwidth. Like tor's existing connection
-   and consumed bandwidth statistics, these new IPv6 statistics will be
-   published in each relay's extra-info descriptor.
+   We also plan to write a script that shows the number of relays in the
+   consensus that support:
+     * IPv6 extends, and
+     * IPv6 client connections.
+   This script will be used for medium-term monitoring, during the deployment
+   of tor's IPv6 changes in 2020. (See [Proposal 311: Relay IPv6 Reachability]
+   and [Proposal 312: Relay Auto IPv6 Address].)
 
 1. Introduction
 
@@ -34,12 +40,6 @@ Ticket: #33159
 2. Scope
 
    This proposal modifies Tor's behaviour as follows:
-
-   Relays, bridges, and directory authorities log the number of relays that
-   support IPv6 clients, and IPv6 relay reachability checks. They also log the
-   corresponding consensus weight fractions.
-
-   As an optional change, tor clients may also log this information.
 
    Relays, bridges, and directory authorities collect statistics on:
      * IPv6 connections, and
@@ -69,31 +69,31 @@ Ticket: #33159
    in each section should specifically exclude or include these other roles.)
 
    Tor clients do not collect any statistics for public reporting. Therefore,
-   clients are out of scope in this proposal. (Except for some optional changes
-   to client logs, where they log the number of IPv6 relays in the consensus).
+   clients are out of scope in this proposal.
 
    When this proposal describes Tor's current behaviour, it covers all
    supported Tor versions (0.3.5.7 to 0.4.2.5), as of January 2020, except
    where another version is specifically mentioned.
 
-3. Logging IPv6 Relays in the Consensus
+   This proposal also includes a medium-term monitoring script, which
+   calculates the number of relays in the consensus that support IPv6 extends,
+   and IPv6 client connections.
 
-   We propose that relays (and bridges) log:
+3. Monitoring IPv6 Relays in the Consensus
+
+   We propose writing a script that calculates:
      * the number of relays, and
      * the consensus weight fraction of relays,
    in the consensus that:
      * have an IPv6 ORPort,
-     * support IPv6 reachability checks, and
-     * support IPv6 clients.
+     * support IPv6 reachability checks,
+     * support IPv6 clients, and
+     * support IPv6 reachability checks, and IPv6 clients.
 
-   In order to test these changes, and provide easy access to these
-   statistics, we propose implementing a script that:
-     * downloads a consensus, and
-     * calculates and reports these statistics.
-
-   As well as the statistics listed above, this script should also report the
-   following relay statistic:
-     * support IPv6 reachability checks and IPv6 clients.
+   In order to provide easy access to these statistics, we propose
+   that the script should:
+     * download a consensus (or read an existing consensus), and
+     * calculate and report these statistics.
 
    The following consensus weight fractions should divide by the total
    consensus weight:
@@ -108,13 +108,12 @@ Ticket: #33159
    "Usable Guards" have the Guard flag, but do not have the Exit flag. If the
    Guard also has the BadExit flag, the Exit flag should be ignored.
 
-   We propose that these logs happen whenever tor:
-     * receives a consensus from a directory server, or
-     * loads a live, valid, cached consensus from disk.
+   Note that this definition of "Usable Guards" is only valid when the
+   consensus contains many more guards than exits. That is, Wgd must be 0 in
+   the consensus. (See the [Tor Directory Protocol] for more details.)
 
-   As an optional change, tor clients may also log this information. Some of
-   this information is not directly relevant to clients, but these logs may
-   help developers (and users).
+   Therefore, the script should check that Wgd is 0. If it is not, the script
+   should log a warning about the accuracy of the "Usable Guard" statistics.
 
 4. Collecting IPv6 Consumed Bandwidth Statistics
 
@@ -322,21 +321,23 @@ Ticket: #33159
 
    We provide a quick summary of our testing plans.
 
-8.1. Testing IPv6 Relay Consensus Count Logging
+8.1. Testing IPv6 Relay Consensus Calculations
 
-   We propose to test these changes using chutney networks. However, chutney
-   creates a limited number of relays, so we also need to test these changes
-   on the public tor network.
+   We propose to test the IPv6 Relay consensus script using chutney networks.
+   However, chutney creates a limited number of relays, so we also need to
+   test these changes on consensuses from the public tor network.
 
-   Therefore, we propose to test these changes on the public network with a
-   small number of relays and bridges.
+   Some of these calculations are similar to the calculations that tor will do,
+   to find out if IPv6 reachability checks are reliable. So we may be able to
+   check the script against tor's reachability logs. (See section 4.3.1 in
+   [Proposal 311: Relay IPv6 Reachability]:  Refusing to Publish the
+   Descriptor.)
 
-   We can use the script and the tor logs to cross-check these calculations.
    The Tor Metrics team may also independently check these calculations.
 
-   Once these changes are merged, they will be monitored by tor developers, as
-   more volunteer relay operators deploy the relevant tor versions. (And as the
-   number of IPv6 relays in the consensus increases.)
+   Once the script is completed, its output will be monitored by tor
+   developers, as more volunteer relay operators deploy the relevant tor
+   versions. (And as the number of IPv6 relays in the consensus increases.)
 
 8.2. Testing IPv6 Extra-Info Statistics
 
