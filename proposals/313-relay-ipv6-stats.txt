@@ -242,11 +242,9 @@ Ticket: #33159
      * help relay operators diagnose issues with IPv6 on their relays, and
      * to drive IPv6 adoption on tor relays.
 
-   Consensus Health adds an IPv6 section, with the following relay statistics:
-     * have an IPv6 ORPort,
-     * support IPv6 reachability checks,
-     * support IPv6 clients, and
-     * support IPv6 reachability checks and IPv6 clients.
+   Consensus Health adds an IPv6 section, with relays in the consensus that:
+     * have an IPv6 ORPort, and
+     * support IPv6 reachability checks.
 
    The definitions of these statistics are in section 3.
 
