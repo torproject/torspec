@@ -233,7 +233,7 @@ Ticket: #33159
    These statistics only show a relay's local bandwidth usage, so they can't
    be used for reporting.
 
-7.2. Show IPv6 Statistics on Consensus Health
+7.2. Show IPv6 Relay Counts on Consensus Health
 
    The [Consensus Health] website displays a wide rage of tor statistics,
    based on the most recent consensus.
