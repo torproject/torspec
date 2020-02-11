@@ -558,6 +558,12 @@ Ticket: #33073
    IP address (in a single API call). Tor should support both styles of
    networking API.
 
+   In particular, if binding to all IPv6 addresses fails, relays should still
+   try to discover their public IPv6 address, and check the reachability of
+   that address. Some OSes may not support the IPV6_V6ONLY flag, but they may
+   instead bind to all addresses at runtime. (The tor install may also have
+   compile-time / runtime flag mismatches.)
+
    If both reachability checks succeed, relays should publish their IPv4 and
    IPv6 ORPorts in their descriptor.
 
