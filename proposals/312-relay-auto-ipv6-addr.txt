@@ -414,7 +414,8 @@ Ticket: #33073
    and IPv6 addresses for:
      * the Address torrc option (see section 3.2.1), and
      * the local hostname.
-   However, OS APIs typically only return a single hostname.
+   However, OS APIs typically only return a single hostname. (Rather than a
+   separate hostname for IPv4 and IPv6.)
 
    For security reasons, directory authorities only use addresses that are
    explicitly configured in their torrc. Since hostname lookups may use DNS,
