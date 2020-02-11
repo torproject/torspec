@@ -239,8 +239,9 @@ Ticket: #33159
    based on the most recent consensus.
 
    We propose this optional change, to:
-     * help relay operators diagnose issues with IPv6 on their relays, and
-     * to drive IPv6 adoption on tor relays.
+     * help tor developers improve IPv6 support on the tor network,
+     * help diagnose issues with IPv6 on the tor network, and
+     * drive IPv6 adoption on tor relays.
 
    Consensus Health adds an IPv6 section, with relays in the consensus that:
      * have an IPv6 ORPort, and
