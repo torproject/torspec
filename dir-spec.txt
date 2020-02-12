@@ -1868,8 +1868,8 @@
         only if it is listed by a majority of the voters.
 
         These lines should be voted on.  A majority of votes is sufficient to
-        make a protocol un-supported. and should require a supermajority of
-        authorities (2/3) to make a protocol required.  The required protocols
+        make a protocol un-supported. A supermajority of authorities (2/3)
+        are needed to make a protocol required.  The required protocols
         should not be torrc-configurable, but rather should be hardwired in
         the Tor code.
 
