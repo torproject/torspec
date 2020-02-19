@@ -323,9 +323,9 @@
    VA-DistSeconds-VoteSeconds/2: The authorities try to download any
    votes they don't have.
 
-   Authorities may also reject any votes that other authorities try to upload
-   after this time.
-   First appeared: 0.4.4.1-alpha.
+   Authorities SHOULD also reject any votes that other authorities try to
+   upload after this time. (0.4.4.1-alpha was the first version to reject votes
+   in this way.)
 
       Note: Refusing late uploaded votes minimises the chance of a consensus
       split, particular when authorities are under bandwidth pressure. If an
