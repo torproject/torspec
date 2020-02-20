@@ -317,10 +317,28 @@
 
    The timeline for a given consensus is as follows:
 
-   VA-DistSeconds-VoteSeconds: The authorities exchange votes.
+   VA-DistSeconds-VoteSeconds: The authorities exchange votes. Each authority
+   uploads their vote to all other authorities.
 
    VA-DistSeconds-VoteSeconds/2: The authorities try to download any
    votes they don't have.
+
+   Authorities SHOULD also reject any votes that other authorities try to
+   upload after this time. (0.4.4.1-alpha was the first version to reject votes
+   in this way.)
+
+      Note: Refusing late uploaded votes minimises the chance of a consensus
+      split, particular when authorities are under bandwidth pressure. If an
+      authority is struggling to upload its vote, and finally uploads to a
+      fraction of authorities after this period, they will compute a consensus
+      different from the others. By refusing uploaded votes after this time,
+      we increase the likelihood that most authorities will use the same vote
+      set.
+
+      Rejecting late uploaded votes does not fix the problem entirely. If
+      some authorities are able to download a specific vote, but others fail
+      to do so, then there may still be a consensus split. However, this
+      change does remove one common cause of consensus splits.
 
    VA-DistSeconds: The authorities calculate the consensus and exchange
    signatures.
