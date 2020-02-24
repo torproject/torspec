@@ -320,13 +320,7 @@ Ticket: #33159
    believe it is safe to collect the smaller IPv6 totals on bridges. The new
    consensus parameter should also be ignored on bridges.
 
-   The existing connection direction statistics are not reported by default,
-   but almost all relays actually report them. For more details, see:
-   [Ticket 33214: ConnDirectionStatistics is off by default, but most relays
-   report it].
-
-   If we fix the ConnDirectionStatistics default in Tor 0.4.4, we should also
-   implement the ConnDirectionStatistics consensus parameter. Then we can set
+   If we implement the ConnDirectionStatistics consensus parameter, we can set
    the consensus parameter to 1 for a week or two, so we can collect these
    statistics.
 
@@ -390,9 +384,6 @@ References:
 
 [Relay Search]:
    https://metrics.torproject.org/rs.html
-
-[Ticket 33214: ConnDirectionStatistics is off by default, but most relays report it]:
-   https://trac.torproject.org/projects/tor/ticket/12377
 
 [Tor Directory Protocol]:
    (version 3) https://gitweb.torproject.org/torspec.git/tree/dir-spec.txt
