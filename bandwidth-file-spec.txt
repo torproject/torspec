@@ -47,7 +47,7 @@
 
   1.0.0 - The legacy Bandwidth File format
 
-  1.1.0 - Add a header containing information about the bandwidth
+  1.1.0 - Adds a header containing information about the bandwidth
           file. Document the sbws and Torflow relay line keys.
 
   1.2.0 - If there are not enough eligible relays, the bandwidth file
