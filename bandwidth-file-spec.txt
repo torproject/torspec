@@ -57,7 +57,7 @@
           Adds scanner and destination countries to the header.
           Adds new KeyValue Lines to the Header List section with
           statistics about the number of relays included in the file.
-          Add new KeyValues to Relay Bandwidth Lines, with different
+          Adds new KeyValues to Relay Bandwidth Lines, with different
           bandwidth values (averages and descriptor bandwidths).
 
   1.4.0 - Adds monitoring KeyValues to the header and relay lines.
