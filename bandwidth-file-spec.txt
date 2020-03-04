@@ -60,9 +60,7 @@
           Add new KeyValues to Relay Bandwidth Lines, with different
           bandwidth values (averages and descriptor bandwidths).
 
-  1.4.0 - Add more KeyValues to Relay Bandwidth Lines, with different
-          bandwidth values (consensus and descriptor burst bandwidth).
-          Adds monitoring KeyValues to the header and relay lines.
+  1.4.0 - Adds monitoring KeyValues to the header and relay lines.
 
           RelayLines for excluded relays MAY be present in the bandwidth
           file for diagnostic reasons. Similarly, if there are not enough
