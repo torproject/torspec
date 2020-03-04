@@ -819,7 +819,7 @@
 
       [Zero or one time.]
 
-      If the consensus bandwdith for this relay was not obtained from
+      If the consensus bandwidth for this relay was not obtained from
       three or more bandwidth authorities, this KeyValue is True or
       False otherwise.
 
