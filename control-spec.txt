@@ -2706,11 +2706,6 @@
        {Controllers may want to warn the user if this event occurs; further
        action is generally not possible.}
 
-     CONSENSUS_ARRIVED
-        Tor has received and validated a new consensus networkstatus.
-        (This event can be delayed a little while after the consensus
-        is received, if Tor needs to fetch certificates.)
-
   Actions for STATUS_CLIENT events can be as follows:
 
      BOOTSTRAP
@@ -2816,6 +2811,11 @@
        progress to their users, but should not interrupt the user's browsing
        to do so.}
        [Note: only REASON=CLOCK_JUMPED is implemented currently.]
+
+     CONSENSUS_ARRIVED
+        Tor has received and validated a new consensus networkstatus.
+        (This event can be delayed a little while after the consensus
+        is received, if Tor needs to fetch certificates.)
 
      DANGEROUS_PORT
      "PORT=" port
