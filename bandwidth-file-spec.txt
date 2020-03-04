@@ -805,7 +805,7 @@
       The descriptor burst bandwidth for this relay in bytes per
       second.
 
-      This KeyValue was added in version 1.4.0 of this specification.
+      This KeyValue was added in version 1.2.0 of this specification.
 
     "consensus_bandwidth" Int
 
@@ -813,7 +813,7 @@
 
       The consensus bandwidth for this relay in bytes per second.
 
-      This KeyValue was added in version 1.4.0 of this specification.
+      This KeyValue was added in version 1.2.0 of this specification.
 
     "consensus_bandwidth_is_unmeasured" Bool
 
@@ -823,7 +823,7 @@
       three or more bandwidth authorities, this KeyValue is True or
       False otherwise.
 
-      This KeyValue was added in version 1.4.0 of this specification.
+      This KeyValue was added in version 1.2.0 of this specification.
 
     "relay_in_recent_consensus_count" Int
 
