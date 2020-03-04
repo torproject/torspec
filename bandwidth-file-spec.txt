@@ -838,7 +838,8 @@
 
       [Zero or one time.]
 
-      The number of times this relay has been prioritized to be measured.
+      The number of times this relay has been prioritized to be measured
+      in the last data_period days.
 
       This KeyValue was added in version 1.4.0 of this specification.
 
