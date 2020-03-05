@@ -828,7 +828,7 @@
       [Zero or one time.]
 
       The number of times this relay was found in a consensus in the
-      last data_period days.(unless otherwise stated, data_period is
+      last data_period days. (Unless otherwise stated, data_period is
       5 by default.)
 
       This KeyValue was added in version 1.4.0 of this specification.
