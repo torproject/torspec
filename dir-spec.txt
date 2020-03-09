@@ -1458,7 +1458,7 @@
       - There are non-cosmetic differences between the old descriptor and the
         new one.
       - Enough time has passed between the descriptors' publication times.
-        (Currently, 12 hours.)
+        (Currently, 2 hours.)
 
    Differences between server descriptors are "non-cosmetic" if they would be
    sufficient to force an upload as described in section 2.1 above.
