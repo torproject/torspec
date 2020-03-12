@@ -70,6 +70,9 @@
           Diagnostic relay lines SHOULD be marked with vote=0, and
           Tor SHOULD NOT use their bandwidths in its votes.
 
+  1.5.0 - Add system information headers, as operating system, OpenSSL and
+          Tor versions.
+
   All Tor versions can consume format version 1.0.0.
 
   All Tor versions can consume format version 1.1.0 and later,
@@ -478,6 +481,14 @@
       (See the note in section 1.4, version 1.4.0, about excluded relays.)
 
       This Line was added in version 1.4.0 of this specification.
+
+    "tor_version=" version_number NL
+
+      [Zero or one time.]
+
+      The Tor version of the Tor process controlled by the generator.
+
+      This Line was added in version 1.5.0 of this specification.
 
     KeyValue NL
 
