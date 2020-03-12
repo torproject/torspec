@@ -47,19 +47,18 @@
 
   1.0.0 - The legacy Bandwidth File format
 
-  1.1.0 - Add a header containing information about the bandwidth
+  1.1.0 - Adds a header containing information about the bandwidth
           file. Document the sbws and Torflow relay line keys.
 
   1.2.0 - If there are not enough eligible relays, the bandwidth file
           SHOULD contain a header, but no relays. (To match Torflow's
           existing behaviour.)
 
+          Adds scanner and destination countries to the header.
           Adds new KeyValue Lines to the Header List section with
           statistics about the number of relays included in the file.
-          Add new KeyValues to Relay Bandwidth Lines, with different
+          Adds new KeyValues to Relay Bandwidth Lines, with different
           bandwidth values (averages and descriptor bandwidths).
-
-  1.3.0 - Adds scanner and destination countries to the header.
 
   1.4.0 - Adds monitoring KeyValues to the header and relay lines.
 
@@ -330,7 +329,7 @@
 
       The country, as in political geolocation, where the generator is run.
 
-      This Line was added in version 1.3.0 of this specification.
+      This Line was added in version 1.2.0 of this specification.
 
     "destinations_countries=" CountryCodeList NL
 
@@ -341,7 +340,7 @@
       The destination Web Servers serve the data that the generator retrieves
       to measure the bandwidth.
 
-      This Line was added in version 1.3.0 of this specification.
+      This Line was added in version 1.2.0 of this specification.
 
     "recent_consensus_count=" Int NL
 
@@ -782,7 +781,7 @@
 
       This KeyValue was added in version 1.2.0 of this specification.
 
-    "desc_bw_average=" Int
+    "desc_bw_avg=" Int
 
       [Zero or one time.]
 
@@ -790,7 +789,7 @@
 
       This KeyValue was added in version 1.2.0 of this specification.
 
-    "desc_obs_bw_last=" Int
+    "desc_bw_obs_last=" Int
 
       [Zero or one time.]
 
@@ -799,7 +798,7 @@
 
       This KeyValue was added in version 1.2.0 of this specification.
 
-    "desc_obs_bw_mean=" Int
+    "desc_bw_obs_mean=" Int
 
       [Zero or one time.]
 
@@ -807,6 +806,71 @@
       second.
 
       This KeyValue was added in version 1.2.0 of this specification.
+
+    "desc_bw_bur=" Int
+
+      [Zero or one time.]
+
+      The descriptor burst bandwidth for this relay in bytes per
+      second.
+
+      This KeyValue was added in version 1.2.0 of this specification.
+
+    "consensus_bandwidth" Int
+
+      [Zero or one time.]
+
+      The consensus bandwidth for this relay in bytes per second.
+
+      This KeyValue was added in version 1.2.0 of this specification.
+
+    "consensus_bandwidth_is_unmeasured" Bool
+
+      [Zero or one time.]
+
+      If the consensus bandwidth for this relay was not obtained from
+      three or more bandwidth authorities, this KeyValue is True or
+      False otherwise.
+
+      This KeyValue was added in version 1.2.0 of this specification.
+
+    "relay_in_recent_consensus_count" Int
+
+      [Zero or one time.]
+
+      The number of times this relay was found in a consensus in the
+      last data_period days. (Unless otherwise stated, data_period is
+      5 by default.)
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "relay_recent_priority_list_count" Int
+
+      [Zero or one time.]
+
+      The number of times this relay has been prioritized to be measured
+      in the last data_period days.
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "relay_recent_measurement_attempt_count" Int
+
+      [Zero or one time.]
+
+      The number of times this relay was tried to be measured in the
+      last data_period days.
+
+      This KeyValue was added in version 1.4.0 of this specification.
+
+    "relay_recent_measurement_failure_count" Int
+
+      [Zero or one time.]
+
+      The number of times this relay was tried to be measured in the
+      last data_period days, but it was not possible to obtain a
+      measurement.
+
+      This KeyValue was added in version 1.4.0 of this specification.
 
     "relay_recent_measurements_excluded_error_count=" Int
 
@@ -983,8 +1047,8 @@ percent_eligible_relays=93
 software=sbws
 software_version=1.0.3
 =====
-bw=38000 bw_mean=1127824 bw_median=1180062 desc_avg_bw=1073741824 desc_obs_bw_last=17230879 desc_obs_bw_mean=14732306 error_circ=0 error_misc=0 error_stream=1 master_key_ed25519=YaqV4vbvPYKucElk297eVdNArDz9HtIwUoIeo0+cVIpQ nick=Test node_id=$68A483E05A2ABDCA6DA5A3EF8DB5177638A27F80 rtt=380 success=1 time=2018-05-08T16:13:26
-bw=1 bw_mean=199162 bw_median=185675 desc_avg_bw=409600 desc_obs_bw_last=836165 desc_obs_bw_mean=858030 error_circ=0 error_misc=0 error_stream=0 master_key_ed25519=a6a+dZadrQBtfSbmQkP7j2ardCmLnm5NJ4ZzkvDxbo0I nick=Test2 node_id=$96C15995F30895689291F455587BD94CA427B6FC rtt=378 success=1 time=2018-05-08T16:13:36
+bw=38000 bw_mean=1127824 bw_median=1180062 desc_bw_avg=1073741824 desc_bw_obs_last=17230879 desc_bw_obs_mean=14732306 error_circ=0 error_misc=0 error_stream=1 master_key_ed25519=YaqV4vbvPYKucElk297eVdNArDz9HtIwUoIeo0+cVIpQ nick=Test node_id=$68A483E05A2ABDCA6DA5A3EF8DB5177638A27F80 rtt=380 success=1 time=2018-05-08T16:13:26
+bw=1 bw_mean=199162 bw_median=185675 desc_bw_avg=409600 desc_bw_obs_last=836165 desc_bw_obs_mean=858030 error_circ=0 error_misc=0 error_stream=0 master_key_ed25519=a6a+dZadrQBtfSbmQkP7j2ardCmLnm5NJ4ZzkvDxbo0I nick=Test2 node_id=$96C15995F30895689291F455587BD94CA427B6FC rtt=378 success=1 time=2018-05-08T16:13:36
 
 A.3.1. When there are not enough eligible measured relays:
 
@@ -1006,7 +1070,7 @@ software_version=1.0.3
 A.4. Headers generated by sbws version 1.0.4
 
 1523911758
-version=1.3.0
+version=1.2.0
 latest_bandwidth=2018-04-16T20:49:18
 destinations_countries=TH,ZZ
 file_created=2018-04-16T21:49:18
