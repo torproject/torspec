@@ -1198,7 +1198,7 @@ Table of contents:
 
      "auth-client" SP client-id SP iv SP encrypted-cookie
 
-      [Any number]
+      [At least once]
 
       When client authorization is enabled, the hidden service inserts an
       "auth-client" line for each of its authorized clients. If client
@@ -1379,11 +1379,11 @@ Table of contents:
 
           [Exactly once per introduction point]
 
-          The certificate is a proposal 220 certificate wrapped in
-          "-----BEGIN ED25519 CERT-----", cross-certifying the descriptor
-          signing key with the introduction point authentication key, which
-          is included in the mandatory signing-key extension.  The certificate
-          type must be [09].
+          The certificate is a proposal 220 certificate wrapped in "-----BEGIN
+          ED25519 CERT-----" cross-certifying the introduction point
+          authentication key using the descriptor signing key. The introduction
+          point authentication key is included in the mandatory signing-key
+          extension.  The certificate type must be [09].
 
         "enc-key" SP "ntor" SP key NL
 
@@ -1396,8 +1396,8 @@ Table of contents:
 
           [Exactly once per introduction point]
 
-          Cross-certification of the descriptor signing key by the encryption
-          key.
+          Cross-certification of the encryption key using the descriptor
+          signing key.
 
           For "ntor" keys, certificate is a proposal 220 certificate wrapped
           in "-----BEGIN ED25519 CERT-----" armor, cross-certifying the
@@ -1424,9 +1424,8 @@ Table of contents:
           MUST be present if "legacy-key" is present.
 
           The certificate is a proposal 220 RSA->Ed cross-certificate wrapped
-          in "-----BEGIN CROSSCERT-----" armor, cross-certifying the
-          descriptor signing key with the RSA public key found in
-          "legacy-key".
+          in "-----BEGIN CROSSCERT-----" armor, cross-certifying the the RSA
+          public key found in "legacy-key" using the descriptor signing key.
 
    To remain compatible with future revisions to the descriptor format,
    clients should ignore unrecognized lines in the descriptor.
@@ -1465,9 +1464,15 @@ Table of contents:
 
        SALT       hashed random bytes from above  [16 bytes]
        ENCRYPTED  The ciphertext                  [variable]
-       MAC        MAC of both above fields        [32 bytes]
+       MAC        D_MAC of both above fields      [32 bytes]
 
-   The final encryption format is ENCRYPTED = STREAM(SECRET_IV,SECRET_KEY) XOR Plaintext
+   The final encryption format is ENCRYPTED = STREAM(SECRET_IV,SECRET_KEY) XOR Plaintext .
+
+   Where D_MAC = H(mac_key_len | MAC_KEY | salt_len | SALT | ENCRYPTED)
+   and
+    mac_key_len = htonll(len(MAC_KEY))
+   and
+    salt_len = htonll(len(SALT)).
 
 2.5.4. Number of introduction points [NUM_INTRO_POINT]
 
