@@ -81,9 +81,8 @@
    1.0.0 - The legacy fallback directory list format
 
    2.0.0 - Adds name and extrainfo structured comments, and section separator
-           comments to make the list easier to parse.
-
-   2.1.0 - Adds a source list comment to the header.
+           comments to make the list easier to parses. Also adds a source list
+           comment to the header.
 
    3.0.0 - Modifies the format of the source list comment.
 
@@ -221,11 +220,11 @@
        transition to signed offers, it will be "descriptor,offer-list".
        Afterwards, it will be "descriptor".
 
-       In version 2.1.0, only one source name was allowed after "source=",
+       In version 2.0.0, only one source name was allowed after "source=",
        and the deprecated "whitelist" source name was used instead of
        "offer-list".
 
-       This line was added in version 2.1.0 of this specification. The format
+       This line was added in version 2.0.0 of this specification. The format
        of this line was modified in version 3.0.0 of this specification.
 
      "/*" SP+ key_value SP+ "*/" SP* NL
