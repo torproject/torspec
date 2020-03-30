@@ -911,7 +911,7 @@
 
       This KeyValue was added in version 1.4.0 of this specification.
 
-    "recent_measurements_excluded_few_count=" Int
+    "relay_recent_measurements_excluded_few_count=" Int
 
       [Zero or one time.]
 
