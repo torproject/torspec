@@ -234,6 +234,8 @@ Proposals by number:
 311  Tor Relay IPv6 Reachability [DRAFT]
 312  Tor Relay Automatic IPv6 Address Discovery [DRAFT]
 313  Tor Relay IPv6 Statistics [DRAFT]
+314  Allow Markdown for proposal format [OPEN]
+315  Updating the list of fields required in directory documents [OPEN]
 
 
 Proposals by status:
@@ -274,6 +276,8 @@ Proposals by status:
    299  Preferring IPv4 or IPv6 based on IP Version Failure Count
    306  A Tor Implementation of IPv6 Happy Eyeballs
    310  Towards load-balancing in Prop 271
+   314  Allow Markdown for proposal format
+   315  Updating the list of fields required in directory documents
  ACCEPTED:
    188  Bridge Guards and other anti-enumeration defenses
    249  Allow CREATE cells with >505 bytes of handshake data

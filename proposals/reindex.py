@@ -37,10 +37,12 @@ def readProposal(fn):
                 return fields
             if line[0].isspace():
                 fields[lastField] += " %s"%(line.strip())
+            elif line == "```":
+                pass
             else:
                 parts = line.split(":", 1)
                 if len(parts) != 2:
-                    raise Error("%s:%s:  Neither field nor continuation"%
+                    raise Error("%s:%s:  Neither field, continuation, nor ```."%
                                 (fn,lineno))
                 else:
                     fields[parts[0]] = parts[1].strip()
@@ -93,8 +95,8 @@ def readProposals():
     for fn in os.listdir(DIR):
         m = FNAME_RE.match(fn)
         if not m: continue
-        if not fn.endswith(".txt"):
-            raise Error("%s doesn't end with .txt"%fn)
+        if not (fn.endswith(".txt") or fn.endswith(".md")):
+            raise Error("%s doesn't end with .txt or .md"%fn)
         num = m.group(1)
         fields = readProposal(fn)
         checkProposal(fn, fields)
