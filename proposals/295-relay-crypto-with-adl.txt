@@ -2,7 +2,8 @@ Filename: 295-relay-crypto-with-adl.txt
 Title: Using ADL for relay cryptography (solving the crypto-tagging attack)
 Author: Tomer Ashur, Orr Dunkelman, Atul Luykx
 Created: 22 Feb 2018
-Last-Modified: 10 July 2019
+Last-Modified: 13 Jan. 2020
+
 Status: Open
 
 
@@ -37,7 +38,12 @@ Status: Open
    available online at https://eprint.iacr.org/2017/239 .
 
    For authentication between the OP and the edge node we use
-   the PIV scheme: https://eprint.iacr.org/2013/835
+   the PIV scheme: https://eprint.iacr.org/2013/835 .
+   
+   A recent paper presented a birthday bound distinguisher
+   against the ADL scheme, thus showing that the RUP security 
+   proof is tight: https://eprint.iacr.org/2019/1359 .
+      
 
 2. Preliminaries
 
@@ -74,7 +80,7 @@ Status: Open
    ENC_KEY_LEN -- The key length used for encryption (e.g., AES). We
    recommend ENC_KEY_LEN = 256.
 
-2.4. Key derivation (replaces Section 5.2.2)
+2.4. Key derivation (replaces Section 5.2.2 in Tor-spec.txt)
 
    For newer KDF needs, Tor uses the key derivation function HKDF
    from RFC5869, instantiated with SHA256. The generated key
@@ -93,26 +99,27 @@ Status: Open
    When used in the ntor handshake a string of key material is
    generated and is used in the following way:
 
-   Length       Purpose                         Notation
-   ------        -------                        --------
-   HASH_LEN     forward digest IV               DF
-   HASH_LEN     backward digest IV              DB
-   ENC_KEY_LEN  encryption key                  Kf
-   ENC_KEY_LEN  decryption key                  Kb
-   DIG_KEY_LEN  forward digest key              Khf
-   DIG_KEY_LEN  backward digest key             Khb
-   ENC_KEY_LEN  forward tweak key               Ktf
-   ENC_KEY_LEN  backward tweak key              Ktb
-   DIGEST_LEN   nonce to use in the                      *
-                  hidden service protocol
+   Length       Purpose                         	Notation
+   ------        -------                        	--------
+   HASH_LEN     forward authentication digest IV 	AF
+   HASH_LEN     forward digest IV               	DF
+   HASH_LEN     backward digest IV              	DB
+   ENC_KEY_LEN  encryption key                  	Kf
+   ENC_KEY_LEN  decryption key                  	Kb
+   DIG_KEY_LEN  forward digest key              	Khf
+   DIG_KEY_LEN  backward digest key             	Khb
+   ENC_KEY_LEN  forward tweak key               	Ktf
+   ENC_KEY_LEN  backward tweak key              	Ktb
+   DIGEST_LEN   nonce to use in the                      
+                  hidden service protocol(*)
 
-      * I am not sure that we need this any longer.
+      (*) I am not sure that if this is still needed.
 
    Excess bytes from K are discarded.
 
 2.6. Ciphers
 
-   For hashing(*) we use GHASH with a DIG_KEY_LEN-bit key. We write
+   For hashing(*) we use GHASH(**) with a DIG_KEY_LEN-bit key. We write
    this as Digest(K,M) where K is the key and M the message to be
    hashed.
 
@@ -128,19 +135,23 @@ Status: Open
    the message to be encrypted (resp., decrypted).
 
    (*) The terms hash and digest are used interchangeably.
+   (**) Proposal 308 suggested that using POLYVAL [GLL18]
+        would be more efficient here. This proposal will work just the 
+		same if POLYVAL is used instead of GHASH. 
 
 3. Routing relay cells
 
    Let n denote the integer representing the destination node. For
-   I = 1...n, we set Tf'_{I} = DF_I and Tb'_{I} = DB_I
-   where DF_I and DB_I are generated according to Section 2.4.
+   I = 1...n, we set Tf'_{I} = DF_I, Tb'_{I} = DB_I, and 
+   Ta'_I = AF_I where DF_I, DB_I, and AF_I are generated 
+   according to Section 2.4. 
 
 3.1. Forward Direction
 
    The forward direction is the direction that CREATE/CREATE2 cells
    are sent.
 
-3.1.1. Routing from the Origin
+3.1.1. Routing from the origin
 
    When an OP sends a relay cell, they prepare the
    cell as follows:
@@ -148,8 +159,9 @@ Status: Open
         The OP prepares the authentication part of the message:
 
                 C_{n+1} = M
-                T_{n+1} = Digest(Khf_n,C_{n+1})
-                N_{n+1} = T_{n+1} ^ E(Ktf_n,T_{n+1} ^ 0)
+                Ta_I = Digest(Khf_n,Ta'_I||C_{n+1})
+                N_{n+1} = Ta_I ^ E(Ktf_n,Ta_I ^ 0)
+		Ta'_{I} = Ta_I
 
         Then, the OP prepares the multi-layered encryption:
 
@@ -161,9 +173,9 @@ Status: Open
 
           The OP sends C_1 and N_1 to node 1.
 
-3.1.2. Relaying Forward at Onion Routers
+3.1.2. Relaying forward at onion routers
 
-   When a forward relay cell is received by OR I, it decrypts the
+   When a forward relay cell is received by OR_I, it decrypts the
    payload with the stream cipher, as follows:
 
         'Forward' relay cell:
@@ -180,14 +192,14 @@ Status: Open
 
    For more information, see section 4 below.
 
-3.2. Backward Direction
+3.2. Backward direction
 
    The backward direction is the opposite direction from
    CREATE/CREATE2 cells.
 
-3.2.1. Relaying Backward at Onion Routers
+3.2.1. Relaying backward at onion routers
 
-   When a backward relay cell is received by OR I, it encrypts the
+   When a backward relay cell is received by OR_I, it encrypts the
    payload with the stream cipher, as follows:
 
         'Backward' relay cell:
@@ -200,7 +212,7 @@ Status: Open
    with C_{n+1} = M and N_{n+1}=0. Once encrypted, the node passes
    C_I and N_I along the circuit towards the OP.
 
-3.2.2. Routing to the Origin
+3.2.2. Routing to the origin
 
    When a relay cell arrives at an OP, the OP decrypts the payload
    with the stream cipher as follows:
@@ -240,17 +252,22 @@ Status: Open
    authentication is now included in the nonce part of the payload.
 
    The old 'Recognized' field is removed and the node always tries to
-   authenticate the message as follows:
+   authenticate the message as follows.
 
-          forward direction (executed by the end node):
+4.1.1 forward direction (executed by the end node):
+				
+				Ta_I = Digest(Khf_n,Ta'_I||C_{n+1})
+				Tag = Ta_I ^ D(Ktf_n,Ta_I ^ N_{n+1})
 
-                T_{n+1} = Digest(Khf_n,C_{n+1})
-                Tag = T_{n+1} ^ D(Ktf_n,T_{n+1} ^ N_{n+1})
+				If Tag = 0:
+                  Ta'_I = Ta_I
+                  The message is authenticated.
+             Otherwise:
+                  Ta'_I remains unchanged.
+                  The message is not authenticated.
 
-                The message is recognized and authenticated
-				(i.e., M = C_{n+1}) if and only if Tag = 0.
 
-          backward direction (executed by the OP):
+4.1.2 backward direction (executed by the OP):
 
                 The message is recognized and authenticated
 				(i.e., C_{n+1} = M) if and only if N_{n+1} = 0.
@@ -264,14 +281,14 @@ Status: Open
      and version-heterogenic circuits
 
    When a cell is prepared to be routed from the origin (see Section
-   3.1.1) the encrypted nonce N is appended to the encrypted cell
-   (occupying the last 16 bytes of the cell). If the cell is
-   prepared to be sent to a node supporting the new protocol, S is
-   combined with other sources to generate the layer's
-   nonce. Otherwise, if the node only supports the old protocol, n
-   is still appended to the encrypted cell (so that following nodes
-   can still recover their nonce), but a synchronized nonce (as per
-   the old protocol) is used in CTR-mode.
+   3.1.1 above) the encrypted nonce N is appended to the encrypted 
+   cell (occupying the last 16 bytes of the cell). If the cell is
+   prepared to be sent to a node supporting the new protocol, N is
+   used to generate the layer's nonce. Otherwise, if the node only 
+   supports the old protocol, N is still appended to the encrypted 
+   cell (so that following nodes can still recover their nonce), 
+   but a synchronized nonce (as per the old protocol) is used in 
+   CTR-mode.
 
    When a cell is sent along the circuit in the 'backward'
    direction, nodes supporting the new protocol always assume that
@@ -371,7 +388,7 @@ Status: Open
    long as an honest node supporting the new protocol processes the
    message between two dishonest ones.
 
-5.3 The Running Digest
+5.3. The running digest
 
    Unlike the old protocol, the running digest is now computed as
    the output of a GHASH call instead of a hash function call
@@ -385,3 +402,164 @@ Status: Open
    repeat with low probability. GHASH is a universal hash function,
    hence it gives such a guarantee assuming its key is chosen
    uniformly at random.
+   
+6. Forward secrecy
+
+   Inspired by the approach of Proposal 308, a small modification 
+   to this proposal makes it forward secure. The core idea is to 
+   replace the encryption key KF_n after de/encrypting the cell.
+   As an added benefit, this would allow to keep the authentication 
+   layer stateless (i.e., without keeping a running digest for 
+   this layer). 
+   
+   Below we present the required changes to the sections above.
+   
+6.1. Routing from the Origin (replacing 3.1.1 above)
+   
+   When an OP sends a relay cell, they prepare the
+   cell as follows:
+
+        The OP prepares the authentication part of the message:
+
+			C_{n+1} = M
+			T_{n+1} = Digest(Khf_n,C_{n+1})
+			N_{n+1} = T_{n+1} ^ E(Ktf_n,T_{n+1} ^ 0)
+				
+
+        Then, the OP prepares the multi-layered encryption:
+			For the final layer n:
+				(C_n,Kf'_n) = Encrypt(Kf_n,N_{n+1},C_{I+1}||0||0) (*)
+				T_n = Digest(Khf_I,Tf'_n||C_n)
+				N_n = T_I ^ E(Ktf_n,T_n ^ N_{n+1})
+				Tf'_n = T_n
+				Kf_n = Kf'_n
+				
+				(*) CTR mode is used to generate two additional blocks. This 
+					256-bit value is denoted K'f_n and is used in subsequent 
+					steps to replace the encryption key of this layer.
+					To achieve forward secrecy it is important that the 
+					obsolete Kf_n is erased in a non-recoverable way. 				
+						
+                For layer I=(n-1)...1:
+                        C_I = Encrypt(Kf_I,N_{I+1},C_{I+1})
+                        T_I = Digest(Khf_I,Tf'_I||C_I)
+                        N_I = T_I ^ E(Ktf_I,T_I ^ N_{I+1})
+                        Tf'_I = T_I
+
+		The OP sends C_1 and N_1 to node 1.
+		
+	Alternatively, if we want that all nodes use the same functionality 
+	OP prepares the cell as follows:
+			
+			For layer I=n...1:
+				(C_I,K'f_I) = Encrypt(Kf_I,N_{I+1},C_{I+1}||0||0) (*)
+				T_I = Digest(Khf_I,Tf'_I||C_I)
+				N_I = T_I ^ E(Ktf_I,T_I ^ N_{I+1})
+				Tf'_I = T_I
+				Kf_I = Kf'_I
+				
+				(*) CTR mode is used to generate two additional blocks. This 
+					256-bit value is denoted K'f_n and is used in subsequent 
+					steps to replace the encryption key of this layer.
+					To achieve forward secrecy it is important that the 
+					obsolete Kf_n is erased in a non-recoverable way. 				
+						
+		This scheme offers forward secrecy in all levels of the circuit.
+		  
+6.2. Relaying Forward at Onion Routers (replacing 3.1.2 above)
+	
+   When a forward relay cell is received by OR I, it decrypts the
+   payload with the stream cipher, as follows:
+
+        'Forward' relay cell:
+
+                T_I = Digest(Khf_I,Tf'_I||C_I)
+                N_{I+1} = T_I ^ D(Ktf_I,T_I ^ N_I)
+                C_{I+1} = Decrypt(Kf_I,N_{I+1},C_I||0||0)
+                Tf'_I = T_I
+
+   The OR then decides whether it recognizes the relay cell as described below. 
+   Depending on the choice of scheme from 6.1 the OR uses the last two blocks 
+   of C_{I+1} to update the encryption key or discards them. 
+   
+   If the cell is recognized the OR also processes the contents of the relay 
+   cell. Otherwise, it passes C_{I+1}||N_{I+1} along the circuit if the circuit 
+   continues.
+
+   For more information about recognizing and authenticating relay cells,
+   see 5.4.5 below.
+   
+6.3. Relaying Backward at Onion Routers (replacing 3.2.1 above)
+
+   When an edge node receives a message M to be routed back to the
+   origin, it encrypts it as follows:
+   
+		T_n = Digest(Khb_n,Tb'_n||M)
+                N_n = T_n ^ E(Ktb_n,T_n ^ 0)
+                (C_n,K'b_n) = Encrypt(Kb_n,N_n,M||0||0) (*)
+                Tb'_n = T_n
+		Kb_n = K'b_n
+   
+				(*) CTR mode is used to generate two additional blocks. This 
+					256-bit value is denoted K'b_n and will be used in 
+					subsequent steps to replace the encryption key of this layer. 
+					To achieve forward secrecy it is important that the obsolete 
+					K'b_n is erased in a non-recoverable way. 
+   
+    Once encrypted, the edge node sends C_n and N_n along the circuit towards 
+	the OP. When a backward relay cell is received by OR_I (I<n), it encrypts 
+	the payload with the stream cipher, as follows:
+
+        'Backward' relay cell:
+
+                T_I = Digest(Khb_I,Tb'_I||C_{I+1})
+                N_I = T_I ^ E(Ktb_I,T_I ^ N_{I+1})
+                C_I = Encrypt(Kb_I,N_I,C_{I+1})
+                Tb'_I = T_I
+
+   Each node passes C_I and N_I along the circuit towards the OP.
+   
+   If forward security is desired for all layers in the circuit, all OR's
+   encrypt as follows:
+		T_I = Digest(Khb_I,Tb'_I||C_{I+1})
+                N_I = T_I ^ E(Ktb_I,T_I ^ 0)
+                (C_I,K'b_I) = Encrypt(Kb_n,N_n,M||0||0)
+                Tb'_I = T_I
+		Kb_I = K'b_I
+   
+
+6.4. Routing to the Origin (replacing 3.2.2 above)
+
+   When a relay cell arrives at an OP, the OP decrypts the payload
+   with the stream cipher as follows:
+
+        OP receives relay cell from node 1:
+
+                For I=1...n, where n is the end node on the circuit:
+                        C_{I+1} = Decrypt(Kb_I,N_I,C_I)
+                        T_I = Digest(Khb_I,Tb'_I||C_{I+1})
+                        N_{I+1} = T_I ^ D(Ktb_I,T_I ^ N_I)
+                        Tb'_I = T_I
+				
+				And updates the encryption keys according to the strategy 
+				chosen for 6.3.
+				
+                If the payload is recognized (see Section 4.1),
+                then:
+
+                       The sending node is I. Process the payload!
+					   
+					   
+6.5. Recognizing and authenticating a relay cell (replacing 4.1.1 above):
+	
+	Authentication in the forward direction is done as follows: 
+
+		T_{n+1} = Digest(Khf_n,C_{n+1})
+                Tag = T_{n+1} ^ D(Ktf_n,T_{n+1} ^ N_{n+1})
+	
+	The message is recognized and authenticated
+				(i.e., M = C_{n+1}) if and only if Tag = 0.
+				
+	No changes are required to the authentication process when the relay 
+	cell is sent backwards.
+	
