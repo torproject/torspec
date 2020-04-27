@@ -1,0 +1,220 @@
+Filename: 317-secure-dns-name-resolution.txt
+Title: Improve security aspects of DNS name resolution
+Author: Christian Hofer
+Created: 21-Mar-2020
+Status: Open
+
+Overview:
+
+   This document proposes a solution for handling DNS name resolution within
+   Tor in a secure manner. In order to achieve this the responsibility for
+   name resolution is moved from the exit relays to the clients. Therefore a
+   security aware DNS resolver is required that is able to operate using Tor.
+
+   The advantages are:
+
+   * Users have no longer to trust exit relays but can choose trusted
+     nameservers.
+   * DNS requests are kept confidential from exit relays in case the
+     nameservers are running behind onion services.
+   * The authenticity and integrity of DNS records is verified by means of
+     DNSSEC.
+
+Motivation:
+
+   The way how Tor resolves DNS names has always been a hot topic within
+   the Tor community and it seems that the discussion is not over yet.
+
+   One example is this recent blog posting that addresses the importance of
+   avoiding public DNS resolvers in order to mitigate analysis attacks.
+
+   https://blog.torproject.org/new-low-cost-traffic-analysis-attacks-mitigations
+
+   Then there is the paper "The Effect of DNS on Tor’s Anonymity" that
+   discusses how to use DNS traffic for correlation attacks and what
+   countermeasures should be taken. Based on this, there is this interesting
+   medium article evaluating the situation two years after it was published.
+
+   https://medium.com/@nusenu/who-controls-tors-dns-traffic-a74a7632e8ca
+
+   Furthermore, there was already a proposal to improve the way how DNS
+   resolution is done within Tor. Unfortunately, it seems that it has been
+   abandoned, so this proposal picked up the presented ideas.
+
+   https://gitweb.torproject.org/torspec.git/tree/proposals/219-expanded-dns.txt
+
+Design:
+
+   The key aspect is the introduction of a DNS resolver module on the client
+   side. It has to comply with the well known DNS standards as described in a
+   series of RFCs. Additional requirements are the ability to communicate
+   through the Tor network for ensuring confidentiality and the implementation
+   of DNS security extensions (DNSSEC) for verifying the authenticity and
+   integrity. Furthermore it has to cover two distinct scenarios, which are
+   described in subsequent sections.
+
+   The resolution scenario, the most common scenario for a DNS resolvers, is
+   applicable for connections handled by the SocksPort. After successful socks
+   handshakes the target address is resolved before attaching the connection.
+
+   The proxy scenario is a more unusual use case, however it is required for
+   connections handled by the DNSPort. In this case requests are forwarded as
+   they are received without employing any resolution or verification means.
+
+   In both scenarios the most noticeable change in terms of interactions
+   between the resolver and the rest of Tor concerns the entry and exit points
+   for passing connections forth and back. Additionally, the entry_connection
+   needs to be extended so that it is capable of holding related state
+   information.
+
+Security implications:
+
+   This improves the security aspects of DNS name resolution by reducing the
+   significance of exit relays. In particular:
+
+   * Operating nameservers behind onion services allows end-to-end encryption
+     for DNS lookups.
+   * Employing DNSSEC verification prevents tampering with DNS records.
+   * Configuring trusted nameservers on the client side reduces the number of
+     entities that must be trusted.
+
+Specification:
+
+   DNS resolver general implementation:
+
+      The security aware DNS resolver module has to comply with existing DNS
+      and DNSSEC specifications. A list of related RFCs:
+
+      RFC883, RFC973, RFC1035, RFC1183, RFC1876, RFC1996, RFC2065, RFC2136,
+      RFC2230, RFC2308, RFC2535, RFC2536, RFC2539, RFC2782, RFC2845, RFC2874,
+      RFC2930, RFC3110, RFC3123, RFC3403, RFC3425, RFC3596, RFC3658, RFC3755,
+      RFC3757, RFC3986, RFC4025, RFC4033, RFC4034, RFC4035, RFC4255, RFC4398,
+      RFC4431,RFC4509, RFC4635, RFC4701, RFC5011, RFC5155, RFC5702, RFC5933,
+      RFC6605, RFC6672, RFC6698, RFC6725, RFC6840, RFC6844, RFC6891, RFC7129,
+      RFC7344, RFC7505, RFC7553, RFC7929, RFC8005, RFC8078, RFC8080, RFC8162.
+
+   DNS resolver configuration settings:
+
+      DNSResolver: If True use DNS resolver module for name resolution,
+        otherwise Tor's behavior should be unchanged.
+
+      DNSResolverIPv4: If True names should be resolved to IPv4 addresses.
+
+      DNSResolverIPv6: If True names should be resolved to IPv6 addresses. In
+        case IPv4 and IPv6 are enabled prefer IPv6 and use IPv4 as fallback.
+
+      DNSResolverRandomizeCase: If True apply 0x20 hack to DNS names for
+        outgoing requests.
+
+      DNSResolverNameservers: A list of comma separated nameservers, can be an
+        IPv4, an IPv6, or an onion address. Should allow means to configure the
+        port and supported zones.
+
+      DNSResolverHiddenServiceZones: A list of comma separated hidden service
+        zones.
+
+      DNSResolverDNSSECMode: Should support at least four modes.
+        Off: No validation is done. The DO bit is not set in the header of
+             outgoing requests.
+        Trust: Trust validation of DNS recursor. The CD and DO bits are not set
+               in the header of outgoing requests.
+        Porcess: Employ DNSSEC validation but ignore the result.
+        Validate: Employ DNSSEC validation and reject insecure data.
+
+      DNSResolverTrustAnchors: A list of comma separated trust anchors in DS
+        record format. https://www.iana.org/dnssec/files
+
+      DNSResolverMaxCacheEntries: Specifies the maximum number of cache
+        entries.
+
+      DNSResolverMaxCacheTTL: Specifies the maximum age of cache entries in
+        seconds.
+
+   DNS resolver state (dns_lookup_st.h):
+
+      action: Defines the active action. Available actions are: forward,
+        resolve, validate.
+
+      qname: Specifies the name that should be resolved or forwarded.
+
+      qtype: Specifies the type that should be resolved or forwarded.
+
+      start_time: Holds the initiation time.
+
+      nameserver: Specifies the chosen nameserver.
+
+      validation: Holds the DNSSEC validation state only applicable for the
+        validate action.
+
+      server_request: The original DNSPort request required for delivering
+        responses in the proxy scenario.
+
+      ap_conn: The original SocksPort entry_connection required for delivering
+        responses in the resolution scenario.
+
+   SocksPort related changes (resolution scenario):
+
+      The entry point is directly after a successful socks handshake in
+      connection_ap_handshake_process_socks (connetion_edge.c). Based on the
+      target address type the entry_connection is either passed to the DNS
+      resolver (hostname) or handled as usual (IPv4, IPv6, onion).
+
+      In the former case the DNS resolver creates a new DNS lookup connection
+      and attaches it instead of the given entry_connection. This connection is
+      responsible for resolving the hostname of the entry_connection and
+      verifying the response.
+
+      Once the result is verified and the hostname is resolved, the DNS
+      resolver replaces the target address in the entry_connection with the
+      resolved address and attaches it. From this point on the entry_connection
+      is processed as usual.
+
+   DNSPort related changes (proxy scenario):
+
+      The entry point is in evdns_server_callback (dnsserv.c). Instead of
+      creating a dummy connection the received server_request is passed to the
+      DNS resolver. It creates a DNS lookup connection with the action type
+      forward and applies the name and type from the server_request. When the
+      DNS resolver receives the answer from the nameserver it resolvers the
+      server_request by adding all received resource records.
+
+Compatibility:
+
+   Compatibility issues are not expected since there are no changes to the Tor
+   protocol. The significant part takes place on the client side before
+   attaching connections.
+
+Implementation:
+
+   A complete implementation of this proposal can be found here:
+    https://github.com/torproject/tor/pull/1869
+
+   The following steps should suffice to test the implementation:
+
+      * check out the branch
+      * build Tor as usual
+      * enable the DNS resolver module by adding `DNSResolver 1` to torrc
+
+   Useful services for verifying DNSSEC validation:
+
+   * http://www.dnssec-or-not.com/
+   * https://enabled.dnssec.hkirc.hk/
+   * https://www.cloudflare.com/ssl/encrypted-sni/
+
+   Dig is useful for testing the DNSPort related changes:
+
+      dig -p9053 torproject.org
+
+Performance and scalability:
+
+   Since there are no direct changes to the protocol and this is an alternative
+   approach for an already existing requirement, there are no performance
+   issues expected. Additionally, the encoding and decoding of DNS message
+   handling as well as the verification takes place on the client side.
+
+   In terms of scalability the availability of nameservers might be one of the
+   key concerns. However, this is the same issue as for nameservers on the
+   clearweb. If it turns out that it is not feasible to operate nameservers as
+   onion service in a performant manner it is always possible to fallback to
+   clearweb nameservers by changing a configuration setting.
+
