@@ -1333,15 +1333,20 @@ see tor-design.pdf.
 
    When an onion router receives an EXTEND2 relay cell, it sends a CREATE2
    cell to the next onion router, with the enclosed HLEN, HTYPE, and HDATA
-   as its payload.
+   as its payload. The initiating onion router chooses some circID not yet
+   used on the connection between the two onion routers. (But see section
+   5.1.1 above, concerning choosing circIDs.)
 
-   As special cases, if the EXTEND/EXTEND2 cell includes a legacy
-   identity, identity fingerprint, or Ed25519 identity of all zeroes, or
-   asks to extend back to the relay that sent the extend cell, the
-   circuit will fail and be torn down. The initiating onion router
-   chooses some circID not yet used on the connection between the two
-   onion routers.  (But see section 5.1.1 above, concerning choosing
-   circIDs.)
+   As special cases, if the EXTEND/EXTEND2 cell includes a legacy identity, or
+   identity fingerprint of all zeroes, or asks to extend back to the relay
+   that sent the extend cell, the circuit will fail and be torn down.
+
+   Ed25519 identity keys are not required in EXTEND2 cells, so all zero
+   keys SHOULD be accepted. If the extending relay knows the ed25519 key from
+   the consensus, it SHOULD also check that key. (See section 5.1.2.)
+
+   If an EXTEND2 cell contains the ed25519 key of the relay that sent the
+   extend cell, the circuit will fail and be torn down.
 
    When an onion router receives a CREATE/CREATE2 cell, if it already has a
    circuit on the given connection with the given circID, it drops the
