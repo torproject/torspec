@@ -1438,11 +1438,12 @@ see tor-design.pdf.
    RELAY_TRUNCATED cell towards the OP; the node farther from the OP
    should send a DESTROY cell down the circuit.
 
-   The payload of a RELAY_TRUNCATED or DESTROY cell contains a single octet,
-   describing why the circuit is being closed or truncated.  When sending a
-   TRUNCATED or DESTROY cell because of another TRUNCATED or DESTROY cell,
-   the error code should be propagated.  The origin of a circuit always sets
-   this error code to 0, to avoid leaking its version.
+   The payload of a DESTROY cell contains a single octet, describing the
+   reason that the circuit was closed. Similarly, the data of a
+   RELAY_TRUNCATED cell also contains this single octet "reason" field. When
+   sending a TRUNCATED or DESTROY cell because of another TRUNCATED or
+   DESTROY cell, the error code should be propagated. The origin of a circuit
+   always sets this error code to 0, to avoid leaking its version.
 
    The error codes are:
 
