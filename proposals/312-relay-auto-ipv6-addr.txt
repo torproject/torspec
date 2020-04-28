@@ -267,17 +267,28 @@ Ticket: #33073
    multiple IPv4 or IPv6 addresses are returned, the first public address from
    each family should be used.
 
-   We should also support the following combinations:
-     A. IPv4 Address / hostname (for IPv6 only),
-     B. IPv6 Address / hostname (for IPv4 only),
-     C. IPv4 Address only / try to guess IPv6, then check its reachability
-        (see section 4.3.1 in [Proposal 311: Relay IPv6 Reachability]), and
-     D. IPv6 Address only / guess IPv4, then its reachability must succeed.
-   There are also similar configurations where a hostname is configured, but it
-   only provides IPv4 or IPv6 addresses.
+   We should support the following combinations of address literals and
+   hostnames:
 
-   Combination C is the most common legacy configuration. We want to
-   support the following outcomes for legacy configurations:
+   Legacy configurations:
+     A. No configured Address option
+     B. Address IPv4 literal
+     C. Address hostname (use IPv4 and IPv6 DNS addresses)
+
+   New configurations:
+     D. Address IPv6 literal
+     E. Address IPv4 literal / Address IPv6 literal
+     F. Address hostname / Address hostname (use IPv4 and IPv6 DNS addresses)
+     G. Address IPv4 literal / Address hostname (only use IPv6 DNS addresses)
+     H. Address hostname (only use IPv4 DNS addresses) / Address IPv6 literal
+
+   If we can't find an IPv4 or IPv6 address using the configured Address
+   options:
+     No IPv4: guess IPv4, and its reachability must succeed.
+     No IPv6: guess IPv6, publish if reachability succeeds.
+
+   Combinations A and B are the most common legacy configurations. We want to
+   support the following outcomes for all legacy configurations:
      * automatic upgrades to guessed and reachable IPv6 addresses,
      * continuing to operate on IPv4 when the IPv6 address can't be guessed,
        and
