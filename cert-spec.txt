@@ -157,7 +157,7 @@ A.1. List of certificate types
 
 A.2. List of extension types
 
-   [01] - signed-with-ed25519-key (section 2.2.1)
+   [04] - signed-with-ed25519-key (section 2.2.1)
 
 A.3. List of signature prefixes
 
