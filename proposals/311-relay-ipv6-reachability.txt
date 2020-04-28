@@ -331,6 +331,50 @@ Ticket: #24404
    Testing relays (and bridges) will record reachability separately for IPv4
    and IPv6 ORPorts, based on the ORPort that the test circuit was received on.
 
+   Here is a reliable way to do reachability self-tests for each ORPort:
+
+   1. Check for create cells on inbound ORPort connections
+
+   Check for a cell on any IPv4 and any IPv6 ORPort. (We can't know which
+   listener(s) correspond to the advertised ORPorts, particularly when using
+   NAT.) Make sure the cell was received on an inbound OR connection.
+
+   2. Check for created cells from testing circuits on outbound OR connections
+
+   Check for a returned created cell on our IPv4 and IPv6 self-test circuits.
+   Make sure those circuits were on outbound OR connections.
+
+   By combining these tests, we confirm that we can:
+     * reach our own ORPorts with testing circuits,
+     * send and receive cells via inbound OR connections to our own ORPorts,
+       and
+     * send and receive cells via outbound OR connections to other relays'
+       ORPorts.
+
+   Once we validate the created cell, we have confirmed that the final remote
+   relay has our private keys. Therefore, this test reliably detects ORPort
+   reachability.
+
+   There is one exception: when another relay on the network is using the same
+   keys.
+
+   Duplicate keys are only possible if a relay's private keys have been copied
+   to another relay. That's either a misconfiguration, or a security issue.
+   Directory authorities ensure that only one relay with each key is included
+   in the consensus.
+
+   If a relay was set up using a copy of another relay's keys, then its
+   reachability self-tests might connect to that other relay. (If the second
+   hop in a testing circuit has an existing OR connection to the other relay.)
+
+   Relays could test if the inbound create cells they receive, match the
+   create cells that they have sent on self-test circuits.
+
+   But this seems like unnecessary complexity, because duplicate keys are
+   rare. At best, it would provide a warning for some operators who have
+   accidentally duplicated their keys. (But it doesn't provide any extra
+   security, because operators can disable self-tests using AssumeReachable.)
+
 4.2.4. No Changes to DirPort Reachability
 
    We do not propose any changes to relay IPv4 DirPort reachability checks at
