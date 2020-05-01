@@ -353,10 +353,11 @@ Ticket: #24404
 
    Once we validate the created cell, we have confirmed that the final remote
    relay has our private keys. Therefore, this test reliably detects ORPort
-   reachability.
+   reachability, in most cases.
 
-   There is one exception: when another relay on the network is using the same
-   keys.
+   There are a few exceptions:
+
+   A. Duplicate Relay Keys
 
    Duplicate keys are only possible if a relay's private keys have been copied
    to another relay. That's either a misconfiguration, or a security issue.
@@ -374,6 +375,19 @@ Ticket: #24404
    rare. At best, it would provide a warning for some operators who have
    accidentally duplicated their keys. (But it doesn't provide any extra
    security, because operators can disable self-tests using AssumeReachable.)
+
+   B. Multiple ORPorts in an Address Family
+
+   Some relays have multiple IPv4 ORPorts, or multiple IPv6 ORPorts. In some
+   cases, only some ports are reachable. (This configuration is uncommon, but
+   multiple ORPorts are supported.)
+
+   Here is how these tests can pass, even if the advertised ORPort is
+   unreachable:
+     * the final extend cell contains the advertised IPv6 address of the
+       self-testing relay,
+     * if the extending relay already has a connection to a working NoAdvertise
+       ORPort, it may use that connection instead.
 
 4.2.4. No Changes to DirPort Reachability
 
