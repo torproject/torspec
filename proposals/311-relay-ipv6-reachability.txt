@@ -337,7 +337,8 @@ Ticket: #24404
 
    Check for a cell on any IPv4 and any IPv6 ORPort. (We can't know which
    listener(s) correspond to the advertised ORPorts, particularly when using
-   NAT.) Make sure the cell was received on an inbound OR connection.
+   port forwarding.) Make sure the cell was received on an inbound OR
+   connection.
 
    2. Check for created cells from testing circuits on outbound OR connections
 
