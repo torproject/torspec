@@ -333,12 +333,13 @@ Ticket: #24404
 
    Here is a reliable way to do reachability self-tests for each ORPort:
 
-   1. Check for create cells on inbound ORPort connections
+   1. Check for create cells on inbound ORPort connections from other relays
 
    Check for a cell on any IPv4 and any IPv6 ORPort. (We can't know which
    listener(s) correspond to the advertised ORPorts, particularly when using
    port forwarding.) Make sure the cell was received on an inbound OR
-   connection.
+   connection, and make sure the connection is authenticated to another relay.
+   (Rather than to a client: clients don't authenticate.)
 
    2. Check for created cells from testing circuits on outbound OR connections
 
@@ -347,8 +348,8 @@ Ticket: #24404
 
    By combining these tests, we confirm that we can:
      * reach our own ORPorts with testing circuits,
-     * send and receive cells via inbound OR connections to our own ORPorts,
-       and
+     * send and receive cells via inbound OR connections to our own ORPorts
+       from other relays, and
      * send and receive cells via outbound OR connections to other relays'
        ORPorts.
 
