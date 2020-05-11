@@ -234,7 +234,7 @@ Proposals by number:
 311  Tor Relay IPv6 Reachability [DRAFT]
 312  Tor Relay Automatic IPv6 Address Discovery [DRAFT]
 313  Tor Relay IPv6 Statistics [DRAFT]
-314  Allow Markdown for proposal format [OPEN]
+314  Allow Markdown for proposal format [ACCEPTED]
 315  Updating the list of fields required in directory documents [OPEN]
 316  FlashFlow: A Secure Speed Test for Tor (Parent Proposal) [DRAFT]
 317  Improve security aspects of DNS name resolution [OPEN]
@@ -279,7 +279,6 @@ Proposals by status:
    299  Preferring IPv4 or IPv6 based on IP Version Failure Count
    306  A Tor Implementation of IPv6 Happy Eyeballs
    310  Towards load-balancing in Prop 271
-   314  Allow Markdown for proposal format
    315  Updating the list of fields required in directory documents
    317  Improve security aspects of DNS name resolution
  ACCEPTED:
@@ -290,6 +289,7 @@ Proposals by status:
    288  Privacy-Preserving Statistics with Privcount in Tor (Shamir version)
    292  Mesh-based vanguards
    301  Don't include package fingerprints in consensus documents
+   314  Allow Markdown for proposal format
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process
