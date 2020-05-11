@@ -238,6 +238,7 @@ Proposals by number:
 315  Updating the list of fields required in directory documents [OPEN]
 316  FlashFlow: A Secure Speed Test for Tor (Parent Proposal) [DRAFT]
 317  Improve security aspects of DNS name resolution [OPEN]
+318  Limit protover values to 0-63 [OPEN]
 
 
 Proposals by status:
@@ -281,6 +282,7 @@ Proposals by status:
    310  Towards load-balancing in Prop 271
    315  Updating the list of fields required in directory documents
    317  Improve security aspects of DNS name resolution
+   318  Limit protover values to 0-63
  ACCEPTED:
    188  Bridge Guards and other anti-enumeration defenses
    249  Allow CREATE cells with >505 bytes of handshake data
