@@ -11,11 +11,17 @@ proposal 245.)
 
 # Removing TAP from v2 onion services
 
-Though v2 onion services akre obsolescent and their cryptographic
-parameters are disturbing, we do not want to drop support for them
-as part of the Walking Onions migration.  If we did so, then we
-would force some users to choose between Walking Onions and v2 onion
-services, which we do not want to do.
+As we implement walking onions, we're faced with a problem: what to do
+with TAP keys?  They are bulky and insecure, and not used for anything
+besides v2 onion services.  Keeping them in SNIPs would consume
+bandwidth, and keeping them indirectly would consume complexity.  It
+would be nicer to remove TAP keys entirely.
+
+But although v2 onion services are obsolescent and their
+cryptographic parameters are disturbing, we do not want to drop
+support for them as part of the Walking Onions migration.  If we did
+so, then we would force some users to choose between Walking Onions
+and v2 onion services, which we do not want to do.
 
 Instead, we describe here a phased plan to replace TAP in v2 onion
 services with ntor.  This change improves the forward secrecy of
@@ -60,7 +66,7 @@ walking onions:
         [at most once]
 
         This value is the same as the snip field introduced to a v3
-        onion service descriptor by proposal XXX, and follows the
+        onion service descriptor by proposal (XXX) and follows the
         same rules.
 
 Services should not include this field unless a new network parameter,
@@ -80,7 +86,7 @@ simply sets KLEN to 32, and includes the ntor key for the relay.
 
 Clients should only use ntor keys in this way if the network parameter
 "hsv2-client-rend-ntor" is set to 1, and if the entry "allow-rend-ntor"
-is present in the onion service descriptr.
+is present in the onion service descriptor.
 
 Services should only advertise "allow-rend-ntor" in this way if the
 network parameter "hsv2-service-rend-ntor" is set to 1.
