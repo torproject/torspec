@@ -33,8 +33,9 @@ We add a new relay cell type: `RELAY_FRAGMENT`.  This cell type contains part
 of another relay cell.  A `RELAY_FRAGEMENT` cell can either introduce a new
 fragmented cell, or can continue one that is already in progress.
 
-The format of a RELAY_FRAGMENT body is one the following:
+The format of a RELAY_FRAGMENT body is one of the following:
 
+    // First body in a series
     struct fragment_begin {
        // What relay_command is in use for the underlying cell?
        u8 relay_command;
@@ -44,6 +45,7 @@ The format of a RELAY_FRAGMENT body is one the following:
        u8 body[];
     }
 
+    // all other cells.
     struct fragment_continued {
        // More bytes for the cell body.
        u8 body[];
