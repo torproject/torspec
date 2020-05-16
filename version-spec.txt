@@ -22,7 +22,7 @@
 
 2. The New Way
 
- After 0.1.0, versions are of the format:
+ Starting at 0.1.0.1-rc, versions are of the format:
 
     MAJOR.MINOR.MICRO[.PATCHLEVEL][-STATUS_TAG][ (EXTRA_INFO)]*
 
