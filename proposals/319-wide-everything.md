@@ -30,7 +30,7 @@ actually be _allowed_ for all relay cell types.
 # Proposal
 
 We add a new relay cell type: `RELAY_FRAGMENT`.  This cell type contains part
-of another relay cell.  A `RELAY_FRAGEMENT` cell can either introduce a new
+of another relay cell.  A `RELAY_FRAGMENT` cell can either introduce a new
 fragmented cell, or can continue one that is already in progress.
 
 The format of a RELAY_FRAGMENT body is one of the following:
@@ -62,16 +62,17 @@ non-full fragmented cell that is not the last fragment in a sequence.
 Fragmented cells MUST NOT be interleaved with other relay cells on a circuit,
 other than cells used for flow control. (Currently, this is only SENDME
 cells.)  If any party receives any cell on a circuit, other than a flow
-control cell or a RELAY_FRAGEMENT cell, before the fragmented cell is
+control cell or a RELAY_FRAGMENT cell, before the fragmented cell is
 complete, than it SHOULD close the circuit.
 
 Parties MUST NOT send extra data in fragmented cells beyond the amount given
 in the first 'total_len' field.
 
-Not every relay command may be sent in a fragmented cell.  In this proposal,
-we allow the following cell types to be fragmented: EXTEND2, EXTENDED2,
-INTRODUCE1, INTRODUCE2, RENDEZVOUS.  Any party receiving a command that they
-believe should not be fragmented should close the circuit.
+Not every relay command may be sent in a fragmented cell.  In this
+proposal, we allow the following cell types to be fragmented: EXTEND2,
+EXTENDED2, INTRODUCE1, INTRODUCE2, RENDEZVOUS1, and RENDEZVOUS2.  Any
+party receiving a command that they believe should not be fragmented
+should close the circuit.
 
 Not all lengths up to 65535 are valid lengths for a fragmented cell.  Any
 length under 499 bytes SHOULD cause the circuit to close, since that could
