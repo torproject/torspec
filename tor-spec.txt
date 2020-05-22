@@ -2146,6 +2146,54 @@ see tor-design.pdf.
           0.2.4.19.  Includes support for CREATE2 and CREATED2 and
           EXTEND2 and EXTENDED2.
 
+          Relay=2 has limited IPv6 support:
+            * Clients might not include IPv6 ORPorts in EXTEND2 cells.
+            * Relays (and bridges) might not initiate IPv6 connections in
+              response to EXTEND2 cells containing IPv6 ORPorts, even if they
+              are configured with an IPv6 ORPort.
+
+          However, relays support accepting inbound connections to their IPv6
+          ORPorts. And they might extend circuits via authenticated IPv6
+          connections to other relays.
+
+   "3" -- relays support extending over IPv6 connections in response to an
+          EXTEND2 cell containing an IPv6 ORPort.
+
+          Bridges might not extend over IPv6, because they try to imitate
+          client behaviour.
+
+          A successful IPv6 extend requires:
+            * Relay subprotocol version 3 (or later) on the extending relay,
+            * an IPv6 ORPort on the extending relay,
+            * an IPv6 ORPort for the accepting relay in the EXTEND2 cell, and
+            * an IPv6 ORPort on the accepting relay.
+          (Because different tor instances can have different views of the
+          network, these checks should be done when the path is selected.
+          Extending relays should only check local IPv6 information, before
+          attempting the extend.)
+
+          When relays receive an EXTEND2 cell containing both an IPv4 and an
+          IPv6 ORPort, and there is no existing authenticated connection with
+          the target relay, the extending relay may choose between IPv4 and
+          IPv6 at random. The extending relay might not try the other address,
+          if the first connection fails.
+
+          As is the case with other subprotocol versions, tor advertises,
+          recommends, or requires support for this protocol version, regardless
+          of its current configuration.
+
+          In particular:
+            * relays without an IPv6 ORPort, and
+            * tor instances that are not relays,
+          have the following behaviour, regardless of their configuration:
+            * advertise support for "Relay=3" in their descriptor
+              (if they are a relay, bridge, or directory authority), and
+            * react to consensuses recommending or requiring support for
+              "Relay=3".
+
+          This subprotocol version is described in proposal 311, and
+          implemented in Tor 0.4.4.1-alpha.
+
 9.4. "HSIntro"
 
    The "HSIntro" protocol handles introduction points.
