@@ -241,6 +241,8 @@ Proposals by number:
 318  Limit protover values to 0-63 [OPEN]
 319  RELAY_FRAGMENT cells [OPEN]
 320  Removing TAP usage from v2 onion services [OPEN]
+321  Better performance and usability for the MyFamily option (v2) [OPEN]
+322  Extending link specifiers to include the directory port [OPEN]
 
 
 Proposals by status:
@@ -287,6 +289,8 @@ Proposals by status:
    318  Limit protover values to 0-63
    319  RELAY_FRAGMENT cells
    320  Removing TAP usage from v2 onion services
+   321  Better performance and usability for the MyFamily option (v2)
+   322  Extending link specifiers to include the directory port
  ACCEPTED:
    188  Bridge Guards and other anti-enumeration defenses
    249  Allow CREATE cells with >505 bytes of handshake data
