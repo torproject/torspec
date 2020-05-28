@@ -1143,6 +1143,16 @@
       The current system or UTC time, as returned by the system, in ISOTime2
       format.  (Introduced in 0.3.4.1-alpha.)
 
+    "rephist/ntor/onion_handshakes_requested"
+    "rephist/ntor/onion_handshakes_assigned"
+      The NTor circuit onion handshake rephist values which are requested or
+      assigned.  (Introduced in 0.4.4.1-alpha)
+
+    "rephist/tap/onion_handshakes_requested"
+    "rephist/tap/onion_handshakes_assigned"
+      The TAP circuit onion handshake rephist values which are requested or
+      assigned.  (Introduced in 0.4.4.1-alpha)
+
     "config-can-saveconf"
       0 or 1, depending on whether it is possible to use SAVECONF without the
       FORCE flag. (Introduced in 0.3.1.1-alpha.)
