@@ -243,6 +243,7 @@ Proposals by number:
 320  Removing TAP usage from v2 onion services [OPEN]
 321  Better performance and usability for the MyFamily option (v2) [OPEN]
 322  Extending link specifiers to include the directory port [OPEN]
+323  Specification for Walking Onions [DRAFT]
 
 
 Proposals by status:
@@ -260,6 +261,7 @@ Proposals by status:
    312  Tor Relay Automatic IPv6 Address Discovery
    313  Tor Relay IPv6 Statistics
    316  FlashFlow: A Secure Speed Test for Tor (Parent Proposal)
+   323  Specification for Walking Onions
  NEEDS-REVISION:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
