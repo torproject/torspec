@@ -23,7 +23,7 @@
   nodes that the client will connect to directly.  If they are not
   compromised, the user's paths are not compromised.
 
-  This specification outlines Tor's guard selection algorithm,
+  This specification outlines Tor's guard housekeeping algorithm,
   which tries to meet the following goals:
 
     - Heuristics and algorithms for determining how and which guards
@@ -45,6 +45,8 @@
     - Tor clients should resist (to the extent possible) attacks
       that try to force them onto compromised guards.
 
+    - Should maintain the load-balancing offered by the path selection
+      algorithm
 
 2. State instances
 
@@ -113,7 +115,7 @@
    specification defines how entry guards specifically should be selected and
    managed, as opposed to middle or exit nodes.
 
-   3.1.1 Entry guard selection
+   3.1.1 Managing entry guards
 
    At a high level, a relay listed in a consensus will move through the
    following states in the process from initial selection to eventual
@@ -129,7 +131,8 @@
 
    Relays listed in the latest consensus can be sampled for guard usage
    if they have the "Guard" flag. Sampling is random but weighted by
-   bandwidth.
+   a measured bandwidth multiplied by bandwidth-weights (Wgg if guard only,
+   Wgd if guard+exit flagged).
 
    Once a path is built and a circuit established using this guard, it
    is marked as confirmed. Until this point, guards are first sampled
@@ -143,9 +146,9 @@
 
    3.1.2 Middle and exit node selection
 
-   Middle nodes are selected at random from relays listed in the
-   latest consensus, weighted by bandwidth. Exit nodes are chosen
-   similarly but restricted to relays with a sufficiently permissive
+   Middle nodes are selected at random from relays listed in the latest
+   consensus, weighted by bandwidth and bandwidth-weights. Exit nodes are
+   chosen similarly but restricted to relays with a sufficiently permissive
    exit policy.
 
    3.2 Circuit Building
@@ -176,7 +179,7 @@
 4.1.  The Sampled Guard Set. [Section:SAMPLED]
 
    We maintain a set, {set:SAMPLED_GUARDS}, that persists across
-   invocations of Tor. It is an unordered subset of the nodes that
+   invocations of Tor. It is a subset of the nodes ordered by a sample idx that
    we have seen listed as a guard in the consensus at some point.
    For each such guard, we record persistently:
 
@@ -230,8 +233,8 @@
    (But if the maximum would be smaller than {MIN_FILTERED_SAMPLE}, we
    set the maximum at {MIN_FILTERED_SAMPLE}.)
 
-   To add a new guard to {SAMPLED_GUARDS}, pick an entry at random
-   from ({GUARDS} - {SAMPLED_GUARDS}), weighted by bandwidth.
+   To add a new guard to {SAMPLED_GUARDS}, pick an entry at random from
+   ({GUARDS} - {SAMPLED_GUARDS}), according to the path selection rules.
 
    We remove an entry from {SAMPLED_GUARDS} if:
 
@@ -262,6 +265,17 @@
 
    The second expiration mechanism makes us rotate our guards slowly
    over time.
+
+   Ordering the {SAMPLED_GUARDS} set in the order in which we sampled those
+   guards and picking guards from that set according to this ordering improves
+   load-balancing. It is closer to offer the expected usage of the guard nodes
+   as per the path selection rules.
+
+   The ordering also improves on another objective of this proposal: trying to
+   resist an adversary pushing clients over compromised guards, since the
+   adversary would need the clients to exhaust all their initial
+   {SAMPLED_GUARDS} set before having a chance to use a newly deployed
+   adversary node.
 
 
 4.2. The Usable Sample [Section:FILTERED]
@@ -376,12 +390,11 @@
   {CONFIRMED_GUARDS} and {FILTERED_GUARDS}, and take the first
   {N_PRIMARY_GUARDS} elements.  If there are fewer than
   {N_PRIMARY_GUARDS} elements, append additional elements to
-  PRIMARY_GUARDS chosen _uniformly_ at random from
-  ({FILTERED_GUARDS} - {CONFIRMED_GUARDS}).
+  PRIMARY_GUARDS chosen from ({FILTERED_GUARDS} - {CONFIRMED_GUARDS}) in
+  sample order.
 
   Once an element has been added to {PRIMARY_GUARDS}, we do not remove it
-  until it is replaced by some element from {CONFIRMED_GUARDS}. Confirmed
-  elements always precede unconfirmed ones in the {PRIMARY_GUARDS} list.
+  until it is replaced by some element from {CONFIRMED_GUARDS}.
 
   Note that {PRIMARY_GUARDS} do not have to be in
   {USABLE_FILTERED_GUARDS}: they might be unreachable.
@@ -475,9 +488,9 @@
       is now <usable_if_no_better_guard>.  (If all entries have
       {is_pending} true, pick the first one.)
 
-    * Otherwise, if there is no such entry, select a member at
-      random from {USABLE_FILTERED_GUARDS}. Set its {is_pending}
-      field to true.  The circuit is <usable_if_no_better_guard>.
+    * Otherwise, if there is no such entry, select a member from
+      {USABLE_FILTERED_GUARDS} in sample order. Set its {is_pending} field to
+      true. The circuit is <usable_if_no_better_guard>.
 
     * Otherwise, if USABLE_FILTERED_GUARDS is empty, we have exhausted
       all the sampled guards.  In this case we proceed by marking all guards
