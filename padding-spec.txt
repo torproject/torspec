@@ -325,13 +325,19 @@ the anonymity and load-balancing implications of their choices.
        u8 command IN [CIRCPAD_COMMAND_START, CIRCPAD_COMMAND_STOP];
 
        u8 machine_type IN [CIRCPAD_MACHINE_CIRC_SETUP];
+
+       u8 unused; // Formerly echo_request
+
+       u32 machine_ctr;
      };
 
   When a client wants to start a circuit padding machine, it first checks that
   the desired destination hop advertises the appropriate subprotocol version for
   that machine. It then sends a circpad_negotiate cell to that hop with
   command=CIRCPAD_COMMAND_START, and machine_type=CIRCPAD_MACHINE_CIRC_SETUP (for
-  the circ setup machine, the destination hop is the second hop in the circuit).
+  the circ setup machine, the destination hop is the second hop in the
+  circuit). The machine_ctr is the count of which machine instance this is on
+  the circuit. It is used to disambiguate shutdown requests.
 
   When a relay receives a circpad_negotiate cell, it checks that it supports
   the requested machine, and sends a circpad_negotiated cell, which is formatted
@@ -343,6 +349,8 @@ the anonymity and load-balancing implications of their choices.
        u8 response IN [CIRCPAD_RESPONSE_OK, CIRCPAD_RESPONSE_ERR];
 
        u8 machine_type IN [CIRCPAD_MACHINE_CIRC_SETUP];
+
+       u32 machine_ctr;
      };
 
   If the machine is supported, the response field will contain
@@ -351,6 +359,9 @@ the anonymity and load-balancing implications of their choices.
   Either side may send a CIRCPAD_COMMAND_STOP to shut down the padding machines
   (clients MUST only send circpad_negotiate, and relays MUST only send
   circpad_negotiated for this purpose).
+
+  If the machine_ctr does not match the current machine instance count
+  on the circuit, the command is ignored.
 
 3.2. Circuit Padding Machine Message Management
 
