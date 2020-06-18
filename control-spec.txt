@@ -2241,6 +2241,9 @@
       MEASUREMENT_EXPIRED (As "TIMEOUT", except that we had left the circuit
                            open for measurement purposes to see how long it
                            would take to finish.)
+      IP_NOW_REDUNDANT    (Closing a circuit to an introduction point that
+                           has become redundant, since some other circuit
+                           opened in parallel with it has succeeded.)
 
    The "REMOTE_REASON" field is provided only when we receive a DESTROY or
    TRUNCATE cell, and only if extended events are enabled.  It contains the

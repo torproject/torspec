@@ -1458,7 +1458,7 @@ see tor-design.pdf.
      6 -- CONNECTFAILED   (Unable to reach relay.)
      7 -- OR_IDENTITY     (Connected to relay, but its OR identity was not
                            as expected.)
-     8 -- OR_CONN_CLOSED  (The OR connection that was carrying this circuit
+     8 -- CHANNEL_CLOSED  (The OR connection that was carrying this circuit
                            died.)
      9 -- FINISHED        (The circuit has expired for being dirty or old.)
     10 -- TIMEOUT         (Circuit construction took too long)
