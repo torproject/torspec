@@ -1911,6 +1911,18 @@
 
         Commonly used "param" arguments at this point include:
 
+        "assume-reachable" -- If set to 1, tells Tor relays that they
+        should ignore the results of their self-testing when deciding
+        whether to publish relay descriptors.
+        Min: 0, Max: 1, Default: 0.
+        First-appeared: Tor 0.4.5.1-alpha
+
+        "assume-reachable-ipv6" -- If set to 1, tells Tor relays that they
+        should ignore the results of their IPv6 self-testing when deciding
+        whether to publish relay descriptors.
+        Min: 0, Max: 1, Default: 0.
+        First-appeared: Tor 0.4.5.1-alpha
+
         "circwindow" -- the default package window that circuits should
         be established with. It started out at 1000 cells, but some
         research indicates that a lower value would mean fewer cells in
