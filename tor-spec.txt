@@ -1617,9 +1617,10 @@ see tor-design.pdf.
    been destined for this hop of the circuit or originated from this hop
    of the circuit, seeded from Df or Db respectively (obtained in
    section 5.2 above), and including this RELAY cell's entire payload
-   (taken with the digest field set to zero).  If the digest
-   is correct, the cell is considered "recognized" for the purposes of
-   decryption (see section 5.5 above).
+   (taken with the digest field set to zero).  Note that these digests
+   _do_ include the padding bytes at the end of the cell, not only those up
+   to "Len".  If the digest is correct, the cell is considered "recognized"
+   for the purposes of decryption (see section 5.5 above).
 
    (The digest does not include any bytes from relay cells that do
    not start or end at this hop of the circuit. That is, it does not
