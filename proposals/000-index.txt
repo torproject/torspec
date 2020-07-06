@@ -244,6 +244,7 @@ Proposals by number:
 321  Better performance and usability for the MyFamily option (v2) [OPEN]
 322  Extending link specifiers to include the directory port [OPEN]
 323  Specification for Walking Onions [DRAFT]
+324  RTT-based Congestion Control for Tor [OPEN]
 
 
 Proposals by status:
@@ -293,6 +294,7 @@ Proposals by status:
    320  Removing TAP usage from v2 onion services
    321  Better performance and usability for the MyFamily option (v2)
    322  Extending link specifiers to include the directory port
+   324  RTT-based Congestion Control for Tor
  ACCEPTED:
    188  Bridge Guards and other anti-enumeration defenses
    249  Allow CREATE cells with >505 bytes of handshake data
