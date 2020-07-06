@@ -1,0 +1,1125 @@
+Filename: 324-rtt-congestion-control.txt
+Title: RTT-based Congestion Control for Tor
+Author: Mike Perry
+Created: 02 July 2020
+Status: Open
+
+
+0. Motivation [MOTIVATION]
+
+This proposal specifies how to incrementally deploy RTT-based congestion
+control and improved queue management in Tor. It is written to allow us
+to first deploy the system only at Exit relays, and then incrementally
+improve the system by upgrading intermediate relays.
+
+Lack of congestion control is the reason why Tor has an inherent speed
+limit of about 500KB/sec for downloads and uploads via Exits, and even
+slower for onion services. Because our stream SENDME windows are fixed
+at 500 cells per stream, and only ~500 bytes can be sent in one cell,
+the max speed of a single Tor stream is 500*500/circuit_latency. This
+works out to about 500KB/sec max sustained throughput for a single
+download, even if circuit latency is as low as 500ms.
+
+Because onion services paths are more than twice the length of Exit
+paths (and thus more than twice the circuit latency), onion service
+throughput will always have less than half the throughput of Exit
+throughput, until we deploy proper congestion control with dynamic
+windows.
+
+Proper congestion control will remove this speed limit for both Exits
+and onion services, as well as reduce memory requirements for fast Tor
+relays, by reducing queue lengths.
+
+The high-level plan is to use Round Trip Time (RTT) as a primary
+congestion signal, and compare the performance of two different
+congestion window update algorithms that both use RTT as a congestion
+signal.
+
+The combination of RTT-based congestion signaling, a congestion window
+update algorithm, and Circuit-EWMA will get us the most if not all of
+the benefits we seek, and only requires clients and Exits to upgrade to
+use it. Once this is deployed, circuit bandwidth caps will no longer be
+capped at ~500kb/sec by the fixed window sizes of SENDME; queue latency
+will fall significantly; memory requirements at relays should plummet;
+and transient bottlenecks in the network should dissipate.
+
+Extended background information on the choices made in this proposal can
+be found at:
+  https://lists.torproject.org/pipermail/tor-dev/2020-June/014343.html
+  https://lists.torproject.org/pipermail/tor-dev/2020-January/014140.html
+
+An exhaustive list of citations for further reading is in Section
+[CITATIONS].
+
+
+1. Overview [OVERVIEW]
+
+This proposal has five main sections, after this overview. These
+sections are referenced [IN_ALL_CAPS] rather than by number, for easy
+searching.
+
+Section [CONGESTION_SIGNALS] specifies how to use Tor's SENDME flow
+control cells to measure circuit RTT, for use as an implicit congestion
+signal. It also specifies an explicit congestion signal, which can be
+used as a future optimization once all relays upgrade.
+
+Section [CONTROL_ALGORITHMS] specifies two candidate congestion window
+upgrade mechanisms, which will be compared for performance in simulation
+in Shadow, as well as evaluated on the live network, and tuned via
+consensus parameters listed in [CONSENSUS_PARAMETERS].
+
+Section [FLOW_CONTROL] specifies how to handle back-pressure when one of
+the endpoints stops reading data, but data is still arriving. In
+particular, it specifies what to do with streams that are not being read
+by an application, but still have data arriving on them.
+
+Section [SYSTEM_INTERACTIONS] describes how congestion control will
+interact with onion services, circuit padding, and conflux-style traffic
+splitting.
+
+Section [EVALUATION] describes how we will evaluate and tune our 
+options for control algorithms and their parameters.
+
+Section [PROTOCOL_SPEC] describes the specific cell formats and
+descriptor changes needed by this proposal.
+
+Section [SECURITY_ANALYSIS] provides information about the DoS and
+traffic analysis properties of congestion control.
+
+
+2. Congestion Signals [CONGESTION_SIGNALS]
+
+In order to detect congestion at relays on a circuit, Tor will use
+circuit Round Trip Time (RTT) measurement. This signal will be used in
+slightly different ways in our various [CONTROL_ALGORITHMS], which will
+be compared against each other for optimum performance in Shadow and on
+the live network.
+
+To facilitate this, we will also change SENDME accounting logic
+slightly. These changes only require clients, exits, and dirauths to
+update.
+
+As a future optimization, we also specify an explicit congestion signal.
+This signal *will* require all relays on a circuit to upgrade to support
+it, but it will reduce congestion by making the first congestion event
+on a circuit much faster to detect.
+
+2.1 RTT measurement
+
+Recall that Tor clients, exits, and onion services send
+RELAY_COMMAND_SENDME relay cells every CIRCWINDOW_INCREMENT (100) cells
+of received RELAY_COMMAND_DATA.
+
+This allows those endpoints to measure the current circuit RTT, by
+measuring the amount of time between sending of every 100th data cell
+and the arrival of the SENDME command that the other endpoint
+immediately sends to ack that 100th cell.
+
+Circuits will record the current RTT measurement as a field in their
+circuit_t data structure. They will also record the minimum and maximum
+RTT seen so far.
+
+Algorithms that make use of this RTT measurement for congestion
+window update are specified in [CONTROL_ALGORITHMS].
+
+2.2. SENDME behavior changes
+
+We will make four major changes to SENDME behavior to aid in computing
+and using RTT as a congestion signal.
+
+First, we will need to establish a ProtoVer of "CCtrl=1" to signal
+support by Exits for the new SENDME format and congestion control
+algorithm mechanisms.  We will need a similar announcement in the onion
+service descriptors of services that support congestion control.
+
+Second, we will turn CIRCWINDOW_INCREMENT into a consensus parameter
+'circwindow_inc', instead of using a hardcoded value of 100 cells. It is
+likely that more frequent SENDME cells will provide quicker reaction to
+congestion, since the RTT will be measured more often. If
+experimentation in Shadow shows that more frequent SENDMEs reduce
+congestion and improve performance but add significant overhead, we can
+reduce SENDME overhead by allowing SENDME cells to carry stream data, as
+well.
+
+  TODO: If two endpoints view different consensus parameters for
+        'circwindow_inc', we will have complications measuring RTT,
+        as well as complications for authenticated SENDME hash
+        accounting. We need a way for endpoints to negotiate SENDME
+        pacing with eachother, perhaps during circuit setup. This will
+        require changes to the Onionskin/CREATE cell format (and
+        RELAY_COMMAND_EXTEND), as mentioned in Section [PROTOCOL_SPEC].
+
+Second, all end-to-end relay cells except RELAY_COMMAND_DROP and
+RELAY_COMMAND_INTRODUCE1 will count towards SENDME cell counts. The
+details behind how these cells are handled is addressed in section
+[SYSTEM_INTERACTIONS].
+
+   TODO: List any other exceptions. There probably are some more.
+
+Third, authenticated SENDMEs can remain as-is in terms of protocol
+behavior, but will require some implementation updates to account for
+variable window sizes and variable SENDME pacing. In particular, the
+sendme_last_digests list for auth sendmes needs updated checks for
+larger windows and CIRCWINDOW_INCREMENT changes. Other functions to
+examine include:
+     - circuit_sendme_cell_is_next()
+     - sendme_record_cell_digest_on_circ()
+     - sendme_record_received_cell_digest()
+     - sendme_record_sending_cell_digest()
+     - send_randomness_after_n_cells
+
+Fourth, stream level SENDMEs will be eliminated. Details on handling
+streams and backpressure is covered in [FLOW_CONTROL].
+
+2.3. Backward ECN signaling [BACKWARD_ECN]
+
+As an optimization after the RTT deployment, we will deploy an explicit
+congestion control signal by allowing relays to modify the
+cell_t.command field when they detect congestion, on circuits for which
+all relays have support for this signal (as mediated by Tor protocol
+version handshake via the client). This is taken from the Options
+mail[1], section BACKWARD_ECN_TOR.
+
+To detect congestion in order to deliver this signal, we will deploy a
+simplified version of the already-simple CoDel algorithm on each
+outbound TLS connection at relays.
+   https://queue.acm.org/detail.cfm?id=2209336
+   https://tools.ietf.org/html/rfc8289
+
+Each cell will get a timestamp upon arrival at a relay that will allow
+us to measure how long it spends in queues, all the way to hitting a TLS
+outbuf.
+
+The duration of total circuitmux queue time for each cell will be
+compared a consensus parameter 'min_queue_target', which is set to 5% of
+min network RTT. (This mirrors the CoDel parameter of the same name).
+
+As soon as a cell of a circuit spends more than this time in queues, a
+per-circuit flag 'ecn_exit_slow_start' will be set to 1. As soon as a
+cell is available in the opposite direction on that circuit, the relay
+will flip the cell_t.command of from CELL_COMMAND_RELAY to
+CELL_COMMAND_RELAY_CONGESTION. (We must wait for a cell in the opposite
+direction because that is the sender that caused the congestion).
+
+This enhancement will allow endpoints to very quickly exit from
+[CONTROL_ALGORITHM] "slow start" phase (during which, the congestion
+window increases exponentially). The ability to more quickly exit the
+exponential slow start phase during congestion will help reduce queue
+sizes at relays.
+
+To avoid side channels, this cell must only be flipped on
+CELL_COMMAND_RELAY, and not CELL_COMMAND_RELAY_EARLY. Additionally, all
+relays MUST enforce that only *one* such cell command is flipped, per
+direction, per circuit. Any additional CELL_COMMAND_RELAY_CONGESTION
+cells seen by any relay or client MUST cause those circuit participants
+to immediately close the circuit.
+
+As a further optimization, if no relay cells are pending in the opposite
+direction as congestion is happening, we can send a zero-filled cell
+instead. In the forward direction of the circuit, we can send this cell
+without any crypto layers, so long as further relays enforce that the
+contents are zero-filled, to avoid side channels.
+
+
+3. Congestion Window Update Algorithms [CONTROL_ALGORITHMS]
+
+We specify two candidate window update algorithms. The specification
+describes the update algorithms for the slow start phase and the
+steady state phase separately, with some explanation. Then the
+combined algorithm is given.
+
+Note that these algorithms differ slightly from the background tor-dev
+mails[1,2], due to corrections and improvements. Hence they have been
+given different names than in those two mails.
+
+These algorithms will be evaluated by running Shadow simulations, to
+help determine parameter ranges, but experimentation on the live network
+will be required to determine which of these algorithms performs best
+when in competition with our current SENDME behavior, as used by real
+network traffic. This experimentation and tuning is detailed in section
+[EVALUATION].
+
+All of these algorithms have rules to update 'cwnd' - the current
+congestion window. In the C Tor reference implementation, 'cwnd' is
+called the circuit 'package_window'. C Tor also maintains a
+'deliver_window', which it uses to track how many cells it has received,
+in order to send the appropriate number of SENDME acks.
+
+  TODO: This 'deliver_window' count can be updated by the other
+        endpoint using the congestion control rules to watch for
+        cheating. Alternatively, it can be simplified just to count
+        the number of cells we get until we send a SENDME. 
+
+Implementation of different algorithms should be very simple - each
+algorithm should have a different set of package_window update functions
+depending on the selected algorithm, as specified by consensus parameter
+'cc_alg'.
+
+For C Tor's current flow control, these functions are defined in sendme.c,
+and are called by relay.c:
+  - sendme_note_circuit_data_packaged()
+  - sendme_circuit_data_received()
+  - sendme_circuit_consider_sending()
+  - sendme_process_circuit_level()
+
+Despite the complexity of the following algorithms in their TCP
+implementations, their Tor equivalents are extremely simple, each being
+just a handful of lines of C. This simplicity is possible because Tor
+does not have to deal with out-of-order delivery, packet drops,
+duplicate packets, and other network issues at the circuit layer, due to
+the fact that Tor circuits already have reliability and in-order
+delivery at that layer.
+
+We are also removing the aspects of TCP that cause the congestion
+algorithm to reset into slow start after being idle for too long, or
+after too many congestion signals. These are deliberate choices that
+simplify the algorithms and also should provide better performance for
+Tor workloads.
+
+  TODO: We may want to experiment with adding revert-to-slow-start back
+        in, but slow start is very expensive in a lot of ways, so let's
+        see if we can avoid falling back into it, if at all possible.
+
+3.1. Tor Westwood: TCP Westwood using RTT signaling [TOR_WESTWOOD]
+   http://intronetworks.cs.luc.edu/1/html/newtcps.html#tcp-westwood
+   http://nrlweb.cs.ucla.edu/nrlweb/publication/download/99/2001-mobicom-0.pdf
+   http://cpham.perso.univ-pau.fr/TCP/ccr_v31.pdf
+   https://c3lab.poliba.it/images/d/d7/Westwood_linux.pdf
+
+Recall that TCP Westwood is basically TCP Reno, but it uses RTT to help
+estimate the bandwidth-delay-product (BDP) of the link, and use that for
+"Fast recovery" after a congestion signal arrives.
+
+We will also be using the RTT congestion signal as per BOOTLEG_RTT_TOR
+here, from the Options mail[1] and Defenestrator paper[3]. Recall that
+BOOTLEG_RTT_TOR emits a congestion signal when the current RTT falls
+below some fractional threshold ('rtt_thresh') fraction between RTT_min
+and RTT_max:
+
+   RTT_current < (1−rtt_thresh)*RTT_min + rtt_thresh*RTT_max
+
+We can also optionally use the ECN signal described in [BACKWARD_ECN]
+above, to exit Slow Start.
+
+Tor Westwood will require each circuit endpoint to maintain a
+Bandwidth-Delay-Product (BDP) and Bandwidth Estimate (BWE) variable.
+
+The bandwidth estimate is the current congestion window size divided by
+the RTT estimate:
+
+   BWE = cwnd / RTT_current
+
+The BDP estimate is computed by multiplying the Bandwidth estimate by
+the circuit latency:
+
+   BDP = BWE * RTT_min
+
+  TODO: Different papers on TCP Westwood and TCP Vegas recommend
+        different methods for calculating BWE. See citations for
+        details, but common options are 'packets_in_flight/RTT_current'
+        or 'circwindow_inc*sendme_arrival_rate'. They also recommend
+        averaging and filtering of the BWE, due to ack compression in
+        inbound queues. We will need to experiment to determine how to
+        best compute the BWE for Tor circuits.
+
+3.1.1. Tor Westwood: Slow Start
+
+Prior to the first congestion signal, Tor Westwood will update its
+congestion window exponentially, as per Slow Start.
+
+Recall that this first congestion signal can be either BOOTLEG_RTT_TOR's
+RTT threshold signal, or BACKWARD_ECN's cell command signal.
+
+For simplicity, we will just write the BOOTLEG_RTT_TOR check, which
+compares the current RTT measurement to the observed min and max RTT,
+using the consensus parameter 'rtt_thresh'.
+
+This section of the update algorithm is:
+
+   cwnd = cwnd + circwindow_inc           # For acked cells
+
+   # BOOTLEG_RTT_TOR threshold check:
+   if RTT_current < (1−rtt_thresh)*RTT_min + rtt_thresh*RTT_max:
+      cwnd = cwnd + circwindow_inc        # Exponential window growth
+    else:
+      BDP = BWE*RTT_min
+      cwnd = max(cwnd * cwnd_recovery_m, BDP)
+      in_slow_start = 0
+
+Increasing the congestion window by 100 *more* cells every SENDME allows
+the sender to send 100 *more* cells every 100 cells. Thus, this is an
+exponential function that causes cwnd to double every cwnd cells.
+
+Once a congestion signal is experienced, Slow Start is exited, and the
+Additive-Increase-Multiplicative-Decrease (AIMD) steady-state phase
+begins. 
+
+3.1.2. Tor Westwood: Steady State AIMD
+
+After slow start exits, in steady-state, after every SENDME response
+without a congestion signal, the window is updated as:
+
+   cwnd = cwnd + circwindow_inc           # For acked cells
+   cwnd = cwnd + circwindow_inc/cwnd      # Linear window growth
+
+This comes out to increasing cwnd by 1, every time cwnd cells are
+successfully sent without a congestion signal occurring. Thus this is
+additive linear growth, not exponential growth.
+
+If there is a congestion signal, cwnd is updated as:
+   
+   cwnd = cwnd + circwindow_inc             # For acked cells
+   cwnd = max(cwnd * cwnd_recovery_m, BDP)  # For window shrink
+
+This is called "Fast Recovery". If you dig into the citations, actual
+TCP Westwood has some additional details for responding to multiple
+packet losses that in some cases can fall back into slow-start, as well
+as some smoothing of the BDP to make up for dropped acks. Tor does not
+need either of these aspects of complexity.
+
+3.1.3. Tor Westwood: Complete SENDME Update Algorithm
+
+Here is the complete congestion window algorithm for Tor Westwood, using
+only RTT signaling.
+
+This will run each time we get a SENDME (aka sendme_process_circuit_level()):
+
+   in_slow_start = 1                            # Per-circuit indicator
+
+   Every received SENDME ack, do:
+     cwnd = cwnd + circwindow_inc               # Update acked cells
+
+     # BOOTLEG_RTT_TOR threshold; can also be BACKWARD_ECN check:
+     if RTT_current < (1−rtt_thresh)*RTT_min + rtt_thresh*RTT_max:
+       if in_slow_start:
+         cwnd = cwnd + circwindow_inc           # Exponential growth 
+       else:
+         cwnd = cwnd + circwindow_inc/cwnd      # Linear growth
+     else:
+       BDP = BWE*RTT_min
+       cwnd = max(cwnd * cwnd_recovery_m, BDP)  # Window shrink
+       in_slow_start = 0
+
+3.2. Tor Vegas: TCP Vegas with Aggressive Slow Start [TOR_VEGAS]
+   http://intronetworks.cs.luc.edu/1/html/newtcps.html#tcp-vegas
+   http://pages.cs.wisc.edu/~akella/CS740/F08/740-Papers/BOP94.pdf
+   ftp://ftp.cs.princeton.edu/techreports/2000/628.pdf
+
+TCP Vegas control algorithm makes use of two RTT measurements:
+RTT_current and RTT_min. Like TCP Westwood, it also maintains a
+bandwidth estimate and a BDP estimate, but those can be simplified away
+with algebra.
+
+The bandwidth estimate is the current congestion window size divided by
+the RTT estimate:
+
+   BWE = cwnd/RTT_current
+
+The extra queue use along a path can thus be estimated by first
+estimating the path's bandwidth-delay product:
+
+   BDP = BWE*RTT_min
+
+TCP Vegas then estimates the queue use caused by congestion as:
+
+   queue_use = cwnd - BDP
+             = cwnd - cwnd*RTT_min/RTT_current
+             = cwnd * (1 - RTT_min/RTT_current)
+
+So only RTT_min and RTT_current need to be recorded to provide this
+queue_use estimate.
+
+  TODO: This simplification might not hold for some versions of BWE
+        and BDP estimation. See also the [TOR_WESTWOOD] section's TODO
+        and paper citations for both TCP Westwood and TCP Vegas.
+
+3.2.1. Tor Vegas Slow Start
+
+During slow start, we will increase our window exponentially, so long as
+this queue_use estimate is below the 'vegas_gamma' consensus parameter.
+
+We also re-use the Tor Westwood backoff, upon exit from Slow Start.
+
+Note though that the exit from Slow Start for here does *not* use the
+BOOTLEG_RTT_TOR style RTT threshold, and instead relies on the
+queue_use calculation directly.
+
+Tor Vegas slow start can also be exited due to [BACKWARD_ECN] cell
+signal, which is omitted for brevity and clarity.
+
+   cwnd = cwnd + circwindow_inc                   # Ack cells
+
+   if queue_use < vegas_gamma:                    # Vegas RTT check
+     cwnd = cwnd + circwindow_inc                 # Exponential growth
+   else:
+     cwnd = max(cwnd * cwnd_recovery_m, BDP)      # Westwood backoff
+     in_slow_start = 0
+
+3.2.2. Tor Vegas: Steady State Queue Tracking
+
+Recall that TCP Vegas does not use AIMD in the steady state. Because
+TCP Vegas is actually trying to directly control the queue use
+on the path, its updates are additive and subtractive only.
+
+If queue_use drops below a threshold alpha (typically 2-3 packets for
+TCP Vegas, but perhaps double or triple that for our smaller cells),
+then the congestion window is increased. If queue_use exceeds a
+threshold beta (typically 4-6 packets, but again we should probably
+double or triple this), then the congestion window is decreased.
+   
+   cwnd = cwnd + circwindow_inc                 # Ack cells
+
+   if queue_use < vegas_alpha:
+     cwnd = cwnd + circwindow_inc/cwnd          # linear growth
+   elif queue_use > vegas_beta:
+     cwnd = cwnd - circwindow_inc/cwnd          # linear backoff
+
+  TODO: Why not reduce the window by the number of packets that
+        queue_use is over or under the target value by, rather than
+        just 1 cell per cwnd? Need to ask some TCP folks, or experiment.
+
+3.2.3. Tor Vegas: Complete SENDME Update Algorithm
+
+   in_slow_start = 1                             # Per-circuit indicator
+
+   Every received SENDME ack:
+     cwnd = cwnd + circwindow_inc                # Update acked cells
+
+     queue_use = cwnd * (1 - RTT_min/RTT_current)
+
+     if in_slow_start:
+       if queue_use < vegas_gamma:
+         cwnd = cwnd + circwindow_inc            # Exponential growth
+       else:
+         cwnd = max(cwnd * cwnd_recovery_m, BDP) # Westwood backoff
+         in_slow_start = 0
+     else:
+       if queue_use < vegas_alpha:
+         cwnd = cwnd + circwindow_inc/cwnd       # linear growth
+       elif queue_use > vegas_beta:
+         cwnd = cwnd - circwindow_inc/cwnd       # linear backoff
+
+
+4. Flow Control [FLOW_CONTROL]
+
+Flow control provides what is known as "pushback" -- the property that
+if one endpoint stops reading data, the other endpoint stops sending
+data. This prevents data from accumulating at points in the network, if
+it is not being read fast enough by an application.
+
+Because Tor must multiplex many streams onto one circuit, and each
+stream is mapped to another TCP socket, Tor's current pushback is rather
+complicated and under-specified. In C Tor, it is implemented in the
+following functions:
+   - circuit_consider_stop_edge_reading()
+   - connection_edge_package_raw_inbuf()
+   - circuit_resume_edge_reading()
+
+Tor currently maintains separate windows for each stream on a circuit,
+to provide individual stream flow control. Circuit windows are SENDME
+acked as soon as a relay data cell is decrypted and recognized. Stream
+windows are only SENDME acked if the data can be delivered to an active
+edge connection. This allows the circuit to continue to operate if an
+endpoint refuses to read data off of one of the streams on the circuit.
+
+Because Tor streams can connect to many different applications and
+endpoints per circuit, it is important to preserve the property that if
+only one endpoint edge connection is inactive, it does not stall the
+whole circuit, in case one of those endpoints is malfunctioning or
+malicious.
+
+However, window-based stream flow control also imposes a speed limit on
+individual streams. If the stream window size is below the circuit
+congestion window size, then it becomes the speed limit of a download,
+as we saw in the [MOTIVATION] section of this proposal.
+
+So for performance, it is optimal that each stream window is the same
+size as the circuit's congestion window. However, large stream windows
+are a vector for OOM attacks, because malicious clients can force Exits
+to buffer a full stream window for each stream while connecting to a
+malicious site and uploading data that the site does not read from its
+socket. This attack is significantly easier to perform at the stream
+level than on the circuit level, because of the multiplier effects of
+only needing to establish a single fast circuit to perform the attack on
+a very large number of streams.
+
+This catch22 means that if we use windows for stream flow control, we
+either have to commit to allocating a full congestion window worth
+memory for each stream, or impose a speed limit on our streams.
+
+Hence, we will discard stream windows entirely, and instead use a
+simpler buffer-based design that uses XON/XOFF as a backstop. This will
+allow us to make full use of the circuit congestion window for every
+stream in combination, while still avoiding buffer buildup inside the
+network.
+
+4.1. Stream Flow Control Without Windows [WINDOWLESS_FLOW]
+
+Each endpoint (client, Exit, or onion service) should send circuit-level
+SENDME acks for all circuit cells as soon as they are decrypted and
+recognized, but *before* delivery to their edge connections. If the edge
+connection is blocked because an application is not reading, data will
+build up in a queue at that endpoint.
+
+Three consensus parameters will govern the max length of this queue:
+xoff_client, xoff_exit, and xoff_mobile. These will be used for Tor
+clients, exits, and mobile devices, respectively. These cuttofs will be
+a percentage of current 'cwnd' rather than number of cells. Something
+like 5% of 'cwnd' should be plenty, since these edge connections should
+normally drain *much* faster than Tor itself.
+
+If the length of an application stream queue exceeds the size provided
+in the appropriate consensus parameter, a RELAY_COMMAND_STREAM_XOFF will
+be sent, which instructs the other endpoint to stop sending from that
+edge connection. This XOFF cell can optionally contain any available
+stream data, as well.
+
+As soon as the queue begins to drain, a RELAY_COMMAND_STREAM_XON will
+sent, which allows the other end to resume reading on that edge
+connection. Because application streams should drain quickly once they
+are active, we will send the XON command as soon as they start draining.
+If the queues fill again, another XOFF will be sent. If this results in
+excessive XOFF/XON flapping and chatter, we will also use consensus
+parameters xon_client, xon_exit, and xon_mobile to optionally specify
+when to send an XON. These parameters will be defined in terms of cells
+below the xoff_* levels, rather than percentage. The XON cells can also
+contain stream data, if any is available.
+
+Tor's OOM killer will be invoked to close any streams whose application
+buffer grows too large, due to memory shortage, or malicious endpoints.
+
+Note that no stream buffer should ever grow larger than the xoff level
+plus 'cwnd', unless an endpoint is ignoring XOFF. So,
+'xoff_{client,exit,mobile} + cwnd' should be the hard-close stream
+cutoff, regardless of OOM killer status.
+
+
+5. System Interactions [SYSTEM_INTERACTIONS]
+
+Tor's circuit-level SENDME system currently has special cases in the
+following situations: Intropoints, HSDirs, onion services, and circuit
+padding. Additionally, proper congestion control will allow us to very
+easily implement conflux (circuit traffic splitting).
+
+This section details those special cases and interactions of congestion
+control with other components of Tor.
+
+5.1. HSDirs
+
+Because HSDirs use the tunneled dirconn mechanism and thus also use
+RELAY_COMMAND_DATA, they are already subject to Tor's flow control.
+
+We may want to make sure our initial circuit window for HSDir circuits
+is set custom for those circuit types, so a SENDME is not required to
+fetch long descriptors. This will ensure HSDir descriptors can be
+fetched in one RTT.
+
+5.2. Introduction Points
+
+Introduction Points are not currently subject to any flow control.
+
+Because Intropoints accept INTRODUCE1 cells from many client circuits
+and then relay them down a single circuit to the service as INTRODUCE2
+cells, we cannot provide end-to-end congestion control all the way from
+client to service for these cells.
+
+We can run congestion control from the service to the Intropoint,
+however, and if that congestion window reaches zero (because the service
+is overwhelmed), then we start sending NACKS back to the clients (or
+begin requiring proof-of-work), rather than just let clients wait for
+timeout.
+
+5.3. Rendezvous Points
+
+Rendezvous points are already subject to end-to-end SENDME control,
+because all relay cells are sent end-to-end via the rendezvous circuit
+splice in circuit_receive_relay_cell().
+
+This means that rendezvous circuits will use end-to-end congestion
+control, as soon as individual onion clients and onion services upgrade
+to support it. There is no need for intermediate relays to upgrade at
+all.
+
+5.4. Circuit Padding
+
+Recall that circuit padding is negotiated between a client and a middle
+relay, with one or more state machines running on circuits at the middle
+relay that decide when to add padding.
+  https://github.com/torproject/tor/blob/master/doc/HACKING/CircuitPaddingDevelopment.md
+
+This means that the middle relay can send padding traffic towards the
+client that contributes to congestion, and the client may also send
+padding towards the middle relay, that also creates congestion.
+
+For low-traffic padding machines, such as the currently deployed circuit
+setup obfuscation, this padding is inconsequential.
+
+However, higher traffic circuit padding machines that are designed to
+defend against website traffic fingerprinting will need additional care
+to avoid inducing additional congestion, especially after the client or
+the exit experiences a congestion signal.
+
+The current overhead percentage rate limiting features of the circuit
+padding system should handle this in some cases, but in other cases, an
+XON/XOFF circuit padding flow control command may be required, so that
+clients may signal to the machine that congestion is occurring.
+
+5.5. Conflux
+
+Conflux (aka multi-circuit traffic splitting) becomes significantly
+easier to implement once we have congestion control. However, much like
+congestion control, it will require experimentation to tune properly.
+
+Recall that Conflux uses a 256-bit UUID to bind two circuits together at
+the Exit or onion service. The original Conflux paper specified an
+equation based on RTT to choose which circuit to send cells on.
+  https://www.cypherpunks.ca/~iang/pubs/conflux-pets.pdf
+
+However, with congestion control, we will already know which circuit has
+the larger congestion window, and thus has the most available cells in
+its current congestion window. This will also be the faster circuit.
+Thus, the decision of which circuit to send a cell on only requires
+comparing congestion windows (and choosing the circuit with more packets
+remaining in its window).
+
+Conflux will require sequence numbers on data cells, to ensure that the
+two circuits' data is properly re-assembled. The resulting out-of-order
+buffer can potentially be as large as an entire congestion window, if
+the circuits are very desynced (or one of them closes). It will be very
+expensive for Exits to maintain this much memory, and exposes them to
+OOM attacks.
+
+This is not as much of a concern in the client download direction, since
+clients will typically only have a small number of these out-of-order
+buffers to keep around. But for the upload direction, Exits will need
+to send some form of early XOFF on the faster circuit if this
+out-of-order buffer begins to grow too large, since simply halting the
+delivery of SENDMEs will still allow a full congestion window full of
+data to arrive. This will also require tuning and experimentation, and
+optimum results will vary between simulator and live network.
+
+  TODO: Can we use explicit SENDME sequence number acking to make a
+       connection-resumption conflux, to recover from circuit collapse
+       or client migration? I am having trouble coming up with a design
+       that does not require Exits to maintain a full congestion
+       window full of data as a retransmit buffer in the event of
+       circuit close. Such reconnect activity might require assistance
+       from Guard relays so that they can help clients discover which
+       cells were sent vs lost.
+
+
+6. Performance Evaluation [EVALUATION]
+
+Congestion control for Tor will be easy to implement, but difficult to
+tune to ensure optimal behavior.
+
+6.1. Congestion Signal Experiments
+
+Our first experiments will be to conduct client-side experiments to
+determine how stable the RTT measurements of circuits are across the
+live Tor network, to determine if we need more frequent SENDMEs, and/or
+need to use any RTT smoothing or averaging.
+
+Once we have a reliable way to measure RTT, we will need to test the
+reliability and accuracy of the Bandwidth Estimation (BWE) and
+Bandwidth-Delay-Product (BDP) measurements that are required for
+[TOR_WESTWOOD] and [TOR_VEGAS]. These experiments can be conducted in
+Shadow, with precise network topologies for which actual bandwidth and
+latency (and thus BWE and BDP) are known parameters.  We should use the
+most accurate form of these estimators from Shadow experimentation to
+run some client tests with custom Exits on the live network, to check
+for high variability in these estimates, discrepancy with client
+application throughput and application latency, and other surprises.
+
+Care will need to be taken to increase or alter Tor's circwindow during
+these experiments in Shadow and on the custom Exits, so that the default
+of 1000 does not impose an artificial ceiling on circuit bandwidth.
+
+6.2. Congestion Algorithm Experiments
+
+In order to evaluate performance of congestion control algorithms, we
+will need to implement [TOR_WESTWOOD], [TOR_VEGAS], and also variants of
+those without the Westwood BDP fast recovery backoff. We will need to
+simulate their use in the Shadow Tor network simulator.
+
+Simulation runs will need to evaluate performance on networks that use
+only one algorithm, as well as on networks that run a combinations of
+algorithms - particularly each type of congestion control in combination
+with Tor's current flow control. If Tor's current flow control is too
+aggressive, we can experiment with kneecapping these legacy flow control
+Tor clients by setting a low 'circwindow' consensus parameter for them.
+
+Because custom congestion control can be deployed by any Exit or onion
+service that desires better service, we will need to be particularly
+careful about how congestion control algorithms interact with rogue
+implementations that more aggressively increase their window sizes.
+During these adversarial-style experiments, we must verify that cheaters
+do not get better service, and that Tor's circuit OOM killer properly
+closes circuits that seriously abuse the congestion control algorithm,
+as per [SECURITY_ANALYSIS].
+
+Finally, we should determine if the [BACKWARD_ECN] cell_t.command
+congestion signal is enough of an optimization to be worth the
+complexity, especially if it is only used once, to exit slow start. This
+can be determined in Shadow.
+
+6.3. Flow Control Algorithm Experiments
+
+We will need to tune the xoff_* consensus parameters to minimize the
+amount of edge connection buffering as well as XON/XOFF chatter for
+Exits. This can be done in simulation, but will require fine-tuning on
+the live network.
+
+Relays will need to report these statistics in extra-info descriptor,
+to help with monitoring the live network conditions.
+
+6.4. Performance Metrics [EVALUATION_METRICS]
+
+Because congestion control will affect so many aspects of performance,
+from throughput to RTT, to load balancing, queue length, overload, and
+other failure conditions, the full set of performance metrics will be
+required:
+  https://trac.torproject.org/projects/tor/wiki/org/roadmaps/CoreTor/PerformanceMetrics
+
+We will also need to monitor network health for relay queue lengths,
+relay overload, and other signs of network stress (and particularly the
+alleviation of network stress).
+
+6.5. Consensus Parameter Tuning [CONSENSUS_PARAMETERS]
+
+During Shadow simulation, we will determine reasonable default
+parameters for our consensus parameters for each algorithm. We will then
+re-run these tuning experiments on the live Tor network, as described
+in:
+  https://trac.torproject.org/projects/tor/wiki/org/roadmaps/CoreTor/PerformanceExperiments
+
+The following list is the complete set of network consensus parameters
+referenced in this proposal, sorted roughly in order of importance (most
+important to tune first):
+
+  cc_alg:
+    - Description:
+          Specifies which congestion control algorithm clients should
+          use, as an integer.
+    - Range: [0,2]  (0=fixed, 1=Westwood, 2=Vegas)
+    - Default: 2
+
+  cwnd_recovery_m:
+    - Description: Specifies how much to reduce the congestion
+                   window after a congestion signal, as a fraction of
+                   100.
+    - Range: [0, 100]
+    - Default: 70
+
+  circwindow:
+    - Description: Initial congestion window for legacy Tor clients
+    - Range: [1, 1000]
+    - Default: 1000 (reduced if legacy Tor clients compete unfairly)
+
+  circwindow_cc:
+    - Description: Initial congestion window for new congestion
+                   control Tor clients.
+    - Range: [1, 1000]
+    - Default: 10-100
+
+  rtt_thresh:
+    - Description:
+              Specifies the cutoff for BOOTLEG_RTT_TOR to deliver
+              congestion signal, as fixed point representation
+              divided by 1000.
+    - Range: [1, 1000]
+    - Default: 230
+
+  vegas_alpha
+  vegas_beta
+  vegas_gamma
+    - Description: These parameters govern the number of cells
+                   that [TOR_VEGAS] can detect in queue before reacting.
+    - Range: [1, 1000]
+    - Defaults: 6,12,12
+
+  circwindow_inc:
+    - Description: Specifies how many cells a SENDME acks
+    - Range: [1, 5000]
+    - Default: 100
+
+  min_queue_target:
+    - Description: How long in milliseconds can a cell spend in
+      a relay's queues before we declare its circuit congested?
+    - Range: [1, 10000]
+    - Default: 10
+
+  xoff_client
+  xoff_mobile
+  xoff_exit
+    - Description: Specifies the stream queue size as a percentage of
+                   'cwnd' at an endpoint before an XOFF is sent.
+    - Range: [1, 100]
+    - Default: 5
+ 
+  xon_client
+  xon_mobile
+  xon_exit
+    - Description: Specifies the how many cells below xoff_* before
+                   an XON is sent from an endpoint.
+    - Range: [1, 10000000]
+    - Default: 10000
+
+
+7. Protocol format specifications [PROTOCOL_SPEC]
+
+   TODO: This section needs details once we close out other TODOs above.
+
+7.1. Circuit window handshake format
+
+   TODO: We need to specify a way to communicate the currently seen
+         circwindow_inc consensus parameter to the other endpoint,
+         due to consensus sync delay. Probably during the CREATE
+         onionskin (and RELAY_COMMAND_EXTEND).
+   TODO: We probably want stricter rules on the range of values
+         for the per-circuit negotiation - something like
+         it has to be between [circwindow_inc/2, 2*circwindow_inc].
+         That way, we can limit weird per-circuit values, but still
+         allow us to change the consensus value in increments.
+
+7.2. XON/XOFF relay cell formats
+
+   TODO: We need to specify XON/XOFF for flow control. This should be
+         simple.
+   TODO: We should also allow it to carry stream data.
+
+7.3. Onion Service formats
+
+   TODO: We need to specify how to signal support for congestion control
+         in an onion service, to both the intropoint and to clients.
+
+7.4. Protocol Version format
+
+   TODO: We need to pick a protover to signal Exit and Intropoint
+         congestion control support.
+
+7.5. SENDME relay cell format
+
+   TODO: We need to specify how to add stream data to a SENDME as an
+         optimization.
+
+7.6. BACKWARD_ECN signal format
+
+   TODO: We need to specify exactly which byte to flip in cells
+         to signal congestion on a circuit.
+
+   TODO: Black magic will allow us to send zero-filled BACKWARD_ECN
+         cells in the *wrong* direction in a circuit, towards the Exit -
+         ie with no crypto layers at all. If we enforce strict format
+         and zero-filling of these cells at intermediate relays, we can
+         avoid side channels there, too. (Such a hack allows us to
+         send BACKWARD_ECN without any wait, if there are no relay cells
+         that are available heading in the backward direction, towards
+         the endpoint that caused congestion).
+
+7.7. Extrainfo descriptor formats
+
+   TODO: We will want to gather information on circuitmux and other
+         relay queues, as well as XON/XOFF rates, and edge connection
+         queue lengths at exits.
+
+
+8. Security Analysis [SECURITY_ANALYSIS]
+
+The security risks of congestion control come in three forms: DoS
+attacks, fairness abuse, and side channel risk.
+
+8.1. DoS Attacks (aka Adversarial Buffer Bloat)
+
+The most serious risk of eliminating our current window cap is that
+endpoints can abuse this situation to create huge queues and thus DoS
+Tor relays.
+
+This form of attack was already studied against the Tor network in the
+Sniper attack:
+  https://www.freehaven.net/anonbib/cache/sniper14.pdf
+
+We had two fixes for this. First, we implemented a circuit-level OOM
+killer that closed circuits whose queues became too big, before the
+relay OOMed and crashed.
+
+Second, we implemented authenticated SENDMEs, so clients could not
+artificially increase their window sizes with honest exits:
+  https://gitweb.torproject.org/torspec.git/tree/proposals/289-authenticated-sendmes.txt
+
+We can continue this kind of enforcement by having Exit relays ensure
+that clients are not transmitting SENDMEs too often, and do not appear
+to be inflating their send windows beyond what the Exit expects by
+calculating a similar receive window.
+
+Unfortunately, authenticated SENDMEs do *not* prevent the same attack
+from being done by rogue exits, or rogue onion services. For that, we
+rely solely on the circuit OOM killer. During our experimentation, we
+must ensure that the circuit OOM killer works properly to close circuits
+in these scenarios.
+
+But in any case, it is important to note that we are not any worse off
+with congestion control than we were before, with respect to these kinds
+of DoS attacks. In fact, the deployment of congestion control by honest
+clients should reduce queue use and overall memory use in relays,
+allowing them to be more resilient to OOM attacks than before.
+
+8.2. Congestion Control Fairness Abuse (aka Cheating)
+
+On the Internet, significant research and engineering effort has been
+devoted to ensuring that congestion control algorithms are "fair" in
+that each connection receives equal throughput. This fairness is
+provided both via the congestion control algorithm, as well as via queue
+management algorithms at Internet routers.
+
+One of the most unfortunate early results was that TCP Vegas, despite
+being near-optimal at minimizing queue lengths at routers, was easily
+out-performed by more aggressive algorithms that tolerated larger queue
+delay (such as TCP Reno).
+
+Note that because the most common direction of traffic for Tor is from
+Exit to client, unless Exits are malicious, we do not need to worry
+about rogue algorithms as much, but we should still examine them in our
+experiments because of the possibility of malicious Exits, as well as
+malicious onion services.
+
+Queue management can help further mitigate this risk, too. When RTT is
+used as a congestion signal, our current Circuit-EWMA queue management
+algorithm is likely sufficient for this. Because Circuit-EWMA will add
+additional delay to loud circuits, "cheaters" who use alternate
+congestion control algorithms to inflate their congestion windows should
+end up with more RTT congestion signals than those who do not, and the
+Circuit-EWMA scheduler will also relay fewer of their cells per time
+interval.
+
+In this sense, we do not need to worry about fairness and cheating as a
+security property, but a lack of fairness in the congestion control
+algorithm *will* increase memory use in relays to queue these
+unfair/loud circuits, perhaps enough to trigger the OOM killer. So we
+should still be mindful of these properties in selecting our congestion
+control algorithm, to minimize relay memory use, if nothing else.
+
+These two properties (honest Exits and Circuit-EWMA) may even be enough
+to make it possible to use [TOR_VEGAS] even in the presence of other
+algorithms, which would be a huge win in terms of memory savings as well
+as vastly reduced queue delay. We must verify this experimentally,
+though.
+
+8.3. Side Channel Risks
+
+Vastly reduced queue delay and predictable amounts of congestion on the
+Tor network may make certain forms of traffic analysis easier.
+Additionally, the ability to measure RTT and have it be stable due to
+minimal network congestion may make geographical inference attacks
+easier:
+  https://www.freehaven.net/anonbib/cache/ccs07-latency-leak.pdf
+  https://www.robgjansen.com/publications/howlow-pets2013.pdf
+
+It is an open question as to if these risks are serious enough to
+warrant eliminating the ability to measure RTT at the protocol level and
+abandoning it as a congestion signal, in favor of other approaches
+(which have their own side channel risks). It will be difficult to
+comprehensively eliminate RTT measurements, too.
+
+On the plus side, Conflux traffic splitting (which is made easy once
+congestion control is implemented) does show promise as providing
+defense against traffic analysis:
+  https://www.comsys.rwth-aachen.de/fileadmin/papers/2019/2019-delacadena-splitting-defense.pdf
+
+There is also literature on shaping circuit bandwidth to create a side
+channel. This can be done regardless of the use of congestion control,
+and is not an argument against using congestion control. In fact, the
+Backlit defense may be an argument in favor of endpoints monitoring
+circuit bandwidth and latency more closely, as a defense:
+  https://www.freehaven.net/anonbib/cache/ndss09-rainbow.pdf
+  https://www.freehaven.net/anonbib/cache/ndss11-swirl.pdf
+  https://www.freehaven.net/anonbib/cache/acsac11-backlit.pdf
+
+Finally, recall that we are considering BACKWARD_ECN to use a
+circuit-level cell_t.command to signal congestion. This allows all
+relays in the path to signal congestion in under RTT/2 in either
+direction, and it can be flipped on existing relay cells already in
+transit, without introducing any overhead.  However, because
+cell_t.command is visible and malleable to all relays, it can also be
+used as a side channel. So we must limit its use to a couple of cells
+per circuit, at most.
+  https://blog.torproject.org/tor-security-advisory-relay-early-traffic-confirmation-attack
+
+
+9. [CITATIONS]
+
+1. Options for Congestion Control in Tor-Like Networks.
+   https://lists.torproject.org/pipermail/tor-dev/2020-January/014140.html
+
+2. Towards Congestion Control Deployment in Tor-like Networks.
+   https://lists.torproject.org/pipermail/tor-dev/2020-June/014343.html
+
+3. DefenestraTor: Throwing out Windows in Tor.
+   https://www.cypherpunks.ca/~iang/pubs/defenestrator.pdf
+
+4. TCP Westwood: Bandwidth Estimation for Enhanced Transport over Wireless Links
+   http://nrlweb.cs.ucla.edu/nrlweb/publication/download/99/2001-mobicom-0.pdf
+
+5. Performance Evaluation and Comparison of Westwood+, New Reno, and Vegas TCP Congestion Control
+   http://cpham.perso.univ-pau.fr/TCP/ccr_v31.pdf
+
+6. Linux 2.4 Implementation of Westwood+ TCP with rate-halving
+   https://c3lab.poliba.it/images/d/d7/Westwood_linux.pdf
+
+7. TCP Westwood
+   http://intronetworks.cs.luc.edu/1/html/newtcps.html#tcp-westwood
+
+8. TCP Vegas: New Techniques for Congestion Detection and Avoidance
+   http://pages.cs.wisc.edu/~akella/CS740/F08/740-Papers/BOP94.pdf
+
+9. Understanding TCP Vegas: A Duality Model
+   ftp://ftp.cs.princeton.edu/techreports/2000/628.pdf
+
+10. TCP Vegas
+    http://intronetworks.cs.luc.edu/1/html/newtcps.html#tcp-vegas
+
+11. Controlling Queue Delay
+    https://queue.acm.org/detail.cfm?id=2209336
+
+12. Controlled Delay Active Queue Management
+    https://tools.ietf.org/html/rfc8289
+
+13. How Much Anonymity does Network Latency Leak?
+    https://www.freehaven.net/anonbib/cache/ccs07-latency-leak.pdf
+
+14. How Low Can You Go: Balancing Performance with Anonymity in Tor
+    https://www.robgjansen.com/publications/howlow-pets2013.pdf
+
+15. POSTER: Traffic Splitting to Counter Website Fingerprinting
+    https://www.comsys.rwth-aachen.de/fileadmin/papers/2019/2019-delacadena-splitting-defense.pdf
+
+16. RAINBOW: A Robust And Invisible Non-Blind Watermark for Network Flows
+    https://www.freehaven.net/anonbib/cache/ndss09-rainbow.pdf
+
+17. SWIRL: A Scalable Watermark to Detect Correlated Network Flows
+    https://www.freehaven.net/anonbib/cache/ndss11-swirl.pdf
+
+18. Exposing Invisible Timing-based Traffic Watermarks with BACKLIT
+    https://www.freehaven.net/anonbib/cache/acsac11-backlit.pdf
+
+19. The Sniper Attack: Anonymously Deanonymizing and Disabling the Tor Network
+    https://www.freehaven.net/anonbib/cache/sniper14.pdf
+
+20. Authenticating sendme cells to mitigate bandwidth attacks
+    https://gitweb.torproject.org/torspec.git/tree/proposals/289-authenticated-sendmes.txt
+
+21. Tor security advisory: "relay early" traffic confirmation attack
+    https://blog.torproject.org/tor-security-advisory-relay-early-traffic-confirmation-attack
+
+22. The Path Less Travelled: Overcoming Tor’s Bottlenecks with Traffic Splitting
+    https://www.cypherpunks.ca/~iang/pubs/conflux-pets.pdf
+
+23. Circuit Padding Developer Documentation
+    https://github.com/torproject/tor/blob/master/doc/HACKING/CircuitPaddingDevelopment.md
+
+24. Plans for Tor Live Network Performance Experiments 
+    https://trac.torproject.org/projects/tor/wiki/org/roadmaps/CoreTor/PerformanceExperiments
+
+25. Tor Performance Metrics for Live Network Tuning
+    https://trac.torproject.org/projects/tor/wiki/org/roadmaps/CoreTor/PerformanceMetrics
+
