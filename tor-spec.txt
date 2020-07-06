@@ -1596,6 +1596,8 @@ see tor-design.pdf.
 
         32..40 -- Used for hidden services; see rend-spec-{v2,v3}.txt.
 
+        41..42 -- Used for circuit padding; see Section 3 of padding-spec.txt.
+
    Commands labelled as "forward" must only be sent by the originator
    of the circuit. Commands labelled as "backward" must only be sent by
    other nodes in the circuit back to the originator. Commands marked

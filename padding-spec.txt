@@ -309,8 +309,12 @@ the anonymity and load-balancing implications of their choices.
 
   Because circuit padding machines only become active at certain points in
   circuit lifetime, and because more than one padding machine may be active at
-  any given point in circuit lifetime, there is also a padding negotiation cell,
-  with fields as follows:
+  any given point in circuit lifetime, there is also a padding negotiation
+  cell and a negotiated response. These are relay commands 41 and 42, with
+  relay headers as per section 6.1 of tor-spec.txt.
+
+  The fields of the relay cell Data payload of a negotiate request are
+  as follows:
 
      const CIRCPAD_COMMAND_STOP = 1;
      const CIRCPAD_COMMAND_START = 2;
@@ -341,7 +345,8 @@ the anonymity and load-balancing implications of their choices.
 
   When a relay receives a circpad_negotiate cell, it checks that it supports
   the requested machine, and sends a circpad_negotiated cell, which is formatted
-  as follows:
+  in the data payload of a relay cell with command number 42 (see tor-spec.txt
+  section 6.1), as follows:
 
      struct circpad_negotiated {
        u8 version IN [0];
