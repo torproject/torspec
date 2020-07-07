@@ -2900,16 +2900,18 @@
      EXTERNAL_ADDRESS
      "ADDRESS=IP"
      "HOSTNAME=NAME"
-     "METHOD=CONFIGURED/DIRSERV/RESOLVED/INTERFACE/GETHOSTNAME"
-       Our best idea for our externally visible IP has changed to 'IP'.
-       If 'HOSTNAME' is present, we got the new IP by resolving 'NAME'.  If the
-       method is 'CONFIGURED', the IP was given verbatim as a configuration
-       option.  If the method is 'RESOLVED', we resolved the Address
-       configuration option to get the IP.  If the method is 'GETHOSTNAME',
-       we resolved our hostname to get the IP.  If the method is 'INTERFACE',
-       we got the address of one of our network interfaces to get the IP.  If
-       the method is 'DIRSERV', a directory server told us a guess for what
-       our IP might be.
+     "METHOD=CONFIGURED/CONFIGURED_ORPORT/DIRSERV/RESOLVED/
+             INTERFACE/GETHOSTNAME"
+       Our best idea for our externally visible IP has changed to 'IP'.  If
+       'HOSTNAME' is present, we got the new IP by resolving 'NAME'.  If the
+       method is 'CONFIGURED', the IP was given verbatim as the Address
+       configuration option.  If the method is 'CONFIGURED_ORPORT', the IP was
+       given verbatim in the ORPort configuration option. If the method is
+       'RESOLVED', we resolved the Address configuration option to get the IP.
+       If the method is 'GETHOSTNAME', we resolved our hostname to get the IP.
+       If the method is 'INTERFACE', we got the address of one of our network
+       interfaces to get the IP.  If the method is 'DIRSERV', a directory
+       server told us a guess for what our IP might be.
 
        {Controllers may want to record this info and display it to the user.}
 
