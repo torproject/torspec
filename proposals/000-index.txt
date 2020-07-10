@@ -245,6 +245,7 @@ Proposals by number:
 322  Extending link specifiers to include the directory port [OPEN]
 323  Specification for Walking Onions [DRAFT]
 324  RTT-based Congestion Control for Tor [OPEN]
+325  Packed relay cells: saving space on small commands [DRAFT]
 
 
 Proposals by status:
@@ -263,6 +264,7 @@ Proposals by status:
    313  Tor Relay IPv6 Statistics
    316  FlashFlow: A Secure Speed Test for Tor (Parent Proposal)
    323  Specification for Walking Onions
+   325  Packed relay cells: saving space on small commands
  NEEDS-REVISION:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
