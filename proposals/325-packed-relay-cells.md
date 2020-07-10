@@ -79,7 +79,7 @@ should all be filled with 0-valued bytes.
 
 # Negotiation and migration
 
-After receiving a packed relay cell, the relay know that the client
+After receiving a packed relay cell, the relay knows that the client
 supports this proposal: Relays SHOULD send packed relay
 cells on any circuit on which they have received a packed relay
 cell.  Relays MUST NOT send packed relay cells otherwise.
@@ -135,7 +135,7 @@ If the optional_stream_id field is not present, then the default
 value for the stream_id is computed as follows.  We use stream_id 0
 for any command that doesn't take a stream ID.  For commands that
 _do_ take a steam_id, we use whichever nonzero stream_id appeared
-last in this cell.
+most recently in the same cell.
 
 This format limits the space of possible relay commands.  That's
 probably okay: after 20 years of Tor development, we have defined 25
