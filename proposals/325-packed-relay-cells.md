@@ -19,7 +19,7 @@ use an entire 498-byte relay payload just to send a one-byte
 flow-control message.
 
 We already have some cases where we'd benefit from this feature.
-For example, when we send SENDME messages, END cells, or BEGIN_DIR
+For example, when we send `SENDME` messages, `END` cells, or `BEGIN_DIR`
 cells, most of the cell body is wasted with padding.
 
 As a side benefit, packing cells in this way may make the job of the
@@ -50,15 +50,15 @@ concatenated in a single relay cell.
 
 Only some relay commands are supported for relay cell packing,
 listed here:
-      - SENDME
-      - DROP
-      - DATA
-      - BEGIN
-      - BEGIN_DIR
-      - END
-      - CONNECTED
-      - PADDING_NEGOTIATE
-      - PADDING_NEGOTIATED
+  - `SENDME`
+  - `DROP`
+  - `DATA`
+  - `BEGIN`
+  - `BEGIN_DIR`
+  - `END`
+  - `CONNECTED`
+  - `PADDING_NEGOTIATE`
+  - `PADDING_NEGOTIATED`
 
 If any relay message with a relay command _not_ listed above appears
 in a packed relay cell with another relay message, then the
@@ -131,10 +131,10 @@ value, computed as:
 
     (stream_id_included<<15) | (relay_command << 9) | (relay_data_len).
 
-If the optional_stream_id field is not present, then the default
-value for the stream_id is computed as follows.  We use stream_id 0
+If the `optional_stream_id` field is not present, then the default
+value for the `stream_id` is computed as follows.  We use stream_id 0
 for any command that doesn't take a stream ID.  For commands that
-_do_ take a steam_id, we use whichever nonzero stream_id appeared
+_do_ take a `steam_id`, we use whichever nonzero `stream_id` appeared
 most recently in the same cell.
 
 This format limits the space of possible relay commands.  That's
