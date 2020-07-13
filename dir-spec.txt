@@ -874,6 +874,16 @@
         number of bytes used in the most recent intervals, ordered from
         oldest to newest.
 
+        These fields include both IPv4 and IPv6 traffic.
+
+    "ipv6-read-history" YYYY-MM-DD HH:MM:SS (NSEC s) NUM,NUM,NUM... NL
+        [At most once]
+    "ipv6-write-history" YYYY-MM-DD HH:MM:SS (NSEC s) NUM,NUM,NUM... NL
+        [At most once]
+
+        Declare how much bandwidth the OR has used recently, on IPv6
+        connections. See "read-history" and "write-history" for full details.
+
     "geoip-db-digest" Digest NL
         [At most once.]
 
@@ -1155,6 +1165,14 @@
         not 10 times more in either direction (BOTH).  After classifying a
         connection, read and write counters are reset for the next
         10-second interval.
+
+        This measurement includes both IPv4 and IPv6 connections.
+
+    "ipv6-conn-bi-direct" YYYY-MM-DD HH:MM:SS (NSEC s) BELOW,READ,WRITE,BOTH NL
+        [At most once]
+
+        Number of IPv6 connections that are used uni-directionally or
+        bi-directionally. See "conn-bi-direct" for more details.
 
     "exit-stats-end" YYYY-MM-DD HH:MM:SS (NSEC s) NL
         [At most once.]
