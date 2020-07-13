@@ -703,16 +703,8 @@
     "write-history" YYYY-MM-DD HH:MM:SS (NSEC s) NUM,NUM,NUM,NUM,NUM... NL
         [At most once]
 
-        Declare how much bandwidth the OR has used recently. Usage is divided
-        into intervals of NSEC seconds.  The YYYY-MM-DD HH:MM:SS field
-        defines the end of the most recent interval.  The numbers are the
-        number of bytes used in the most recent intervals, ordered from
-        oldest to newest.
-
-        [We didn't start parsing these lines until Tor 0.1.0.6-rc; they should
-         be marked with "opt" until earlier versions of Tor are obsolete.]
-
-        [See also migration notes in section 2.1.2.1.]
+        (These fields once appeared in router descriptors, but have
+        appeared in extrainfo descriptors since 0.2.0.x.)
 
     "eventdns" bool NL
 
@@ -876,8 +868,11 @@
     "write-history" YYYY-MM-DD HH:MM:SS (NSEC s) NUM,NUM,NUM,NUM,NUM... NL
         [At most once.]
 
-        As documented in section 2.1.1 above.  See migration notes in
-        section 2.1.2.1.
+        Declare how much bandwidth the OR has used recently. Usage is divided
+        into intervals of NSEC seconds.  The YYYY-MM-DD HH:MM:SS field
+        defines the end of the most recent interval.  The numbers are the
+        number of bytes used in the most recent intervals, ordered from
+        oldest to newest.
 
     "geoip-db-digest" Digest NL
         [At most once.]
@@ -1293,19 +1288,6 @@
         A document signature as documented in section 1.3, using the
         initial item "extra-info" and the final item "router-signature",
         signed with the router's identity key.
-
-2.1.2.1. Moving history fields to extra-info documents
-
-   Tools that want to use the read-history and write-history values SHOULD
-   download extra-info documents as well as server descriptors.  Such
-   tools SHOULD accept history values from both sources; if they appear in
-   both documents, the values in the extra-info documents are authoritative.
-
-   New versions of Tor no longer generate server descriptors
-   containing read-history or write-history.  Tools should continue to
-   accept read-history and write-history values in server descriptors
-   produced by older versions of Tor until all Tor versions earlier
-   than 0.2.0.x are obsolete.
 
 2.1.3. Nonterminals in server descriptors
 
