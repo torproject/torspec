@@ -409,6 +409,7 @@ This will run each time we get a SENDME (aka sendme_process_circuit_level()):
 3.2. Tor Vegas: TCP Vegas with Aggressive Slow Start [TOR_VEGAS]
    http://intronetworks.cs.luc.edu/1/html/newtcps.html#tcp-vegas
    http://pages.cs.wisc.edu/~akella/CS740/F08/740-Papers/BOP94.pdf
+   http://www.mathcs.richmond.edu/~lbarnett/cs332/assignments/brakmo_peterson_vegas.pdf
    ftp://ftp.cs.princeton.edu/techreports/2000/628.pdf
 
 TCP Vegas control algorithm makes use of two RTT measurements:
@@ -437,7 +438,11 @@ queue_use estimate.
 
   TODO: This simplification might not hold for some versions of BWE
         and BDP estimation. See also the [TOR_WESTWOOD] section's TODO
-        and paper citations for both TCP Westwood and TCP Vegas.
+        and paper citations for both TCP Westwood and TCP Vegas. In
+        particular, see Section 3.5.2 of:
+        http://pages.cs.wisc.edu/~akella/CS740/F08/740-Papers/BOP94.pdf
+        or Section 3.2 of:
+        http://www.mathcs.richmond.edu/~lbarnett/cs332/assignments/brakmo_peterson_vegas.pdf
 
 3.2.1. Tor Vegas Slow Start
 
@@ -480,9 +485,11 @@ double or triple this), then the congestion window is decreased.
    elif queue_use > vegas_beta:
      cwnd = cwnd - circwindow_inc/cwnd          # linear backoff
 
-  TODO: Why not reduce the window by the number of packets that
-        queue_use is over or under the target value by, rather than
-        just 1 cell per cwnd? Need to ask some TCP folks, or experiment.
+Notice that we only decrease the window size by a single packet per
+congestion window, rather than by the full delta between current
+queue_use and the target value. This is done because if more than one
+connection jumps to use the available bandwidth at once, excess
+congestion will result.
 
 3.2.3. Tor Vegas: Complete SENDME Update Algorithm
 
