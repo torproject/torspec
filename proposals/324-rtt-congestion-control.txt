@@ -485,11 +485,11 @@ double or triple this), then the congestion window is decreased.
    elif queue_use > vegas_beta:
      cwnd = cwnd - circwindow_inc/cwnd          # linear backoff
 
-Notice that we only decrease the window size by a single packet per
+Notice that we only change the window size by a single packet per
 congestion window, rather than by the full delta between current
 queue_use and the target value. This is done because if more than one
 connection jumps to use the available bandwidth at once, excess
-congestion will result.
+congestion will result (or underutilization).
 
 3.2.3. Tor Vegas: Complete SENDME Update Algorithm
 
