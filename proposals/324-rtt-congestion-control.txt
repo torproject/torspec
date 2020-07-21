@@ -192,12 +192,18 @@ outbuf.
 
 The duration of total circuitmux queue time for each cell will be
 compared a consensus parameter 'min_queue_target', which is set to 5% of
-min network RTT. (This mirrors the CoDel parameter of the same name).
+min network RTT. (This mirrors the CoDel TARGET parameter).
 
-As soon as a cell of a circuit spends more than this time in queues, a
-per-circuit flag 'ecn_exit_slow_start' will be set to 1. As soon as a
-cell is available in the opposite direction on that circuit, the relay
-will flip the cell_t.command of from CELL_COMMAND_RELAY to
+Additionally, an inspection INTERVAL parameter 'queue_interval' governs
+how long queue lengths must exceed 'min_queue_target' before a circuit
+is declared congested. This mirrors the CoDel INTERVAL parameter, and it
+should default to approximately 50-100% of average network RTT.
+
+As soon as the cells of a circuit spend more than 'min_queue_target'
+time in queues for at least 'queue_interval' amount of time, per-circuit
+flag 'ecn_exit_slow_start' will be set to 1. As soon as a cell is
+available in the opposite direction on that circuit, the relay will flip
+the cell_t.command of from CELL_COMMAND_RELAY to
 CELL_COMMAND_RELAY_CONGESTION. (We must wait for a cell in the opposite
 direction because that is the sender that caused the congestion).
 
@@ -849,6 +855,13 @@ important to tune first):
     - Range: [1, 10000]
     - Default: 10
 
+  queue_interval:
+    - Description: How long in milliseconds must cells exceed
+      'min_queue_target' queue delay before we actually send a
+      congestion signal?
+    - Range: [1, 10000]
+    - Default: 200
+
   xoff_client
   xoff_mobile
   xoff_exit
@@ -1122,4 +1135,3 @@ per circuit, at most.
 
 25. Tor Performance Metrics for Live Network Tuning
     https://trac.torproject.org/projects/tor/wiki/org/roadmaps/CoreTor/PerformanceMetrics
-
