@@ -1505,6 +1505,10 @@
 
         The "onion-key" element as specified in section 2.1.1.
 
+        When generating microdescriptors for consensus method 30 or later,
+        the trailing = sign must be absent. For consensus method 29 or
+        earlier, the trailing = sign must be present.
+
     "ntor-onion-key" SP base-64-encoded-key NL
 
         [At most once]
@@ -2988,6 +2992,9 @@
         * If consensus method 29 or later is used, microdescriptor "family"
           lines are canonicalized to improve compression.
 
+        * If consensus method 30 or later is used, the base64 encoded
+          ntor-onion-key does not include the trailing = sign.
+
      The signatures at the end of a consensus document are sorted in
      ascending order by identity digest.
 
@@ -3073,6 +3080,7 @@
      "27" -- Adds support for "a" lines in microdescriptor consensues.
      "28" -- Removes "a" lines from microdescriptors.
      "29" -- Canonicalizes families in microdescriptors.
+     "30" -- Removes padding from ntor-onion-key.
 
    Before generating a consensus, an authority must decide which consensus
    method to use.  To do this, it looks for the highest version number
