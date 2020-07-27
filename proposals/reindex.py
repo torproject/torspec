@@ -161,7 +161,7 @@ def writeMarkdownFile(prefix, format_inputs):
         f.write(content)
 
 def writeMarkdownIndexFiles(proposals):
-    markdown_files = [ "README", "INDEX" ]
+    markdown_files = [ "README", "BY_INDEX" ]
     format_inputs = {}
 
     entries = []
