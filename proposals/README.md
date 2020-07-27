@@ -38,10 +38,11 @@ for discussion.
 * [`317-secure-dns-name-resolution.txt`](/proposals/317-secure-dns-name-resolution.txt): Improve security aspects of DNS name resolution
 * [`318-limit-protovers.md`](/proposals/318-limit-protovers.md): Limit protover values to 0-63
 * [`319-wide-everything.md`](/proposals/319-wide-everything.md): RELAY_FRAGMENT cells
-* [`320-tap-out-again.md`](/proposals/320-tap-out-again.md): Removing TAP usage from v2 onion services
 * [`321-happy-families.md`](/proposals/321-happy-families.md): Better performance and usability for the MyFamily option (v2)
 * [`322-dirport-linkspec.md`](/proposals/322-dirport-linkspec.md): Extending link specifiers to include the directory port
+* [`323-walking-onions-full.md`](/proposals/323-walking-onions-full.md): Specification for Walking Onions
 * [`324-rtt-congestion-control.txt`](/proposals/324-rtt-congestion-control.txt): RTT-based Congestion Control for Tor
+* [`325-packed-relay-cells.md`](/proposals/325-packed-relay-cells.md): Packed relay cells: saving space on small commands
 
 
 ## ACCEPTED proposals: slated for implementation
@@ -51,7 +52,6 @@ might or might not have a specific timeframe planned for their
 implementation.
 
 * [`188-bridge-guards.txt`](/proposals/188-bridge-guards.txt): Bridge Guards and other anti-enumeration defenses
-* [`249-large-create-cells.txt`](/proposals/249-large-create-cells.txt): Allow CREATE cells with >505 bytes of handshake data
 * [`265-load-balancing-with-overhead.txt`](/proposals/265-load-balancing-with-overhead.txt): Load Balancing with Overhead Parameters
 * [`282-remove-named-from-consensus.txt`](/proposals/282-remove-named-from-consensus.txt): Remove "Named" and "Unnamed" handling from consensus voting
 * [`288-privcount-with-shamir.txt`](/proposals/288-privcount-with-shamir.txt): Privacy-Preserving Statistics with Privcount in Tor (Shamir version)
@@ -114,8 +114,6 @@ discussion.
 * [`312-relay-auto-ipv6-addr.txt`](/proposals/312-relay-auto-ipv6-addr.txt): Tor Relay Automatic IPv6 Address Discovery
 * [`313-relay-ipv6-stats.txt`](/proposals/313-relay-ipv6-stats.txt): Tor Relay IPv6 Statistics
 * [`316-flashflow.txt`](/proposals/316-flashflow.txt): FlashFlow: A Secure Speed Test for Tor (Parent Proposal)
-* [`323-walking-onions-full.md`](/proposals/323-walking-onions-full.md): Specification for Walking Onions
-* [`325-packed-relay-cells.md`](/proposals/325-packed-relay-cells.md): Packed relay cells: saving space on small commands
 
 
 ## NEEDS-REVISION proposals: ideas that we can't implement as-is
@@ -284,6 +282,7 @@ implemented.
 * [`210-faster-headless-consensus-bootstrap.txt`](/proposals/210-faster-headless-consensus-bootstrap.txt): Faster Headless Consensus Bootstrapping
 * [`225-strawman-shared-rand.txt`](/proposals/225-strawman-shared-rand.txt): Strawman proposal: commit-and-reveal shared rng
 * [`247-hs-guard-discovery.txt`](/proposals/247-hs-guard-discovery.txt): Defending Against Guard Discovery Attacks using Vanguards
+* [`249-large-create-cells.txt`](/proposals/249-large-create-cells.txt): Allow CREATE cells with >505 bytes of handshake data
 * [`252-single-onion.txt`](/proposals/252-single-onion.txt): Single Onion Services
 * [`266-removing-current-obsolete-clients.txt`](/proposals/266-removing-current-obsolete-clients.txt): Removing current obsolete clients from the Tor network
 * [`280-privcount-in-tor.txt`](/proposals/280-privcount-in-tor.txt): Privacy-Preserving Statistics with Privcount in Tor
@@ -341,6 +340,7 @@ longer relevant (the proposal is OBSOLETE).
 * [`268-guard-selection.txt`](/proposals/268-guard-selection.txt): New Guard Selection Behaviour [OBSOLETE]
 * [`270-newhope-hybrid-handshake.txt`](/proposals/270-newhope-hybrid-handshake.txt): RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope [OBSOLETE]
 * [`286-hibernation-api.txt`](/proposals/286-hibernation-api.txt): Controller APIs for hibernation access on mobile [REJECTED]
+* [`320-tap-out-again.md`](/proposals/320-tap-out-again.md): Removing TAP usage from v2 onion services [REJECTED]
 
 
 
