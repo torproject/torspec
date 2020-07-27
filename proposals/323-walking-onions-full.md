@@ -3,7 +3,7 @@ Filename: 323-walking-onions-full.md
 Title: Specification for Walking Onions
 Author: Nick Mathewson
 Created: 3 June 2020
-Status: Draft
+Status: Open
 ```
 
 
