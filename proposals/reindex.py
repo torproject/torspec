@@ -17,8 +17,16 @@ CONDITIONAL_FIELDS = { "OPEN" : [ "Target", "Ticket" ],
                        "FINISHED" : [ "Implemented-In", "Ticket" ] }
 FNAME_RE = re.compile(r'^(\d\d\d)-.*[^\~]$')
 DIR = "."
-OUTFILE = "000-index.txt"
-TMPFILE = OUTFILE+".tmp"
+OUTFILE_TXT = "000-index.txt"
+TMPFILE_TXT = OUTFILE_TXT+".tmp"
+
+TEMPFILES = [TMPFILE_TXT]
+
+def unlink_if_present(fname):
+    try:
+        os.unlink(fname)
+    except OSError:
+        pass
 
 def indexed(seq):
     n = 0
@@ -95,6 +103,8 @@ def readProposals():
     for fn in os.listdir(DIR):
         m = FNAME_RE.match(fn)
         if not m: continue
+        if fn.endswith(".tmp"):
+            continue
         if not (fn.endswith(".txt") or fn.endswith(".md")):
             raise Error("%s doesn't end with .txt or .md"%fn)
         num = m.group(1)
@@ -104,14 +114,14 @@ def readProposals():
         res.append(fields)
     return res
 
-def writeIndexFile(proposals):
+def writeTextIndexFile(proposals):
     proposals.sort(key=lambda f:f['num'])
     seenStatuses = set()
     for p in proposals:
         seenStatuses.add(p['Status'])
 
-    out = open(TMPFILE, 'w')
-    inf = open(OUTFILE, 'r')
+    out = open(TMPFILE_TXT, 'w')
+    inf = open(OUTFILE_TXT, 'r')
     for line in inf:
         out.write(line)
         if line.startswith("====="): break
@@ -133,11 +143,56 @@ def writeIndexFile(proposals):
                     out.write(" [in %(Implemented-In)s]"%prop)
                 out.write("\n")
     out.close()
-    os.rename(TMPFILE, OUTFILE)
+    os.rename(TMPFILE_TXT, OUTFILE_TXT)
 
-try:
-    os.unlink(TMPFILE)
-except OSError:
-    pass
+def formatMarkdownEntry(prop, withStatus=False):
+    if withStatus:
+        fmt = "* [`{Filename}`](/proposals/{Filename}): {Title} [{Status}]\n"
+    else:
+        fmt = "* [`{Filename}`](/proposals/{Filename}): {Title}\n"
+    return fmt.format(**prop)
 
-writeIndexFile(readProposals())
+def writeMarkdownFile(prefix, format_inputs):
+    template = prefix+"_template.md"
+    output = prefix+".md"
+    t = open(template).read()
+    content = t.format(**format_inputs)
+    with open(output, 'w') as f:
+        f.write(content)
+
+def writeMarkdownIndexFiles(proposals):
+    markdown_files = [ "README", "INDEX" ]
+    format_inputs = {}
+
+    entries = []
+    for prop in proposals:
+        entries.append(formatMarkdownEntry(prop, withStatus=True))
+    format_inputs["BY_INDEX"] = "".join(entries)
+
+    for s in STATUSES:
+        entries = []
+        for prop in proposals:
+            if s == prop['Status']:
+                entries.append(formatMarkdownEntry(prop))
+        if entries:
+            format_inputs[s] = "".join(entries)
+        else:
+            format_inputs[s] = "(There are no proposals in this category)\n"
+
+    entries = []
+    for prop in proposals:
+        if prop['Status'] in ('DEAD', 'REJECTED', 'OBSOLETE'):
+            entries.append(formatMarkdownEntry(prop, withStatus=True))
+    format_inputs['DEAD_REJECTED_OBSOLETE'] = "".join(entries)
+
+    for prefix in markdown_files:
+        writeMarkdownFile(prefix, format_inputs)
+
+if __name__ == '__main__':
+    proposals = readProposals()
+    try:
+        writeTextIndexFile(proposals)
+        writeMarkdownIndexFiles(proposals)
+    finally:
+        for tempfile in TEMPFILES:
+            unlink_if_present(tempfile)
