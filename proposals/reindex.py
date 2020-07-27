@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-# Future imports for Python 2.7, mandatory in 3.0
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+import sys
+if sys.version_info[0] < 3:
+    print("No support for Python 2.")
+    sys.exit(1)
 
 import codecs, re, os
 class Error(Exception): pass
