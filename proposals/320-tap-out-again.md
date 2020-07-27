@@ -3,8 +3,11 @@ Filename: 320-tap-out-again.md
 Title: Removing TAP usage from v2 onion services
 Author: Nick Mathewson
 Created: 11 May 2020
-Status: Open
+Status: Rejected
 ```
+
+> NOTE: we rejected this proposal in favor of simply deprecating v2 onion
+> services entirely.
 
 (This proposal is part of the Walking Onions spec project.  It updates
 proposal 245.)
