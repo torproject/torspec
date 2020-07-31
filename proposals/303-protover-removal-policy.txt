@@ -2,7 +2,7 @@ Filename: 303-protover-removal-policy.txt
 Title: When and how to remove support for protocol versions
 Author: Nick Mathewson
 Created: 21 May 2019
-Status: Draft
+Status: Open
 
 1. Background
 

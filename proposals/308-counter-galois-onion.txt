@@ -3,7 +3,7 @@ Title: Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptograph
 Authors: Jean Paul Degabriele, Alessandro Melloni, Martijn Stam
 Created: 13 Sep 2019
 Last-Modified: 13 Sep 2019
-Status: Draft
+Status: Open
 
 
 

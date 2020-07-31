@@ -2,7 +2,7 @@ Filename: 240-auth-cert-revocation.txt
 Title: Early signing key revocation for directory authorities
 Author: Nick Mathewson
 Created: 09-Jan-2015
-Status: Draft
+Status: Open
 
 1. Overview
 
