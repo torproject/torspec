@@ -2,7 +2,8 @@ Filename: 299-ip-failure-count.txt
 Title: Preferring IPv4 or IPv6 based on IP Version Failure Count
 Author: Neel Chauhan
 Created: 25-Jan-2019
-Status: Open
+Status: Superseded
+Superseded-by: 306
 Ticket: https://trac.torproject.org/projects/tor/ticket/27491
 
 1. Introduction
