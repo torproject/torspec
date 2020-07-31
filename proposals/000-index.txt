@@ -108,7 +108,7 @@ Proposals by number:
 185  Directory caches without DirPort [SUPERSEDED]
 186  Multiple addresses for one OR or bridge [CLOSED]
 187  Reserve a cell type to allow client authorization [CLOSED]
-188  Bridge Guards and other anti-enumeration defenses [ACCEPTED]
+188  Bridge Guards and other anti-enumeration defenses [RESERVE]
 189  AUTHORIZE and AUTHORIZED cells [OBSOLETE]
 190  Bridge Client Authorization Based on a Shared Secret [OBSOLETE]
 191  Bridge Detection Resistance against MITM-capable Adversaries [OBSOLETE]
@@ -160,7 +160,7 @@ Proposals by number:
 237  All relays are directory servers [CLOSED]
 238  Better hidden service stats from Tor relays [CLOSED]
 239  Consensus Hash Chaining [OPEN]
-240  Early signing key revocation for directory authorities [DRAFT]
+240  Early signing key revocation for directory authorities [OPEN]
 241  Resisting guard-turnover attacks [REJECTED]
 242  Better performance and usability for the MyFamily option [RESERVE]
 243  Give out HSDir flag only to relays with Stable flag [CLOSED]
@@ -174,7 +174,7 @@ Proposals by number:
 251  Padding for netflow record resolution reduction [CLOSED]
 252  Single Onion Services [SUPERSEDED]
 253  Out of Band Circuit HMACs [DEAD]
-254  Padding Negotiation [NEEDS-REVISION]
+254  Padding Negotiation [CLOSED]
 255  Controller features to allow for load-balancing hidden services [RESERVE]
 256  Key revocation for relays and authorities [RESERVE]
 257  Refactoring authorities and making them more isolated from the net [META]
@@ -182,7 +182,7 @@ Proposals by number:
 259  New Guard Selection Behaviour [OBSOLETE]
 260  Rendezvous Single Onion Services [FINISHED]
 261  AEZ for relay cryptography [OBSOLETE]
-262  Re-keying live circuits with new cryptographic material [OPEN]
+262  Re-keying live circuits with new cryptographic material [RESERVE]
 263  Request to change key exchange protocol for handshake v1.2 [OBSOLETE]
 264  Putting version numbers on the Tor subprotocols [CLOSED]
 265  Load Balancing with Overhead Parameters [ACCEPTED]
@@ -195,17 +195,17 @@ Proposals by number:
 272  Listed routers should be Valid, Running, and treated as such [CLOSED]
 273  Exit relay pinning for web services [DRAFT]
 274  Rotate onion keys less frequently [CLOSED]
-275  Stop including meaningful "published" time in microdescriptor consensus [OPEN]
-276  Report bandwidth with lower granularity in consensus documents [OPEN]
+275  Stop including meaningful "published" time in microdescriptor consensus [ACCEPTED]
+276  Report bandwidth with lower granularity in consensus documents [DEAD]
 277  Detect multiple relay instances running with same ID [OPEN]
 278  Directory Compression Scheme Negotiation [CLOSED]
 279  A Name System API for Tor Onion Services [NEEDS-REVISION]
 280  Privacy-Preserving Statistics with Privcount in Tor [SUPERSEDED]
 281  Downloading microdescriptors in bulk [RESERVE]
-282  Remove "Named" and "Unnamed" handling from consensus voting [ACCEPTED]
+282  Remove "Named" and "Unnamed" handling from consensus voting [FINISHED]
 283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [CLOSED]
 284  Hidden Service v3 Control Port [CLOSED]
-285  Directory documents should be standardized as UTF-8 [OPEN]
+285  Directory documents should be standardized as UTF-8 [ACCEPTED]
 286  Controller APIs for hibernation access on mobile [REJECTED]
 287  Reduce circuit lifetime without overloading the network [OPEN]
 288  Privacy-Preserving Statistics with Privcount in Tor (Shamir version) [ACCEPTED]
@@ -219,26 +219,26 @@ Proposals by number:
 296  Have Directory Authorities expose raw bandwidth list files [OPEN]
 297  Relaxing the protover-based shutdown rules [CLOSED]
 298  Putting family lines in canonical form [CLOSED]
-299  Preferring IPv4 or IPv6 based on IP Version Failure Count [OPEN]
-300  Walking Onions: Scaling and Saving Bandwidth [DRAFT]
-301  Don't include package fingerprints in consensus documents [ACCEPTED]
+299  Preferring IPv4 or IPv6 based on IP Version Failure Count [SUPERSEDED]
+300  Walking Onions: Scaling and Saving Bandwidth [INFORMATIONAL]
+301  Don't include package fingerprints in consensus documents [FINISHED]
 302  Hiding onion service clients using padding [CLOSED]
-303  When and how to remove support for protocol versions [DRAFT]
+303  When and how to remove support for protocol versions [OPEN]
 304  Extending SOCKS5 Onion Service Error Codes [CLOSED]
 305  ESTABLISH_INTRO Cell DoS Defense Extension [CLOSED]
 306  A Tor Implementation of IPv6 Happy Eyeballs [OPEN]
-307  Onion Balance Support for Onion Service v3 [DRAFT]
-308  Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography [DRAFT]
+307  Onion Balance Support for Onion Service v3 [RESERVE]
+308  Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography [OPEN]
 309  Optimistic SOCKS Data [DRAFT]
-310  Towards load-balancing in Prop 271 [OPEN]
-311  Tor Relay IPv6 Reachability [DRAFT]
-312  Tor Relay Automatic IPv6 Address Discovery [DRAFT]
-313  Tor Relay IPv6 Statistics [DRAFT]
-314  Allow Markdown for proposal format [ACCEPTED]
+310  Towards load-balancing in Prop 271 [FINISHED]
+311  Tor Relay IPv6 Reachability [ACCEPTED]
+312  Tor Relay Automatic IPv6 Address Discovery [ACCEPTED]
+313  Tor Relay IPv6 Statistics [ACCEPTED]
+314  Allow Markdown for proposal format [FINISHED]
 315  Updating the list of fields required in directory documents [OPEN]
 316  FlashFlow: A Secure Speed Test for Tor (Parent Proposal) [DRAFT]
-317  Improve security aspects of DNS name resolution [OPEN]
-318  Limit protover values to 0-63 [OPEN]
+317  Improve security aspects of DNS name resolution [NEEDS-REVISION]
+318  Limit protover values to 0-63 [ACCEPTED]
 319  RELAY_FRAGMENT cells [OPEN]
 320  Removing TAP usage from v2 onion services [REJECTED]
 321  Better performance and usability for the MyFamily option (v2) [OPEN]
@@ -251,45 +251,32 @@ Proposals by number:
 Proposals by status:
 
  DRAFT:
-   240  Early signing key revocation for directory authorities
    273  Exit relay pinning for web services [for n/a]
    294  TLS 1.3 Migration
-   300  Walking Onions: Scaling and Saving Bandwidth
-   303  When and how to remove support for protocol versions
-   307  Onion Balance Support for Onion Service v3
-   308  Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography
    309  Optimistic SOCKS Data
-   311  Tor Relay IPv6 Reachability
-   312  Tor Relay Automatic IPv6 Address Discovery
-   313  Tor Relay IPv6 Statistics
    316  FlashFlow: A Secure Speed Test for Tor (Parent Proposal)
  NEEDS-REVISION:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
    245  Deprecating and removing the TAP circuit extension protocol
    248  Remove all RSA identity keys
-   254  Padding Negotiation
    269  Transitionally secure hybrid handshakes
    279  A Name System API for Tor Onion Services
    291  The move to two guard nodes
+   317  Improve security aspects of DNS name resolution
  OPEN:
    201  Make bridges report statistics on daily v3 network status requests [for 0.2.4.x]
    239  Consensus Hash Chaining
-   262  Re-keying live circuits with new cryptographic material
+   240  Early signing key revocation for directory authorities
    267  Tor Consensus Transparency
-   275  Stop including meaningful "published" time in microdescriptor consensus [for 0.3.1.x-alpha]
-   276  Report bandwidth with lower granularity in consensus documents [for 0.3.1.x-alpha]
    277  Detect multiple relay instances running with same ID [for 0.3.??]
-   285  Directory documents should be standardized as UTF-8
    287  Reduce circuit lifetime without overloading the network
    295  Using ADL for relay cryptography (solving the crypto-tagging attack)
    296  Have Directory Authorities expose raw bandwidth list files
-   299  Preferring IPv4 or IPv6 based on IP Version Failure Count
+   303  When and how to remove support for protocol versions
    306  A Tor Implementation of IPv6 Happy Eyeballs
-   310  Towards load-balancing in Prop 271
+   308  Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography
    315  Updating the list of fields required in directory documents
-   317  Improve security aspects of DNS name resolution
-   318  Limit protover values to 0-63
    319  RELAY_FRAGMENT cells
    321  Better performance and usability for the MyFamily option (v2)
    322  Extending link specifiers to include the directory port
@@ -297,13 +284,15 @@ Proposals by status:
    324  RTT-based Congestion Control for Tor
    325  Packed relay cells: saving space on small commands
  ACCEPTED:
-   188  Bridge Guards and other anti-enumeration defenses
    265  Load Balancing with Overhead Parameters [for 0.2.9.x]
-   282  Remove "Named" and "Unnamed" handling from consensus voting [for 0.3.3.x]
+   275  Stop including meaningful "published" time in microdescriptor consensus [for 0.3.1.x-alpha]
+   285  Directory documents should be standardized as UTF-8
    288  Privacy-Preserving Statistics with Privcount in Tor (Shamir version)
    292  Mesh-based vanguards
-   301  Don't include package fingerprints in consensus documents
-   314  Allow Markdown for proposal format
+   311  Tor Relay IPv6 Reachability
+   312  Tor Relay Automatic IPv6 Address Discovery
+   313  Tor Relay IPv6 Statistics
+   318  Limit protover values to 0-63
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process
@@ -318,6 +307,10 @@ Proposals by status:
    217  Tor Extended ORPort Authentication [for 0.2.5.x]
    232  Pluggable Transport through SOCKS proxy [in 0.2.6]
    260  Rendezvous Single Onion Services [in 0.2.9.3-alpha]
+   282  Remove "Named" and "Unnamed" handling from consensus voting [for 0.3.3.x]
+   301  Don't include package fingerprints in consensus documents
+   310  Towards load-balancing in Prop 271
+   314  Allow Markdown for proposal format
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]
@@ -394,6 +387,7 @@ Proposals by status:
    244  Use RFC5705 Key Exporting in our AUTHENTICATE calls [in 0.3.0.1-alpha]
    250  Random Number Generation During Tor Voting
    251  Padding for netflow record resolution reduction [in 0.3.1.1-alpha]
+   254  Padding Negotiation
    264  Putting version numbers on the Tor subprotocols [in 0.2.9.4-alpha]
    271  Another algorithm for guard selection [in 0.3.0.1-alpha]
    272  Listed routers should be Valid, Running, and treated as such [in 0.2.9.3-alpha, 0.2.9.4-alpha]
@@ -432,6 +426,7 @@ Proposals by status:
    252  Single Onion Services
    266  Removing current obsolete clients from the Tor network
    280  Privacy-Preserving Statistics with Privcount in Tor
+   299  Preferring IPv4 or IPv6 based on IP Version Failure Count
  DEAD:
    100  Tor Unreliable Datagram Extension Proposal
    115  Two Hop Paths
@@ -443,6 +438,7 @@ Proposals by status:
    213  Remove stream-level sendmes from the design
    253  Out of Band Circuit HMACs
    258  Denial-of-service resistance for directory authorities
+   276  Report bandwidth with lower granularity in consensus documents
  REJECTED:
    134  More robust consensus voting with diverse authority sets
    147  Eliminate the need for v2 directories in generating v3 directories [for 0.2.4.x]
@@ -484,12 +480,16 @@ Proposals by status:
    133  Incorporate Unreachable ORs into the Tor Network
    172  GETINFO controller option for circuit information
    177  Abstaining from votes on individual flags [for 0.2.4.x]
+   188  Bridge Guards and other anti-enumeration defenses
    211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]
    223  Ace: Improved circuit-creation key exchange
    226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS"
    242  Better performance and usability for the MyFamily option
    255  Controller features to allow for load-balancing hidden services
    256  Key revocation for relays and authorities
+   262  Re-keying live circuits with new cryptographic material
    281  Downloading microdescriptors in bulk
+   307  Onion Balance Support for Onion Service v3
  INFORMATIONAL:
    159  Exit Scanning
+   300  Walking Onions: Scaling and Saving Bandwidth
