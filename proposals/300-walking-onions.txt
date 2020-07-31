@@ -2,7 +2,8 @@ Filename: 300-walking-onions.txt
 Title: Walking Onions: Scaling and Saving Bandwidth
 Author: Nick Mathewson
 Created: 5-Feb-2019
-Status: Draft
+Status: Informational
+
 
 0. Status
 
@@ -11,8 +12,8 @@ Status: Draft
    used to maintain a client's view of the Tor network.
 
    This is a draft proposal; there are problems left to be solved and
-   questions left to be answered.  Once those parts are done, we can
-   fill in section 4 with the final details of the design.
+   questions left to be answered.  Proposal 323 tries to fill in all the
+   gaps.
 
 1. Introduction
 
