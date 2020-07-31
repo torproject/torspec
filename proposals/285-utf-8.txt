@@ -2,7 +2,7 @@ Filename: 285-utf-8.txt
 Title: Directory documents should be standardized as UTF-8
 Author: Nick Mathewson
 Created: 13 November 2017
-Status: Open
+Status: Accepted
 
 1. Summary and motivation
 

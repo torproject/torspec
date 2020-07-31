@@ -2,7 +2,7 @@ Filename: 311-relay-ipv6-reachability.txt
 Title: Tor Relay IPv6 Reachability
 Author: teor, Nick Mathewson
 Created: 22-January-2020
-Status: Draft
+Status: Accepted
 Ticket: #24404
 
 0. Abstract

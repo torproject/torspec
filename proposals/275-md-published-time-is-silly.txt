@@ -2,7 +2,7 @@ Filename: 275-md-published-time-is-silly.txt
 Title: Stop including meaningful "published" time in microdescriptor consensus
 Author: Nick Mathewson
 Created: 20-Feb-2017
-Status: Open
+Status: Accepted
 Target: 0.3.1.x-alpha
 
 0. Status:

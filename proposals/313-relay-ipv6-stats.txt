@@ -2,7 +2,7 @@ Filename: 313-relay-ipv6-stats.txt
 Title: Tor Relay IPv6 Statistics
 Author: teor, Karsten Loesing, Nick Mathewson
 Created: 10-February-2020
-Status: Draft
+Status: Accepted
 Ticket: #33159
 
 0. Abstract
