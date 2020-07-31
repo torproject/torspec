@@ -2,7 +2,7 @@ Filename: 301-dont-vote-on-package-fingerprints.txt
 Title: Don't include package fingerprints in consensus documents
 Author: Iain R. Learmonth
 Created: 2019-02-21
-Status: Accepted
+Status: Finished
 Ticket: #28465
 
 0. Abstract

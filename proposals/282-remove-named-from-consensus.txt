@@ -2,7 +2,7 @@ Filename: 282-remove-named-from-consensus.txt
 Title: Remove "Named" and "Unnamed" handling from consensus voting
 Author: Nick Mathewson
 Created: 12-Sep-2017
-Status: Accepted
+Status: Finished
 Target: 0.3.3.x
 
 1. Summary

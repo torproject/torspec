@@ -3,7 +3,7 @@ Filename: 314-allow-markdown-proposals.md
 Title: Allow Markdown for proposal format.
 Author: Nick Mathewson
 Created: 23 April 2020
-Status: Accepted
+Status: Finished
 ```
 
 # Introduction

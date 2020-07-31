@@ -3,7 +3,7 @@ Title: Towards load-balancing in Prop 271
 Author:  Florentin Rochet, Aaron Johnson et al.
 Created: 2019-10-27
 Supersedes: 271
-Status: Open
+Status: Finished
 
 1. Motivation and Context
 
