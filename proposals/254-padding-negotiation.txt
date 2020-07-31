@@ -2,7 +2,9 @@ Filename: 254-padding-negotiation.txt
 Title: Padding Negotiation
 Authors: Mike Perry
 Created: 01 September 2015
-Status: Needs-Revision
+Status: Closed
+
+   [See padding-spec.txt for the implemented version of this proposal.]
 
 
 0. Overview
