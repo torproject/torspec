@@ -2,8 +2,13 @@ Filename: 276-lower-bw-granularity.txt
 Title: Report bandwidth with lower granularity in consensus documents
 Author: Nick Mathewson
 Created: 20-Feb-2017
-Status: Open
+Status: Dead
 Target: 0.3.1.x-alpha
+
+   [NOTE: We're calling this proposal dead for now: the benefits are small
+   compared to the possible loss in routing correctness.  If/when proposal
+   300 is built, it will have even less benefit. (2020 July 31)]
+
 
 1. Overview
 
