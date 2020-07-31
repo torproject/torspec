@@ -229,7 +229,7 @@ Proposals by number:
 306  A Tor Implementation of IPv6 Happy Eyeballs [OPEN]
 307  Onion Balance Support for Onion Service v3 [RESERVE]
 308  Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography [OPEN]
-309  Optimistic SOCKS Data [DRAFT]
+309  Optimistic SOCKS Data [OPEN]
 310  Towards load-balancing in Prop 271 [FINISHED]
 311  Tor Relay IPv6 Reachability [ACCEPTED]
 312  Tor Relay Automatic IPv6 Address Discovery [ACCEPTED]
@@ -253,7 +253,6 @@ Proposals by status:
  DRAFT:
    273  Exit relay pinning for web services [for n/a]
    294  TLS 1.3 Migration
-   309  Optimistic SOCKS Data
    316  FlashFlow: A Secure Speed Test for Tor (Parent Proposal)
  NEEDS-REVISION:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
@@ -276,6 +275,7 @@ Proposals by status:
    303  When and how to remove support for protocol versions
    306  A Tor Implementation of IPv6 Happy Eyeballs
    308  Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography
+   309  Optimistic SOCKS Data
    315  Updating the list of fields required in directory documents
    319  RELAY_FRAGMENT cells
    321  Better performance and usability for the MyFamily option (v2)

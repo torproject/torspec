@@ -2,7 +2,7 @@ Filename: 309-optimistic-socks-in-tor.txt
 Title: Optimistic SOCKS Data
 Author: Tom Ritter
 Created: 21-June-2019
-Status: Draft
+Status: Open
 Ticket: #5915
 
 0. Abstract

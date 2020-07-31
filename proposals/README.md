@@ -31,6 +31,7 @@ for discussion.
 * [`303-protover-removal-policy.txt`](/proposals/303-protover-removal-policy.txt): When and how to remove support for protocol versions
 * [`306-ipv6-happy-eyeballs.txt`](/proposals/306-ipv6-happy-eyeballs.txt): A Tor Implementation of IPv6 Happy Eyeballs
 * [`308-counter-galois-onion.txt`](/proposals/308-counter-galois-onion.txt): Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography
+* [`309-optimistic-socks-in-tor.txt`](/proposals/309-optimistic-socks-in-tor.txt): Optimistic SOCKS Data
 * [`315-update-dir-required-fields.txt`](/proposals/315-update-dir-required-fields.txt): Updating the list of fields required in directory documents
 * [`319-wide-everything.md`](/proposals/319-wide-everything.md): RELAY_FRAGMENT cells
 * [`321-happy-families.md`](/proposals/321-happy-families.md): Better performance and usability for the MyFamily option (v2)
@@ -106,7 +107,6 @@ discussion.
 
 * [`273-exit-relay-pinning.txt`](/proposals/273-exit-relay-pinning.txt): Exit relay pinning for web services
 * [`294-tls-1.3.txt`](/proposals/294-tls-1.3.txt): TLS 1.3 Migration
-* [`309-optimistic-socks-in-tor.txt`](/proposals/309-optimistic-socks-in-tor.txt): Optimistic SOCKS Data
 * [`316-flashflow.txt`](/proposals/316-flashflow.txt): FlashFlow: A Secure Speed Test for Tor (Parent Proposal)
 
 

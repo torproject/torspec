@@ -226,7 +226,7 @@ Below are a list of proposals sorted by their proposal number.  See
 * [`306-ipv6-happy-eyeballs.txt`](/proposals/306-ipv6-happy-eyeballs.txt): A Tor Implementation of IPv6 Happy Eyeballs [OPEN]
 * [`307-onionbalance-v3.txt`](/proposals/307-onionbalance-v3.txt): Onion Balance Support for Onion Service v3 [RESERVE]
 * [`308-counter-galois-onion.txt`](/proposals/308-counter-galois-onion.txt): Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography [OPEN]
-* [`309-optimistic-socks-in-tor.txt`](/proposals/309-optimistic-socks-in-tor.txt): Optimistic SOCKS Data [DRAFT]
+* [`309-optimistic-socks-in-tor.txt`](/proposals/309-optimistic-socks-in-tor.txt): Optimistic SOCKS Data [OPEN]
 * [`310-bandaid-on-guard-selection.txt`](/proposals/310-bandaid-on-guard-selection.txt): Towards load-balancing in Prop 271 [FINISHED]
 * [`311-relay-ipv6-reachability.txt`](/proposals/311-relay-ipv6-reachability.txt): Tor Relay IPv6 Reachability [ACCEPTED]
 * [`312-relay-auto-ipv6-addr.txt`](/proposals/312-relay-auto-ipv6-addr.txt): Tor Relay Automatic IPv6 Address Discovery [ACCEPTED]
