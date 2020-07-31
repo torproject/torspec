@@ -2,7 +2,7 @@ Filename: 317-secure-dns-name-resolution.txt
 Title: Improve security aspects of DNS name resolution
 Author: Christian Hofer
 Created: 21-Mar-2020
-Status: Open
+Status: Needs-Revision
 
 Overview:
 
