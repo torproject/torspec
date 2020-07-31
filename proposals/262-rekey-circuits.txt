@@ -2,7 +2,11 @@ Filename: 262-rekey-circuits.txt
 Title: Re-keying live circuits with new cryptographic material
 Author: Nick Mathewson
 Created: 28 Dec 2015
-Status: Open
+Status: Reserve
+
+   [NOTE: This proposal is in "Reserve" status because the issue it
+   addresses should be solved by any future relay encryption
+   protocol. (2020 July 31)]
 
 1. Summary and Motivation
 

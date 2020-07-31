@@ -3,7 +3,12 @@ Title: Bridge Guards and other anti-enumeration defenses
 Author: Nick Mathewson, Isis Lovecruft
 Created: 14 Oct 2011
 Modified: 10 Sep 2015
-Status: Accepted
+Status: Reserve
+
+   [NOTE: This proposal is marked as "reserve" because the enumeration
+   technique it addresses does not currently seem to be in use. See
+   ticket tor#7144 for more information. (2020 July 31)]
+
 
 1. Overview
 
