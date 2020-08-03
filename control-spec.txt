@@ -2305,7 +2305,9 @@
                "SUCCEEDED"    / ; Received a reply; stream established
                "FAILED"       / ; Stream failed and not retriable
                "CLOSED"       / ; Stream closed
-               "DETACHED"       ; Detached from circuit; still retriable
+               "DETACHED"     / ; Detached from circuit; still retriable
+               "CONTROLLER_WAIT"  ; Waiting for controller to use ATTACHSTREAM
+                                  ; (new in 0.4.5.1-alpha)
 
        Target = TargetAddress ":" Port
        Port = an integer from 0 to 65535 inclusive
