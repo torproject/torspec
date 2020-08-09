@@ -89,6 +89,6 @@ Implemented-In: 0.2.4.11-alpha
    * How hard is this to implement?
 
      I wasn't sure, so I coded it up.  I've got a probably-buggy
-     implementation in branch "wide_cird_ids" in my public repository.
+     implementation in branch "wide_circ_ids" in my public repository.
      Be afraid!  More testing is needed!
 

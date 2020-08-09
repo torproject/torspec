@@ -1934,7 +1934,7 @@ Table of contents:
    extended ntor handshake, as described in tor-spec.txt section 5.1.4,
    with the modified PROTOID as given above. To be explicit, the hidden
    service host generates a keypair of y,Y = KEYGEN(), and uses its
-   introduction point encryption key 'b' to computes:
+   introduction point encryption key 'b' to compute:
 
       intro_secret_hs_input = EXP(X,b) | AUTH_KEY | X | B | PROTOID
       info = m_hsexpand | subcredential

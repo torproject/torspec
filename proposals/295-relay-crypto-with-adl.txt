@@ -395,7 +395,7 @@ Status: Open
    guarantees as SHA256, it is worth discussing why security is not
    lost from computing the running digest differently.
 
-   The running digets is used to ensure that if the same payload is
+   The running digest is used to ensure that if the same payload is
    encrypted twice, then the resulting ciphertext does not remain
    the same. Therefore, all that is needed is that the digest should
    repeat with low probability. GHASH is a universal hash function,
