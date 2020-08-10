@@ -696,6 +696,11 @@
     "address" -- the best guess at our external IP address. If we
       have no guess, return a 551 error. (Added in 0.1.2.2-alpha)
 
+    "address/v4"
+    "address/v6"
+      the best guess at our respective external IPv4 or IPv6 address.
+      If we have no guess, return a 551 error. (Added in 0.4.5.1-alpha)
+
     "fingerprint" -- the contents of the fingerprint file that Tor
       writes as a relay, or a 551 if we're not a relay currently.
       (Added in 0.1.2.3-alpha)
