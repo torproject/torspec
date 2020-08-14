@@ -167,9 +167,9 @@ Default: 45.
 
 ### New Cell Types
 
-FlashFlow will introduce a new cell command MEASURE.
+FlashFlow will introduce a new cell command MEASUREMENT.
 
-The payload of each MEASURE cell consists of:
+The payload of each MEASUREMENT cell consists of:
 
 ```
 Measure command [1 byte]
@@ -182,7 +182,6 @@ The measure commands are:
 ```
 0 -- MEAS_PARAMS    [forward]
 1 -- MEAS_PARAMS_OK [backward]
-2 -- MEAS_ECHO      [forward and backward]
 3 -- MEAS_BG        [backward]
 4 -- MEAS_ERR       [forward and backward]
 ```
@@ -192,25 +191,23 @@ Backward cells are sent from the relay to the measurer/coordinator.
 
 MEAS_PARAMS and MEAS_PARAMS_OK are used during the pre-measurement stage
 to tell the target what to expect and for the relay to positively
-acknowledge the message. MEAS_ECHO cells are the measurement traffic;
-the measurer generates them, sends them to the target, and the target
-echos them back. The target send a MEAS_BG cell once per second to report
+acknowledge the message.
+The target send a MEAS_BG cell once per second to report
 the amount of background traffic it is handling. MEAS_ERR cells are used
 to signal to the other party that there has been some sort of problem
 and that the measurement should be aborted. These measure commands are
 described in more detail in the next section.
 
-The only cell that sometimes undergoes cell encryption is MEAS_ECHO; no
-other cell ever gets cell encrypted. (All cells are transmitted on a
-regular TLS-wrapped OR connection; that encryption still exists.)
+FlashFlow also introduces a new relay command, MEAS_ECHO. Relay celsl with
+this relay command are the
+measurement traffic. The measurer generates and encrypts them, sends them to the target,
+the target decrypts them, then it sends them back. A variation where
+the measurer skips encryption of MEAS_ECHO cells in most cases is
+described in Appendix A, and was found to be necessary in paper prototypes to
+save CPU load at the measurer.
 
-The relay "decrypts" MEAS_ECHO cells before sending them back to the
-measurer; this mirrors the way relays decrypt/encrypt RELAY_DATA cells
-in order to induce realistic cryptographic CPU load. The measurer
-usually skips encrypting MEAS_ECHO cells to reduce its own CPU load;
-however, to verify the relay is actually correctly decrypting all cells,
-the measurer will choose random outgoing cells, encrypt them, remember
-the ciphertext, and verify the corresponding incoming cell matches.
+MEASUREMENT cells, on the other hand, are not encrypted (beyond the regular
+TLS on the connection).
 
 ### Pre-Measurement Handshaking/Starting a Measurement
 
@@ -510,7 +507,6 @@ Notable new things that internal tor code will need to do on the
 measurer (client) side:
 
 1. Open many TLS+TCP connections to the same relay on purpose.
-2. Verify echo cells.
 
 #### Open many connections
 
@@ -524,122 +520,10 @@ accomplish this will be investigated.
 On the relay side, these measurer connections do not count towards DoS
 detection algorithms.
 
-#### Verify echo cells
-
-A parameter will exist to tell the measurers with what frequency they
-shall verify that cells echoed back to them match what was sent. This
-parameter does not need to exist outside of the FF deployment (e.g. it
-doesn't need to be a consensus parameter).
-
-The parameter instructs the measurers to check 1 out of every N cells.
-
-The measurer keeps a count of how many measurement cells it has sent. It
-also logically splits its output stream of cells into buckets of size N.
-At the start of each bucket (when num_sent % N == 0), the measurer
-chooses a random index in the bucket. Upon sending the cell at that
-index (num_sent % N == chosen_index), the measurer records the cell.
-
-The measurer also counts cells that it receives. When it receives a cell
-at an index that was recorded, it verifies that the received cell
-matches the recorded sent cell. If they match, no special action is
-taken. If they don't match, the measurer indicates failure to the
-coordinator and target relay and closes all connections, ending the
-measurement.
-
-##### Example
-
-Consider bucket_size is 1000. For the moment ignore cell encryption.
-
-We start at idx=0 and pick an idx in [0, 1000) to record, say 640. At
-idx=640 we record the cell. At idx=1000 we choose a new idx in [1000,
-2000) to record, say 1236. At idx=1236 we record the cell. At idx=2000
-we choose a new idx in [2000, 3000). Etc.
-
-There's 2000+ cells in flight and the measurer has recorded two items:
-
-```
-- (640, contents_of_cellA)
-- (1236, contents_of_cellB)
-```
-
-Consider the receive side now. It counts the cells it receives. At
-receive idx=640, it checks the received cell matches the saved cell from
-before. At receive idx=1236, it again checks the received cell matches.
-Etc.
-
-##### Motivation
-
-A malicious relay may want to skip decryption of measurement cells to
-save CPU cycles and obtain a higher capacity estimate. More generally,
-it could generate fake measurement cells locally, ignore the measurement
-traffic it is receiving, and flood the measurer with more traffic that
-it (the measurer) is even sending.
-
-The security of echo cell verification is discussed in section 3.3.1.
-
 ## Security
 
 In this section we discuss the security of various aspects of FlashFlow
 and the tor changes it requires.
-
-### Echo Cell Verification: Bucket Size
-
-A smaller bucket size means more cells are checked and FF is more likely
-to detect a malicious target. It also means more bookkeeping overhead
-(CPU/RAM).
-
-An adversary that knows bucket_size and cheats on one item out of every
-bucket_size items will have a 1/bucket_size chance of getting caught in
-the first bucket. This is the worst case adversary. While cheating on
-just a single item per bucket yields very little advantage, cheating on
-more items per bucket increases the likelihood the adversary gets
-caught. Thus only the worst case is considered here.
-
-In general, the odds the adversary can successfully cheat in a single
-bucket are
-
-```
-(bucket_size-1)/bucket_size
-```
-
-Thus the odds the adversary can cheat in X consecutive buckets are
-
-```
-[(bucket_size-1)/bucket_size]^X
-```
-
-In our case, X will be highly varied: Slow relays won't see very many
-buckets, but fast relays will. The damage to the network a very slow
-relay can do by faking being only slightly faster is limited.
-Nonetheless, for now we motivate the selection of bucket_size with a
-slow relay:
-
-- Assume a very slow relay of 1 Mbit/s capacity that will cheat 1 cell
-  in each bucket. Assume a 30 second measurement.
-- The relay will handle 1*30 = 30 Mbit of traffic during the
-  measurement, or 3.75 MB, or 3.75 million bytes.
-- Cells are 514 bytes. Approximately (e.g. ignoring TLS) 7300 cells
-  will be sent/recv over the course of the measurement.
-- A bucket_size of 50 results in about 146 buckets over the course of
-  the 30s measurement.
-- Therefore, the odds of the adversary cheating successfully as
-  (49/50)^(146), or about 5.2%.
-
-This sounds high, but a relay capable of double the bandwidth (2 Mbit/s)
-will have (49/50)^(2*146) or 0.2% odds of success, which is quite low.
-
-Wanting a <1% chance that a 10 Mbit/s relay can successfully cheat
-results in a bucket size of approximately 125:
-
-- 10*30 = 300 Mbit of traffic during 30s measurement. 37.5 million
-  bytes.
-- 37,500,000 bytes / 514 bytes/cell = ~73,000 cells
-- bucket_size of 125 cells means 73,000 / 125 = 584 buckets
-- (124/125)^(584) = 0.918% chance of successfully cheating
-
-Slower relays can cheat more easily but the amount of extra weight they
-can obtain is insignificant in absolute terms. Faster relays are
-essentially unable to cheat.
 
 ### Weight Inflation
 
@@ -821,4 +705,118 @@ The following is quoted from Section 4.3 of the FlashFlow paper.
     Enhancing Technologies (PoPETs), 2017(2), April 2017.
 [2] Mike Perry: Graph onionperf and consensus information from Rob's
     experiments https://trac.torproject.org/projects/tor/ticket/33076
+
+# Appendix A: Save CPU at measurer by not encrypting all MEAS_ECHO cells
+
+## Verify echo cells
+
+A parameter will exist to tell the measurers with what frequency they
+shall verify that cells echoed back to them match what was sent. This
+parameter does not need to exist outside of the FF deployment (e.g. it
+doesn't need to be a consensus parameter).
+
+The parameter instructs the measurers to check 1 out of every N cells.
+
+The measurer keeps a count of how many measurement cells it has sent. It
+also logically splits its output stream of cells into buckets of size N.
+At the start of each bucket (when num_sent % N == 0), the measurer
+chooses a random index in the bucket. Upon sending the cell at that
+index (num_sent % N == chosen_index), the measurer records the cell.
+
+The measurer also counts cells that it receives. When it receives a cell
+at an index that was recorded, it verifies that the received cell
+matches the recorded sent cell. If they match, no special action is
+taken. If they don't match, the measurer indicates failure to the
+coordinator and target relay and closes all connections, ending the
+measurement.
+
+### Example
+
+Consider bucket_size is 1000. For the moment ignore cell encryption.
+
+We start at idx=0 and pick an idx in [0, 1000) to record, say 640. At
+idx=640 we record the cell. At idx=1000 we choose a new idx in [1000,
+2000) to record, say 1236. At idx=1236 we record the cell. At idx=2000
+we choose a new idx in [2000, 3000). Etc.
+
+There's 2000+ cells in flight and the measurer has recorded two items:
+
+```
+- (640, contents_of_cellA)
+- (1236, contents_of_cellB)
+```
+
+Consider the receive side now. It counts the cells it receives. At
+receive idx=640, it checks the received cell matches the saved cell from
+before. At receive idx=1236, it again checks the received cell matches.
+Etc.
+
+### Motivation
+
+A malicious relay may want to skip decryption of measurement cells to
+save CPU cycles and obtain a higher capacity estimate. More generally,
+it could generate fake measurement cells locally, ignore the measurement
+traffic it is receiving, and flood the measurer with more traffic that
+it (the measurer) is even sending.
+
+The security of echo cell verification is discussed in section 3.3.1.
+
+### Security
+
+A smaller bucket size means more cells are checked and FF is more likely
+to detect a malicious target. It also means more bookkeeping overhead
+(CPU/RAM).
+
+An adversary that knows bucket_size and cheats on one item out of every
+bucket_size items will have a 1/bucket_size chance of getting caught in
+the first bucket. This is the worst case adversary. While cheating on
+just a single item per bucket yields very little advantage, cheating on
+more items per bucket increases the likelihood the adversary gets
+caught. Thus only the worst case is considered here.
+
+In general, the odds the adversary can successfully cheat in a single
+bucket are
+
+```
+(bucket_size-1)/bucket_size
+```
+
+Thus the odds the adversary can cheat in X consecutive buckets are
+
+```
+[(bucket_size-1)/bucket_size]^X
+```
+
+In our case, X will be highly varied: Slow relays won't see very many
+buckets, but fast relays will. The damage to the network a very slow
+relay can do by faking being only slightly faster is limited.
+Nonetheless, for now we motivate the selection of bucket_size with a
+slow relay:
+
+- Assume a very slow relay of 1 Mbit/s capacity that will cheat 1 cell
+  in each bucket. Assume a 30 second measurement.
+- The relay will handle 1*30 = 30 Mbit of traffic during the
+  measurement, or 3.75 MB, or 3.75 million bytes.
+- Cells are 514 bytes. Approximately (e.g. ignoring TLS) 7300 cells
+  will be sent/recv over the course of the measurement.
+- A bucket_size of 50 results in about 146 buckets over the course of
+  the 30s measurement.
+- Therefore, the odds of the adversary cheating successfully as
+  (49/50)^(146), or about 5.2%.
+
+This sounds high, but a relay capable of double the bandwidth (2 Mbit/s)
+will have (49/50)^(2*146) or 0.2% odds of success, which is quite low.
+
+Wanting a <1% chance that a 10 Mbit/s relay can successfully cheat
+results in a bucket size of approximately 125:
+
+- 10*30 = 300 Mbit of traffic during 30s measurement. 37.5 million
+  bytes.
+- 37,500,000 bytes / 514 bytes/cell = ~73,000 cells
+- bucket_size of 125 cells means 73,000 / 125 = 584 buckets
+- (124/125)^(584) = 0.918% chance of successfully cheating
+
+Slower relays can cheat more easily but the amount of extra weight they
+can obtain is insignificant in absolute terms. Faster relays are
+essentially unable to cheat.
 
