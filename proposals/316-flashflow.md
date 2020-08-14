@@ -214,7 +214,7 @@ the ciphertext, and verify the corresponding incoming cell matches.
 
 ### Pre-Measurement Handshaking/Starting a Measurement
 
-The coordinator connects to the target relay and sends it a MEAS_PARAMS
+The coordinator establishes a one-hop circuit with the target relay and sends it a MEAS_PARAMS
 cell. If the target is unwilling to be measured at this time or if the
 coordinator didn't use a TLS certificate that the target trusts, it
 responds with an error cell and closes the connection. Otherwise it
@@ -229,11 +229,11 @@ detection subsystem until the measurement ends (successfully or
 otherwise), at which point the whitelist is cleared.
 
 Upon receiving a MEAS_PARAMS_OK from the target, the coordinator will
-instruct the measurers to open their TCP connections with the target. If
+instruct the measurers to open their circuits (one circuit per connection) with the target. If
 the coordinator or any measurer receives a MEAS_ERR, it reports the error
 to the coordinator and considers the measurement a failure. It is also a
-failure if any measurer is unable to open at least half of its TCP
-connections with the target.
+failure if any measurer is unable to open at least half of its circuits
+with the target.
 
 The payload of MEAS_PARAMS cells [XXX more may need to be added]:
 
