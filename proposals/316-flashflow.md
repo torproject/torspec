@@ -255,12 +255,12 @@ will open with the target. Future versions of FlashFlow and MEAS_PARAMS
 will use TLS certificates instead of IP addresses.
 
 MEAS_PARAMS_OK has no payload: it's just padding bytes to make the cell
-514 bytes long.
+PAYLOAD_LEN (509) bytes long.
 
 The payload of MEAS_ECHO cells:
 
 ```
-- arbitrary bytes [max to fill up 514 byte cell]
+- arbitrary bytes [PAYLOAD_LEN bytes]
 ```
 
 The payload of MEAS_BG cells:
