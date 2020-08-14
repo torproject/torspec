@@ -516,9 +516,19 @@
 
   Example:
 
-    C: MAPADDRESS 0.0.0.0=torproject.org 1.2.3.4=tor.freehaven.net
-    S: 250-127.192.10.10=torproject.org
-    S: 250 1.2.3.4=tor.freehaven.net
+    C: MAPADDRESS 1.2.3.4=torproject.org
+    S: 250 1.2.3.4=torproject.org
+
+    C: GETINFO address-mappings/control
+    S: 250-address-mappings/control=1.2.3.4 torproject.org NEVER
+    S: 250 OK
+
+    C: MAPADDRESS 1.2.3.4=1.2.3.4
+    S: 250 1.2.3.4=1.2.3.4
+
+    C: GETINFO address-mappings/control
+    S: 250-address-mappings/control=
+    S: 250 OK
 
   {Note: This feature is designed to be used to help Tor-ify applications
   that need to use SOCKS4 or hostname-less SOCKS5.  There are three
