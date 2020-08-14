@@ -8,11 +8,14 @@ Status: Draft
 
 # Markdown revision TODO:
 
+- `[ ]` foo
+
 - `[ ]` hyperlink sources
 - `[ ]` make section numbers work, or don't use them, or ...?
 - `[.]` do coords need to communicate? No. Specify better in Measurement
         Scheduling section
     - addressed in Intro
+- `[x]` MSM --> MEAS
 
 # Introduction
 
@@ -177,90 +180,90 @@ Data            [Length-3 bytes]
 The measure commands are:
 
 ```
-0 -- MSM_PARAMS    [forward]
-1 -- MSM_PARAMS_OK [backward]
-2 -- MSM_ECHO      [forward and backward]
-3 -- MSM_BG        [backward]
-4 -- MSM_ERR       [forward and backward]
+0 -- MEAS_PARAMS    [forward]
+1 -- MEAS_PARAMS_OK [backward]
+2 -- MEAS_ECHO      [forward and backward]
+3 -- MEAS_BG        [backward]
+4 -- MEAS_ERR       [forward and backward]
 ```
 
 Forward cells are sent from the measurer/coordinator to the relay.
 Backward cells are sent from the relay to the measurer/coordinator.
 
-MSM_PARAMS and MSM_PARAMS_OK are used during the pre-measurement stage
+MEAS_PARAMS and MEAS_PARAMS_OK are used during the pre-measurement stage
 to tell the target what to expect and for the relay to positively
-acknowledge the message. MSM_ECHO cells are the measurement traffic;
+acknowledge the message. MEAS_ECHO cells are the measurement traffic;
 the measurer generates them, sends them to the target, and the target
-echos them back. The target send a MSM_BG cell once per second to report
-the amount of background traffic it is handling. MSM_ERR cells are used
+echos them back. The target send a MEAS_BG cell once per second to report
+the amount of background traffic it is handling. MEAS_ERR cells are used
 to signal to the other party that there has been some sort of problem
 and that the measurement should be aborted. These measure commands are
 described in more detail in the next section.
 
-The only cell that sometimes undergoes cell encryption is MSM_ECHO; no
+The only cell that sometimes undergoes cell encryption is MEAS_ECHO; no
 other cell ever gets cell encrypted. (All cells are transmitted on a
 regular TLS-wrapped OR connection; that encryption still exists.)
 
-The relay "decrypts" MSM_ECHO cells before sending them back to the
+The relay "decrypts" MEAS_ECHO cells before sending them back to the
 measurer; this mirrors the way relays decrypt/encrypt RELAY_DATA cells
 in order to induce realistic cryptographic CPU load. The measurer
-usually skips encrypting MSM_ECHO cells to reduce its own CPU load;
+usually skips encrypting MEAS_ECHO cells to reduce its own CPU load;
 however, to verify the relay is actually correctly decrypting all cells,
 the measurer will choose random outgoing cells, encrypt them, remember
 the ciphertext, and verify the corresponding incoming cell matches.
 
 ### Pre-Measurement Handshaking/Starting a Measurement
 
-The coordinator connects to the target relay and sends it a MSM_PARAMS
+The coordinator connects to the target relay and sends it a MEAS_PARAMS
 cell. If the target is unwilling to be measured at this time or if the
 coordinator didn't use a TLS certificate that the target trusts, it
 responds with an error cell and closes the connection. Otherwise it
 checks that the parameters of the measurement are acceptable (e.g. the
 version is acceptable, the duration isn't too long, etc.). If the
-target is happy, it sends a MSM_PARAMS_OK, otherwise it sends a MSM_ERR
+target is happy, it sends a MEAS_PARAMS_OK, otherwise it sends a MEAS_ERR
 and closes the connection.
 
 Upon learning the IP addresses of the measurers from the coordinator in
-the MSM_PARAMS cell, the target whitelists their IPs in its DoS
+the MEAS_PARAMS cell, the target whitelists their IPs in its DoS
 detection subsystem until the measurement ends (successfully or
 otherwise), at which point the whitelist is cleared.
 
-Upon receiving a MSM_PARAMS_OK from the target, the coordinator will
+Upon receiving a MEAS_PARAMS_OK from the target, the coordinator will
 instruct the measurers to open their TCP connections with the target. If
-the coordinator or any measurer receives a MSM_ERR, it reports the error
+the coordinator or any measurer receives a MEAS_ERR, it reports the error
 to the coordinator and considers the measurement a failure. It is also a
 failure if any measurer is unable to open at least half of its TCP
 connections with the target.
 
-The payload of MSM_PARAMS cells [XXX more may need to be added]:
+The payload of MEAS_PARAMS cells [XXX more may need to be added]:
 
 ```
 - version       [1 byte]
-- msm_duration  [1 byte]
+- meas_duration  [1 byte]
 - num_measurers [1 byte]
 - measurer_info [num_measurers times]
   - ipv4_addr   [4 bytes]
   - num_conns   [2 bytes]
 ```
 
-version dictates how this MSM_PARAMS cell shall be parsed. msm_duration
+version dictates how this MEAS_PARAMS cell shall be parsed. meas_duration
 is the duration, in seconds, that the actual measurement will last.
 num_measurers is how many measurer_info structs follow. For each
 measurer, the ipv4_addr it will use when connecting to the target is
 provided, as is num_conns, the number of TCP connections that measurer
-will open with the target. Future versions of FlashFlow and MSM_PARAMS
+will open with the target. Future versions of FlashFlow and MEAS_PARAMS
 will use TLS certificates instead of IP addresses.
 
-MSM_PARAMS_OK has no payload: it's just padding bytes to make the cell
+MEAS_PARAMS_OK has no payload: it's just padding bytes to make the cell
 514 bytes long.
 
-The payload of MSM_ECHO cells:
+The payload of MEAS_ECHO cells:
 
 ```
 - arbitrary bytes [max to fill up 514 byte cell]
 ```
 
-The payload of MSM_BG cells:
+The payload of MEAS_BG cells:
 
 ```
 - second        [1 byte]
@@ -268,14 +271,14 @@ The payload of MSM_BG cells:
 - recv_bg_bytes [4 bytes]
 ```
 
-second is the number of seconds since the measurement began. MSM_BG
+second is the number of seconds since the measurement began. MEAS_BG
 cells are sent once per second from the relay to the FlashFlow
 coordinator. The first cell will have this set to 1, and each
 subsequent cell will increment it by one. sent_bg_bytes is the number of
-background traffic bytes sent in the last second (since the last MSM_BG
+background traffic bytes sent in the last second (since the last MEAS_BG
 cell). recv_bg_bytes is the same but for received bytes.
 
-The payload of MSM_ERR cells:
+The payload of MEAS_ERR cells:
 
 ```
 - err_code [1 byte]
@@ -296,7 +299,7 @@ null byte or the end of the cell, whichever comes first.
 ### Measurement Mode
 
 The relay considers the measurement to have started the moment it
-receives the first MSM_ECHO cell from any measurer. At this point, the
+receives the first MEAS_ECHO cell from any measurer. At this point, the
 relay
 
 - Starts a repeating 1s timer on which it will report the amount of
@@ -306,11 +309,11 @@ relay
   traffic it handles according to the torrc option/consensus
   parameter.
 
-The relay decrypts and echos back all MSM_ECHO cells it receives on
+The relay decrypts and echos back all MEAS_ECHO cells it receives on
 measurement connections until it has reported its amount of background
 traffic the same number of times as there are seconds in the measurement
 (e.g. 30 per-second reports for a 30 second measurement). After sending
-the last MSM_BG cell, the relay drops all buffered MSM_ECHO cells,
+the last MEAS_BG cell, the relay drops all buffered MEAS_ECHO cells,
 closes all measurement connections, and exits measurement mode.
 
 During the measurement the relay targets a ratio of background traffic
@@ -360,7 +363,7 @@ this section:
 
 Every second during a measurement, the measurers send the amount of
 verified measurement traffic they have received back from the relay.
-Additionally, the relay sends a MSM_BG cell each second to the
+Additionally, the relay sends a MEAS_BG cell each second to the
 coordinator with amount of non-measurement background traffic it is
 sending and receiving.
 
@@ -686,12 +689,12 @@ options if they would like to allow themselves to be measured: a flag
 allowing measurement, and the list of coordinator TLS certificate that
 are allowed to start a measurement.
 
-The relay drops MSM_PARAMS cells from coordinators it does not trust,
+The relay drops MEAS_PARAMS cells from coordinators it does not trust,
 and immediately closes the connection after that. A FF coordinator
 cannot convince a relay to enter measurement mode unless the relay
 trusts its TLS certificate.
 
-A trusted coordinator specifies in the MSM_PARAMS cell the IP addresses
+A trusted coordinator specifies in the MEAS_PARAMS cell the IP addresses
 of the measurers the relay shall expect to connect to it shortly. The
 target adds the measurer IP addresses to a whitelist in the DoS
 connection limit system, exempting them from any configured connection
@@ -735,7 +738,7 @@ same way they currently vote on recommended tor versions.
 
 FlashFlow measurers will be updated to use TLS certificates when
 connecting to relays too. FlashFlow coordinators will update the
-contents of MSM_PARAMS cells to contain measurer TLS certificates
+contents of MEAS_PARAMS cells to contain measurer TLS certificates
 instead of IP addresses, and relays will update to expect this change.
 
 ## Measurement Scheduling
