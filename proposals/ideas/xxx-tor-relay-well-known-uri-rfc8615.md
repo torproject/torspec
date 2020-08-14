@@ -63,6 +63,7 @@ tor-dev AT lists.torproject.org
 * [https://gitweb.torproject.org/torspec.git/tree/tor-spec.txt](https://gitweb.torproject.org/torspec.git/tree/tor-spec.txt)
 * [https://gitweb.torproject.org/torspec.git/tree/cert-spec.txt](https://gitweb.torproject.org/torspec.git/tree/cert-spec.txt)
 * [https://nusenu.github.io/ContactInfo-Information-Sharing-Specification/#operatorurl](https://nusenu.github.io/ContactInfo-Information-Sharing-Specification/#operatorurl)
+* [RFC8615](https://tools.ietf.org/html/rfc8615)
 
 
 
