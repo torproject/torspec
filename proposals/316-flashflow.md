@@ -10,6 +10,9 @@ Status: Draft
 
 - `[ ]` hyperlink sources
 - `[ ]` make section numbers work, or don't use them, or ...?
+- `[.]` do coords need to communicate? No. Specify better in Measurement
+        Scheduling section
+    - addressed in Intro
 
 # Introduction
 
@@ -48,7 +51,8 @@ FlashFlow will run their own FlashFlow deployment consisting of a
 coordinator that they run and one or more measurers that they trust
 (e.g. because they run them themselves), similar to how each runs their
 own Torflow/sbws. Section 5.2 of this proposal describes long term plans
-involving multiple FlashFlow deployments.
+involving multiple FlashFlow deployments. *FlashFlow coordinators do not need
+to communicate with each other*.
 
 FlashFlow is more performant than Torflow: FlashFlow takes 5 hours to
 measure the entire existing Tor network from scratch (with 3 Gbit/s
