@@ -6,9 +6,9 @@ Created: 14 August 2020
 Status: Open
 ```
 
-This is a specification for a well-known registry submission according to [RFC8615](https://tools.ietf.org/html/rfc8615)
-
 # The "tor-relay" Well-Known Resource Identifier
+
+This is a specification for a well-known registry submission according to [RFC8615](https://tools.ietf.org/html/rfc8615)
 
 This resource identifier is used for the the verification of [Tor](https://www.torproject.org/) relay contact information 
 (more specifically the [operatorurl](https://nusenu.github.io/ContactInfo-Information-Sharing-Specification/#operatorurl)).
