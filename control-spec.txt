@@ -2014,7 +2014,7 @@
   Tor replies with "250 OK" on success. Tor also emits the BUILDTIMEOUT_SET
   RESET event right after this "250 OK".
 
-  [DROPTIMEOUTS was added in Tor 0.4.4.0-alpha.]
+  [DROPTIMEOUTS was added in Tor 0.4.5.0-alpha.]
 
 4. Replies
 
