@@ -8,8 +8,6 @@ Status: Draft
 
 # Markdown revision TODO:
 
-- `[ ]` foo
-
 - `[ ]` hyperlink sources
 - `[ ]` make section numbers work, or don't use them, or ...?
 - `[.]` do coords need to communicate? No. Specify better in Measurement
@@ -234,21 +232,21 @@ with the target.
 The payload of MEAS_PARAMS cells [XXX more may need to be added]:
 
 ```
-- version       [1 byte]
-- meas_duration  [1 byte]
-- num_measurers [1 byte]
+- meas_duration [2 bytes] [1, 600]
+- num_measurers [1 byte] [1, 10]
 - measurer_info [num_measurers times]
-  - ipv4_addr   [4 bytes]
-  - num_conns   [2 bytes]
 ```
 
-version dictates how this MEAS_PARAMS cell shall be parsed. meas_duration
+meas_duration
 is the duration, in seconds, that the actual measurement will last.
-num_measurers is how many measurer_info structs follow. For each
-measurer, the ipv4_addr it will use when connecting to the target is
-provided, as is num_conns, the number of TCP connections that measurer
-will open with the target. Future versions of FlashFlow and MEAS_PARAMS
+num_measurers is how many link_specifier structs follow containing information
+on the measurers that the relay should expect.
+Future versions of FlashFlow and MEAS_PARAMS
 will use TLS certificates instead of IP addresses.
+[XXX probably need diff layout to allow upgrade to TLS certs instead of
+link_specifier structs. probably using ext-type-length-value like teor
+suggests]
+[XXX want to specify number of conns to expect from each measurer here?]
 
 MEAS_PARAMS_OK has no payload: it's just padding bytes to make the cell
 PAYLOAD_LEN (509) bytes long.
@@ -259,12 +257,12 @@ The payload of MEAS_ECHO cells:
 - arbitrary bytes [PAYLOAD_LEN bytes]
 ```
 
-The payload of MEAS_BG cells:
+The payload of MEAS_BG cells [XXX more for extra info? like CPU usage]:
 
 ```
-- second        [1 byte]
-- sent_bg_bytes [4 bytes]
-- recv_bg_bytes [4 bytes]
+- second        [2 byte] [1, 600]
+- sent_bg_bytes [4 bytes] [0, 2^32-1]
+- recv_bg_bytes [4 bytes] [0, 2^32-1]
 ```
 
 second is the number of seconds since the measurement began. MEAS_BG
@@ -274,11 +272,10 @@ subsequent cell will increment it by one. sent_bg_bytes is the number of
 background traffic bytes sent in the last second (since the last MEAS_BG
 cell). recv_bg_bytes is the same but for received bytes.
 
-The payload of MEAS_ERR cells:
+The payload of MEAS_ERR cells [XXX need field for more info]:
 
 ```
-- err_code [1 byte]
-- err_str  [possibly zero-len null-terminated string]
+- err_code [1 byte] [0, 255]
 ```
 
 The error code is one of:
@@ -287,10 +284,6 @@ The error code is one of:
 [... XXX TODO ...]
 255 -- OTHER
 ```
-
-The error string is optional in all cases. It isn't present if the first
-byte of err_str is null, otherwise it is present. It ends at the first
-null byte or the end of the cell, whichever comes first.
 
 ### Measurement Mode
 
