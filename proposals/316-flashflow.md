@@ -181,8 +181,8 @@ The measure commands are:
 ```
 0 -- MEAS_PARAMS    [forward]
 1 -- MEAS_PARAMS_OK [backward]
-3 -- MEAS_BG        [backward]
-4 -- MEAS_ERR       [forward and backward]
+2 -- MEAS_BG        [backward]
+3 -- MEAS_ERR       [forward and backward]
 ```
 
 Forward cells are sent from the measurer/coordinator to the relay.
