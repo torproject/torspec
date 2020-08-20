@@ -173,8 +173,7 @@ The payload of each MEASUREMENT cell consists of:
 
 ```
 Measure command [1 byte]
-Length          [2 bytes]
-Data            [Length-3 bytes]
+Data            [varied]
 ```
 
 The measure commands are:
