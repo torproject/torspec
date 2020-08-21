@@ -309,10 +309,13 @@ During the measurement the relay targets a ratio of background traffic
 to measurement traffic as specified by a consensus parameter/torrc
 option. For a given ratio r, if the relay has handled x cells of
 measurement traffic recently, Tor then limits itself to y = xr/(1-r)
-cells of non-measurement traffic this scheduling round. The target will
-enforce that a minimum of 10 Mbit/s of measurement traffic is recorded
-since the last background traffic scheduling round to ensure it always
-allows some minimum amount of background traffic.
+cells of non-measurement traffic this scheduling round.
+If x is very small, the relay will perform the calculation s.t. x is the
+number of cells required to produce 10 Mbit/s of measurement traffic, thus
+ensuring some minimum amount of background traffic is allowed.
+
+[XXX teor suggests in [4] that the number 10 Mbit/s could be derived more
+intelligently. E.g. based on AuthDirFastGuarantee or AuthDirGuardBWGuarantee]
 
 ## FlashFlow Components
 
@@ -482,18 +485,17 @@ v3bw.2020-03-01-04-00-00
 v3bw.2020-03-01-05-00-00
 ```
 
+[XXX Either FF should auto-delete old ones, logrotate config should be
+provided, a script provided, or something to help bwauths not accidentally
+fill up their disk]
+
+[XXX What's the approxmiate disk usage for, say, a few years of these?]
+
 ### FlashFlow Measurer
 
 The measurers take commands from the coordinator, connect to target
 relays with many sockets, send them traffic, and verify the received
-traffic is the same as what was sent. Measurers need access to a lot of
-internal tor functionality. One strategy is to house as much logic as
-possible inside an compile-time-optional control port module that calls
-into other parts of tor. Alternatively FlashFlow could link against tor
-and call internal tor functions directly.
-
-[XXX for now I'll assume that an optional little-t tor control port
-module housing a lot of this code is the best idea.]
+traffic is the same as what was sent.
 
 Notable new things that internal tor code will need to do on the
 measurer (client) side:
@@ -586,6 +588,10 @@ The medium term deployment stage begins after FlashFlow has been
 implemented and relays are starting to update to a version of Tor that
 supports it.
 
+New link- and relay-subprotocol versions will be used by the relay to indicate
+FF support. E.g. at the time of writing, the next relay subprotocol version is
+4 [3].
+
 We plan to host a FlashFlow deployment consisting of a FF coordinator
 and a single FF measurer on a single 1 Gbit/s machine. Data produced by
 this deployment will be made available (semi?) publicly, including both
@@ -626,6 +632,11 @@ deployment. FF deployments will need to coordinate between themselves
 to not measure the same relay at the same time, and to handle new relays
 as they join during the middle of a measurement period (during the day).
 
+The measurement scheduling process shall be non-interactive. All the inputs
+(e.g. the shared random value, the identities of the coords, the relays
+currently in the network) are publicly known to (at least) the bwauths, thus
+each individual bwauth can calculate same multi-coord measurement schedule.
+
 The following is quoted from Section 4.3 of the FlashFlow paper.
 
     To measure all relays in the network, the BWAuths periodically
@@ -652,6 +663,17 @@ The following is quoted from Section 4.3 of the FlashFlow paper.
     slots with sufficient unallocated capacity. Note that this design
     ensures that old relays will continue to be measured, with new
     relays given secondary priority in the order they arrive.
+
+[XXX Teor leaves good ideas in his tor-dev@ post [5],
+including a good plain language description of what the FF paper quotes says,
+and a recommendation on which consensus to use when making a new schedule]
+
+A problem arises when two relays are hosted on the same machine but measured
+at different times: they both will be measured to have the full capacity of
+their host. At the very least, the scheduling algo should schedule relays with
+the same IP to be measured at the same time. Perhaps better is measuring all
+relays in the same MyFamily, same ipv4/24, and/or same ipv6/48 at the same
+time. What specifically to do here is left for medium/long term work.
 
 ## Experiments
 
@@ -697,6 +719,12 @@ The following is quoted from Section 4.3 of the FlashFlow paper.
     Enhancing Technologies (PoPETs), 2017(2), April 2017.
 [2] Mike Perry: Graph onionperf and consensus information from Rob's
     experiments https://trac.torproject.org/projects/tor/ticket/33076
+[3] tor-spec.txt Section 9.3 "Relay" Subprotocol versioning
+    https://gitweb.torproject.org/torspec.git/tree/tor-spec.txt#n2132
+[4] Teor's second respose to FlashFlow proposal
+    https://lists.torproject.org/pipermail/tor-dev/2020-April/014251.html
+[5] Teor's first respose to FlashFlow proposal
+    https://lists.torproject.org/pipermail/tor-dev/2020-April/014246.html
 
 # Appendix A: Save CPU at measurer by not encrypting all MEAS_ECHO cells
 
