@@ -6,15 +6,6 @@ Created: 23 April 2020
 Status: Draft
 ```
 
-# Markdown revision TODO:
-
-- `[ ]` hyperlink sources
-- `[ ]` make section numbers work, or don't use them, or ...?
-- `[.]` do coords need to communicate? No. Specify better in Measurement
-        Scheduling section
-    - addressed in Intro
-- `[x]` MSM --> MEAS
-
 # Introduction
 
 FlashFlow is a new distributed bandwidth measurement system for Tor that
@@ -711,11 +702,14 @@ time. What specifically to do here is left for medium/long term work.
 
 [0] F. Thill. Hidden Service Tracking Detection and Bandwidth Cheating
     in Tor Anonymity Network. Master’s thesis, Univ. Luxembourg, 2014.
+    https://www.cryptolux.org/images/b/bc/Tor_Issues_Thesis_Thill_Fabrice.pdf
 [1] A. Johnson, R. Jansen, N. Hopper, A. Segal, and P. Syverson.
     PeerFlow: Secure Load Balancing in Tor. Proceedings on Privacy
     Enhancing Technologies (PoPETs), 2017(2), April 2017.
+    https://ohmygodel.com/publications/peerflow-popets2017.pdf
 [2] Mike Perry: Graph onionperf and consensus information from Rob's
-    experiments https://trac.torproject.org/projects/tor/ticket/33076
+    experiments
+    https://trac.torproject.org/projects/tor/ticket/33076
 [3] tor-spec.txt Section 9.3 "Relay" Subprotocol versioning
     https://gitweb.torproject.org/torspec.git/tree/tor-spec.txt#n2132
 [4] Teor's second respose to FlashFlow proposal
