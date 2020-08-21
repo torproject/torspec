@@ -196,38 +196,37 @@ and that the measurement should be aborted. These measure commands are
 described in more detail in the next section.
 
 FlashFlow also introduces a new relay command, MEAS_ECHO. Relay celsl with
-this relay command are the
-measurement traffic. The measurer generates and encrypts them, sends them to the target,
-the target decrypts them, then it sends them back. A variation where
-the measurer skips encryption of MEAS_ECHO cells in most cases is
-described in Appendix A, and was found to be necessary in paper prototypes to
-save CPU load at the measurer.
+this relay command are the measurement traffic. The measurer generates and
+encrypts them, sends them to the target, the target decrypts them, then it
+sends them back. A variation where the measurer skips encryption of MEAS_ECHO
+cells in most cases is described in Appendix A, and was found to be necessary
+in paper prototypes to save CPU load at the measurer.
 
 MEASUREMENT cells, on the other hand, are not encrypted (beyond the regular
 TLS on the connection).
 
 ### Pre-Measurement Handshaking/Starting a Measurement
 
-The coordinator establishes a one-hop circuit with the target relay and sends it a MEAS_PARAMS
-cell. If the target is unwilling to be measured at this time or if the
-coordinator didn't use a TLS certificate that the target trusts, it
-responds with an error cell and closes the connection. Otherwise it
-checks that the parameters of the measurement are acceptable (e.g. the
-version is acceptable, the duration isn't too long, etc.). If the
-target is happy, it sends a MEAS_PARAMS_OK, otherwise it sends a MEAS_ERR
-and closes the connection.
+The coordinator establishes a one-hop circuit with the target relay and sends
+it a MEAS_PARAMS cell. If the target is unwilling to be measured at this time
+or if the coordinator didn't use a TLS certificate that the target trusts, it
+responds with an error cell and closes the connection. Otherwise it checks
+that the parameters of the measurement are acceptable (e.g. the version is
+acceptable, the duration isn't too long, etc.). If the target is happy, it
+sends a MEAS_PARAMS_OK, otherwise it sends a MEAS_ERR and closes the
+connection.
 
 Upon learning the IP addresses of the measurers from the coordinator in
 the MEAS_PARAMS cell, the target whitelists their IPs in its DoS
 detection subsystem until the measurement ends (successfully or
 otherwise), at which point the whitelist is cleared.
 
-Upon receiving a MEAS_PARAMS_OK from the target, the coordinator will
-instruct the measurers to open their circuits (one circuit per connection) with the target. If
-the coordinator or any measurer receives a MEAS_ERR, it reports the error
-to the coordinator and considers the measurement a failure. It is also a
-failure if any measurer is unable to open at least half of its circuits
-with the target.
+Upon receiving a MEAS_PARAMS_OK from the target, the coordinator will instruct
+the measurers to open their circuits (one circuit per connection) with the
+target. If the coordinator or any measurer receives a MEAS_ERR, it reports the
+error to the coordinator and considers the measurement a failure. It is also a
+failure if any measurer is unable to open at least half of its circuits with
+the target.
 
 The payload of MEAS_PARAMS cells [XXX more may need to be added]:
 
@@ -237,12 +236,10 @@ The payload of MEAS_PARAMS cells [XXX more may need to be added]:
 - measurer_info [num_measurers times]
 ```
 
-meas_duration
-is the duration, in seconds, that the actual measurement will last.
-num_measurers is how many link_specifier structs follow containing information
-on the measurers that the relay should expect.
-Future versions of FlashFlow and MEAS_PARAMS
-will use TLS certificates instead of IP addresses.
+meas_duration is the duration, in seconds, that the actual measurement will
+last.  num_measurers is how many link_specifier structs follow containing
+information on the measurers that the relay should expect.  Future versions of
+FlashFlow and MEAS_PARAMS will use TLS certificates instead of IP addresses.
 [XXX probably need diff layout to allow upgrade to TLS certs instead of
 link_specifier structs. probably using ext-type-length-value like teor
 suggests]
