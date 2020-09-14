@@ -1933,6 +1933,8 @@
     551 - Client with with this "Nickname" already exists
     552 - Unrecognized KeyType
 
+  [ONION_CLIENT_AUTH_ADD was added in Tor 0.4.3.1-alpha]
+
 3.31. ONION_CLIENT_AUTH_REMOVE
 
   The syntax is:
@@ -1948,6 +1950,8 @@
 
     512 - Syntax error in "HSAddress".
     251 - Client credentials for "HSAddress" did not exist.
+
+  [ONION_CLIENT_AUTH_REMOVE was added in Tor 0.4.3.1-alpha]
 
 3.32. ONION_CLIENT_AUTH_VIEW
 
@@ -1983,6 +1987,8 @@
   On success "250 OK" is returned. Otherwise, the following error codes exist:
 
     512 - Syntax error in "HSAddress".
+
+  [ONION_CLIENT_AUTH_VIEW was added in Tor 0.4.3.1-alpha]
 
 3.33. DROPOWNERSHIP
 
