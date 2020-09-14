@@ -121,7 +121,7 @@ Proposals by number:
 198  Restore semantics of TLS ClientHello [CLOSED]
 199  Integration of BridgeFinder and BridgeFinderHelper [OBSOLETE]
 200  Adding new, extensible CREATE, EXTEND, and related cells [CLOSED]
-201  Make bridges report statistics on daily v3 network status requests [OPEN]
+201  Make bridges report statistics on daily v3 network status requests [RESERVE]
 202  Two improved relay encryption protocols for Tor cells [META]
 203  Avoiding censorship by impersonating an HTTPS server [OBSOLETE]
 204  Subdomain support for Hidden Service addresses [CLOSED]
@@ -264,7 +264,6 @@ Proposals by status:
    291  The move to two guard nodes
    317  Improve security aspects of DNS name resolution
  OPEN:
-   201  Make bridges report statistics on daily v3 network status requests [for 0.2.4.x]
    239  Consensus Hash Chaining
    240  Early signing key revocation for directory authorities
    267  Tor Consensus Transparency
@@ -481,6 +480,7 @@ Proposals by status:
    172  GETINFO controller option for circuit information
    177  Abstaining from votes on individual flags [for 0.2.4.x]
    188  Bridge Guards and other anti-enumeration defenses
+   201  Make bridges report statistics on daily v3 network status requests [for 0.2.4.x]
    211  Internal Mapaddress for Tor Configuration Testing [for 0.2.4.x+]
    223  Ace: Improved circuit-creation key exchange
    226  "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS"

@@ -118,7 +118,7 @@ Below are a list of proposals sorted by their proposal number.  See
 * [`198-restore-clienthello-semantics.txt`](/proposals/198-restore-clienthello-semantics.txt): Restore semantics of TLS ClientHello [CLOSED]
 * [`199-bridgefinder-integration.txt`](/proposals/199-bridgefinder-integration.txt): Integration of BridgeFinder and BridgeFinderHelper [OBSOLETE]
 * [`200-new-create-and-extend-cells.txt`](/proposals/200-new-create-and-extend-cells.txt): Adding new, extensible CREATE, EXTEND, and related cells [CLOSED]
-* [`201-bridge-v3-reqs-stats.txt`](/proposals/201-bridge-v3-reqs-stats.txt): Make bridges report statistics on daily v3 network status requests [OPEN]
+* [`201-bridge-v3-reqs-stats.txt`](/proposals/201-bridge-v3-reqs-stats.txt): Make bridges report statistics on daily v3 network status requests [RESERVE]
 * [`202-improved-relay-crypto.txt`](/proposals/202-improved-relay-crypto.txt): Two improved relay encryption protocols for Tor cells [META]
 * [`203-https-frontend.txt`](/proposals/203-https-frontend.txt): Avoiding censorship by impersonating an HTTPS server [OBSOLETE]
 * [`204-hidserv-subdomains.txt`](/proposals/204-hidserv-subdomains.txt): Subdomain support for Hidden Service addresses [CLOSED]

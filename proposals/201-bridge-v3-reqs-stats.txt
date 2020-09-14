@@ -2,7 +2,7 @@ Filename: 201-bridge-v3-reqs-stats.txt
 Title: Make bridges report statistics on daily v3 network status requests
 Author: Karsten Loesing
 Created: 10-May-2012
-Status: Open
+Status: Reserve
 Target: 0.2.4.x
 
 Overview:

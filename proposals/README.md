@@ -20,7 +20,6 @@ Below are a list of proposals sorted by status.  See
 These are proposals that we think are likely to be complete, and ripe
 for discussion.
 
-* [`201-bridge-v3-reqs-stats.txt`](/proposals/201-bridge-v3-reqs-stats.txt): Make bridges report statistics on daily v3 network status requests
 * [`239-consensus-hash-chaining.txt`](/proposals/239-consensus-hash-chaining.txt): Consensus Hash Chaining
 * [`240-auth-cert-revocation.txt`](/proposals/240-auth-cert-revocation.txt): Early signing key revocation for directory authorities
 * [`267-tor-consensus-transparency.txt`](/proposals/267-tor-consensus-transparency.txt): Tor Consensus Transparency
@@ -245,6 +244,7 @@ confront the problems that they try to solve.
 * [`172-circ-getinfo-option.txt`](/proposals/172-circ-getinfo-option.txt): GETINFO controller option for circuit information
 * [`177-flag-abstention.txt`](/proposals/177-flag-abstention.txt): Abstaining from votes on individual flags
 * [`188-bridge-guards.txt`](/proposals/188-bridge-guards.txt): Bridge Guards and other anti-enumeration defenses
+* [`201-bridge-v3-reqs-stats.txt`](/proposals/201-bridge-v3-reqs-stats.txt): Make bridges report statistics on daily v3 network status requests
 * [`211-mapaddress-tor-status.txt`](/proposals/211-mapaddress-tor-status.txt): Internal Mapaddress for Tor Configuration Testing
 * [`223-ace-handshake.txt`](/proposals/223-ace-handshake.txt): Ace: Improved circuit-creation key exchange
 * [`226-bridgedb-database-improvements.txt`](/proposals/226-bridgedb-database-improvements.txt): "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS"
