@@ -627,12 +627,13 @@
 
        It MUST be the next-to-last element in the descriptor, appearing
        immediately before the RSA signature. It MUST contain an Ed25519
-       signature of a SHA256 digest of the entire document, from the
-       first character up to and including the first space after the
-       "router-sig-ed25519" string, prefixed with the string "Tor
-       router descriptor signature v1".  Its format is:
+       signature of a SHA256 digest of the entire document. This digest is
+       taken from the first character up to and including the first space
+       after the "router-sig-ed25519" string. Before computing the digest,
+       the string "Tor router descriptor signature v1" is prefixed to the
+       document.
 
-       The signature is encoded in Base64 with terminating =s removed.
+       The signature is encoded in Base64, with terminating =s removed.
 
        The signing key in the identity-ed25519 certificate MUST
        be the one used to sign the document.
