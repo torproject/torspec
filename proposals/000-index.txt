@@ -246,6 +246,7 @@ Proposals by number:
 323  Specification for Walking Onions [OPEN]
 324  RTT-based Congestion Control for Tor [OPEN]
 325  Packed relay cells: saving space on small commands [OPEN]
+326  The "tor-relay" Well-Known Resource Identifier [OPEN]
 
 
 Proposals by status:
@@ -282,6 +283,7 @@ Proposals by status:
    323  Specification for Walking Onions
    324  RTT-based Congestion Control for Tor
    325  Packed relay cells: saving space on small commands
+   326  The "tor-relay" Well-Known Resource Identifier
  ACCEPTED:
    265  Load Balancing with Overhead Parameters [for 0.2.9.x]
    275  Stop including meaningful "published" time in microdescriptor consensus [for 0.3.1.x-alpha]
