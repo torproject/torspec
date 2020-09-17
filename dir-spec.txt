@@ -362,7 +362,10 @@
         (See note above: clients guess that the next consensus's FU will be
         two intervals after the current VA.)
 
-   VU: The consensus is no longer valid.
+   VU: The consensus is no longer valid; clients should continue to try to
+   download a new consensus if they have not done so already.
+
+   VU + 24 hours: Clients will no longer use the consensus at all.
 
    VoteSeconds and DistSeconds MUST each be at least 20 seconds; FU-VA and
    VU-FU MUST each be at least 5 minutes.
@@ -1770,9 +1773,13 @@
 
         [Exactly once.]
 
-        The end of the Interval for this vote.  After this time, the
-        consensus produced by this vote should not be used.  See section 1.4
+        The end of the Interval for this vote.  After this time, all
+        clients should try to find a more recent consensus. See section 1.4
         for voting timeline information.
+
+        In practice, clients continue to use the consensus for up to 24 hours
+        after it is no longer valid, if no more recent consensus can be
+        downloaded.
 
     "voting-delay" SP VoteSeconds SP DistSeconds NL
 
