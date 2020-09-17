@@ -1,5 +1,5 @@
 ```
-Filename: 316-flashflow.txt
+Filename: 316-flashflow.md
 Title: FlashFlow: A Secure Speed Test for Tor (Parent Proposal)
 Author: Matthew Traudt, Aaron Johnson, Rob Jansen, Mike Perry
 Created: 23 April 2020
