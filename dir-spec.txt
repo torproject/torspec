@@ -200,7 +200,8 @@
   Items.  Every Item begins with a KeywordLine, followed by zero or more
   Objects. A KeywordLine begins with a Keyword, optionally followed by
   whitespace and more non-newline characters, and ends with a newline.  A
-  Keyword is a sequence of one or more characters in the set [A-Za-z0-9-].
+  Keyword is a sequence of one or more characters in the set [A-Za-z0-9-],
+  but may not start with -.
   An Object is a block of encoded data in pseudo-Privacy-Enhanced-Mail (PEM)
   style format: that is, lines of encoded data MAY be wrapped by inserting
   an ascii linefeed ("LF", also called newline, or "NL" here) character
@@ -214,13 +215,14 @@
     Document ::= (Item | NL)+
     Item ::= KeywordLine Object*
     KeywordLine ::= Keyword NL | Keyword WS ArgumentChar+ NL
-    Keyword = KeywordChar+
-    KeywordChar ::= 'A' ... 'Z' | 'a' ... 'z' | '0' ... '9' | '-'
+    Keyword = KeywordStart KeywordChar*
+    KeywordStart ::= 'A' ... 'Z' | 'a' ... 'z' | '0' ... '9'
+    KeywordChar ::= KeywordStart | '-'
     ArgumentChar ::= any printing ASCII character except NL.
     WS = (SP | TAB)+
     Object ::= BeginLine Base64-encoded-data EndLine
-    BeginLine ::= "-----BEGIN " Keyword "-----" NL
-    EndLine ::= "-----END " Keyword "-----" NL
+    BeginLine ::= "-----BEGIN " Keyword (" " Keyword)* "-----" NL
+    EndLine ::= "-----END " Keyword (" " Keyword)* "-----" NL
 
     A Keyword may not be "-----BEGIN".
 
