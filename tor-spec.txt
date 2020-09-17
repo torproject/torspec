@@ -1030,6 +1030,10 @@ see tor-design.pdf.
    Nodes MUST ignore unrecognized specifiers, and MUST accept multiple
    instances of specifiers other than 'legacy identity'.
 
+   For purposes of indistinguishability, implementations SHOULD send
+   these link specifiers, if using them, in this order: [00], [02], [03],
+   [01].
+
    The relay payload for an EXTEND relay cell consists of:
 
          Address                       [4 bytes]
