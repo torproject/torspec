@@ -3803,13 +3803,8 @@
    need to fetch the microdescriptors that have changed.
 
    When a client gets a new microdescriptor consensus, it looks to see if
-   there are any microdescriptors it needs to learn.  If it needs to learn
-   more than half of the microdescriptors, it requests 'all', else it
-   requests only the missing ones.  Clients MAY try to determine whether
-   the upload bandwidth for listing the microdescriptors they want is more
-   or less than the download bandwidth for the microdescriptors they do
-   not want.
-   [XXX The 'all' URL is not implemented yet. -KL]
+   there are any microdescriptors it needs to learn, and launches a request
+   for them.
 
    Clients maintain a cache of microdescriptors along with metadata like
    when it was last referenced by a consensus, and which identity key
