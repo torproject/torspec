@@ -3789,12 +3789,11 @@
    failure count.
 
    Clients retain the most recent descriptor they have downloaded for each
-   router so long as it is not too old (currently, 48 hours), OR so long as
-   no better descriptor has been downloaded for the same router.
-
-   [Versions of Tor before 0.1.2.3-alpha would discard descriptors simply for
-   being published too far in the past.]  [The code seems to discard
-   descriptors in all cases after they're 5 days old. True? -RD]
+   router so long as it is listed in the consensus.  If it is not listed,
+   they keep it so long as it is not too old (currently, ROUTER_MAX_AGE=48
+   hours) and no better router descriptor has been downloaded for the same
+   relay.  Caches retain descriptors until they are at least
+   OLD_ROUTER_DESC_MAX_AGE=5 days old.
 
    Clients which chose to download the microdescriptor consensus instead
    of the general consensus must download the referenced microdescriptors
