@@ -506,9 +506,11 @@ see tor-design.pdf.
                  Padding bytes SHOULD be set to NUL.
 
    We recommend random padding in RELAY/RELAY_EARLY cells, so that the cell
-   content is unpredictable. See proposal 289 for details. For other
-   cells, TLS authenticates cell content, so randomised padding bytes are
-   redundant.
+   content is unpredictable. See the format of relay cells in section 6.1
+   for detail.
+
+   For other cells, TLS authenticates cell content, so randomized padding
+   bytes are redundant.
 
    Receivers MUST ignore padding bytes.
 
@@ -1578,7 +1580,8 @@ see tor-design.pdf.
          StreamID                [2 bytes]
          Digest                  [4 bytes]
          Length                  [2 bytes]
-         Data                    [PAYLOAD_LEN-11 bytes]
+         Data                    [Length bytes]
+         Padding                 [PAYLOAD_LEN - 11 - Length bytes]
 
    The relay commands are:
 
@@ -1648,6 +1651,14 @@ see tor-design.pdf.
    the unencrypted payload is padded with padding bytes. Implementations
    handle padding bytes of unencrypted relay cells as they do padding
    bytes for other cell types; see Section 3.
+
+   The 'Padding' field is used to make relay cell contents unpredictable, to
+   avoid certain attacks (see proposal 289 for rationale). Implementations
+   SHOULD fill this field with four zero-valued bytes, followed by as many
+   random bytes as will fit.  (If there are fewer than 4 bytes for padding,
+   then they should all be filled with zero.
+
+   Implementations MUST NOT rely on the contents of the 'Padding' field.
 
    If the RELAY cell is recognized but the relay command is not
    understood, the cell must be dropped and ignored. Its contents
