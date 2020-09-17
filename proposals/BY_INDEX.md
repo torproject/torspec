@@ -233,7 +233,7 @@ Below are a list of proposals sorted by their proposal number.  See
 * [`313-relay-ipv6-stats.txt`](/proposals/313-relay-ipv6-stats.txt): Tor Relay IPv6 Statistics [ACCEPTED]
 * [`314-allow-markdown-proposals.md`](/proposals/314-allow-markdown-proposals.md): Allow Markdown for proposal format [FINISHED]
 * [`315-update-dir-required-fields.txt`](/proposals/315-update-dir-required-fields.txt): Updating the list of fields required in directory documents [OPEN]
-* [`316-flashflow.txt`](/proposals/316-flashflow.txt): FlashFlow: A Secure Speed Test for Tor (Parent Proposal) [DRAFT]
+* [`316-flashflow.md`](/proposals/316-flashflow.md): FlashFlow: A Secure Speed Test for Tor (Parent Proposal) [DRAFT]
 * [`317-secure-dns-name-resolution.txt`](/proposals/317-secure-dns-name-resolution.txt): Improve security aspects of DNS name resolution [NEEDS-REVISION]
 * [`318-limit-protovers.md`](/proposals/318-limit-protovers.md): Limit protover values to 0-63 [ACCEPTED]
 * [`319-wide-everything.md`](/proposals/319-wide-everything.md): RELAY_FRAGMENT cells [OPEN]

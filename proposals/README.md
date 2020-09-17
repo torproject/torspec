@@ -106,7 +106,7 @@ discussion.
 
 * [`273-exit-relay-pinning.txt`](/proposals/273-exit-relay-pinning.txt): Exit relay pinning for web services
 * [`294-tls-1.3.txt`](/proposals/294-tls-1.3.txt): TLS 1.3 Migration
-* [`316-flashflow.txt`](/proposals/316-flashflow.txt): FlashFlow: A Secure Speed Test for Tor (Parent Proposal)
+* [`316-flashflow.md`](/proposals/316-flashflow.md): FlashFlow: A Secure Speed Test for Tor (Parent Proposal)
 
 
 ## NEEDS-REVISION proposals: ideas that we can't implement as-is
