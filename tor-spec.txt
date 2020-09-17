@@ -1686,7 +1686,7 @@ see tor-design.pdf.
    Upon receiving this cell, the exit node resolves the address as
    necessary, and opens a new TCP connection to the target port.  If the
    address cannot be resolved, or a connection can't be established, the
-   exit node replies with a RELAY_END cell.  (See 6.4 below.)
+   exit node replies with a RELAY_END cell.  (See 6.3 below.)
    Otherwise, the exit node replies with a RELAY_CONNECTED cell, whose
    payload is in one of the following formats:
 
@@ -1787,9 +1787,16 @@ see tor-design.pdf.
       14 -- REASON_NOTDIRECTORY   (Client sent RELAY_BEGIN_DIR to a
                                    non-directory relay.)
 
-   (With REASON_EXITPOLICY, the 4-byte IPv4 address or 16-byte IPv6 address
-   forms the optional data, along with a 4-byte TTL; no other reason
-   currently has extra data.)
+
+   For most reasons, the format is:
+
+      Reason                      [1 byte]
+
+   For REASON_EXITPOLICY, the format is:
+
+      Reason                      [1 byte]
+      IPv4 or IPv6 address        [4 bytes or 16 bytes]
+      TTL                         [4 bytes]
 
    OPs and ORs MUST accept reasons not on the above list, since future
    versions of Tor may provide more fine-grained reasons.
