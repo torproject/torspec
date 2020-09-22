@@ -1,0 +1,1129 @@
+Filename: 327-pow-over-intro.txt
+Title: A First Take at PoW Over Introduction Circuits
+Author: George Kadianakis, Mike Perry, David Goulet, tevador
+Created: 2 April 2020
+Status: Draft
+
+0. Abstract
+
+  This proposal aims to thwart introduction flooding DoS attacks by introducing
+  a dynamic Proof-Of-Work protocol that occurs over introduction circuits.
+
+1. Motivation
+
+  So far our attempts at limiting the impact of introduction flooding DoS
+  attacks on onion services has been focused on horizontal scaling with
+  Onionbalance, optimizing the CPU usage of Tor and applying congestion control
+  using rate limiting. While these measures move the goalpost forward, a core
+  problem with onion service DoS is that building rendezvous circuits is a
+  costly procedure both for the service and for the network. For more
+  information on the limitations of rate-limiting when defending against DDoS,
+  see [REF_TLS_1].
+
+  If we ever hope to have truly reachable global onion services, we need to
+  make it harder for attackers to overload the service with introduction
+  requests. This proposal achieves this by allowing onion services to specify
+  an optional dynamic proof-of-work scheme that its clients need to participate
+  in if they want to get served.
+
+  With the right parameters, this proof-of-work scheme acts as a gatekeeper to
+  block amplification attacks by attackers while letting legitimate clients
+  through.
+
+1.1. Related work
+
+  For a similar concept, see the three internet drafts that have been proposed
+  for defending against TLS-based DDoS attacks using client puzzles [REF_TLS].
+
+1.2. Threat model [THREAT_MODEL]
+
+1.2.1. Attacker profiles [ATTACKER_MODEL]
+
+  This proposal is written to thwart specific attackers. A simple PoW proposal
+  cannot defend against all and every DoS attack on the Internet, but there are
+  adverary models we can defend against.
+
+  Let's start with some adversary profiles:
+
+  "The script-kiddie"
+
+    The script-kiddie has a single computer and pushes it to its
+    limits. Perhaps it also has a VPS and a pwned server. We are talking about
+    an attacker with total access to 10 Ghz of CPU and 10 GBs of RAM. We
+    consider the total cost for this attacker to be zero $.
+
+  "The small botnet"
+
+    The small botnet is a bunch of computers lined up to do an introduction
+    flooding attack. Assuming 500 medium-range computers, we are talking about
+    an attacker with total access to 10 Thz of CPU and 10 TB of RAM. We consider
+    the upfront cost for this attacker to be about $400.
+
+  "The large botnet"
+
+    The large botnet is a serious operation with many thousands of computers
+    organized to do this attack. Assuming 100k medium-range computers, we are
+    talking about an attacker with total access to 200 Thz of CPU and 200 TB of
+    RAM. The upfront cost for this attacker is about $36k.
+
+  We hope that this proposal can help us defend against the script-kiddie
+  attacker and small botnets. To defend against a large botnet we would need
+  more tools in our disposal (see [FUTURE_DESIGNS]).
+
+1.2.2. User profiles [USER_MODEL]
+
+  We have attackers and we have users. Here are a few user profiles:
+
+  "The standard web user"
+
+    This is a standard laptop/desktop user who is trying to browse the
+    web. They don't know how these defences work and they don't care to
+    configure or tweak them. They are gonna use the default values and if the
+    site doesn't load, they are gonna close their browser and be sad at Tor.
+    They run a 2Ghz computer with 4GB of RAM.
+
+  "The motivated user"
+
+    This is a user that really wants to reach their destination. They don't
+    care about the journey; they just want to get there. They know what's going
+    on; they are willing to tweak the default values and make their computer do
+    expensive multi-minute PoW computations to get where they want to be.
+
+  "The mobile user"
+
+    This is a motivated user on a mobile phone. Even tho they want to read the
+    news article, they don't have much leeway on stressing their machine to do
+    more computation.
+
+  We hope that this proposal will allow the motivated user to always connect
+  where they want to connect to, and also give more chances to the other user
+  groups to reach the destination.
+
+1.2.3. The DoS Catch-22 [CATCH22]
+
+  This proposal is not perfect and it does not cover all the use cases. Still,
+  we think that by covering some use cases and giving reachability to the
+  people who really need it, we will severely demotivate the attackers from
+  continuing the DoS attacks and hence stop the DoS threat all
+  together. Furthermore, by increasing the cost to launch a DoS attack, a big
+  class of DoS attackers will disappear from the map, since the expected ROI
+  will decrease.
+
+2. System Overview
+
+2.1. Tor protocol overview
+
+                                          +----------------------------------+
+                                          |          Onion Service           |
+   +-------+ INTRO1  +-----------+ INTRO2 +--------+                         |
+   |Client |-------->|Intro Point|------->|  PoW   |-----------+             |
+   +-------+         +-----------+        |Verifier|           |             |
+                                          +--------+           |             |
+                                          |                    |             |
+                                          |                    |             |
+                                          |         +----------v---------+   |
+                                          |         |Intro Priority Queue|   |
+                                          +---------+--------------------+---+
+                                                           |  |  |
+                                                Rendezvous |  |  |
+                                                  circuits |  |  |
+                                                           v  v  v
+
+
+
+  The proof-of-work scheme specified in this proposal takes place during the
+  introduction phase of the onion service protocol.
+
+  The system described in this proposal is not meant to be on all the time, and
+  should only be enabled by services when under duress. The percentage of
+  clients receiving puzzles can also be configured based on the load of the
+  service.
+
+  In summary, the following steps are taken for the protocol to complete:
+
+  1) Service encodes PoW parameters in descriptor [DESC_POW]
+  2) Client fetches descriptor and computes PoW [CLIENT_POW]
+  3) Client completes PoW and sends results in INTRO1 cell [INTRO1_POW]
+  4) Service verifies PoW and queues introduction based on PoW effort [SERVICE_VERIFY]
+
+2.2. Proof-of-work overview
+
+2.2.1. Primitives
+
+  For our proof-of-work function we will use the 'equix' scheme by tevador
+  [REF_EQUIX].  Equix is an assymetric PoW function based on Equihash<60,3>. It
+  features lightning fast verification speed, and also aims to minimize the
+  assymetry between CPU and GPU. Furthermore, it's designed for this particular
+  use-case and hence cryptocurrency miners are not incentivized to make
+  optimized ASICs for it.
+
+  The Equix scheme provides two functions that will be used in this proposal:
+      - equix_solve(seed, nonce, effort) which solves a puzzle instance.
+      - equix_verify(seed, nonce, effort, solution) which verifies a puzzle solution.
+
+  We tune equix in section [EQUIX_TUNING].
+
+2.2.2. Dynamic PoW
+
+  DoS is a dynamic problem where the attacker's capabilities constantly change,
+  and hence we want our proof-of-work system to be dynamic and not stuck with a
+  static difficulty setting. Hence, instead of forcing clients to go below a
+  static target like in Bitcoin to be successful, we ask clients to "bid" using
+  their PoW effort. Effectively, a client gets higher priority the higher
+  effort they put into their proof-of-work. This is similar to how
+  proof-of-stake works but instead of staking coins, you stake work.
+
+  The benefit here is that legitimate clients who really care about getting
+  access can spend a big amount of effort into their PoW computation, which
+  should guarantee access to the service given reasonable adversary models. See
+  [PARAM_TUNING] for more details about these guarantees and tradeoffs.
+
+  As a way to improve reachability and UX, the service tries to estimate the
+  effort needed for clients to get access at any given time and places it in
+  the descriptor. See [EFFORT_ESTIMATION] for more details.
+
+2.2.3. PoW effort
+
+  For our dynamic PoW system to work, we will need to be able to compare PoW
+  tokens with each other. To do so we define a function:
+         unsigned effort(uint8_t *token)
+  which takes as its argument a hash output token, interprets it as a
+  bitstring, and returns the quotient of dividing a bitstring of 1s by it.
+
+  So for example:
+         effort(00000001100010101101) = 11111111111111111111 / 00000001100010101101
+  or the same in decimal:
+         effort(6317) = 1048575 / 6317 = 165.
+
+  This definition of effort has the advantage of directly expressing the
+  expected number of hashes that the client had to calculate to reach the
+  effort. This is in contrast to the (cheaper) exponential effort definition of
+  taking the number of leading zero bits.
+
+3. Protocol specification
+
+3.1. Service encodes PoW parameters in descriptor [DESC_POW]
+
+  This whole protocol starts with the service encoding the PoW parameters in
+  the 'encrypted' (inner) part of the v3 descriptor. As follows:
+
+       "pow-params" SP type SP seed-b64 SP expiration-time NL
+
+        [At most once]
+
+        type: The type of PoW system used. We call the one specified here "v1"
+
+        seed-b64: A random seed that should be used as the input to the PoW
+                  hash function. Should be 32 random bytes encoded in base64
+                  without trailing padding.
+
+        suggested-effort: An unsigned integer specifying an effort value that
+                  clients should aim for when contacting the service. See
+                  [EFFORT_ESTIMATION] for more details here.
+
+        expiration-time: A timestamp in "YYYY-MM-DD SP HH:MM:SS" format after
+                         which the above seed expires and is no longer valid as
+                         the input for PoW. It's needed so that the size of our
+                         replay cache does not grow infinitely. It should be
+                         set to RAND_TIME(now+7200, 900) seconds.
+
+   The service should refresh its seed when expiration-time passes. The service
+   SHOULD keep its previous seed in memory and accept PoWs using it to avoid
+   race-conditions with clients that have an old seed. The service SHOULD avoid
+   generating two consequent seeds that have a common 4 bytes prefix. See
+   [INTRO1_POW] for more info.
+
+   By RAND_TIME(ts, interval) we mean a time between ts-interval and ts, chosen
+   uniformly at random.
+
+3.2. Client fetches descriptor and computes PoW [CLIENT_POW]
+
+  If a client receives a descriptor with "pow-params", it should assume that
+  the service is expecting a PoW input as part of the introduction protocol.
+
+  The client parses the descriptor and extracts the PoW parameters. It makes
+  sure that the <expiration-time> has not expired and if it has, it needs to
+  fetch a new descriptor.
+
+  The client should then extract the <suggested-effort> field to configure its
+  PoW 'target' (see [REF_TARGET]). The client SHOULD NOT accept 'target' values
+  that will cause an infinite PoW computation. {XXX: How to enforce this?}
+
+  To complete the PoW the client follows the following logic:
+
+      a) Client selects a target effort E.
+      b) Client generates a random 16-byte nonce N.
+      c) Client derives seed C by decoding 'seed-b64'.
+      d) Client calculates S = equix_solve(C || N || E)
+      e) Client calculates R = blake2b(C || N || E || S)
+      f) Client checks if R * E <= UINT32_MAX.
+        f1) If yes, success! The client can submit N, E, the first 4 bytes of C
+    and S.
+        f2) If no, fail! The client interprets N as a 16-byte little-endian
+    integer, increments it by 1 and goes back to step d).
+
+  At the end of the above procedure, the client should have S as the solution
+  of the Equix puzzle with N as the nonce, C as the seed. How quickly this
+  happens depends solely on the target effort E parameter.
+
+3.3. Client sends PoW in INTRO1 cell [INTRO1_POW]
+
+  Now that the client has an answer to the puzzle it's time to encode it into
+  an INTRODUCE1 cell. To do so the client adds an extension to the encrypted
+  portion of the INTRODUCE1 cell by using the EXTENSIONS field (see
+  [PROCESS_INTRO2] section in rend-spec-v3.txt). The encrypted portion of the
+  INTRODUCE1 cell only gets read by the onion service and is ignored by the
+  introduction point.
+
+  We propose a new EXT_FIELD_TYPE value:
+
+     [01] -- PROOF_OF_WORK
+
+   The EXT_FIELD content format is:
+
+        POW_VERSION    [1 byte]
+        POW_NONCE      [16 bytes]
+        POW_EFFORT     [4 bytes]
+        POW_SEED       [4 bytes]
+        POW_SOLUTION   [16 bytes]
+
+   where:
+
+    POW_VERSION is 1 for the protocol specified in this proposal
+    POW_NONCE is the nonce 'N' from the section above
+    POW_SEED is the first 4 bytes of the seed used
+
+   This will increase the INTRODUCE1 payload size by 43 bytes since the
+   extension type and length is 2 extra bytes, the N_EXTENSIONS field is always
+   present and currently set to 0 and the EXT_FIELD is 41 bytes. According to
+   ticket #33650, INTRODUCE1 cells currently have more than 200 bytes
+   available.
+
+3.4. Service verifies PoW and handles the introduction  [SERVICE_VERIFY]
+
+   When a service receives an INTRODUCE1 with the PROOF_OF_WORK extension, it
+   should check its configuration on whether proof-of-work is required to
+   complete the introduction. If it's not required, the extension SHOULD BE
+   ignored. If it is required, the service follows the procedure detailed in
+   this section.
+
+   If the service requires the PROOF_OF_WORK extension but received an
+   INTRODUCE1 cell without any embedded proof-of-work, the service SHOULD
+   consider this cell as a zero-effort introduction for the purposes of the
+   priority queue (see section [INTRO_QUEUE]).
+
+3.4.1. PoW verification [POW_VERIFY]
+
+   To verify the client's proof-of-work the service MUST do the following steps:
+
+      a) Find a valid seed C that starts with POW_SEED. Fail if no such seed
+         exists.
+      b) Fail if E = POW_EFFORT is lower than the minimum effort.
+      c) Fail if N = POW_NONCE is present in the replay cache (see [REPLAY_PROTECTION[)
+      d) Calculate R = blake2b(C || N || E || S)
+      e) Fail if R * E > UINT32_MAX
+      f) Fail if equix_verify(C || N || E, S) != EQUIX_OK
+      g) Put the request in the queue with a priority of E
+
+   If any of these steps fail the service MUST ignore this introduction request
+   and abort the protocol.
+
+   In this proposal we call the above steps the "top half" of introduction
+   handling. If all the steps of the "top half" have passed, then the circuit
+   is added to the introduction queue as detailed in section [INTRO_QUEUE].
+
+3.4.1.1. Replay protection [REPLAY_PROTECTION]
+
+  The service MUST NOT accept introduction requests with the same (seed, nonce)
+  tuple. For this reason a replay protection mechanism must be employed.
+
+  The simplest way is to use a simple hash table to check whether a (seed,
+  nonce) tuple has been used before for the actiev duration of a
+  seed. Depending on how long a seed stays active this might be a viable
+  solution with reasonable memory/time overhead.
+
+  If there is a worry that we might get too many introductions during the
+  lifetime of a seed, we can use a Bloom filter as our replay cache
+  mechanism. The probabilistic nature of Bloom filters means that sometimes we
+  will flag some connections as replays even if they are not; with this false
+  positive probability increasing as the number of entries increase. However,
+  with the right parameter tuning this probability should be negligible and
+  well handled by clients. {TODO: Figure bloom filter}
+
+3.4.2. The Introduction Queue  [INTRO_QUEUE]
+
+3.4.2.1. Adding introductions to the introduction queue [ADD_QUEUE]
+
+  When PoW is enabled and a verified introduction comes through, the service
+  instead of jumping straight into rendezvous, queues it and prioritizes it
+  based on how much effort was devoted by the client to PoW. This means that
+  introduction requests with high effort should be prioritized over those with
+  low effort.
+
+  To do so, the service maintains an "introduction priority queue" data
+  structure. Each element in that priority queue is an introduction request,
+  and its priority is the effort put into its PoW:
+
+  When a verified introduction comes through, the service uses the effort()
+  function with the solution S as its input, and uses the output to place requests
+  into the right position of the priority_queue: The bigger the effort, the
+  more priority it gets in the queue. If two elements have the same effort, the
+  older one has priority over the newer one.
+
+3.4.2.2. Handling introductions from the introduction queue [HANDLE_QUEUE]
+
+  The service should handle introductions by pulling from the introduction
+  queue. We call this part of introduction handling the "bottom half" because
+  most of the computation happens in this stage. For a description of how we
+  expect such a system to work in Tor, see [TOR_SCHEDULER] section.
+
+3.4.3. PoW effort estimation [EFFORT_ESTIMATION]
+
+  The service starts with a default suggested-effort value of 5000 (see
+  [EQUIX_DIFFICULTY] section for more info).
+
+  Then during its operation the service continuously keeps track of the
+  received PoW cell efforts to inform its clients of the effort they should put
+  in their introduction to get service. The service informs the clients by
+  using the <suggested-effort> field in the descriptor.
+
+  Everytime the service handles or trims an introduction request from the
+  priority queue in [HANDLE_QUEUE], the service adds the request's effort to a
+  sorted list.
+
+  Then every HS_UPDATE_PERIOD seconds (which is controlled through a consensus
+  parameter and has a default value of 300 seconds) and while the DoS feature
+  is enabled, the service updates its <suggested-effort> value as follows:
+
+    1. Set TOTAL_EFFORT to the sum of the effort of all valid requests that
+       have been received since the last HS descriptor update (this includes
+       all handled requests, trimmed requests and requests still in the queue)
+
+    2. Set SUGGESTED_EFFORT = TOTAL_EFFORT / (SVC_BOTTOM_CAPACITY * HS_UPDATE_PERIOD).
+       The denominator above is the max number of requests that the service
+       could have handled during that time.
+
+    3. Set <suggested-effort> to max(MIN_EFFORT, SUGGESTED_EFFORT).
+
+    During the above procedure we use the following default values:
+      - MIN_EFFORT = 1000, as the result of a simulation experiment [REF_TEVADOR_SIM]
+      - SVC_BOTTOM_CAPACITY = 100, which is the number of introduction requests
+        that can be handled by the service per second. This was computed in
+        [POW_DIFFICULTY_TOR] as 180, but we reduced it to 100 to account for
+        slower computers and networks.
+
+  The above algorithm is meant to balance the suggested effort based on the
+  effort of all received requests. It attempts to dynamically adjust the
+  suggested effort so that it increases when an attack is received, and tones
+  down when the attack has stopped.
+
+  It's worth noting that the suggested-effort is not a hard limit to the
+  efforts that are accepted by the service, and it's only meant to serve as a
+  guideline for clients to reduce the number of unsuccessful requests that get
+  to the service. The service still adds requests with lower effort than
+  suggested-effort to the priority queue in [ADD_QUEUE].
+
+  Finally, the above algorithm will never reset back to zero suggested-effort,
+  even if the attack is completely over. That's because in that case it would
+  be impossible to determine the total computing power of connecting
+  clients. Instead it will reset back to MIN_EFFORT, and the operator will have
+  to manually shut down the anti-DoS mechanism.
+
+  {XXX: SVC_BOTTOM_CAPACITY is static above and will not be accurate for all
+  boxes. Ideally we should calculate SVC_BOTTOM_CAPACITY dynamically based on
+  the resources of every onion service while the algorithm is running.}
+
+3.4.3.1. Updating descriptor with new suggested effort
+
+  Every HS_UPDATE_PERIOD seconds the service should upload a new descriptor
+  with a new suggested-effort value.
+
+  The service should avoid uploading descriptors too often to avoid overwheming
+  the HSDirs. The service SHOULD NOT upload descriptors more often than
+  HS_UPDATE_PERIOD. The service SHOULD NOT upload a new descriptor if the
+  suggested-effort value changes by less than 15%.
+
+  {XXX: Is this too often? Perhaps we can set different limits for when the
+  difficulty goes up and different for when it goes down. It's more important
+  to update the descriptor when the difficulty goes up.}
+
+  {XXX: What attacks are possible here? Can the attacker intentionally hit this
+  rate-limit and then influence the suggested effort so that clients do not
+  learn about the new effort?}
+
+4. Client behavior [CLIENT_BEHAVIOR]
+
+  This proposal introduces a bunch of new ways where a legitimate client can
+  fail to reach the onion service.
+
+  Furthermore, there is currently no end-to-end way for the onion service to
+  inform the client that the introduction failed. The INTRO_ACK cell is not
+  end-to-end (it's from the introduction point to the client) and hence it does
+  not allow the service to inform the client that the rendezvous is never gonna
+  occur.
+
+  For this reason we need to define some client behaviors to work around these
+  issues.
+
+4.1. Clients handling timeouts [CLIENT_TIMEOUT]
+
+  Alice can fail to reach the onion service if her introduction request gets
+  trimmed off the priority queue in [HANDLE_QUEUE], or if the service does not
+  get through its priority queue in time and the connection times out.
+
+  This section presents a heuristic method for the client getting service even
+  in such scenarios.
+
+  If the rendezvous request times out, the client SHOULD fetch a new descriptor
+  for the service to make sure that it's using the right suggested-effort for
+  the PoW and the right PoW seed. The client SHOULD NOT fetch service
+  descriptors more often than every 'hs-pow-desc-fetch-rate-limit' seconds
+  (which is controlled through a consensus parameter and has a default value of
+  600 seconds).
+
+  {XXX: Is this too rare? Too often?}
+
+  When the client fetches a new descriptor, it should try connecting to the
+  service with the new suggested-effort and PoW seed. If that doesn't work, it
+  should double the effort and retry. The client should keep on
+  doubling-and-retrying until it manages to get service, or its able to fetch a
+  new descriptor again.
+
+  {XXX: This means that the client will keep on spinning and
+  doubling-and-retrying for a service under this situation. There will never be
+  a "Client connection timed out" page for the user. Is this good? Is this bad?
+  Should we stop doubling-and-retrying after some iterations? Or should we
+  throw a custom error page to the user, and ask the user to stop spinning
+  whenever they want?}
+
+4.3. Other descriptor issues
+
+  Another race condition here is if the service enables PoW, while a client has
+  a cached descriptor. How will the client notice that PoW is needed? Does it
+  need to fetch a new descriptor? Should there be another feedback mechanism?
+
+5. Attacker strategies [ATTACK_META]
+
+  Now that we defined our protocol we need to start tweaking the various
+  knobs. But before we can do that, we first need to understand a few
+  high-level attacker strategies to see what we are fighting against.
+
+5.1.1. Overwhelm PoW verification (aka "Overwhelm top half") [ATTACK_TOP_HALF]
+
+  A basic attack here is the adversary spamming with bogus INTRO cells so that
+  the service does not have computing capacity to even verify the
+  proof-of-work. This adversary tries to overwhelm the procedure in the
+  [POW_VERIFY] section.
+
+  That's why we need the PoW algorithm to have a cheap verification time so
+  that this attack is not possible: we tune this PoW parameter in section
+  [POW_TUNING_VERIFICATION].
+
+5.1.2. Overwhelm rendezvous capacity (aka "Overwhelm bottom half") [ATTACK_BOTTOM_HALF]
+
+  Given the way the introduction queue works (see [HANDLE_QUEUE]), a very
+  effective strategy for the attacker is to totally overwhelm the queue
+  processing by sending more high-effort introductions than the onion service
+  can handle at any given tick. This adversary tries to overwhelm the procedure
+  in the [HANDLE_QUEUE] section.
+
+  To do so, the attacker would have to send at least 20 high-effort
+  introduction cells every 100ms, where high-effort is a PoW which is above the
+  estimated level of "the motivated user" (see [USER_MODEL]).
+
+  An easier attack for the adversary, is the same strategy but with
+  introduction cells that are all above the comfortable level of "the standard
+  user" (see [USER_MODEL]). This would block out all standard users and only
+  allow motivated users to pass.
+
+5.1.3. Hybrid overwhelm strategy [ATTACK_HYBRID]
+
+  If both the top- and bottom- halves are processed by the same thread, this
+  opens up the possibility for a "hybrid" attack. Given the performance figures
+  for the bottom half (0.31 ms/req.) and the top half (5.5 ms/req.), the
+  attacker can optimally deny service by submitting 91 high-effort requests and
+  1520 invalid requests per second. This will completely saturate the main loop
+  because:
+
+  0.31*(1520+91) ~ 0.5 sec.
+  5.5*91         ~ 0.5 sec.
+
+  This attack only has half the bandwidth requirement of [ATTACK_TOP_HALF] and
+  half the compute requirement of [ATTACK_BOTTOM_HALF].
+
+  Alternatively, the attacker can adjust the ratio between invalid and
+  high-effort requests depending on their bandwidth and compute capabilities.
+
+5.1.4. Gaming the effort estimation logic [ATTACK_EFFORT]
+
+  Another way to beat this system is for the attacker to game the effort
+  estimation logic (see [EFFORT_ESTIMATION]). Essentialy, there are two attacks
+  that we are trying to avoid:
+
+  - Attacker sets descriptor suggested-effort to a very high value effectively
+    making it impossible for most clients to produce a PoW token in a
+    reasonable timeframe.
+  - Attacker sets descriptor suggested-effort to a very small value so that
+    most clients aim for a small value while the attacker comfortably launches
+    an [ATTACK_BOTTOM_HALF] using medium effort PoW (see [REF_TEVADOR_1])
+
+5.1.4. Precomputed PoW attack
+
+  The attacker may precompute many valid PoW nonces and submit them all at once
+  before the current seed expires, overwhelming the service temporarily even
+  using a single computer. The current scheme gives the attackers 4 hours to
+  launch this attack since each seed lasts 2 hours and the service caches two
+  seeds.
+
+  An attacker with this attack might be aiming to DoS the service for a limited
+  amount of time, or to cause an [ATTACK_EFFORT] attack.
+
+6. Parameter tuning [POW_TUNING]
+
+  There are various parameters in this PoW system that need to be tuned:
+
+  We first start by tuning the time it takes to verify a PoW token. We do this
+  first because it's fundamental to the performance of onion services and can
+  turn into a DoS vector of its own. We will do this tuning in a way that's
+  agnostic to the chosen PoW function.
+
+  We will then move towards analyzing the default difficulty setting for our
+  PoW system. That defines the expected time for clients to succeed in our
+  system, and the expected time for attackers to overwhelm our system. Same as
+  above we will do this in a way that's agnostic to the chosen PoW function.
+
+  Finally, using those two pieces we will tune our PoW function and pick the
+  right default difficulty setting. At the end of this section we will know the
+  resources that an attacker needs to overwhelm the onion service, the
+  resources that the service needs to verify introduction requests, and the
+  resources that legitimate clients need to get to the onion service.
+
+6.1. PoW verification [POW_TUNING_VERIFICATION]
+
+  Verifying a PoW token is the first thing that a service does when it receives
+  an INTRODUCE2 cell and it's detailed in section [POW_VERIFY]. This
+  verification happens during the "top half" part of the process. Every
+  milisecond spent verifying PoW adds overhead to the already existing "top
+  half" part of handling an introduction cell. Hence we should be careful to
+  add minimal overhead here so that we don't enable attacks like [ATTACK_TOP_HALF].
+
+  During our performance measurements in [TOR_MEASUREMENTS] we learned that the
+  "top half" takes about 0.26 msecs in average, without doing any sort of PoW
+  verification. Using that value we compute the following table, that describes
+  the number of cells we can queue per second (aka times we can perform the
+  "top half" process) for different values of PoW verification time:
+
+      +---------------------+-----------------------+--------------+
+      |PoW Verification Time| Total "top half" time | Cells Queued |
+      |                     |                       |  per second  |
+      |---------------------|-----------------------|--------------|
+      |    0     msec       |    0.26      msec     |    3846      |
+      |    1     msec       |    1.26      msec     |    793       |
+      |    2     msec       |    2.26      msec     |    442       |
+      |    3     msec       |    3.26      msec     |    306       |
+      |    4     msec       |    4.26      msec     |    234       |
+      |    5     msec       |    5.26      msec     |    190       |
+      |    6     msec       |    6.26      msec     |    159       |
+      |    7     msec       |    7.26      msec     |    137       |
+      |    8     msec       |    8.26      msec     |    121       |
+      |    9     msec       |    9.26      msec     |    107       |
+      |    10    msec       |    10.26     msec     |    97        |
+      +---------------------+-----------------------+--------------+
+
+  Here is how you can read the table above:
+
+  - For a PoW function with a 1ms verification time, an attacker needs to send
+    793 dummy introduction cells per second to succeed in a [ATTACK_TOP_HALF] attack.
+
+  - For a PoW function with a 2ms verification time, an attacker needs to send
+    442 dummy introduction cells per second to succeed in a [ATTACK_TOP_HALF] attack.
+
+  - For a PoW function with a 10ms verification time, an attacker needs to send
+    97 dummy introduction cells per second to succeed in a [ATTACK_TOP_HALF] attack.
+
+  Whether an attacker can succeed at that depends on the attacker's resources,
+  but also on the network's capacity.
+
+  Our purpose here is to have the smallest PoW verification overhead possible
+  that also allows us to achieve all our other goals.
+
+  [Note that the table above is simply the result of a naive multiplication and
+  does not take into account all the auxiliary overheads that happen every
+  second like the time to invoke the mainloop, the bottom-half processes, or
+  pretty much anything other than the "top-half" processing.
+
+  During our measurements the time to handle INTRODUCE2 cells dominates any
+  other action time: There might be events that require a long processing time,
+  but these are pretty infrequent (like uploading a new HS descriptor) and
+  hence over a long time they smooth out. Hence extrapolating the total cells
+  queued per second based on a single "top half" time seems like good enough to
+  get some initial intuition. That said, the values of "Cells queued per
+  second" from the table above, are likely much smaller than displayed above
+  because of all the auxiliary overheads.]
+
+6.2. PoW difficulty analysis [POW_DIFFICULTY_ANALYSIS]
+
+  The difficulty setting of our PoW basically dictates how difficult it should
+  be to get a success in our PoW system. An attacker who can get many successes
+  per second can pull a successfull [ATTACK_BOTTOM_HALF] attack against our
+  system.
+
+  In classic PoW systems, "success" is defined as getting a hash output below
+  the "target". However, since our system is dynamic, we define "success" as an
+  abstract high-effort computation.
+
+  Our system is dynamic but we still need a default difficulty settings that
+  will define the metagame and be used for bootstrapping the system. The client
+  and attacker can still aim higher or lower but for UX purposes and for
+  analysis purposes we do need to define a default difficulty.
+
+6.2.1. Analysis based on adversary power
+
+  In this section we will try to do an analysis of PoW difficulty without using
+  any sort of Tor-related or PoW-related benchmark numbers.
+
+  We created the table (see [REF_TABLE]) below which shows how much time a
+  legitimate client with a single machine should expect to burn before they get
+  a single success. The x-axis is how many successes we want the attacker to be
+  able to do per second: the more successes we allow the adversary, the more
+  they can overwhelm our introduction queue. The y-axis is how many machines
+  the adversary has in her disposal, ranging from just 5 to 1000.
+
+       ===============================================================
+       |    Expected Time (in seconds) Per Success For One Machine   |
+ ===========================================================================
+ |                                                                          |
+ |   Attacker Succeses        1       5       10      20      30      50    |
+ |       per second                                                         |
+ |                                                                          |
+ |            5               5       1       0       0       0       0     |
+ |            50              50      10      5       2       1       1     |
+ |            100             100     20      10      5       3       2     |
+ | Attacker   200             200     40      20      10      6       4     |
+ |  Boxes     300             300     60      30      15      10      6     |
+ |            400             400     80      40      20      13      8     |
+ |            500             500     100     50      25      16      10    |
+ |            1000            1000    200     100     50      33      20    |
+ |                                                                          |
+ ============================================================================
+
+  Here is how you can read the table above:
+
+  - If an adversary has a botnet with 1000 boxes, and we want to limit her to 1
+    success per second, then a legitimate client with a single box should be
+    expected to spend 1000 seconds getting a single success.
+
+  - If an adversary has a botnet with 1000 boxes, and we want to limit her to 5
+    successes per second, then a legitimate client with a single box should be
+    expected to spend 200 seconds getting a single success.
+
+  - If an adversary has a botnet with 500 boxes, and we want to limit her to 5
+    successes per second, then a legitimate client with a single box should be
+    expected to spend 100 seconds getting a single success.
+
+  - If an adversary has access to 50 boxes, and we want to limit her to 5
+    successes per second, then a legitimate client with a single box should be
+    expected to spend 10 seconds getting a single success.
+
+  - If an adversary has access to 5 boxes, and we want to limit her to 5
+    successes per second, then a legitimate client with a single box should be
+    expected to spend 1 seconds getting a single success.
+
+  With the above table we can create some profiles for default values of our
+  PoW difficulty. So for example, we can use the last case as the default
+  parameter for Tor Browser, and then create three more profiles for more
+  expensive cases, scaling up to the first case which could be hardest since
+  the client is expected to spend 15 minutes for a single introduction.
+
+6.2.2. Analysis based on Tor's performance [POW_DIFFICULTY_TOR]
+
+  To go deeper here, we can use the performance measurements from
+  [TOR_MEASUREMENTS] to get a more specific intuition on the default
+  difficulty. In particular, we learned that completely handling an
+  introduction cell takes 5.55 msecs in average. Using that value, we can
+  compute the following table, that describes the number of introduction cells
+  we can handle per second for different values of PoW verification:
+
+      +---------------------+-----------------------+--------------+
+      |PoW Verification Time| Total time to handle  | Cells handled|
+      |                     |   introduction cell   |  per second  |
+      |---------------------|-----------------------|--------------|
+      |    0      msec      |    5.55        msec   |    180.18    |
+      |    1      msec      |    6.55        msec   |    152.67    |
+      |    2      msec      |    7.55        msec   |    132.45    |
+      |    3      msec      |    8.55        msec   |    116.96    |
+      |    4      msec      |    9.55        mesc   |    104.71    |
+      |    5      msec      |    10.55       msec   |    94.79     |
+      |    6      msec      |    11.55       msec   |    86.58     |
+      |    7      msec      |    12.55       msec   |    79.68     |
+      |    8      msec      |    13.55       msec   |    73.80     |
+      |    9      msec      |    14.55       msec   |    68.73     |
+      |    10     msec      |    15.55       msec   |    64.31     |
+      +---------------------+-----------------------+--------------+
+
+  Here is how you can read the table above:
+
+  - For a PoW function with a 1ms verification time, an attacker needs to send
+    152 high-effort introduction cells per second to succeed in a
+    [ATTACK_BOTTOM_HALF] attack.
+
+  - For a PoW function with a 10ms verification time, an attacker needs to send
+    64 high-effort introduction cells per second to succeed in a
+    [ATTACK_BOTTOM_HALF] attack.
+
+  We can use this table to specify a default difficulty that won't allow our
+  target adversary to succeed in an [ATTACK_BOTTOM_HALF] attack.
+
+  Of course, when it comes to this table, the same disclaimer as in section
+  [POW_TUNING_VERIFICATION] is valid. That is, the above table is just a
+  theoretical extrapolation and we expect the real values to be much lower
+  since they depend on auxiliary processing overheads, and on the network's
+  capacity.
+
+6.3. Tuning equix difficulty [EQUIX_DIFFICULTY]
+
+  The above two sections were not depending on a particular PoW scheme. They
+  gave us an intuition on the values we are aiming for in terms of verification
+  speed and PoW difficulty. Now we need to make things concrete:
+
+  As described in section [EFFORT_ESTIMATION] we start the service with a
+  default suggested-effort value of 5000. Given the benchmarks of EquiX
+  [REF_EQUIX] this should take about 2 to 3 seconds on a modern CPU.
+
+  With this default difficulty setting and given the table in
+  [POW_DIFFICULTY_ANALYSIS] this means that an attacker with 50 boxes will be
+  able to get about 20 successful PoWs per second, and an attacker with 100
+  boxes about 40 successful PoWs per second.
+
+  Then using the table in [POW_DIFFICULTY_TOR] we can see that the number of
+  attacker's successes is not enough to overwhelm the service through an
+  [ATTACK_BOTTOM_HALF] attack. That is, an attacker would need to do about 152
+  introductions per second to overwhelm the service, whereas they can only do
+  40 with 100 boxes.
+
+7. Discussion
+
+7.1. UX
+
+  This proposal has user facing UX consequences.
+
+  Here is some UX improvements that don't need user-input:
+
+  - Primarily, there should be a way for Tor Browser to display to users that
+    additional time (and resources) will be needed to access a service that is
+    under attack. Depending on the design of the system, it might even be
+    possible to estimate how much time it will take.
+
+  And here are a few UX approaches that will need user-input and have an
+  increasing engineering difficulty. Ideally this proposal will not need
+  user-input and the default behavior should work for almost all cases.
+
+  a) Tor Browser needs a "range field" which the user can use to specify how
+     much effort they want to spend in PoW if this ever occurs while they are
+     browsing. The ranges could be from "Easy" to "Difficult", or we could try
+     to estimate time using an average computer. This setting is in the Tor
+     Browser settings and users need to find it.
+
+  b) We start with a default effort setting, and then we use the new onion
+     errors (see #19251) to estimate when an onion service connection has
+     failed because of DoS, and only then we present the user a "range field"
+     which they can set dynamically. Detecting when an onion service connection
+     has failed because of DoS can be hard because of the lack of feedback (see
+     [CLIENT_BEHAVIOR])
+
+  c) We start with a default effort setting, and if things fail we
+     automatically try to figure out an effort setting that will work for the
+     user by doing some trial-and-error connections with different effort
+     values. Until the connection succeeds we present a "Service is
+     overwhelmed, please wait" message to the user.
+
+7.2. Future work [FUTURE_WORK]
+
+7.2.1. Incremental improvements to this proposal
+
+  There are various improvements that can be done in this proposal, and while
+  we are trying to keep this v1 version simple, we need to keep the design
+  extensible so that we build more features into it. In particular:
+
+  - End-to-end introduction ACKs
+
+    This proposal suffers from various UX issues because there is no end-to-end
+    mechanism for an onion service to inform the client about its introduction
+    request. If we had end-to-end introduction ACKs many of the problems from
+    [CLIENT_BEHAVIOR] would be aleviated. The problem here is that end-to-end
+    ACKs require modifications on the introduction point code and a network
+    update which is a lengthy process.
+
+  - Multithreading scheduler
+
+    Our scheduler is pretty limited by the fact that Tor has a single-threaded
+    design. If we improve our multithreading support we could handle a much
+    greater amount of introduction requests per second.
+
+7.2.2. Future designs [FUTURE_DESIGNS]
+
+  This is just the beginning in DoS defences for Tor and there are various
+  futured designs and schemes that we can investigate. Here is a brief summary
+  of these:
+
+  "More advanced PoW schemes" -- We could use more advanced memory-hard PoW
+         schemes like MTP-argon2 or Itsuku to make it even harder for
+         adversaries to create successful PoWs. Unfortunately these schemes
+         have much bigger proof sizes, and they won't fit in INTRODUCE1 cells.
+         See #31223 for more details.
+
+  "Third-party anonymous credentials" -- We can use anonymous credentials and a
+         third-party token issuance server on the clearnet to issue tokens
+         based on PoW or CAPTCHA and then use those tokens to get access to the
+         service. See [REF_CREDS] for more details.
+
+  "PoW + Anonymous Credentials" -- We can make a hybrid of the above ideas
+         where we present a hard puzzle to the user when connecting to the
+         onion service, and if they solve it we then give the user a bunch of
+         anonymous tokens that can be used in the future. This can all happen
+         between the client and the service without a need for a third party.
+
+  All of the above approaches are much more complicated than this proposal, and
+  hence we want to start easy before we get into more serious projects.
+
+7.3. Environment
+
+  We love the environment! We are concerned of how PoW schemes can waste energy
+  by doing useless hash iterations. Here is a few reasons we still decided to
+  pursue a PoW approach here:
+
+  "We are not making things worse" -- DoS attacks are already happening and
+      attackers are already burning energy to carry them out both on the
+      attacker side, on the service side and on the network side. We think that
+      asking legitimate clients to carry out PoW computations is not gonna
+      affect the equation too much, since an attacker right now can very
+      quickly cause the same damage that hundreds of legitimate clients do a
+      whole day.
+
+  "We hope to make things better" -- The hope is that proposals like this will
+      make the DoS actors go away and hence the PoW system will not be used. As
+      long as DoS is happening there will be a waste of energy, but if we
+      manage to demotivate them with technical means, the network as a whole
+      will less wasteful. Also see [CATCH22] for a similar argument.
+
+8. Acknowledgements
+
+  Thanks a lot to tevador for the various improvements to the proposal and for
+  helping us understand and tweak the RandomX scheme.
+
+  Thanks to Solar Designer for the help in understanding the current PoW
+  landscape, the various approaches we could take, and teaching us a few neat
+  tricks.
+
+Appendix A.  Little-t tor introduction scheduler
+
+  This section describes how we will implement this proposal in the "tor"
+  software (little-t tor).
+
+  The following should be read as if tor is an onion service and thus the end
+  point of all inbound data.
+
+A.1. The Main Loop [MAIN_LOOP]
+
+  Tor uses libevent for its mainloop. For network I/O operations, a mainloop
+  event is used to inform tor if it can read on a certain socket, or a
+  connection object in tor.
+
+  From there, this event will empty the connection input buffer (inbuf) by
+  extracting and processing a cell at a time. The mainloop is single threaded
+  and thus each cell is handled sequentially.
+
+  Processing an INTRODUCE2 cell at the onion service means a series of
+  operations (in order):
+
+    1) Unpack cell from inbuf to local buffer.
+
+    2) Decrypt cell (AES operations).
+
+    3) Parse cell header and process it depending on its RELAY_COMMAND.
+
+    4) INTRODUCE2 cell handling which means building a rendezvous circuit:
+        i)  Path selection
+        ii) Launch circuit to first hop.
+
+    5) Return to mainloop event which essentially means back to step (1).
+
+  Tor will read at most 32 cells out of the inbuf per mainloop round.
+
+A.2. Requirements for PoW
+
+  With this proposal, in order to prioritize cells by the amount of PoW work
+  it has done, cells can _not_ be processed sequentially as described above.
+
+  Thus, we need a way to queue a certain number of cells, prioritize them and
+  then process some cell(s) from the top of the queue (that is, the cells that
+  have done the most PoW effort).
+
+  We thus require a new cell processing flow that is _not_ compatible with
+  current tor design. The elements are:
+
+    - Validate PoW and place cells in a priority queue of INTRODUCE2 cells (as
+      described in section [INTRO_QUEUE]).
+
+    - Defer "bottom half" INTRO2 cell processing for after cells have been
+      queued into the priority queue.
+
+A.3. Proposed scheduler [TOR_SCHEDULER]
+
+  The intuitive way to address the A.2 requirements would be to do this
+  simple and naive approach:
+
+    1) Mainloop: Empty inbuf INTRODUCE2 cells into priority queue
+
+    2) Process all cells in pqueue
+
+    3) Goto (1)
+
+  However, we are worried that handling all those cells before returning to the
+  mainloop opens possibilities of attack by an adversary since the priority
+  queue is not gonna be kept up to date while we process all those cells. This
+  means that we might spend lots of time dealing with introductions that don't
+  deserve it. See [BOTTOM_HALF_SCHEDULER] for more details.
+
+  We thus propose to split the INTRODUCE2 handling into two different steps:
+  "top half" and "bottom half" process, as also mentioned in [POW_VERIFY]
+  section above.
+
+A.3.1. Top half and bottom half scheduler
+
+  The top half process is responsible for queuing introductions into the
+  priority queue as follows:
+
+    a) Unpack cell from inbuf to local buffer.
+
+    b) Decrypt cell (AES operations).
+
+    c) Parse INTRODUCE2 cell header and validate PoW.
+
+    d) Return to mainloop event which essentially means step (1).
+
+  The top-half basically does all operations of section [MAIN_LOOP] except from (4).
+
+  An then, the bottom-half process is responsible for handling introductions
+  and doing rendezvous. To achieve this we introduce a new mainloop event to
+  process the priority queue _after_ the top-half event has completed. This new
+  event would do these operations sequentially:
+
+    a) Pop INTRODUCE2 cell from priority queue.
+
+    b) Parse and process INTRODUCE2 cell.
+
+    c) End event and yield back to mainloop.
+
+A.3.2. Scheduling the bottom half process [BOTTOM_HALF_SCHEDULER]
+
+  The question now becomes: when should the "bottom half" event get triggered
+  from the mainloop?
+
+  We propose that this event is scheduled in when the network I/O event
+  queues at least 1 cell into the priority queue. Then, as long as it has a
+  cell in the queue, it would re-schedule itself for immediate execution
+  meaning at the next mainloop round, it would execute again.
+
+  The idea is to try to empty the queue as fast as it can in order to provide a
+  fast response time to an introduction request but always leave a chance for
+  more cells to appear between cell processing by yielding back to the
+  mainloop. With this we are aiming to always have the most up-to-date version
+  of the priority queue when we are completing introductions: this way we are
+  prioritizing clients that spent a lot of time and effort completing their PoW.
+
+  If the size of the queue drops to 0, it stops scheduling itself in order to
+  not create a busy loop. The network I/O event will re-schedule it in time.
+
+  Notice that the proposed solution will make the service handle 1 single
+  introduction request at every main loop event. However, when we do
+  performance measurements we might learn that it's preferable to bump the
+  number of cells in the future from 1 to N where N <= 32.
+
+A.4 Performance measurements
+
+  This section will detail the performance measurements we've done on tor.git
+  for handling an INTRODUCE2 cell and then a discussion on how much more CPU
+  time we can add (for PoW validation) before it badly degrades our
+  performance.
+
+A.4.1 Tor measurements [TOR_MEASUREMENTS]
+
+  In this section we will derive measurement numbers for the "top half" and
+  "bottom half" parts of handling an introduction cell.
+
+  These measurements have been done on tor.git at commit
+  80031db32abebaf4d0a91c01db258fcdbd54a471.
+
+  We've measured several set of actions of the INTRODUCE2 cell handling process
+  on Intel(R) Xeon(R) CPU E5-2650 v4. Our service was accessed by an array of
+  clients that sent introduction requests for a period of 60 seconds.
+
+  1. Full Mainloop Event
+
+     We start by measuring the full time it takes for a mainloop event to
+     process an inbuf containing INTRODUCE2 cells. The mainloop event processed
+     2.42 cells per invocation on average during our measurements.
+
+     Total measurements: 3279
+
+       Min: 0.30 msec - 1st Q.: 5.47 msec - Median: 5.91 msec
+       Mean: 13.43 msec - 3rd Q.: 16.20 msec - Max: 257.95 msec
+
+  2. INTRODUCE2 cell processing (bottom-half)
+
+     We also measured how much time the "bottom half" part of the process
+     takes. That's the heavy part of processing an introduction request as seen
+     in step (4) of the [MAIN_LOOP] section:
+
+     Total measurements: 7931
+
+       Min: 0.28 msec - 1st Q.: 5.06 msec - Median: 5.33 msec
+       Mean: 5.29 msec - 3rd Q.: 5.57 msec - Max: 14.64 msec
+
+  3. Connection data read (top half)
+
+     Now that we have the above pieces, we can use them to measure just the
+     "top half" part of the procedure. That's when bytes are taken from the
+     connection inbound buffer and parsed into an INTRODUCE2 cell where basic
+     validation is done.
+
+     There is an average of 2.42 INTRODUCE2 cells per mainloop event and so we
+     divide that by the full mainloop event mean time to get the time for one
+     cell. From that we substract the "bottom half" mean time to get how much
+     the "top half" takes:
+
+        => 13.43 / (7931 / 3279) = 5.55
+        => 5.55 - 5.29 = 0.26
+
+        Mean: 0.26 msec
+
+  To summarize, during our measurements the average number of INTRODUCE2 cells
+  a mainloop event processed is ~2.42 cells (7931 cells for 3279 mainloop
+  invocations).
+
+  This means that, taking the mean of mainloop event times, it takes ~5.55msec
+  (13.43/2.42) to completely process an INTRODUCE2 cell. Then if we look deeper
+  we see that the "top half" of INTRODUCE2 cell processing takes 0.26 msec in
+  average, whereas the "bottom half" takes around 5.33 msec.
+
+  The heavyness of the "bottom half" is to be expected since that's where 95%
+  of the total work takes place: in particular the rendezvous path selection
+  and circuit launch.
+
+A.2. References
+
+    [REF_EQUIX]: https://github.com/tevador/equix
+                 https://github.com/tevador/equix/blob/master/devlog.md
+    [REF_TABLE]: The table is based on the script below plus some manual editing for readability:
+                 https://gist.github.com/asn-d6/99a936b0467b0cef88a677baaf0bbd04
+    [REF_BOTNET]: https://media.kasperskycontenthub.com/wp-content/uploads/sites/43/2009/07/01121538/ynam_botnets_0907_en.pdf
+    [REF_CREDS]: https://lists.torproject.org/pipermail/tor-dev/2020-March/014198.html
+    [REF_TARGET]: https://en.bitcoin.it/wiki/Target
+    [REF_TLS]: https://www.ietf.org/archive/id/draft-nygren-tls-client-puzzles-02.txt
+               https://tools.ietf.org/id/draft-nir-tls-puzzles-00.html
+               https://tools.ietf.org/html/draft-ietf-ipsecme-ddos-protection-10
+    [REF_TLS_1]: https://www.ietf.org/archive/id/draft-nygren-tls-client-puzzles-02.txt
+    [REF_TEVADOR_1]: https://lists.torproject.org/pipermail/tor-dev/2020-May/014268.html
+    [REF_TEVADOR_2]: https://lists.torproject.org/pipermail/tor-dev/2020-June/014358.html
+    [REF_TEVADOR_SIM]: https://github.com/tevador/scratchpad/blob/master/tor-pow/effort_sim.md
