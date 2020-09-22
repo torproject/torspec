@@ -49,11 +49,11 @@
    The "VERSION" field holds the value [01].  The "CERT_TYPE" field
    holds a value depending on the type of certificate. (See appendix
    A.1.) The CERTIFIED_KEY field is an Ed25519 public key if
-   CERT_KEY_TYPE is [01], or a SHA256 hash of some other key type
-   depending on the value of CERT_KEY_TYPE. The EXPIRATION_DATE is a
-   date, given in HOURS since the epoch, after which this
-   certificate isn't valid. (A four-byte field here will work fine
-   until 10136 A.D.)
+   CERT_KEY_TYPE is [01], or a digest of some other key type
+   depending on the value of CERT_KEY_TYPE.  (See appendix A.4.)
+   The EXPIRATION_DATE is a date, given in HOURS since the epoch,
+   after which this certificate isn't valid. (A four-byte field here
+   will work fine until 10136 A.D.)
 
    The EXTENSIONS field contains zero or more extensions, each of
    the format:
@@ -116,7 +116,7 @@
    acts with the authority of the RSA key that signed this
    certificate."
 
-A.1. List of certificate types
+A.1. List of certificate types (CERT_TYPE field)
 
    The values marked with asterisks are not types corresponding to
    the certificate format of section 2.1.  Instead, they are
@@ -166,14 +166,14 @@ A.3. List of signature prefixes
 
    "Tor router descriptor signature v1" (see dir-spec.txt)
 
-A.4. List of certified key types
+A.4. List of certified key types (CERT_KEY_TYPE field)
 
    [01] ed25519 key
-   [02] SHA256 hash of an RSA key
-   [03] SHA256 hash of an X.509 certificate
-   [08] short-term HS descriptor signing key, signed with blinded public key (rend-spec-v3.txt)
-   [09] intro point authentication key, cross-certifying the HS descriptor
-        signing key  (rend-spec-v3.txt)
-   [0B] ed25519 key derived from the curve25519 intro point encryption key,
-        cross-certifying the HS descriptor signing key  (rend-spec-v3.txt)
+   [02] SHA256 hash of an RSA key. (Not currently used.)
+   [03] SHA256 hash of an X.509 certificate. (Used with certificate
+        type 5.)
 
+   (NOTE: Up till 0.4.5.1-alpha, all versions of Tor have incorrectly used
+   "01" for all types of certified key.  Implementations SHOULD
+   allow "01" in this position, and infer the actual key type from
+   the CERT_TYPE field.)
