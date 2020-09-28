@@ -39,6 +39,8 @@
         Min: 0. Max: 1. Default: 0.
         First-appeared: 0.2.3.11-alpha
 
+        "ExtendByEd25519ID" -- DOCDOC
+
 
 2. Performance-tuning parameters
 
@@ -80,6 +82,11 @@
         "sendme_accept_min_version" -- Minimum SENDME version that is accepted.
                                        Min: 0. Max: 255. Default 0. First
                                        appeared: 0.4.1.1-alpha.
+
+
+    "KISTSchedRunInterval" -- DOCDOC
+
+    "UseGuardFraction" -- DOCDOC
 
 
 3. Voting-related parameters
@@ -186,6 +193,9 @@
         point (for protover HSIntro=5). Min: 0. Max: 1. Default: 0. First
         appeared: 0.4.2.1-alpha.
 
+    "HiddenServiceEnableIntroDoSBurstPerSec" -- DOCDOC
+    "HiddenServiceEnableIntroDoSRatePerSec" -- DOCDOC
+
 
 9. Denial-of-service parameters
 
@@ -237,6 +247,43 @@
         the circuit queue a given circuit. Min: 0. Max: 50000. Default 1000.
         First appeared: 0.4.0.3-alpha.
 
+    "circpad_global_allowed_cells" -- DOCDOC
+    "circpad_global_max_padding_pct" -- DOCDOC
+    "circpad_padding_disabled" -- DOCDOC
+    "circpad_padding_reduced" -- DOCDOC
+
+    "nf_conntimeout_clients" -- DOCDOC
+    "nf_conntimeout_relays" -- DOCDOC
+    "nf_ito_high_reduced" -- DOCDOC
+    "nf_ito_low" -- DOCDOC
+    "nf_ito_low_reduced" -- DOCDOC
+    "nf_pad_before_usage" -- DOCDOC
+    "nf_pad_relays" -- DOCDOC
+    "nf_pad_single_onion" -- DOCDOC
+
+11. Guard-related parameters
+
+
+    "guard-confirmed-min-lifetime-days" -- DOCDOC
+    "guard-extreme-restriction-percent" -- DOCDOC
+    "guard-internet-likely-down-interval" -- DOCDOC
+    "guard-lifetime-days" -- DOCDOC
+    "guard-max-samlines" -- DOCDOC
+    "guard-max-sample-size" -- DOCDOC
+    "guard-meaningful-restriction-percent" -- DOCDOC
+    "guard-min-filtered-sample-size" -- DOCDOC
+    "guard-n-primary-dir-guards-to-use" -- DOCDOC
+    "guard-n-primary-guards" -- DOCDOC
+    "guard-n-primary-guards-to-use" -- DOCDOC
+    "guard-nonprimary-guard-connect-timeout" -- DOCDOC
+    "guard-nonprimary-guard-idle-timeout" -- DOCDOC
+    "guard-remove-unlisted-guards-after-days" -- DOCDOC
+
+12. Relay behavior
+
+    "assume-reachable" -- DOCDOC
+    "assume-reachable-ipv6" -- DOCDOC
+
 X. Obsolete parameters
 
         "NumDirectoryGuards", "NumEntryGuards" -- Number of guard nodes
@@ -245,16 +292,19 @@ X. Obsolete parameters
         NumDirectoryGuards: Min: 0. Max: 10. Default: 0
         NumEntryGuards:     Min: 1. Max: 10. Default: 3
         First-appeared: 0.2.4.23, 0.2.5.6-alpha
+        Removed in: 0.3.0
 
         "GuardLifetime" -- Duration for which clients should choose guard
         nodes, in seconds.
         Min: 30 days.  Max: 1826 days.  Default: 60 days.
         First-appeared: 0.2.4.12-alpha
+        Removed in: 0.3.0.
 
         "UseNTorHandshake" -- If true, then versions of Tor that support
           NTor will prefer to use it by default.
         Min: 0,  Max: 1. Default: 1.
         First-appeared: 0.2.4.8-alpha
+        Removed in: 0.2.9.
 
         "Support022HiddenServices" -- Used to implement a mass switch-over
         from sending timestamps to hidden services by default to sending
@@ -263,7 +313,5 @@ X. Obsolete parameters
         they do not.
         Min: 0, Max: 1. Default: 1.
         First-appeared: 0.2.4.18-rc
-
-
-
+        Removed in: 0.2.6
 
