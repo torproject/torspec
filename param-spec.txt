@@ -32,14 +32,23 @@ line of a directory consensus.
     Min: 0, Max: 1. Default: 1.
     First-appeared: 0.2.4.23, 0.2.5.2-alpha
 
-    "min_paths_for_circs_pct" -- DOCDOC
+    "min_paths_for_circs_pct" -- A percentage threshold that determines
+    whether clients believe they have enough directory information to
+    build circuits.  This value applies to the total fraction of
+    bandwidth-weighted paths that the client could build; see
+    path-spec.txt for more information.
+    Min: 25, Max: 95, Default: 60
+    First-appeared: 0.2.4
 
     "AllowNonearlyExtend" -- If true, permit EXTEND cells that are not inside
     RELAY_EARLY cells.
     Min: 0. Max: 1. Default: 0.
     First-appeared: 0.2.3.11-alpha
 
-    "ExtendByEd25519ID" -- DOCDOC
+    "ExtendByEd25519ID" -- If true, clients should include Ed25519
+    identities for relays when generating EXTEND2 cells.
+    Min: 0. Max: 1. Default: 0.
+    First-appeared: 0.3.0
 
 
 2. Performance-tuning parameters
@@ -74,19 +83,20 @@ line of a directory consensus.
     Min 1000. Max 4294967295. Default 50000.
     First-appeared: 0.3.3.6-rc.
 
-
     "sendme_emit_min_version" -- Minimum SENDME version that can be sent.
-    Min: 0. Max: 255. Default 0. First
-    appeared: 0.4.1.1-alpha.
+    Min: 0. Max: 255. Default 0.
+    First appeared: 0.4.1.1-alpha.
 
     "sendme_accept_min_version" -- Minimum SENDME version that is accepted.
-    Min: 0. Max: 255. Default 0. First
-    appeared: 0.4.1.1-alpha.
+    Min: 0. Max: 255. Default 0.
+    First appeared: 0.4.1.1-alpha.
 
-    "KISTSchedRunInterval" -- DOCDOC
-
-    "UseGuardFraction" -- DOCDOC
-
+    "KISTSchedRunInterval" -- How frequently should the "KIST" scheduler
+    run in order to decide which data to write to the network? Value in
+    units of milliseconds.  If 0, then the KIST scheduler should be
+    disabled.
+    Min: 0. Max: 100. Default: 10.
+    First appeared: 0.3.2
 
 3. Voting-related parameters
 
@@ -185,17 +195,25 @@ line of a directory consensus.
 
     "hs_service_max_rdv_failures" -- This parameter determines the
     maximum number of rendezvous attempt an HS service can make per
-    introduction.  Min 1. Max 10. Default 2.  First-appeared:
-    0.3.3.0-alpha.
+    introduction.
+    Min 1. Max 10. Default 2.
+    First-appeared: 0.3.3.0-alpha.
 
     "HiddenServiceEnableIntroDoSDefense" -- This parameter makes tor
-    start using this new proposed extension if available by the
-    introduction point (for protover HSIntro=5). Min: 0. Max:
-    1. Default: 0. First appeared: 0.4.2.1-alpha.
+    start using this defense if the introduction point supports it
+    (for protover HSIntro=5).
+    Min: 0. Max: 1. Default: 0.
+    First appeared: 0.4.2.1-alpha.
 
-    "HiddenServiceEnableIntroDoSBurstPerSec" -- DOCDOC
+    "HiddenServiceEnableIntroDoSBurstPerSec" -- Maximum burst to be used
+    for token bucket for the introduction point rate-limiting.
+    Min: 0. Max: INT32_MAX. Default: 200
+    First appeared: 0.4.2.1-alpha.
 
-    "HiddenServiceEnableIntroDoSRatePerSec" -- DOCDOC
+    "HiddenServiceEnableIntroDoSRatePerSec" -- Refill rate to be used
+    for token bucket for the introduction point rate-limiting.
+    Min: 0. Max: INT32_MAX. Default: 25
+    First appeared: 0.4.2.1-alpha.
 
 9. Denial-of-service parameters
 
@@ -273,6 +291,11 @@ line of a directory consensus.
 
 11. Guard-related parameters
 
+    "UseGuardFraction" -- If true, clients use `GuardFraction`
+    information from the consensus in order to decide how to weight
+    guards when picking them.
+    Min: 0. Max: 1. Default: 0.
+    First appeared: 0.2.6
 
     "guard-confirmed-min-lifetime-days" -- DOCDOC
 
@@ -304,9 +327,16 @@ line of a directory consensus.
 
 12. Relay behavior
 
-    "assume-reachable" -- DOCDOC
+    "assume-reachable" -- If true, relays should publish descriptors
+    even when they cannot make a connection to their IPv4 ORPort.
+    Min: 0. Max: 1. Default: 0.
+    First appeared: 0.4.5.1-alpha.
 
-    "assume-reachable-ipv6" -- DOCDOC
+    "assume-reachable-ipv6" -- If true, relays should publish
+    descriptors even when they cannot make a connection to their IPv6
+    ORPort.
+    Min: 0. Max: 1. Default: 0.
+    First appeared: 0.4.5.1-alpha.
 
 X. Obsolete parameters
 
