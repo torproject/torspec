@@ -341,7 +341,8 @@
       change does remove one common cause of consensus splits.
 
    VA-DistSeconds: The authorities calculate the consensus and exchange
-   signatures.
+   signatures.  (This is the earliest point at which anybody can
+   possibly get a given consensus if they ask for it.)
 
    VA-DistSeconds/2: The authorities try to download any signatures
    they don't have.
@@ -1752,7 +1753,14 @@
         [Exactly once.]
 
         The start of the Interval for this vote.  Before this time, the
-        consensus document produced from this vote should not be used.
+        consensus document produced from this vote is not officially in
+        use.
+
+        (Note that because of propagation delays, clients and relays
+        may see consensus documents that are up to `DistSeconds`
+        earlier than this this time, and should not warn about
+        them.)
+
         See section 1.4 for voting timeline information.
 
     "fresh-until" SP YYYY-MM-DD SP HH:MM:SS NL
