@@ -291,39 +291,95 @@ line of a directory consensus.
 
 11. Guard-related parameters
 
+    (See guard-spec.txt for more information on the vocabulary used here.)
+
     "UseGuardFraction" -- If true, clients use `GuardFraction`
     information from the consensus in order to decide how to weight
     guards when picking them.
     Min: 0. Max: 1. Default: 0.
     First appeared: 0.2.6
 
-    "guard-confirmed-min-lifetime-days" -- DOCDOC
+    "guard-lifetime-days" -- Controls guard lifetime. If a unconfirmed
+    guard has been sampled more than this many days ago, it should be
+    removed from the guard sample.
+    Min: 1. Max: 3650. Default: 120.
+    First appeared: 0.3.0
 
-    "guard-extreme-restriction-percent" -- DOCDOC
+    "guard-confirmed-min-lifetime-days" -- Controls confirmed guard
+    lifetime: if a guard was confirmed more than this many days ago, it
+    should be removed from the guard sample.
+    Min: 1. Max: 3650. Default: 60.
+    First appeared: 0.3.0
 
-    "guard-internet-likely-down-interval" -- DOCDOC
+    "guard-internet-likely-down-interval" -- If Tor has been unable to
+    build a circuit for this long (in seconds), assume that the internet
+    connection is down, and treat guard failures as unproven.
+    Min: 1. Max: INT32_MAX. Default: 600.
+    First appeared: 0.3.0
 
-    "guard-lifetime-days" -- DOCDOC
+    "guard-max-sample-size" -- Largest number of guards that clients
+    should try to collect in their sample.
+    Min: 1. Max: INT32_MAX. Default: 60.
+    First appeared: 0.3.0
 
-    "guard-max-samlines" -- DOCDOC
+    "guard-max-sample-threshold-percent" -- Largest bandwidth-weighted
+    fraction of guards that clients should try to collect in their
+    sample.
+    Min: 1. Max: 100. Default: 20.
+    First appeared: 0.3.0
 
-    "guard-max-sample-size" -- DOCDOC
+    "guard-meaningful-restriction-percent" -- If the client has
+    configured tor to exclude so many guards that the available guard
+    bandwidth is less than this percentage of the total, treat the guard
+    sample as "restricted", and keep it in a separate sample.
+    Min: 1. Max: 100. Default: 20.
+    First appeared: 0.3.0
 
-    "guard-meaningful-restriction-percent" -- DOCDOC
+    "guard-extreme-restriction-percent" -- Warn the user if they have
+    configured tor to exclude so many guards that the available guard
+    bandwidth is less than this percentage of the total.
+    Min: 1. Max: INT32_MAX. Default: 1.
+    First appeared: 0.3.0
 
-    "guard-min-filtered-sample-size" -- DOCDOC
+    "guard-min-filtered-sample-size" -- If fewer than this number of
+    guards is available in the sample after filtering out unusable
+    guards, the client should try to add more guards to the sample (if
+    allowed).
+    Min: 1. Max: INT32_MAX. Default: 20.
+    First appeared: 0.3.0
 
-    "guard-n-primary-dir-guards-to-use" -- DOCDOC
+    "guard-n-primary-guards" -- The number of confirmed guards that the
+    client should treat as "primary guards".
+    Min: 1. Max: INT32_MAX. Default: 3.
+    First appeared: 0.3.0
 
-    "guard-n-primary-guards" -- DOCDOC
+    "guard-n-primary-guards-to-use", "guard-n-primary-dir-guards-to-use"
+    -- number of primary guards and primary directory guards that the
+    client should be willing to use in parallel.  Other primary guards
+    won't get used unless the earlier ones are down.
+    "guard-n-primary-guards-to-use":
+       Min 1, Max INT32_MAX: Default: 1.
+    "guard-n-primary-dir-guards-to-use"
+       Min 1, Max INT32_MAX: Default: 3.
+    First appeared: 0.3.0
 
-    "guard-n-primary-guards-to-use" -- DOCDOC
+    "guard-nonprimary-guard-connect-timeout" -- When trying to confirm
+    nonprimary guards, if a guard doesn't answer for more than this long
+    in seconds, treat lower-priority guards as usable.
+    Min: 1. Max: INT32_MAX. Default: 15
+    First appeared: 0.3.0
 
-    "guard-nonprimary-guard-connect-timeout" -- DOCDOC
+    "guard-nonprimary-guard-idle-timeout" --  When trying to confirm
+    nonprimary guards, if a guard doesn't answer for more than this long
+    in seconds, treat it as down.
+    Min: 1. Max: INT32_MAX. Default: 600
+    First appeared: 0.3.0
 
-    "guard-nonprimary-guard-idle-timeout" -- DOCDOC
-
-    "guard-remove-unlisted-guards-after-days" -- DOCDOC
+    "guard-remove-unlisted-guards-after-days" -- If a guard has been
+    unlisted in the consensus for at least this many days, remove it
+    from the sample.
+    Min: 1. Max: 3650. Default: 20.
+    First appeared: 0.3.0
 
 12. Relay behavior
 
