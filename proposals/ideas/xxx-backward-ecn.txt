@@ -1,0 +1,85 @@
+This idea requires all relays to implement it, in order to deploy.
+
+It is actually two optimizations at once. One optimization is a cell command
+type to signal congestion directly. The other optimization is the ability for
+this cell type to also carry end-to-end relay data, if any is available.
+
+The second optimization may have AES synchronization complexity, but if we are
+ensure end-to-end RELAY treatment of this cell in the cases where it does,
+carry valid relay data, that should be OK. But differentiating when it does
+and does not cary valid data may be easier said that done, with a single cell
+command.
+
+########################
+
+X. Backward ECN signaling [BACKWARD_ECN]
+
+As an optimization after the RTT deployment, we will deploy an explicit
+congestion control signal by allowing relays to modify the
+cell_t.command field when they detect congestion, on circuits for which
+all relays have support for this signal (as mediated by Tor protocol
+version handshake via the client). This is taken from the Options
+mail[1], section BACKWARD_ECN_TOR.
+
+To detect congestion in order to deliver this signal, we will deploy a
+simplified version of the already-simple CoDel algorithm on each
+outbound TLS connection at relays.
+   https://queue.acm.org/detail.cfm?id=2209336
+   https://tools.ietf.org/html/rfc8289
+
+Each cell will get a timestamp upon arrival at a relay that will allow
+us to measure how long it spends in queues, all the way to hitting a TLS
+outbuf.
+
+The duration of total circuitmux queue time for each cell will be
+compared a consensus parameter 'min_queue_target', which is set to 5% of
+min network RTT. (This mirrors the CoDel TARGET parameter).
+
+Additionally, an inspection INTERVAL parameter 'queue_interval' governs
+how long queue lengths must exceed 'min_queue_target' before a circuit
+is declared congested. This mirrors the CoDel INTERVAL parameter, and it
+should default to approximately 50-100% of average network RTT.
+
+As soon as the cells of a circuit spend more than 'min_queue_target'
+time in queues for at least 'queue_interval' amount of time, per-circuit
+flag 'ecn_exit_slow_start' will be set to 1. As soon as a cell is
+available in the opposite direction on that circuit, the relay will flip
+the cell_t.command of from CELL_COMMAND_RELAY to
+CELL_COMMAND_RELAY_CONGESTION. (We must wait for a cell in the opposite
+direction because that is the sender that caused the congestion).
+
+This enhancement will allow endpoints to very quickly exit from
+[CONTROL_ALGORITHM] "slow start" phase (during which, the congestion
+window increases exponentially). The ability to more quickly exit the
+exponential slow start phase during congestion will help reduce queue
+sizes at relays.
+
+To avoid side channels, this cell must only be flipped on
+CELL_COMMAND_RELAY, and not CELL_COMMAND_RELAY_EARLY. Additionally, all
+relays MUST enforce that only *one* such cell command is flipped, per
+direction, per circuit. Any additional CELL_COMMAND_RELAY_CONGESTION
+cells seen by any relay or client MUST cause those circuit participants
+to immediately close the circuit.
+
+As a further optimization, if no relay cells are pending in the opposite
+direction as congestion is happening, we can send a zero-filled cell
+instead. In the forward direction of the circuit, we can send this cell
+without any crypto layers, so long as further relays enforce that the
+contents are zero-filled, to avoid side channels.
+
+
+Y. BACKWARD_ECN signal format
+
+   TODO: We need to specify exactly which byte to flip in cells
+         to signal congestion on a circuit.
+
+   TODO: Black magic will allow us to send zero-filled BACKWARD_ECN
+         cells in the *wrong* direction in a circuit, towards the Exit -
+         ie with no crypto layers at all. If we enforce strict format
+         and zero-filling of these cells at intermediate relays, we can
+         avoid side channels there, too. (Such a hack allows us to
+         send BACKWARD_ECN without any wait, if there are no relay cells
+         that are available heading in the backward direction, towards
+         the endpoint that caused congestion).
+
+
