@@ -56,7 +56,7 @@ The RSA SHA1 relay fingerprint can be found in the file named "fingerprint" loca
 
 # Change Controller
 
-tor-dev AT lists.torproject.org
+Tor Project Development Mailing List <tor-dev@lists.torproject.org>
 
 # Related Information
 
