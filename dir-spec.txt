@@ -200,7 +200,8 @@
   Items.  Every Item begins with a KeywordLine, followed by zero or more
   Objects. A KeywordLine begins with a Keyword, optionally followed by
   whitespace and more non-newline characters, and ends with a newline.  A
-  Keyword is a sequence of one or more characters in the set [A-Za-z0-9-].
+  Keyword is a sequence of one or more characters in the set [A-Za-z0-9-],
+  but may not start with -.
   An Object is a block of encoded data in pseudo-Privacy-Enhanced-Mail (PEM)
   style format: that is, lines of encoded data MAY be wrapped by inserting
   an ascii linefeed ("LF", also called newline, or "NL" here) character
@@ -214,13 +215,14 @@
     Document ::= (Item | NL)+
     Item ::= KeywordLine Object*
     KeywordLine ::= Keyword NL | Keyword WS ArgumentChar+ NL
-    Keyword = KeywordChar+
-    KeywordChar ::= 'A' ... 'Z' | 'a' ... 'z' | '0' ... '9' | '-'
+    Keyword = KeywordStart KeywordChar*
+    KeywordStart ::= 'A' ... 'Z' | 'a' ... 'z' | '0' ... '9'
+    KeywordChar ::= KeywordStart | '-'
     ArgumentChar ::= any printing ASCII character except NL.
     WS = (SP | TAB)+
     Object ::= BeginLine Base64-encoded-data EndLine
-    BeginLine ::= "-----BEGIN " Keyword "-----" NL
-    EndLine ::= "-----END " Keyword "-----" NL
+    BeginLine ::= "-----BEGIN " Keyword (" " Keyword)* "-----" NL
+    EndLine ::= "-----END " Keyword (" " Keyword)* "-----" NL
 
     A Keyword may not be "-----BEGIN".
 
@@ -361,7 +363,10 @@
         (See note above: clients guess that the next consensus's FU will be
         two intervals after the current VA.)
 
-   VU: The consensus is no longer valid.
+   VU: The consensus is no longer valid; clients should continue to try to
+   download a new consensus if they have not done so already.
+
+   VU + 24 hours: Clients will no longer use the consensus at all.
 
    VoteSeconds and DistSeconds MUST each be at least 20 seconds; FU-VA and
    VU-FU MUST each be at least 5 minutes.
@@ -626,12 +631,13 @@
 
        It MUST be the next-to-last element in the descriptor, appearing
        immediately before the RSA signature. It MUST contain an Ed25519
-       signature of a SHA256 digest of the entire document, from the
-       first character up to and including the first space after the
-       "router-sig-ed25519" string, prefixed with the string "Tor
-       router descriptor signature v1".  Its format is:
+       signature of a SHA256 digest of the entire document. This digest is
+       taken from the first character up to and including the first space
+       after the "router-sig-ed25519" string. Before computing the digest,
+       the string "Tor router descriptor signature v1" is prefixed to the
+       document.
 
-       The signature is encoded in Base64 with terminating =s removed.
+       The signature is encoded in Base64, with terminating =s removed.
 
        The signing key in the identity-ed25519 certificate MUST
        be the one used to sign the document.
@@ -1775,9 +1781,13 @@
 
         [Exactly once.]
 
-        The end of the Interval for this vote.  After this time, the
-        consensus produced by this vote should not be used.  See section 1.4
+        The end of the Interval for this vote.  After this time, all
+        clients should try to find a more recent consensus. See section 1.4
         for voting timeline information.
+
+        In practice, clients continue to use the consensus for up to 24 hours
+        after it is no longer valid, if no more recent consensus can be
+        downloaded.
 
     "voting-delay" SP VoteSeconds SP DistSeconds NL
 
@@ -3563,12 +3573,11 @@
    failure count.
 
    Clients retain the most recent descriptor they have downloaded for each
-   router so long as it is not too old (currently, 48 hours), OR so long as
-   no better descriptor has been downloaded for the same router.
-
-   [Versions of Tor before 0.1.2.3-alpha would discard descriptors simply for
-   being published too far in the past.]  [The code seems to discard
-   descriptors in all cases after they're 5 days old. True? -RD]
+   router so long as it is listed in the consensus.  If it is not listed,
+   they keep it so long as it is not too old (currently, ROUTER_MAX_AGE=48
+   hours) and no better router descriptor has been downloaded for the same
+   relay.  Caches retain descriptors until they are at least
+   OLD_ROUTER_DESC_MAX_AGE=5 days old.
 
    Clients which chose to download the microdescriptor consensus instead
    of the general consensus must download the referenced microdescriptors
@@ -3578,13 +3587,8 @@
    need to fetch the microdescriptors that have changed.
 
    When a client gets a new microdescriptor consensus, it looks to see if
-   there are any microdescriptors it needs to learn.  If it needs to learn
-   more than half of the microdescriptors, it requests 'all', else it
-   requests only the missing ones.  Clients MAY try to determine whether
-   the upload bandwidth for listing the microdescriptors they want is more
-   or less than the download bandwidth for the microdescriptors they do
-   not want.
-   [XXX The 'all' URL is not implemented yet. -KL]
+   there are any microdescriptors it needs to learn, and launches a request
+   for them.
 
    Clients maintain a cache of microdescriptors along with metadata like
    when it was last referenced by a consensus, and which identity key
