@@ -3448,6 +3448,10 @@
    FPRLIST is +-separated list of recognized authority identity
    fingerprints as in appendix B.
 
+4.6 Retrying failed downloads
+
+   See section 5.5 below; it applies to caches as well as clients.
+
 5. Client operation
 
    Every Tor that is not a directory server (that is, those that do
@@ -3657,6 +3661,63 @@
 5.4.4. Warning about a router's status.
 
    (This section is removed; authorities no longer assign the 'Named' flag.)
+
+5.5. Retrying failed downloads
+
+   This section applies to caches as well as to clients.
+
+   When a client fails to download a resource (a consensus, a router
+   descriptor, a microdescriptor, etc) it waits for a certain amount of
+   time before retrying the download.  To determine the amount of time
+   to wait, clients use a randomized exponential backoff algorithm.
+   (Specifically, they use a variation of the "decorrelated jitter"
+   algorithm from
+   https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/ .)
+
+   The specific formula used to compute the 'i+1'th delay is:
+
+        Delay_{i+1} = MIN(cap, random_between(lower_bound, upper_bound)))
+          where upper_bound = MAX(lower_bound+1, Delay_i * 3)
+                lower_bound = MAX(1, base_delay).
+
+   The value of 'cap' is set to INT_MAX; the value of 'base_delay'
+   depends on what is being downloaded, whether the client is fully
+   bootstrapped, how the client is configured, and where it is
+   downloading from.  Current base_delay values are:
+
+   Consensus objects, as a non-bridge cache:
+         0 (TestingServerConsensusDownloadInitialDelay)
+
+   Consensus objects, as a client or bridge that has bootstrapped:
+         0 (TestingClientConsensusDownloadInitialDelay)
+
+   Consensus objects, as a client or bridge that is bootstrapping,
+   when connecting to an authority because no "fallback" caches are
+   known:
+         0 (ClientBootstrapConsensusAuthorityOnlyDownloadInitialDelay)
+
+   Consensus objects, as a client or bridge that is bootstrapping,
+   when "fallback" caches are known but connecting to an authority
+   anyway:
+         6 (ClientBootstrapConsensusAuthorityDownloadInitialDelay)
+
+   Consensus objects, as a client or bridge that is bootstrapping,
+   when downloading from a "fallback" cache.
+         0 (ClientBootstrapConsensusFallbackDownloadInitialDelay)
+
+   Bridge descriptors, as a bridge-using client when at least one bridge
+   is usable:
+         10800 (TestingBridgeDownloadInitialDelay)
+
+   Bridge descriptors, otherwise:
+         0 (TestingBridgeBootstrapDownloadInitialDelay)
+
+   Other objects, as cache or authority:
+         0 (TestingServerDownloadInitialDelay)
+
+   Other objects, as client:
+         0 (TestingClientDownloadInitialDelay)
+
 
 6. Standards compliance
 
