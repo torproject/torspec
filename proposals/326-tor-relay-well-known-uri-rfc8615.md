@@ -10,8 +10,7 @@ Status: Open
 
 This is a specification for a well-known [registry](https://www.iana.org/assignments/well-known-uris/) entry according to [RFC8615](https://tools.ietf.org/html/rfc8615).
 
-This resource identifier is used for the the verification of [Tor](https://www.torproject.org/) relay contact information 
-(more specifically the [operatorurl](https://nusenu.github.io/ContactInfo-Information-Sharing-Specification/#operatorurl)).
+This resource identifier can be used for serving and finding proofs related to [Tor](https://www.torproject.org/) relay contact information.
 It can also be used for autodiscovery of Tor relays run by a given entity, if the entity domain is known.
 It solves the issue that Tor relay contact information is an unidirectional and unverified claim by nature.
 This well-known URI aims to allow the verification of the unidirectional claim.
@@ -23,7 +22,7 @@ organization by pointing to its website: Tor relay contact information field -> 
 * The "tor-relay" URI allows for the verification of that claim by fetching the files containing Tor relay ID(s) under the specified URI, 
 because attackers can not easily place these files at the given location.
 
-* By publishing Tor relay IDs under this URI the website operator claims to operate these relays.
+* By publishing Tor relay IDs under this URI the website operator claims to be the responsible entity for these Tor relays.
 The verification of listed Tor relay IDs only succeeds if the claim can be verified bidirectionally (website -> relay and relay -> website).
 
 * This URI is not related to Tor bridges or Tor onion services.
@@ -62,7 +61,7 @@ Tor Project Development Mailing List <tor-dev@lists.torproject.org>
 
 * [https://gitweb.torproject.org/torspec.git/tree/tor-spec.txt](https://gitweb.torproject.org/torspec.git/tree/tor-spec.txt)
 * [https://gitweb.torproject.org/torspec.git/tree/cert-spec.txt](https://gitweb.torproject.org/torspec.git/tree/cert-spec.txt)
-* [https://nusenu.github.io/ContactInfo-Information-Sharing-Specification/#operatorurl](https://nusenu.github.io/ContactInfo-Information-Sharing-Specification/#operatorurl)
+* [https://nusenu.github.io/ContactInfo-Information-Sharing-Specification](https://nusenu.github.io/ContactInfo-Information-Sharing-Specification)
 * [RFC8615](https://tools.ietf.org/html/rfc8615)
 
 
