@@ -802,7 +802,7 @@ Table of contents:
    using the current consensus "valid-after" as specified in section
    [TIME-PERIODS].
 
-   Then, for each node listed in the current consensus with the HSDirV3 flag,
+   Then, for each node listed in the current consensus with the HSDir flag,
    we compute a directory index for that node as:
 
            hsdir_index(node) = H("node-idx" | node_identity |
