@@ -1213,6 +1213,8 @@
 
     "hidserv-stats-end" YYYY-MM-DD HH:MM:SS (NSEC s) NL
         [At most once.]
+    "hidserv-v3-stats-end" YYYY-MM-DD HH:MM:SS (NSEC s) NL
+        [At most once.]
 
         YYYY-MM-DD HH:MM:SS defines the end of the included measurement
         interval of length NSEC seconds (86400 seconds by default).
@@ -1222,6 +1224,8 @@
         hours.
 
     "hidserv-rend-relayed-cells" SP NUM SP key=val SP key=val ... NL
+        [At most once.]
+    "hidserv-rend-v3-relayed-cells" SP NUM SP key=val SP key=val ... NL
         [At most once.]
 
         Approximate number of RELAY cells seen in either direction on a
@@ -1240,6 +1244,8 @@
         value can be negative.
 
     "hidserv-dir-onions-seen" SP NUM SP key=val SP key=val ... NL
+        [At most once.]
+    "hidserv-dir-v3-onions-seen" SP NUM SP key=val SP key=val ... NL
         [At most once.]
 
         Approximate number of unique hidden-service identities seen in
