@@ -3,7 +3,8 @@ Filename: 318-limit-protovers.md
 Title: Limit protover values to 0-63.
 Author: Nick Mathewson
 Created: 11 May 2020
-Status: Accepted
+Status: Closed
+Implemented-In: 0.4.5.1-alpha
 ```
 
 # Limit protover values to 0-63.

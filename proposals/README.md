@@ -55,7 +55,6 @@ implementation.
 * [`311-relay-ipv6-reachability.txt`](/proposals/311-relay-ipv6-reachability.txt): Tor Relay IPv6 Reachability
 * [`312-relay-auto-ipv6-addr.txt`](/proposals/312-relay-auto-ipv6-addr.txt): Tor Relay Automatic IPv6 Address Discovery
 * [`313-relay-ipv6-stats.txt`](/proposals/313-relay-ipv6-stats.txt): Tor Relay IPv6 Statistics
-* [`318-limit-protovers.md`](/proposals/318-limit-protovers.md): Limit protover values to 0-63
 
 
 ## FINISHED proposals: implemented, specs not merged
@@ -233,6 +232,7 @@ necessary.
 * [`302-padding-machines-for-onion-clients.txt`](/proposals/302-padding-machines-for-onion-clients.txt): Hiding onion service clients using padding
 * [`304-socks5-extending-hs-error-codes.txt`](/proposals/304-socks5-extending-hs-error-codes.txt): Extending SOCKS5 Onion Service Error Codes
 * [`305-establish-intro-dos-defense-extention.txt`](/proposals/305-establish-intro-dos-defense-extention.txt): ESTABLISH_INTRO Cell DoS Defense Extension
+* [`318-limit-protovers.md`](/proposals/318-limit-protovers.md): Limit protover values to 0-63
 
 
 ## RESERVE proposals: saving for later

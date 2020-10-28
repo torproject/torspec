@@ -238,7 +238,7 @@ Proposals by number:
 315  Updating the list of fields required in directory documents [OPEN]
 316  FlashFlow: A Secure Speed Test for Tor (Parent Proposal) [DRAFT]
 317  Improve security aspects of DNS name resolution [NEEDS-REVISION]
-318  Limit protover values to 0-63 [ACCEPTED]
+318  Limit protover values to 0-63 [CLOSED]
 319  RELAY_FRAGMENT cells [OPEN]
 320  Removing TAP usage from v2 onion services [REJECTED]
 321  Better performance and usability for the MyFamily option (v2) [OPEN]
@@ -295,7 +295,6 @@ Proposals by status:
    311  Tor Relay IPv6 Reachability
    312  Tor Relay Automatic IPv6 Address Discovery
    313  Tor Relay IPv6 Statistics
-   318  Limit protover values to 0-63
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process
@@ -405,6 +404,7 @@ Proposals by status:
    302  Hiding onion service clients using padding [in 0.4.1.1-alpha]
    304  Extending SOCKS5 Onion Service Error Codes
    305  ESTABLISH_INTRO Cell DoS Defense Extension
+   318  Limit protover values to 0-63 [in 0.4.5.1-alpha]
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration
