@@ -676,14 +676,8 @@
     "desc/all-recent" -- the latest server descriptor for every router that
       Tor knows about.  (See md note about "desc/id" and "desc/name" above.)
 
-    "network-status" -- a space-separated list (v1 directory style)
-      of all known OR identities. This is in the same format as the
-      router-status line in v1 directories; see dir-spec-v1.txt section
-      3 for details.  (If VERBOSE_NAMES is enabled, the output will
-      not conform to dir-spec-v1.txt; instead, the result will be a
-      space-separated list of LongName, each preceded by a "!" if it is
-      believed to be not running.) This option is deprecated; use
-      "ns/all" instead.
+    "network-status" -- [Deprecated in 0.3.1.1-alpha, removed
+      in 0.4.5.1-alpha.]
 
     "address-mappings/all"
     "address-mappings/config"
