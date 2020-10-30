@@ -441,7 +441,7 @@
     "identity-ed25519" NL "-----BEGIN ED25519 CERT-----" NL certificate
            "-----END ED25519 CERT-----" NL
 
-        [At most once, in second position in document.]
+        [Exactly once, in second position in document.]
         [No extra arguments]
 
         The certificate is a base64-encoded Ed25519 certificate (see
@@ -453,13 +453,17 @@
         signed-with-ed25519-key extension (see cert-spec.txt,
         section 2.2.1), so that we can extract the master identity key.
 
+        [Before Tor 0.4.5.1-alpha, this field was optional.]
+
      "master-key-ed25519" SP MasterKey NL
 
-        [At most once]
+        [Exactly once]
 
         Contains the base-64 encoded ed25519 master key as a single
         argument.  If it is present, it MUST match the identity key
         in the identity-ed25519 entry.
+
+        [Before Tor 0.4.5.1-alpha, this field was optional.]
 
     "bandwidth" bandwidth-avg bandwidth-burst bandwidth-observed NL
 
@@ -535,9 +539,8 @@
 
     "onion-key-crosscert" NL a RSA signature in PEM format.
 
-       [At most once, required when identity-ed25519 is present]
+       [Exactly once]
        [No extra arguments]
-
 
        This element contains an RSA signature, generated using the
        onion-key, of the following:
@@ -558,9 +561,12 @@
        had control over the secret key corresponding to the
        onion-key.
 
+       [Before Tor 0.4.5.1-alpha, this field was optional whenever
+       identity-ed25519 was absent.]
+
     "ntor-onion-key" base-64-encoded-key
 
-       [At most once]
+       [Exactly once]
 
        A curve25519 public key used for the ntor circuit extended
        handshake.  It's the standard encoding of the OR's curve25519
@@ -569,11 +575,13 @@
        for at least 1 week after any new key is published in a
        subsequent descriptor.
 
+       [Before Tor 0.4.5.1-alpha, this field was optional.]
+
     "ntor-onion-key-crosscert" SP Bit NL
            "-----BEGIN ED25519 CERT-----" NL certificate
            "-----END ED25519 CERT-----" NL
 
-       [At most once, required when identity-ed25519 is present]
+       [Exactly once]
        [No extra arguments]
 
        A signature created with the ntor-onion-key, using the
@@ -592,6 +600,9 @@
        This signature proves that the party creating the descriptor
        had control over the secret key corresponding to the
        ntor-onion-key.
+
+       [Before Tor 0.4.5.1-alpha, this field was optional whenever
+       identity-ed25519 was absent.]
 
     "signing-key" NL a public key in PEM format
 
@@ -626,8 +637,7 @@
 
     "router-sig-ed25519" SP Signature NL
 
-       [At most once.]
-       [Required when identity-ed25519 is present; forbidden otherwise.]
+       [Exactly once.]
 
        It MUST be the next-to-last element in the descriptor, appearing
        immediately before the RSA signature. It MUST contain an Ed25519
@@ -641,6 +651,9 @@
 
        The signing key in the identity-ed25519 certificate MUST
        be the one used to sign the document.
+
+       [Before Tor 0.4.5.1-alpha, this field was optional whenever
+       identity-ed25519 was absent.]
 
     "router-signature" NL Signature NL
 
@@ -819,8 +832,7 @@
 
    "proto" SP Entries NL
 
-       [At most one.]
-       [Will become mandatory at some point after May 2018.]
+       [Exactly once.]
 
        Entries =
        Entries = Entry
@@ -845,8 +857,10 @@
        Ranges should be represented as compactly as possible. Ints must be no
        larger than 63.
 
-       This field was first added in Tor 0.2.9.x. Some time after all earlier
-       Tor relay versions are obsolete, it will become mandatory.
+       This field was first added in Tor 0.2.9.x.
+
+       [Before Tor 0.4.5.1-alpha, this field was optional.]
+
 
 2.1.2. Extra-info document format
 
@@ -1518,12 +1532,14 @@
 
     "ntor-onion-key" SP base-64-encoded-key NL
 
-        [At most once]
+        [Exactly once]
 
         The "ntor-onion-key" element as specified in section 2.1.1.
 
         (Only included when generating microdescriptors for
         consensus-method 16 or later.)
+
+        [Before Tor 0.4.5.1-alpha, this field was optional.]
 
      "a" SP address ":" port NL
 
@@ -1633,9 +1649,11 @@
 
      "pr" SP Entries NL
 
-        [At most once.]
+        [Exactly once.]
 
         The "proto" element as specified in section 2.1.1.
+
+        [Before Tor 0.4.5.1-alpha, this field was optional.]
 
    (Note that with microdescriptors, clients do not learn the RSA identity of
    their routers: they only learn a hash of the RSA identity key.  This is
