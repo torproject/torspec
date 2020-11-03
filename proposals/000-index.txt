@@ -248,6 +248,7 @@ Proposals by number:
 325  Packed relay cells: saving space on small commands [OPEN]
 326  The "tor-relay" Well-Known Resource Identifier [OPEN]
 327  A First Take at PoW Over Introduction Circuits [DRAFT]
+328  Make Relays Report When They Are Overloaded [DRAFT]
 
 
 Proposals by status:
@@ -257,6 +258,7 @@ Proposals by status:
    294  TLS 1.3 Migration
    316  FlashFlow: A Secure Speed Test for Tor (Parent Proposal)
    327  A First Take at PoW Over Introduction Circuits
+   328  Make Relays Report When They Are Overloaded
  NEEDS-REVISION:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
