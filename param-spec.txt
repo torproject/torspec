@@ -26,11 +26,13 @@ line of a directory consensus.
     Min: 0, Max: 1, Default: 1
     First-appeared: 0.2.3.3-alpha
     Default was 0 before: 0.2.9.1-alpha
+    Removed in 0.4.5.1-alpha; now always on.
 
     "usecreatefast" -- Used to control whether clients use the CREATE_FAST
     handshake on the first hop of their circuits.
     Min: 0, Max: 1. Default: 1.
     First-appeared: 0.2.4.23, 0.2.5.2-alpha
+    Removed in 0.4.5.1-alpha; now always off.
 
     "min_paths_for_circs_pct" -- A percentage threshold that determines
     whether clients believe they have enough directory information to
