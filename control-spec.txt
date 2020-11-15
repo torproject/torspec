@@ -1666,6 +1666,7 @@
             [SP "MaxStreams=" NumStreams]
             1*(SP "Port=" VirtPort ["," Target])
             *(SP "ClientAuth=" ClientName [":" ClientBlob]) CRLF
+            *(SP "ClientAuthV3=" V3Key) CRLF
 
     KeyType =
      "NEW"     / ; The server should generate a key of algorithm KeyBlob
@@ -1691,6 +1692,8 @@
                      to the current control connection.
      "BasicAuth" / ; Client authorization is required using the "basic"
                      method (v2 only).
+     "V3Auth"    / ; Version 3 client authorization is required (v3 only).
+
      "NonAnonymous" /; Add a non-anonymous Single Onion Service. Tor
                        checks this flag matches its configured hidden
                        service anonymity mode.
@@ -1712,6 +1715,8 @@
 
     ClientBlob = Authorization data for the client, in an opaque format
                  specific to the authorization method (v2 only).
+
+    V3Key = The client's base32-encoded public key (v3 only).
 
   The server reply format is:
 
