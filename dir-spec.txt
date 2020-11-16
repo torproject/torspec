@@ -1782,8 +1782,7 @@
 
         (Note that because of propagation delays, clients and relays
         may see consensus documents that are up to `DistSeconds`
-        earlier than this this time, and should not warn about
-        them.)
+        earlier than this time, and should not warn about them.)
 
         See section 1.4 for voting timeline information.
 

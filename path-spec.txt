@@ -124,7 +124,7 @@ of their choices.
    Here, "enough" directory information is defined as:
 
       * Having a consensus that's been valid at some point in the
-        last REASONABLY_LIVE_TIME interval (24 hourts).
+        last REASONABLY_LIVE_TIME interval (24 hours).
 
       * Having enough descriptors that we could build at least some
         fraction F of all bandwidth-weighted paths, without taking

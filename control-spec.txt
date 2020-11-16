@@ -3605,7 +3605,8 @@
                 configuration option. Tor accepts relative and full path.
       Message = The log message that the PT sends back to the tor parent
                 process minus the "LOG" string prefix. Formatted as
-                specified in pt-spec.txt section 3.3.4.
+                specified in pt-spec.txt section "3.3.4. Pluggable
+                Transport Log Message".
 
    This event is triggered when tor receives a log message from the PT.
 
@@ -3627,11 +3628,12 @@
 
       Program = The program path as defined in the *TransportPlugin
                 configuration option. Tor accepts relative and full path.
-      Transport = This value indicate a hint on what the PT is such has the
+      Transport = This value indicate a hint on what the PT is such as the
                   name or the protocol used for instance.
       Message = The status message that the PT sends back to the tor parent
                 process minus the "STATUS" string prefix. Formatted as
-                specified in pt-spec.txt section 3.3.5.
+                specified in pt-spec.txt section "3.3.5 Pluggable
+                Transport Status Message".
 
    This event is triggered when tor receives a log message from the PT.
 
