@@ -1716,7 +1716,8 @@
     ClientBlob = Authorization data for the client, in an opaque format
                  specific to the authorization method (v2 only).
 
-    V3Key = The client's base32-encoded public key (v3 only).
+    V3Key = The client's base32-encoded ed25519 public key, using only the key
+            part of rend-spec-v3.txt section G.1.2 (v3 only).
 
   The server reply format is:
 
@@ -1803,6 +1804,11 @@
      S: 250-ClientAuth=bob:[Blob Redacted]
      S: 250 OK
 
+     C: ADD_ONION NEW:ED25519-V3 ClientAuthV3=[Blob Redacted] Port=22
+     S: 250-ServiceID=n35etu3yjxrqjpntmfziom5sjwspoydchmelc4xleoy4jk2u4lziz2yd
+     S: 250-ClientAuthV3=[Blob Redacted]
+     S: 250 OK
+
   Examples with Tor in anonymous onion service mode:
 
      C: ADD_ONION NEW:BEST Flags=DiscardPK Port=22
@@ -1826,6 +1832,7 @@
   [ClientAuth was added in Tor 0.2.9.1-alpha. It is v2 only.]
   [NonAnonymous was added in Tor 0.2.9.3-alpha.]
   [HS v3 support added 0.3.3.1-alpha]
+  [ClientV3Auth support added 0.4.6.1-alpha]
 
 3.28. DEL_ONION
 
