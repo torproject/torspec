@@ -13,13 +13,6 @@ line of a directory consensus.
     Min: 100, Max: 1000
     First-appeared: Tor 0.2.1.20
 
-    "refuseunknownexits" -- if set to one, exit relays look at the previous
-    hop of circuits that ask to open an exit stream, and refuse to exit if
-    they don't recognize it as a relay. The goal is to make it harder for
-    people to use them as one-hop proxies. See trac entry 1751 for details.
-    Min: 0, Max: 1
-    First-appeared: 0.2.2.17-alpha
-
     "UseOptimisticData" -- If set to zero, clients by default shouldn't try
     to send optimistic data to servers until they have received a
     RELAY_CONNECTED cell.
@@ -41,11 +34,6 @@ line of a directory consensus.
     path-spec.txt for more information.
     Min: 25, Max: 95, Default: 60
     First-appeared: 0.2.4
-
-    "AllowNonearlyExtend" -- If true, permit EXTEND cells that are not inside
-    RELAY_EARLY cells.
-    Min: 0. Max: 1. Default: 0.
-    First-appeared: 0.2.3.11-alpha
 
     "ExtendByEd25519ID" -- If true, clients should include Ed25519
     identities for relays when generating EXTEND2 cells.
@@ -156,6 +144,13 @@ line of a directory consensus.
 
 7. Relay behavior
 
+    "refuseunknownexits" -- if set to one, exit relays look at the previous
+    hop of circuits that ask to open an exit stream, and refuse to exit if
+    they don't recognize it as a relay. The goal is to make it harder for
+    people to use them as one-hop proxies. See trac entry 1751 for details.
+    Min: 0, Max: 1
+    First-appeared: 0.2.2.17-alpha
+
     "onion-key-rotation-days" -- (min 1, max 90, default 28)
 
     "onion-key-grace-period-days" -- (min 1, max
@@ -167,6 +162,11 @@ line of a directory consensus.
     previous onion key for an additional onion-key-grace-period-days
     days after it is replaced.  (Introduced in 0.3.1.1-alpha;
     prior versions of tor hardcoded both of these values to 7 days.)
+
+    "AllowNonearlyExtend" -- If true, permit EXTEND cells that are not inside
+    RELAY_EARLY cells.
+    Min: 0. Max: 1. Default: 0.
+    First-appeared: 0.2.3.11-alpha
 
 8. V3 onion service parameters
 
