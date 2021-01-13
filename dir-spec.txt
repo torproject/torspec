@@ -2805,6 +2805,10 @@
         * If consensus method 30 or later is used, the base64 encoded
           ntor-onion-key does not include the trailing = sign.
 
+        * If consensus method 31 or later is used, authorities parse the
+          "bwweightscale" and "maxunmeasuredbw" parameters correctly when
+          computing votes.
+
      The signatures at the end of a consensus document are sorted in
      ascending order by identity digest.
 
@@ -2891,6 +2895,8 @@
      "28" -- Removes "a" lines from microdescriptors.
      "29" -- Canonicalizes families in microdescriptors.
      "30" -- Removes padding from ntor-onion-key.
+     "31" -- Uses correct parsing for bwweightscale and maxunmeasuredbw
+             when computing weights
 
    Before generating a consensus, an authority must decide which consensus
    method to use.  To do this, it looks for the highest version number
@@ -2938,7 +2944,11 @@
 
 3.8.3. Computing Bandwidth Weights
 
-  Let weight_scale = 10000
+  Let weight_scale = 10000, or the value of the "bwweightscale" parameter.
+  (Before consensus method 31 there was a bug in parsing bwweightscale, so
+  that if there were any consensus parameters after it alphabetically, it
+  would always be treated as 10000. A similar bug existed for
+  "maxunmeasuredbw".)
 
   Starting with consensus method 26, G, M, E, and D are initialized to 1 and
   T to 4. Prior consensus methods initialize them all to 0. With this change,
@@ -3091,7 +3101,8 @@
 
   To ensure consensus, all calculations are performed using integer math
   with a fixed precision determined by the bwweightscale consensus
-  parameter (defaults at 10000, Min: 1, Max: INT32_MAX).
+  parameter (defaults at 10000, Min: 1, Max: INT32_MAX). (See note above
+  about parsing bug in bwweightscale before consensus method 31.)
 
   For future balancing improvements, Tor clients support 11 additional weights
   for directory requests and middle weighting. These weights are currently
