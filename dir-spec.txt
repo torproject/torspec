@@ -4060,7 +4060,6 @@ E. Limited ed diff format
     - "<n1>,<n2>c"     Replace lines n1 through n2, inclusive, with the
                        following block.
     - "<n1>a"          Append the following block after line n1.
-    - "a"              Append the following block after the current line.
 
    Note that line numbers always apply to the file after all previous
    commands have already been applied.  Note also that line numbers
@@ -4075,12 +4074,6 @@ E. Limited ed diff format
    signatures.  Using this format ensures that the client will
    successfully apply the diff even if they have an unusual encoding for
    the signatures.
-
-   The "current line" is either the first line of the file, if this is
-   the first command, the last line of a block we added in an append or
-   change command, or the line immediate following a set of lines we just
-   deleted (or the last line of the file if there are no lines after
-   that).
 
    The replace and append command take blocks.  These blocks are simply
    appended to the diff after the line with the command.  A line with
