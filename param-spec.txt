@@ -48,6 +48,13 @@ line of a directory consensus.
     Min: 0. Max: 255. Default 0.
     First appeared: 0.4.1.1-alpha.
 
+    "allow-network-reentry" -- If true, the Exit relays allow connections that
+    are exiting the network to re-enter. If false, any exit connections going
+    to a relay ORPort or an authority ORPort and DirPort is denied and the
+    stream is terminated.
+    Min: 0. Max: 1. Default: 0
+    First appeared: 0.4.5.1-alpha.
+
 2. Performance-tuning parameters
 
     "CircuitPriorityHalflifeMsec" -- the halflife parameter used when
