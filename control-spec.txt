@@ -2579,7 +2579,7 @@
 
      "650" SP "ADDRMAP" SP Address SP NewAddress SP Expiry
        [SP "error=" ErrorCode] [SP "EXPIRES=" UTCExpiry] [SP "CACHED=" Cached]
-       CRLF
+       [SP "STREAMID=" StreamId] CRLF
 
      NewAddress = Address / "<error>"
      Expiry = DQUOTE ISOTime DQUOTE / "NEVER"
@@ -2588,6 +2588,7 @@
      UTCExpiry = DQUOTE IsoTime DQUOTE
 
      Cached = DQUOTE "YES" DQUOTE / DQUOTE "NO" DQUOTE
+     StreamId = DQUOTE StreamId DQUOTE
 
   Error and UTCExpiry are only provided if extended events are enabled.
   The values for Error are mostly useless.  Future values will be
@@ -2600,6 +2601,9 @@
 
   Cached indicates whether the mapping will be stored until it expires, or if
   it is just a notification in response to a RESOLVE command.
+
+  StreamId is the global stream identifier of the stream or circuit from which
+  the address was resolved.
 
 4.1.8. Descriptors uploaded to us in our role as authoritative dirserver
 
