@@ -39,26 +39,59 @@ I'll use "client" to mean the initiator of a circuit, and "relay" to
 refer to the parties through who a circuit is created.  Note that
 each "relay" (as used here) may be the "client" on circuits of its own.
 
-When a relay supports relay message packing, it advertises the fact
-using a new Relay protocol version.  Clients must opt-in to using
-this protocol version (see XXX below) before they can send any
-packed relay cells, and before the relay will send them any packed
-relay cells.
+When a relay supports relay message packing, it advertises the fact using a
+new Relay protocol version.  Clients must opt-in to using this protocol
+version (see "Negotiation and Migration" section below ) before they can send
+any packed relay cells, and before the relay will send them any packed relay
+cells.
 
 When packed cells are in use, multiple cell messages can be
 concatenated in a single relay cell.
 
-Only some relay commands are supported for relay cell packing,
-listed here:
-  - `SENDME`
-  - `DROP`
-  - `DATA`
-  - `BEGIN`
+## Packed Cell Format
+
+In order to have multiple commands within one single relay cell, they are
+concatenated one after another following this format of a relay cell. The
+first command is the same header format as a normal relay cell detailed in
+section 6.1 of tor-spec.txt
+
+  Relay Command   [1 byte]
+  'Recognized'    [2 bytes]
+  StreamID        [2 bytes]
+  Digest          [4 bytes]
+  Length          [2 bytes]
+  Data            [Length bytes]
+  RELAY\_MESSAGE
+  Padding         [up to end of cell]
+
+The `RELAY_MESSAGE` can be empty as in no bytes indicating no other messages
+or set to the following:
+
+   Relay Command   [1 byte]
+   StreamID        [2 bytes]
+   Length          [2 bytes]
+   Data            [Length bytes]
+   RELAY\_MESSAGE
+
+Note that the Recognized and Digest field are not added to a second relay
+message, they are solely used for the whole relay cell thus how we
+encrypt/decrypt and recognize a cell is not changed, only the payload changes
+to contain multiple messages.
+
+The "Relay Command" byte "0" is now used to explicitly indicate "end of
+commands". If the byte "0" appears after a `RELAY_MESSAGE`, the rest of the
+cell MUST be ignored.
+
+Only some "Relay Command" are supported for relay cell packing:
   - `BEGIN_DIR`
-  - `END`
+  - `BEGIN`
   - `CONNECTED`
-  - `PADDING_NEGOTIATE`
+  - `DATA`
+  - `DROP`
+  - `END`
   - `PADDING_NEGOTIATED`
+  - `PADDING_NEGOTIATE`
+  - `SENDME`
 
 If any relay message with a relay command _not_ listed above appears
 in a packed relay cell with another relay message, then the
@@ -67,15 +100,10 @@ receiving party MUST tear down the circuit.
 (Note that relay cell fragments (proposal 319) are not supported for
 packing.)
 
-The command byte "0" is now used to explicitly indicate "end of
-cell".  If the byte "0" appears after a relay message, the rest of
-the cell MUST be ignored.
-
-When generating RELAY cells, implementations SHOULD (as they do
-today) fill in the unused bytes with four 0-valued bytes, followed by
-a sequence of random bytes up to the end of the cell.  If there are
-fewer than 4 unused bytes at the end of the cell, those unused bytes
-should all be filled with 0-valued bytes.
+When generating RELAY cells, implementations SHOULD (as they do today) fill in
+the Padding field with four 0-valued bytes, followed by a sequence of random
+bytes up to the end of the cell. If there are fewer than 4 unused bytes at the
+end of the cell, those unused bytes should all be filled with 0-valued bytes.
 
 # Negotiation and migration
 
