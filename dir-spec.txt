@@ -2492,19 +2492,14 @@
    published time on the descriptor is over 18 hours in the past.  (This flag
    was added in 0.4.0.1-alpha.)
 
-   Directory server administrators may label some relays or IPs as
-   blacklisted, and elect not to include them in their network-status lists.
-
-   Authorities SHOULD 'disable' any relays in excess of 2 on any single
-   IP.  When there are more than 2 (or AuthDirMaxServersPerAddr) to
-   choose from, authorities should first prefer authorities to
-   non-authorities, then prefer Running to non-Running, and then prefer
-   high-bandwidth to low-bandwidth[*].  To 'disable' a relay, the
-   authority *should* vote for it without the Running or Valid flag.
-
-      [*] In this comparison, measured bandwidth is used unless it is not
-          present for a router, in which case advertised bandwidth is used.
-          Bug 8710 has a patch to change this behavior.
+   "Sybil" -- authorities SHOULD NOT accept more than 2 relays on a single IP.
+   If this happens, the authority *should* vote for the excess relays, but
+   should omit the Running or Valid flags and instead should assign the "Sybil"
+   flag.  When there are more than 2 (or AuthDirMaxServersPerAddr) relays to
+   choose from, authorities should first prefer authorities to non-authorities,
+   then prefer Running to non-Running, and then prefer high-bandwidth to
+   low-bandwidth relays.  In this comparison, measured bandwidth is used unless
+   it is not present for a router, in which case advertised bandwidth is used.
 
    Thus, the network-status vote includes all non-blacklisted,
    non-expired, non-superseded descriptors.
