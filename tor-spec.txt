@@ -1822,6 +1822,16 @@ see tor-design.pdf.
    [*] Older versions of Tor also send this reason when connections are
        reset.
 
+   Upon receiving a RELAY_END cell, the recipient may be sure that no further
+   cells will arrive on that stream, and can treat such cells as a protocol
+   violation.
+
+   After sending a RELAY_END cell, the sender needs to give the recipient
+   time to receive that cell.  In the meantime, the sender SHOULD remember
+   how many cells of which types (CONNECTED, SENDME, DATA) that it would have
+   accepted on that stream, and SHOULD kill the circuit if it receives more
+   than permitted.
+
    --- [The rest of this section describes unimplemented functionality.]
 
    Because TCP connections can be half-open, we follow an equivalent
