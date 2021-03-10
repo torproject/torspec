@@ -76,7 +76,7 @@ and write, in the past 24 hours starting at the provided timestamp rounded down
 to the hour.
 
 ```
-"overload-ratelimits" SP YYYY-MM-DD SP HH:MM:SS
+"overload-ratelimits" SP version SP YYYY-MM-DD SP HH:MM:SS
                       SP rate-limit SP burst-limit
                       SP read-overload-count SP write-overload-count NL
   [At most once.]
@@ -87,7 +87,9 @@ and BandwidthBurst found in the torrc configuration file.
 
 The "{read|write}-overload-count" are the counts of how many times the reported
 limits of burst/rate were exhausted and thus the maximum between the read and
-write count occurances.
+write count occurances. To make the counter more meaningful and to avoid
+multiple connections saturating the counter when a relay is overloaded, we only
+increment it once a minute.
 
 The 'version' field is set to '1' for the initial implementation of this
 proposal.
