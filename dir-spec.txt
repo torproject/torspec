@@ -2294,6 +2294,24 @@
      "id" SP "ed25519" SP "none" NL
         [vote only, at most once]
 
+     "stats" SP [KeyValues] NL
+
+        [At most once. Vote only]
+
+        KeyValue ::= Keyword '=' Number
+        Number ::= [0-9]+("."[0-9]+)?
+        KeyValues ::= KeyValue | KeyValues SP KeyValue
+
+        Line containing various statistics that an authority has computed for
+        this relay. Each stats is represented as a key + value. Reported keys
+        are:
+
+          "wfu"  - Weighted Fractional Uptime
+          "tk"   - Weighted Time Known
+          "mtbf" - Mean Time Between Failure (stability)
+
+          (As of tor-0.4.6.1-alpha)
+
    The footer section is delineated in all votes and consensuses supporting
    consensus method 9 and above with the following:
 
