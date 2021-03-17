@@ -36,20 +36,22 @@ the future and thus this is not an exhaustive list.
 The general overload line indicates that a relay has reached an "overloaded
 state" which can be one or many of the following load metrics:
 
-   - Any OOMkiller invocation due to memory pressure
-   - Any onionskins are dropped
-   - CPU utilization of Tor's mainloop CPU core above 90% for 60 sec
+   - Any OOM invocation due to memory pressure
+   - Any ntor onionskins are dropped
    - TCP port exhaustion
+   - DNS timeout reached
+   - CPU utilization of Tor's mainloop CPU core above 90% for 60 sec
+   - Control port overload (too many messages queued)
 
 The format of the overloaded line added in the extra-info document is as
 follow:
 
 ```
-"overload-reached" YYYY-MM-DD HH:MM:SS NL
+"overload-general" SP version SP YYYY-MM-DD HH:MM:SS NL
    [At most once.]
 ```
 
-The timestamp is when a at least one metrics was detected. It should always be
+The timestamp is when at least one metrics was detected. It should always be
 at the hour and thus, as an example, "2020-01-10 13:00:00" is an expected
 timestamp. Because this is a binary state, if the line is present, we consider
 that it was hit at the very least once somewhere between the provided
@@ -60,27 +62,37 @@ The overload field should remain in place for 72 hours since last triggered.
 If the limits are reached again in this period, the timestamp is updated, and
 this 72 hour period restarts.
 
+The 'version' field is set to '1' for the initial implementation of this
+proposal which includes all the above overload metrics except from the CPU and
+control port overload. The first version also uses a primitive logic for
+detecting DNS timeouts (only if libevent failed a set of 3 DNS requests/retries
+in a row).
+
 # 1.2. Token bucket size
 
 Relays should report the 'BandwidthBurst' and 'BandwidthRate' limits in their
 descriptor, as well as the number of times these limits were reached, for read
-and write, in the past 24 hours starting at the provided timestamp rounded
-down to the hour.
+and write, in the past 24 hours starting at the provided timestamp rounded down
+to the hour.
 
 ```
-"overload-ratelimits" SP YYYY-MM-DD SP HH:MM:SS
+"overload-ratelimits" SP version SP YYYY-MM-DD SP HH:MM:SS
                       SP rate-limit SP burst-limit
-                      SP read-rate-count SP read-burst-count
-                      SP write-rate-count SP write-burst-count NL
+                      SP read-overload-count SP write-overload-count NL
   [At most once.]
 ```
 
 The "rate-limit" and "burst-limit" are the raw values from the BandwidthRate
 and BandwidthBurst found in the torrc configuration file.
 
-The "{read|write}-rate-count" and "{read|write}-burst-count" are the counts of
-how many times the reported limits were exhausted and thus the maximum between
-the read and write count occurances.
+The "{read|write}-overload-count" are the counts of how many times the reported
+limits of burst/rate were exhausted and thus the maximum between the read and
+write count occurances. To make the counter more meaningful and to avoid
+multiple connections saturating the counter when a relay is overloaded, we only
+increment it once a minute.
+
+The 'version' field is set to '1' for the initial implementation of this
+proposal.
 
 # 1.3. File Descriptor Exhaustion
 
@@ -91,7 +103,7 @@ notice which relay has a value too small and we can notify them.
 This should be published in this format:
 
 ```
-"overload-fd-exhausted" YYYY-MM-DD HH:MM:SS NL
+"overload-fd-exhausted" SP version YYYY-MM-DD HH:MM:SS NL
   [At most once.]
 ```
 
@@ -101,6 +113,9 @@ between the this timestamp and the "published" timestamp of the document.
 This overload field should remain in place for 72 hours since last triggered.
 If the limits are reached again in this period, the timestamp is updated, and
 this 72 hour period restarts.
+
+The 'version' field is set to '1' for the initial implementation of this
+proposal which detects fd exhaustion only when a socket open fails.
 
 # 2. Load Metrics
 
