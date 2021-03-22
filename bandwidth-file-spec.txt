@@ -1166,7 +1166,7 @@ B.3. Quota changes
   consensus diffs and compressed consensuses. But if the relay
   quota is too small, some relays may be over- or under-weighted.
 
-B.4. Torflow aggreation
+B.4. Torflow aggregation
 
   Torflow implements two methods to compute the bandwidth values from the
   (stream) bandwidth measurements: with and without PID control feedback.
@@ -1192,9 +1192,9 @@ B.4. Torflow aggreation
       measured (`n`), ie, calculate the mean average of the relays'
       filtered bandwidth.
     - calculate the stream average by dividing the sum of all the
-      relays' filtered bandwidth by the number of relays that have been
+      relays' measured bandwidth by the number of relays that have been
       measured (`n`), ie, calculate the mean average or the relays'
-     measured bandwidth.
+      measured bandwidth.
 
      In pseudocode:
 
@@ -1213,8 +1213,8 @@ B.4. Torflow aggreation
       r_strm_i = bw_i / bw_avg_strm
 
   4. Calculate the final ratio for each relay:
-    The final ratio is the larger between the filtered bandwidth and the
-    stream bandwidth.
+    The final ratio is the larger between the filtered bandwidth's and the
+    stream bandwidth's ratio.
 
     In pseudocode:
 
