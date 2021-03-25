@@ -1053,8 +1053,15 @@ also be used as a side channel. So we must limit its use to a couple of
 cells per circuit, at most.
   https://blog.torproject.org/tor-security-advisory-relay-early-traffic-confirmation-attack
 
+9. Acknowledgements
 
-9. [CITATIONS]
+Immense thanks to Toke Høiland-Jørgensen for considerable input into all
+aspects of the TCP congestion control background material for this proposal,
+as well as review of our versions of the algorithms.
+
+
+
+10. [CITATIONS]
 
 1. Options for Congestion Control in Tor-Like Networks.
    https://lists.torproject.org/pipermail/tor-dev/2020-January/014140.html
