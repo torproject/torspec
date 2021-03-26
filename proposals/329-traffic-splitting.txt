@@ -35,7 +35,7 @@ Status: Draft
   Because Tor's congestion control only concerns itself with bottnecks in
   Tor relay queues, and not with any other bottlenecks (such as
   intermediate Internet routers), we can avoid this complexity merely by
-  specifying that any paths that are constructed should not share any
+  specifying that any paths that are constructed SHOULD share any
   relays. In this way, we can proceed to use the exact same congestion
   control as specified in Proposal 324, for each path.
   
@@ -105,10 +105,10 @@ Status: Draft
   only two rendezvous circuits are linked. Each of these RP circuits will
   be constructed separately, and then linked. However, the same path
   constraints apply to each half of the circuits (no shared relays between
-  the legs).  Should, by chance, the service and the client sides end up
+  the legs). If, by chance, the service and the client sides end up
   sharing some relays, this is not catastrophic. Multipath TCP researchers
-  we have consulted believe Tor's congestion control from Proposal 324 to
-  be sufficient in this rare case.
+  we have consulted (see [ACKNOWLEDGEMENTS]), believe Tor's congestion
+  control from Proposal 324 to be sufficient in this rare case.
   
   Only two circuits SHOULD be linked together. However, implementations
   SHOULD make it easy for researchers to *test* more than two paths, as
@@ -194,7 +194,7 @@ Status: Draft
   want to support it, because of its own memory issues.
   
   The NONCE contains a random 256-bit secret, used to associate the two
-  circuits together. The nonce must not be shared outside of the circuit
+  circuits together. The nonce MUST NOT be shared outside of the circuit
   transmission, or data may be injected into TCP streams. This means it
   MUST NOT be logged to disk.
   
@@ -212,11 +212,11 @@ Status: Draft
            Sent from the OP to the exit/service, to provide initial RTT
            measurement for the exit/service.
   
-  For timeout of the handshake, clients should use the normal SOCKS/stream
+  For timeout of the handshake, clients SHOULD use the normal SOCKS/stream
   timeout already in use for RELAY_BEGIN.
   
   These three relay commands (RELAY_CIRCUIT_LINK, RELAY_CIRCUIT_LINKED,
-  and RELAY_CIRCUIT_LINKED_ACK) are send on *each* leg, to allow each
+  and RELAY_CIRCUIT_LINKED_RTT_ACK) are send on *each* leg, to allow each
   endpoint to measure the initial RTT of each leg.
 
 2.2. Linking Circuits from OP to Exit [LINKING_EXIT]
@@ -235,7 +235,7 @@ Status: Draft
   measured by the client, to determine each circuit RTT to determine
   primary vs secondary circuit use, and for packet scheduling.  Similarly,
   the exit measures the RTT times between RELAY_COMMAND_LINKED and
-  RELAY_COMMAND_LINKED_ACK, for the same purpose.
+  RELAY_COMMAND_LINKED_RTT_ACK, for the same purpose.
   
 2.3. Linking circuits to an onion service [LINKING_SERVICE]
   
@@ -254,7 +254,7 @@ Status: Draft
   circuit, until RTT can be measured.
   
   Once both circuits are linked and RTT is measured, packet scheduling
-  should be used, as per [SCHEDULING].
+  MUST be used, as per [SCHEDULING].
   
 2.4. Congestion Control Application [CONGESTION_CONTROL]
   
@@ -313,7 +313,7 @@ Status: Draft
   
   When an endpoint switches legs, on the first cell in a new leg, LongSeq
   is set to 1, and the following 31 bits represent the *total* number of
-  cells sent on the *other* leg, before the switch. The receiver must wait
+  cells sent on the *other* leg, before the switch. The receiver MUST wait
   for that number of cells to arrive from the previous leg before
   delivering that cell.
   
@@ -332,10 +332,10 @@ Status: Draft
 
   In the event that a circuit leg is destroyed, they MAY be resumed.
   
-  Resumption is achieved by re-using the NONCE and method to the same
-  endpoint (either [LINKING_EXIT] or [LINKING_SERVICE]). The resumed path
-  need not use the same middle and guard relays, but should not share any
-  relays with any existing legs(s).
+  Resumption is achieved by re-using the NONCE to the same endpoint
+  (either [LINKING_EXIT] or [LINKING_SERVICE]). The resumed path need
+  not use the same middle and guard relays as the destroyed leg(s), but
+  SHOULD NOT share any relays with any existing legs(s).
   
   To provide resumption, endpoints store an absolute 64bit cell counter of
   the last cell they have sent on a conflux pair (their LAST_SEQNO_SENT),
@@ -363,11 +363,13 @@ Status: Draft
   
   Because both endpoints get information about the other side's absolute
   SENT sequence number, they will know exactly how many re-transmitted
-  packets to expect, should the circuit stay open. Re-transmitters should
-  not re-increment their absolute sent fields while re-transmitting.
+  packets to expect, if the circuit is successfully resumed.
+
+  Re-transmitters MUST NOT re-increment their absolute sent fields
+  while re-transmitting.
   
   If it does not have this missing data due to memory pressure, that
-  endpoint should destroy *both* legs, as this represents unrecoverable
+  endpoint MUST destroy *both* legs, as this represents unrecoverable
   data loss.
   
   Otherwise, the new circuit can be re-joined, and its RTT can be compared
@@ -428,13 +430,13 @@ Status: Draft
   switch if the RTTs themselves change which circuit is primary). This is
   what was done in the original Conflux paper. This behavior effectively
   causes us to optimize for responsiveness and congestion avoidance,
-  rather than throughput. For evaluation, we should control this switching
+  rather than throughput. For evaluation, we will control this switching
   behavior with a consensus parameter (see [CONSENSUS_PARAMETERS]).
   
   Because of potential side channel risk (see [SIDE_CHANNELS]), a third
   variant of this algorithm, where the primary circuit is chosen during
-  the [LINKING_CIRCUITS] handshake and never changed, should also be
-  possible to control via consensus parameter.
+  the [LINKING_CIRCUITS] handshake and never changed, is also possible
+  to control via consensus parameter.
 
 3.2. BLEST Scheduling [BLEST_TOR]
 
@@ -465,8 +467,8 @@ Status: Draft
   in this check. total_send_window is min(recv_win, CWND). But since Tor
   does not use receive windows and intead uses stream XON/XOFF, we only
   use CWND. There is some concern this may alter BLEST's buffer
-  minimization properties, but since receive window should only matter if
-  the application is slower than Tor, and XON/XOFF should cover that case,
+  minimization properties, but since receive window only matter if
+  the application is slower than Tor, and XON/XOFF will cover that case,
   hopefully this is fine. If we need to, we could turn [REORDER_SIGNALING]
   into a receive window indication of some kind, to indicate remaining
   buffer size.
@@ -497,17 +499,17 @@ Status: Draft
 
 3.3. Reorder queue signaling [REORDER_SIGNALING]
 
-  Reordering should be fairly simple task. By following using the sequence
+  Reordering is fairly simple task. By following using the sequence
   number field in [SEQUENCING], endpoints can know how many cells are
   still in flight on the other leg.
   
   To reorder them properly, a buffer of out of order cells needs to be
-  kept.  On the Exit side, this can quickly become overwhelming
+  kept. On the Exit side, this can quickly become overwhelming
   considering ten of thousands of possible circuits can be held open
   leading to gigabytes of memory being used. There is a clear potential
-  memory DoS vector which means that a tor implementation should be able
-  to limit the size of those queues.
-  
+  memory DoS vector in this case, covered in more detail in
+  [MEMORY_DOS].
+
   Luckily, [BLEST_TOR] and the form of [LOWRTT_TOR] that only uses the
   primary circuit will minimize or eliminate this out-of-order buffer.
   
@@ -526,7 +528,7 @@ Status: Draft
   
   When the reorder queue hits this size, a RELAY_CONFLUX_XOFF is sent down
   the circuit leg that has data waiting in the queue and use of that leg
-  must cease, until it drains to half of this value, at which point an
+  SHOULD cease, until it drains to half of this value, at which point an
   RELAY_CONFLUX_XON is sent. Note that this is different than the stream
   XON/XOFF from Proposal 324.
   
@@ -614,16 +616,16 @@ Status: Draft
   location. See [LATENCY_LEAK] for more details. It is unclear at this
   time how much more severe this is for two paths than just one.
   
-  We should preserve the ability to disable conflux to and from Exit
-  relays, should these side channels prove more severe, or should it prove
-  possible to mitigate single-circuit side channels, but not conflux side
-  channels.
+  We preserve the ability to disable conflux to and from Exit relays
+  using consensus parameters, if these side channels prove more severe,
+  or if it proves possible possible to mitigate single-circuit side
+  channels, but not conflux side channels.
   
   In all cases, all of these side channels appear less severe for onion
   service traffic, due to the higher path variability due to relay
   selection, as well as the end-to-end nature of conflux in that case.
-  This indicates that our ability to enable/disable conflux for services
-  should be separate from Exits.
+  Thus, we separate our ability to enable/disable conflux for onion
+  services from Exits.
 
 4.3. Traffic analysis [TRAFFIC_ANALYSIS]
 
@@ -634,7 +636,7 @@ Status: Draft
   [LINKING_CIRCUITS] may be quite noticeable.
   
   As one countermeasure, it may be possible to eliminate the third leg
-  (RELAY_CIRCUIT_LINKED_ACK) by computing the exit/service RTT via
+  (RELAY_CIRCUIT_LINKED_RTT_ACK) by computing the exit/service RTT via
   measuring the time between CREATED/REND_JOINED and RELAY_CIRCUIT_LINK,
   but this will introduce cross-component complexity into Tor's protocol
   that could quickly become unwieldy and fragile.
@@ -739,7 +741,7 @@ A.1 BEGIN/END sequencing [ALTERNATIVE_SEQUENCING]
   opposed to the endpoint, to support padding.
   
   Sequence numbers are incremented by one when an endpoint switches legs
-  to transmit a cell. This number will wrap; implementations should treat
+  to transmit a cell. This number will wrap; implementations MUST treat
   0 as the next sequence after 2^6-1. Because we do not expect to support
   significantly more than 2 legs, and much fewer than 63, this is not an
   issue.
@@ -808,7 +810,7 @@ A.3. Alternative RTT measurement [ALTERNATIVE_RTT]
   We should not add more.
 
 
-Appendix B: Acknowledgments
+Appendix B: Acknowledgments [ACKNOWLEDGEMENTS]
 
   Thanks to Per Hurtig for helping us with the framing of the MPTCP
   problem space.
