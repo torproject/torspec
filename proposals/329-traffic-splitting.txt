@@ -467,7 +467,9 @@ Status: Draft
   use CWND. There is some concern this may alter BLEST's buffer
   minimization properties, but since receive window should only matter if
   the application is slower than Tor, and XON/XOFF should cover that case,
-  hopefully this is fine.
+  hopefully this is fine. If we need to, we could turn [REORDER_SIGNALING]
+  into a receive window indication of some kind, to indicate remaining
+  buffer size.
   
   Otherwise, if the primary_limit condition is not hit, cease reading on
   source edge connections until SENDME acks come back.
@@ -510,7 +512,10 @@ Status: Draft
   primary circuit will minimize or eliminate this out-of-order buffer.
   
   XXX: The remainder of this section may be over-complicating things... We
-  only need these concepts if we want to use BLEST's lambda feedback.
+  only need these concepts if we want to use BLEST's lambda feedback. Though
+  turning this into some kind of receive window that indicates remaining
+  reorder buffer size may also help with the total_send_window also noted
+  in BLEST_TOR.
   
   The default for this queue size is governed by the 'cflx_reorder_client'
   and 'cflx_reorder_srv' consensus parameters (see [CONSENSUS_PARAMS]).
