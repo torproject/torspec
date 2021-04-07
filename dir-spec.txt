@@ -151,7 +151,7 @@
 
    Routers periodically upload signed "routers descriptors" to the
    directory authorities describing their keys, capabilities, and other
-   information.  Routers may also upload signed "extra info documents"
+   information.  Routers may also upload signed "extra-info documents"
    containing information that is not required for the Tor protocol.
    Directory authorities serve server descriptors indexed by router
    identity, or by hash of the descriptor.
@@ -724,7 +724,7 @@
         [At most once]
 
         (These fields once appeared in router descriptors, but have
-        appeared in extrainfo descriptors since 0.2.0.x.)
+        appeared in extra-info descriptors since 0.2.0.x.)
 
     "eventdns" bool NL
 
@@ -869,7 +869,7 @@
     "extra-info" Nickname Fingerprint NL
         [At start, exactly once.]
 
-        Identifies what router this is an extra info descriptor for.
+        Identifies what router this is an extra-info descriptor for.
         Fingerprint is encoded in hex (using upper-case letters), with
         no spaces.
 
