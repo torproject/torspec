@@ -79,8 +79,9 @@ encrypt/decrypt and recognize a cell is not changed, only the payload changes
 to contain multiple messages.
 
 The "Relay Command" byte "0" is now used to explicitly indicate "end of
-commands". If the byte "0" appears after a `RELAY_MESSAGE`, the rest of the
-cell MUST be ignored.
+commands".  If the byte "0" appears after a `RELAY_MESSAGE`, the rest of the
+cell MUST be ignored.  (Note that this "end of commands" indicator may be
+absent if there are no bytes remaining after the last message in the cell.)
 
 Only some "Relay Command" are supported for relay cell packing:
   - `BEGIN_DIR`
