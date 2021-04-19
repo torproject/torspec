@@ -635,6 +635,34 @@
        "ipv6-policy" line is equivalent to "ipv6-policy reject
        1-65535".
 
+    "overload-general" SP version SP YYYY-MM-DD HH:MM:SS NL
+
+       [At most once.]
+
+       Indicates that a relay has reached an "overloaded state" which can be
+       one or many of the following load metrics:
+
+         - Any OOM invocation due to memory pressure
+         - Any ntor onionskins are dropped
+         - TCP port exhaustion
+         - DNS timeout reached
+
+      The timestamp is when at least one metrics was detected. It should always
+      be at the hour and thus, as an example, "2020-01-10 13:00:00" is an
+      expected timestamp. Because this is a binary state, if the line is
+      present, we consider that it was hit at the very least once somewhere
+      between the provided timestamp and the "published" timestamp of the
+      document which is when the document was generated.
+
+      The overload-general line should remain in place for 72 hours since last
+      triggered.  If the limits are reached again in this period, the timestamp
+      is updated, and this 72 hour period restarts.
+
+      The 'version' field is set to '1' for now.
+
+      (Introduced in tor-0.4.6.1-alpha, but moved from extra-info to general
+       descriptor in tor-0.4.6.2-alpha)
+
     "router-sig-ed25519" SP Signature NL
 
        [Exactly once.]
@@ -1322,6 +1350,44 @@
          max-chanpad-timers
            - The maximum number of timers that this relay scheduled for
              padding in the previous NSEC interval
+
+    "overload-ratelimits" SP version SP YYYY-MM-DD SP HH:MM:SS
+                      SP rate-limit SP burst-limit
+                      SP read-overload-count SP write-overload-count NL
+        [At most once.]
+
+        Indicates that a bandwidth limit was exhausted for this relay.
+
+		The "rate-limit" and "burst-limit" are the raw values from the
+		BandwidthRate and BandwidthBurst found in the torrc configuration file.
+
+		The "{read|write}-overload-count" are the counts of how many times the
+		reported limits of burst/rate were exhausted and thus the maximum
+		between the read and write count occurances. To make the counter more
+		meaningful and to avoid multiple connections saturating the counter
+		when a relay is overloaded, we only increment it once a minute.
+
+		The 'version' field is set to '1' for now.
+
+        (Introduced in tor-0.4.6.1-alpha)
+
+    "overload-fd-exhausted" SP version YYYY-MM-DD HH:MM:SS NL
+        [At most once.]
+
+        Indicates that a file descriptor exhaustion was experienced by this
+        relay.
+
+        The timestamp indicates that the maximum was reached between the
+        timestamp and the "published" timestamp of the document.
+
+        This overload field should remain in place for 72 hours since last
+        triggered.  If the limits are reached again in this period, the
+        timestamp is updated, and this 72 hour period restarts.
+
+        The 'version' field is set to '1' for the initial implementation which
+        detects fd exhaustion only when a socket open fails.
+
+        (Introduced in tor-0.4.6.1-alpha)
 
     "router-sig-ed25519"
         [As in router descriptors]
