@@ -1000,6 +1000,12 @@ see tor-design.pdf.
    belong to any circuit: CircID 0 must not be used for circuits.  No
    other CircID value, including 0x8000 or 0x80000000, is reserved.
 
+   Existing Tor implementations choose their CircID values at random from
+   among the available unused values.  To avoid distinguishability, new
+   implementations should do the same. Implementations MAY give up and stop
+   attempting to build new circuits on a channel, if a certain number of
+   randomly chosen CircID values are all in use (today's Tor stops after 64).
+
 5.1.2. EXTEND and EXTENDED cells
 
    To extend an existing circuit, the client sends an EXTEND or EXTEND2
