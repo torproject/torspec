@@ -231,8 +231,10 @@ of their choices.
 2.2. Path selection and constraints
 
    We choose the path for each new circuit before we build it.  We choose the
-   exit node first, followed by the other nodes in the circuit.  All paths
-   we generate obey the following constraints:
+   exit node first, followed by the other nodes in the circuit, front to
+   back. (In other words, for a 3-hop circuit, we first pick hop 3,
+   then hop 1, then hop 2.)  All paths we generate obey the following
+   constraints:
 
      - We do not choose the same router twice for the same path.
      - We do not choose any router in the same family as another in the same
