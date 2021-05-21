@@ -142,10 +142,10 @@ component identified by a label (see list below). To make sense, this should
 be visualized with the rate() function.
 
 Possible LABELs for which the OOM was triggered:
-  - `cell`: Circuit cell queue
-  - `dns`: DNS resolution cache
-  - `geoip`: GeoIP cache
-  - `hsdir`: Onion service descriptors
+  - `subsys=cell`: Circuit cell queue
+  - `subsys=dns`: DNS resolution cache
+  - `subsys=geoip`: GeoIP cache
+  - `subsys=hsdir`: Onion service descriptors
 
 ## 2.2 Onionskin Queues
 
@@ -161,8 +161,10 @@ tor_load_onionskin_total{<LABEL>} <NUM>
 ```
 
 Possible LABELs are:
-  - `processed`: Indicating how many were processed.
-  - `dropped`: Indicating how many were dropped due to load.
+  - `type=<handshake_type>`: Type of handshake of that onionskins.
+      * Possible values: `ntor`, `tap`, `fast`
+  - `action=processed`: Indicating how many were processed.
+  - `action=dropped`: Indicating how many were dropped due to load.
 
 ## 2.3 File Descriptor Exhaustion
 
@@ -177,7 +179,8 @@ tor_load_fd_total{<LABEL>} <NUM>
 ```
 
 Possible LABELs are:
-  - `remaining`: How many file descriptors remains that is can be opened.
+  - `state=total`: Maximum number of file descriptors allowed open
+  - `state=opened`: How many file descriptors are opened.
 
 Note: since tor does track that value in order to reserve a block for critical
 port such as the Control Port, that value can easily be exported.
@@ -195,7 +198,8 @@ tor_load_socket_total{<LABEL>} <NUM>
 ```
 
 Possible LABELs are:
-  - `outbound`: Sockets used for outbound connections.
+  - `state=total`: Maximum number of sockets allowed open
+  - `state=opened`: How sockets are opened.
 
 ## 2.5 Connection Bucket Limit
 
@@ -210,5 +214,5 @@ tor_load_global_rate_limit_reached_total{<LABEL>} <NUM>
 ```
 
 Possible LABELs are:
-  - `read`: Read side of the global rate limit bucket.
-  - `write`: Write side of the global rate limit bucket.
+  - `side=read`: Read side of the global rate limit bucket.
+  - `side=write`: Write side of the global rate limit bucket.
