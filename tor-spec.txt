@@ -1069,6 +1069,10 @@ see tor-design.pdf.
    different RSA identity, it SHOULD NOT attempt to make another
    connection: it should just fail and DESTROY the circuit.
 
+   The client MAY include multiple IPv4 or IPv6 link specifiers in an
+   EXTEND cell; current OR implementations only consider the first
+   of each type.
+
    After checking relay identities, extending ORs generate a
    CREATE/CREATE2 cell from the contents of the EXTEND/EXTEND2 cell.
    See section 5.3 for details.
