@@ -40,12 +40,12 @@ Status: Draft
   - Tor proposal #327 increases the attacker's computational requirements (not implemented yet).
 
   While the above proposals in tandem should provide reasonable protection
-  against many DoS attackers, they fundamentally work by reducing the assymetry
+  against many DoS attackers, they fundamentally work by reducing the asymmetry
   between the onion service and the attacker. This won't work if the attacker
-  is extremely powerful because the assymetry is already huge and cutting it
+  is extremely powerful because the asymmetry is already huge and cutting it
   down does not help.
 
-  we believe that a proposal based on cryptographic guarantees -- like Res
+  We believe that a proposal based on cryptographic guarantees -- like Res
   tokens -- can offer protection against even extremely strong attackers.
 
 # 2. Overview
@@ -71,7 +71,7 @@ Status: Draft
 
 # 3. Design [TOKEN_DESIGN]
 
-  In this section we will go over the high-level design of the system, and on
+  In this section we will go over the high-level design of the system, and in
   the next section we will delve into the lower-level details of the protocol.
 
 ## 3.1. Anonymous credentials
@@ -261,7 +261,7 @@ Status: Draft
     [At most once]
 
     token-type: Is the type of token supported ("res" for this proposal)
-    issuer: A comma separated list of issuers which are supported by this onion service
+    issuer-list: A comma separated list of issuers which are supported by this onion service
 
 ## 4.3. Token issuance
 
@@ -381,7 +381,7 @@ Status: Draft
 
   XXX maybe with a bit of tweaking we can even use a 1536-bit RSA signature here...
 
-### 4.4.2. Onion service verifies token  [RES_VERIFY]
+### 4.4.2. Onion service verifies token [RES_VERIFY]
 
   Upon receiving an INTRODUCE1 cell with the above extension the service
   verifies the token. It does so as follows:
@@ -389,8 +389,8 @@ Status: Draft
   1) The service checks its double spend protection cache for an element that
      matches DEST_DIGEST. If one is found, verification fails.
   2) The service checks: DEST_DIGEST == FDH_N(service_pubkey || SALT), where
-     'service_pubkey' is its own long-term identity pubkey.
-  3) The service finds the corresponding issuer pubkey 'e' based on ISSUER_KEY
+     'service_pubkey' is its own long-term public identity key.
+  3) The service finds the corresponding issuer public key 'e' based on ISSUER_KEY
      from the consensus or its configuration file
   4) The service checks: TOKEN ^ e == DEST_DIGEST
 
@@ -399,7 +399,7 @@ Status: Draft
   double spend protection cache by maintaining a sorted array of truncated
   DEST_DIGEST elements.
 
-  If any of the above steps fail, the verification process aborts and the
+  If any of the above steps fails, the verification process aborts and the
   introduction request gets discarded.
 
   If all the above verification steps have been completed successfully, the
@@ -514,7 +514,7 @@ Status: Draft
   however we didn't expand on those use cases to keep the proposal short.  In
   the future, we might want to split this document into two proposals: one
   proposal that specifies the token scheme, and another that specifies how to
-  use it in the context of onion servicves, so that we can then write more
+  use it in the context of onion services, so that we can then write more
   proposals that use the token scheme as a primitive.
 
   An extremely relevant use case would be to use Res tokens as a way to protect
