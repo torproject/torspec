@@ -350,7 +350,7 @@ Table of contents:
      Alex Biryukov,
      Lasse Øverlier,
      Ivan Pustogarov,
-     Paul Syverson
+     Paul Syverson,
      Ralf-Philipp Weinmann,
 
    See [ATTACK-REFS] for their papers.
@@ -364,7 +364,7 @@ Table of contents:
    And if this document makes any sense at all, it's thanks to
    editing help from
 
-      Matthew Finkel
+      Matthew Finkel,
       George Kadianakis,
       Peter Palfrader,
       Tim Wilson-Brown ("teor"),
@@ -2144,7 +2144,7 @@ Table of contents:
 
      where:
        - PUBKEY is the 32 bytes ed25519 master pubkey of the hidden service.
-       - VERSION is an one byte version field (default value '\x03')
+       - VERSION is a one byte version field (default value '\x03')
        - ".onion checksum" is a constant string
        - CHECKSUM is truncated to two bytes before inserting it in onion_address
 

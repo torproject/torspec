@@ -26,9 +26,9 @@ We propose that relays start collecting several metrics (see section 2)
 reflecting their loads from different component of tor.
 
 Then, we propose that 3 new lines be added to the extra-info document (see
-dir-spec.txt, section 2.1.2) if only the overload case arrise.
+dir-spec.txt, section 2.1.2) if only the overload case arises.
 
-This following describes a series of metrics to collect but more might come in
+The following describes a series of metrics to collect but more might come in
 the future and thus this is not an exhaustive list.
 
 # 1.1. General Overload
@@ -44,14 +44,14 @@ state" which can be one or many of the following load metrics:
    - Control port overload (too many messages queued)
 
 The format of the overloaded line added in the extra-info document is as
-follow:
+follows:
 
 ```
 "overload-general" SP version SP YYYY-MM-DD HH:MM:SS NL
    [At most once.]
 ```
 
-The timestamp is when at least one metrics was detected. It should always be
+The timestamp is when at least one metric was detected. It should always be
 at the hour and thus, as an example, "2020-01-10 13:00:00" is an expected
 timestamp. Because this is a binary state, if the line is present, we consider
 that it was hit at the very least once somewhere between the provided
@@ -87,7 +87,7 @@ and BandwidthBurst found in the torrc configuration file.
 
 The "{read|write}-overload-count" are the counts of how many times the reported
 limits of burst/rate were exhausted and thus the maximum between the read and
-write count occurances. To make the counter more meaningful and to avoid
+write count occurrences. To make the counter more meaningful and to avoid
 multiple connections saturating the counter when a relay is overloaded, we only
 increment it once a minute.
 

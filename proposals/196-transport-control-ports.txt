@@ -196,7 +196,7 @@ Implemented-In: 0.2.5.2-alpha
 
 5. Authentication
 
-  To defend against cross-protocol attacks on the Extended ORPOrt,
+  To defend against cross-protocol attacks on the Extended ORPort,
   proposal 213 defines an authentication scheme that should be used to
   protect it.
 

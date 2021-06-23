@@ -1044,7 +1044,7 @@
       return either a sequence of newline-terminated hex encoded digests, or
       a "serialized download status" as follows:
 
-       SerializedDownloadSatus =
+       SerializedDownloadStatus =
          -- when do we plan to next attempt to download this object?
          "next-attempt-at" SP ISOTime CRLF
          -- how many times have we failed since the last success?

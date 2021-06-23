@@ -131,7 +131,7 @@ Target: 0.2.5.x
         "ExtORPort authentication server-to-client hash" | ClientNonce | ServerNonce)
   + ServerNonce is 32 random octets.
 
-  Upon receiving that data, the client computers ServerHash herself and
+  Upon receiving that data, the client computes ServerHash herself and
   validates it against the ServerHash provided by the server.
 
   If the server-provided ServerHash is invalid, the client MUST
@@ -146,7 +146,7 @@ Target: 0.2.5.x
       HMAC-SHA256(CookieString,
         "ExtORPort authentication client-to-server hash" | ClientNonce | ServerNonce)
 
-  Upon receiving that data, the server computers ClientHash herself and
+  Upon receiving that data, the server computes ClientHash herself and
   validates it against the ClientHash provided by the client.
 
   Finally, the server replies with:

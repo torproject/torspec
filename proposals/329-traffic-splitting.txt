@@ -22,7 +22,7 @@ Status: Draft
   
   The design space is broken into two orthogonal parts: congestion control
   algorithms that apply to each path, and traffic scheduling algorithms
-  that decide when to send packets to send on each path.
+  that decide which packets to send on each path.
   
   MPTCP specifies 'coupled' congestion control (see [COUPLED]). Coupled
   congestion control updates single-path congestion control algorithms to
@@ -32,10 +32,10 @@ Status: Draft
   accomplishing this have been proposed and implemented in the Linux
   kernel.
   
-  Because Tor's congestion control only concerns itself with bottnecks in
+  Because Tor's congestion control only concerns itself with bottlenecks in
   Tor relay queues, and not with any other bottlenecks (such as
   intermediate Internet routers), we can avoid this complexity merely by
-  specifying that any paths that are constructed SHOULD share any
+  specifying that any paths that are constructed SHOULD NOT share any
   relays. In this way, we can proceed to use the exact same congestion
   control as specified in Proposal 324, for each path.
   
@@ -465,7 +465,7 @@ Status: Draft
   
   XXX: Note that BLEST uses total_send_window where we use secondary.cwnd
   in this check. total_send_window is min(recv_win, CWND). But since Tor
-  does not use receive windows and intead uses stream XON/XOFF, we only
+  does not use receive windows and instead uses stream XON/XOFF, we only
   use CWND. There is some concern this may alter BLEST's buffer
   minimization properties, but since receive window only matter if
   the application is slower than Tor, and XON/XOFF will cover that case,
