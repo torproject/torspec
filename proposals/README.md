@@ -64,8 +64,6 @@ These proposals are implemented in some version of Tor; the proposals
 themselves still need to be merged into the specifications proper.
 
 * [`160-bandwidth-offset.txt`](/proposals/160-bandwidth-offset.txt): Authorities vote for bandwidth offsets in consensus
-* [`196-transport-control-ports.txt`](/proposals/196-transport-control-ports.txt): Extended ORPort and TransportControlPort
-* [`217-ext-orport-auth.txt`](/proposals/217-ext-orport-auth.txt): Tor Extended ORPort Authentication
 * [`232-pluggable-transports-through-proxy.txt`](/proposals/232-pluggable-transports-through-proxy.txt): Pluggable Transport through SOCKS proxy
 * [`260-rend-single-onion.txt`](/proposals/260-rend-single-onion.txt): Rendezvous Single Onion Services
 * [`282-remove-named-from-consensus.txt`](/proposals/282-remove-named-from-consensus.txt): Remove "Named" and "Unnamed" handling from consensus voting
@@ -110,6 +108,8 @@ discussion.
 * [`316-flashflow.md`](/proposals/316-flashflow.md): FlashFlow: A Secure Speed Test for Tor (Parent Proposal)
 * [`327-pow-over-intro.txt`](/proposals/327-pow-over-intro.txt): A First Take at PoW Over Introduction Circuits
 * [`328-relay-overload-report.md`](/proposals/328-relay-overload-report.md): Make Relays Report When They Are Overloaded
+* [`329-traffic-splitting.txt`](/proposals/329-traffic-splitting.txt): Overcoming Tor's Bottlenecks with Traffic Splitting
+* [`331-res-tokens-for-anti-dos.md`](/proposals/331-res-tokens-for-anti-dos.md): Res tokens: Anonymous Credentials for Onion Service DoS Resilience
 
 
 ## NEEDS-REVISION proposals: ideas that we can't implement as-is
@@ -194,6 +194,7 @@ necessary.
 * [`186-multiple-orports.txt`](/proposals/186-multiple-orports.txt): Multiple addresses for one OR or bridge
 * [`187-allow-client-auth.txt`](/proposals/187-allow-client-auth.txt): Reserve a cell type to allow client authorization
 * [`193-safe-cookie-authentication.txt`](/proposals/193-safe-cookie-authentication.txt): Safe cookie authentication for Tor controllers
+* [`196-transport-control-ports.txt`](/proposals/196-transport-control-ports.txt): Extended ORPort and TransportControlPort
 * [`198-restore-clienthello-semantics.txt`](/proposals/198-restore-clienthello-semantics.txt): Restore semantics of TLS ClientHello
 * [`200-new-create-and-extend-cells.txt`](/proposals/200-new-create-and-extend-cells.txt): Adding new, extensible CREATE, EXTEND, and related cells
 * [`204-hidserv-subdomains.txt`](/proposals/204-hidserv-subdomains.txt): Subdomain support for Hidden Service addresses
@@ -204,6 +205,7 @@ necessary.
 * [`214-longer-circids.txt`](/proposals/214-longer-circids.txt): Allow 4-byte circuit IDs in a new link protocol
 * [`215-update-min-consensus-ver.txt`](/proposals/215-update-min-consensus-ver.txt): Let the minimum consensus method change with time
 * [`216-ntor-handshake.txt`](/proposals/216-ntor-handshake.txt): Improved circuit-creation key exchange
+* [`217-ext-orport-auth.txt`](/proposals/217-ext-orport-auth.txt): Tor Extended ORPort Authentication
 * [`218-usage-controller-events.txt`](/proposals/218-usage-controller-events.txt): Controller events to better understand connection/circuit usage
 * [`220-ecc-id-keys.txt`](/proposals/220-ecc-id-keys.txt): Migrate server identity keys to Ed25519
 * [`221-stop-using-create-fast.txt`](/proposals/221-stop-using-create-fast.txt): Stop using CREATE_FAST

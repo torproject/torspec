@@ -116,7 +116,7 @@ Proposals by number:
 193  Safe cookie authentication for Tor controllers [CLOSED]
 194  Mnemonic .onion URLs [SUPERSEDED]
 195  TLS certificate normalization for Tor 0.2.4.x [DEAD]
-196  Extended ORPort and TransportControlPort [FINISHED]
+196  Extended ORPort and TransportControlPort [CLOSED]
 197  Message-based Inter-Controller IPC Channel [REJECTED]
 198  Restore semantics of TLS ClientHello [CLOSED]
 199  Integration of BridgeFinder and BridgeFinderHelper [OBSOLETE]
@@ -137,7 +137,7 @@ Proposals by number:
 214  Allow 4-byte circuit IDs in a new link protocol [CLOSED]
 215  Let the minimum consensus method change with time [CLOSED]
 216  Improved circuit-creation key exchange [CLOSED]
-217  Tor Extended ORPort Authentication [FINISHED]
+217  Tor Extended ORPort Authentication [CLOSED]
 218  Controller events to better understand connection/circuit usage [CLOSED]
 219  Support for full DNS and DNSSEC resolution in Tor [NEEDS-REVISION]
 220  Migrate server identity keys to Ed25519 [CLOSED]
@@ -249,7 +249,9 @@ Proposals by number:
 326  The "tor-relay" Well-Known Resource Identifier [OPEN]
 327  A First Take at PoW Over Introduction Circuits [DRAFT]
 328  Make Relays Report When They Are Overloaded [DRAFT]
+329  Overcoming Tor's Bottlenecks with Traffic Splitting [DRAFT]
 330  Modernizing authority contact entries [OPEN]
+331  Res tokens: Anonymous Credentials for Onion Service DoS Resilience [DRAFT]
 
 
 Proposals by status:
@@ -260,6 +262,8 @@ Proposals by status:
    316  FlashFlow: A Secure Speed Test for Tor (Parent Proposal)
    327  A First Take at PoW Over Introduction Circuits
    328  Make Relays Report When They Are Overloaded
+   329  Overcoming Tor's Bottlenecks with Traffic Splitting
+   331  Res tokens: Anonymous Credentials for Onion Service DoS Resilience
  NEEDS-REVISION:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
@@ -309,8 +313,6 @@ Proposals by status:
    290  Continuously update consensus methods
  FINISHED:
    160  Authorities vote for bandwidth offsets in consensus [for 0.2.1.x]
-   196  Extended ORPort and TransportControlPort [in 0.2.5.2-alpha]
-   217  Tor Extended ORPort Authentication [for 0.2.5.x]
    232  Pluggable Transport through SOCKS proxy [in 0.2.6]
    260  Rendezvous Single Onion Services [in 0.2.9.3-alpha]
    282  Remove "Named" and "Unnamed" handling from consensus voting [for 0.3.3.x]
@@ -368,6 +370,7 @@ Proposals by status:
    186  Multiple addresses for one OR or bridge [for 0.2.4.x+]
    187  Reserve a cell type to allow client authorization [for 0.2.3.x]
    193  Safe cookie authentication for Tor controllers
+   196  Extended ORPort and TransportControlPort [in 0.2.5.2-alpha]
    198  Restore semantics of TLS ClientHello [for 0.2.4.x]
    200  Adding new, extensible CREATE, EXTEND, and related cells [in 0.2.4.8-alpha]
    204  Subdomain support for Hidden Service addresses
@@ -378,6 +381,7 @@ Proposals by status:
    214  Allow 4-byte circuit IDs in a new link protocol [in 0.2.4.11-alpha]
    215  Let the minimum consensus method change with time [in 0.2.6.1-alpha]
    216  Improved circuit-creation key exchange [in 0.2.4.8-alpha]
+   217  Tor Extended ORPort Authentication [for 0.2.5.x]
    218  Controller events to better understand connection/circuit usage [in 0.2.5.2-alpha]
    220  Migrate server identity keys to Ed25519 [in 0.3.0.1-alpha]
    221  Stop using CREATE_FAST [for 0.2.5.x]

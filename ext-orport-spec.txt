@@ -1,0 +1,212 @@
+             Extended ORPort for pluggable transports
+                 George Kadianakis, Nick Mathewson
+
+1. Overview
+
+  This document describes the "Extended ORPort" protocol, a wrapper
+  around Tor's ordinary ORPort protocol for use by bridges that
+  support pluggable transports.  It provides a way for server-side PTs
+  and bridges to exchange additional information before beginning
+  the actual OR connection.
+
+  See `tor-spec.txt` for information on the regular OR protocol, and
+  `pt-spec.txt` for information on pluggable transports.
+
+  This protocol was originally proposed in proposal 196, and
+  extended with authentication in proposal 217.
+
+2. Establishing a connection and authenticating.
+
+  When a client (that is to say, a server-side pluggable transport)
+  connects to an Extended ORPort, the server sends:
+
+    AuthTypes                                   [variable]
+    EndAuthTypes                                [1 octet]
+
+  Where,
+
+  + AuthTypes are the authentication schemes that the server supports
+    for this session. They are multiple concatenated 1-octet values that
+    take values from 1 to 255.
+  + EndAuthTypes is the special value 0.
+
+  The client reads the list of supported authentication schemes,
+  chooses one, and sends it back:
+
+    AuthType                                    [1 octet]
+
+  Where,
+
+  + AuthType is the authentication scheme that the client wants to use
+    for this session. A valid authentication type takes values from 1 to
+    255. A value of 0 means that the client did not like the
+    authentication types offered by the server.
+
+  If the client sent an AuthType of value 0, or an AuthType that the
+  server does not support, the server MUST close the connection.
+
+2.1. Authentication type: SAFE_COOKIE
+
+  We define one authentication type: SAFE_COOKIE.  Its AuthType
+  value is 1.  It is based on the client proving to the bridge that
+  it can access a given "cookie" file on  disk.  The purpose of
+  authentication is to defend against cross-protocol attacks.
+
+  If the Extended ORPort is enabled, Tor should regenerate the cookie
+  file on startup and store it in
+  $DataDirectory/extended_orport_auth_cookie.
+
+  The location of the cookie can be overriden by using the
+  configuration file parameter ExtORPortCookieAuthFile, which is
+  defined as:
+
+    ExtORPortCookieAuthFile <path>
+
+  where <path> is a filesystem path.
+
+2.1.2. Cookie-file format
+
+  The format of the cookie-file is:
+
+     StaticHeader                                [32 octets]
+     Cookie                                      [32 octets]
+
+  Where,
+  + StaticHeader is the following string:
+    "! Extended ORPort Auth Cookie !\x0a"
+  + Cookie is the shared-secret. During the SAFE_COOKIE protocol, the
+    cookie is called CookieString.
+
+  Extended ORPort clients MUST make sure that the StaticHeader is
+  present in the cookie file, before proceeding with the
+  authentication protocol.
+
+2.1.3.  SAFE_COOKIE Protocol specification
+
+
+  A client that performs the SAFE_COOKIE handshake begins by sending:
+
+     ClientNonce                                 [32 octets]
+
+  Where,
+  + ClientNonce is 32 octets of random data.
+
+  Then, the server replies with:
+
+     ServerHash                                  [32 octets]
+     ServerNonce                                 [32 octets]
+
+  Where,
+  + ServerHash is computed as:
+      HMAC-SHA256(CookieString,
+        "ExtORPort authentication server-to-client hash" | ClientNonce | ServerNonce)
+  + ServerNonce is 32 random octets.
+
+  Upon receiving that data, the client computes ServerHash, and
+  validates it against the ServerHash provided by the server.
+
+  If the server-provided ServerHash is invalid, the client MUST
+  terminate the connection.
+
+  Otherwise the client replies with:
+
+     ClientHash                                  [32 octets]
+
+  Where,
+  + ClientHash is computed as:
+      HMAC-SHA256(CookieString,
+        "ExtORPort authentication client-to-server hash" | ClientNonce | ServerNonce)
+
+  Upon receiving that data, the server computes ClientHash, and
+  validates it against the ClientHash provided by the client.
+
+  Finally, the server replies with:
+
+     Status                                      [1 octet]
+
+  Where,
+  + Status is 1 if the authentication was successfull. If the
+    authentication failed, Status is 0.
+
+3. The extended ORPort protocol
+
+  Once a connection is established and authenticated, the parties
+  communicate with the protocol described here.
+
+3.1. Protocol
+
+  The extended server port protocol is as follows:
+
+     COMMAND [2 bytes, big-endian]
+     BODYLEN [2 bytes, big-endian]
+     BODY [BODYLEN bytes]
+
+     Commands sent from the transport proxy to the bridge are:
+
+     [0x0000] DONE: There is no more information to give. The next
+       bytes sent by the transport will be those tunneled over it.
+       (body ignored)
+
+     [0x0001] USERADDR: an address:port string that represents the
+       client's address.
+
+     [0x0002] TRANSPORT: a string of the name of the pluggable
+       transport currently in effect on the connection.
+
+     Replies sent from tor to the proxy are:
+
+     [0x1000] OKAY: Send the user's traffic. (body ignored)
+
+     [0x1001] DENY: Tor would prefer not to get more traffic from
+       this address for a while. (body ignored)
+
+     [0x1002] CONTROL: (Not used)
+
+  Parties MUST ignore command codes that they do not understand.
+
+  If the server receives a recognized command that does not parse, it
+  MUST close the connection to the client.
+
+3.2. Command descriptions
+
+3.2.1. USERADDR
+
+  An ASCII string holding the TCP/IP address of the client of the
+  pluggable transport proxy. A Tor bridge SHOULD use that address to
+  collect statistics about its clients.  Recognized formats are:
+    1.2.3.4:5678
+    [1:2::3:4]:5678
+
+  (Current Tor versions may accept other formats, but this is a bug:
+  transports MUST NOT send them.)
+
+  The string MUST not be NUL-terminated.
+
+3.2.2. TRANSPORT
+
+  An ASCII string holding the name of the pluggable transport used by
+  the client of the pluggable transport proxy. A Tor bridge that
+  supports multiple transports SHOULD use that information to collect
+  statistics about the popularity of individual pluggable transports.
+
+  The string MUST not be NUL-terminated.
+
+  Pluggable transport names are C-identifiers and Tor MUST check them
+  for correctness.
+
+4. Security Considerations
+
+  Extended ORPort or TransportControlPort do _not_ provide link
+  confidentiality, authentication or integrity. Sensitive data, like
+  cryptographic material, should not be transferred through them.
+
+  An attacker with superuser access is able to sniff network traffic,
+  and capture TransportControlPort identifiers and any data passed
+  through those ports.
+
+  Tor SHOULD issue a warning if the bridge operator tries to bind
+  Extended ORPort to a non-localhost address.
+
+  Pluggable transport proxies SHOULD issue a warning if they are
+  instructed to connect to a non-localhost Extended ORPort.
+

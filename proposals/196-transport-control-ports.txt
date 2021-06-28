@@ -2,7 +2,7 @@ Filename: 196-transport-control-ports.txt
 Title: Extended ORPort and TransportControlPort
 Author: George Kadianakis, Nick Mathewson
 Created: 14 Mar 2012
-Status: Finished
+Status: Closed
 Implemented-In: 0.2.5.2-alpha
 
 1. Overview
