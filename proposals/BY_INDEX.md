@@ -249,4 +249,5 @@ Below are a list of proposals sorted by their proposal number.  See
 * [`329-traffic-splitting.txt`](/proposals/329-traffic-splitting.txt): Overcoming Tor's Bottlenecks with Traffic Splitting [DRAFT]
 * [`330-authority-contact.md`](/proposals/330-authority-contact.md): Modernizing authority contact entries [OPEN]
 * [`331-res-tokens-for-anti-dos.md`](/proposals/331-res-tokens-for-anti-dos.md): Res tokens: Anonymous Credentials for Onion Service DoS Resilience [DRAFT]
+* [`332-ntor-v3-with-extra-data.md`](/proposals/332-ntor-v3-with-extra-data.md): Ntor protocol with extra data, version 3 [OPEN]
 

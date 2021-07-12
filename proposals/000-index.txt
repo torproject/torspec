@@ -252,6 +252,7 @@ Proposals by number:
 329  Overcoming Tor's Bottlenecks with Traffic Splitting [DRAFT]
 330  Modernizing authority contact entries [OPEN]
 331  Res tokens: Anonymous Credentials for Onion Service DoS Resilience [DRAFT]
+332  Ntor protocol with extra data, version 3 [OPEN]
 
 
 Proposals by status:
@@ -294,6 +295,7 @@ Proposals by status:
    325  Packed relay cells: saving space on small commands
    326  The "tor-relay" Well-Known Resource Identifier
    330  Modernizing authority contact entries
+   332  Ntor protocol with extra data, version 3
  ACCEPTED:
    265  Load Balancing with Overhead Parameters [for 0.2.9.x]
    275  Stop including meaningful "published" time in microdescriptor consensus [for 0.3.1.x-alpha]
