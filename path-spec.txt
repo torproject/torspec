@@ -403,7 +403,7 @@ of their choices.
    Once 'cbtmincircs' build times are recorded, Tor clients update the
    distribution parameters and recompute the timeout every circuit completion
    (though see section 2.4.5 for when to pause and reset timeout due to
-   network change or connectivity loss).
+   too many circuits timing out).
 
    Tor clients calculate the parameters for a Pareto distribution fitting the
    data using the maximum likelihood estimator. For derivation, see:
@@ -488,12 +488,6 @@ of their choices.
    Tor clients attempt to detect both network connectivity loss and drastic
    changes in the timeout characteristics.
 
-   Clients assume that they have had network connectivity loss if a circuit
-   times out and have received no cells or TLS handshakes since that
-   circuit began. Clients then temporarily stop counting timeouts until
-   network activity resumes (ie: until a TLS handshake completes or a cell
-   arrives at the client).
-
    To detect changing network conditions, clients keep a history of
    the timeout or non-timeout status of the past 'cbtrecentcount' circuits
    (20 circuits) that successfully completed at least one hop. If more than
@@ -501,7 +495,8 @@ of their choices.
    resets the timeout to 'cbtinitialtimeout' (60 seconds), and then begins
    recomputing the timeout.
 
-   If the timeout was already 60 or higher, the client doubles the timeout.
+   If the timeout was already at least `cbtinitialtimeout`,
+   the client doubles the timeout.
 
 2.4.6. Consensus parameters governing behavior
 
