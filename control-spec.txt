@@ -3097,6 +3097,8 @@
     "DOWN" -- The guard now seems to be unreachable.
     "BAD"  -- Because of flags set in the consensus and/or values in the
               configuration, this node is now unusable as a guard.
+    "BAD_L2" -- This layer2 guard has expired or got removed from the
+              consensus. This node is removed from the layer2 guard set.
     "GOOD" -- Because of flags set in the consensus and/or values in the
               configuration, this node is now usable as a guard.
 
