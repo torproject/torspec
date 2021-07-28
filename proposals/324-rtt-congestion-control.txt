@@ -128,6 +128,29 @@ Circuits will also record the minimum and maximum RTT seen so far.
 Algorithms that make use of this RTT measurement for congestion
 window update are specified in [CONTROL_ALGORITHMS].
 
+2.1.1. Clock Jump Heuristics [CLOCK_HEURISTICS]
+
+The timestamps for RTT (and BDP) are measured using Tor's
+monotime_absolute_usec() API. This API is designed to provide a monotonic
+clock that only moves forward. However, depending on the underlying system
+clock, this may result in the same timestamp value being returned for long
+periods of time, which would result in RTT 0-values. Alternatively, the clock
+may jump forward, resulting in abnormally large RTT values.
+
+To guard against this, we perform a series of heuristic checks on the time delta
+measured by the RTT estimator, and if these heurtics detect a stall or a jump,
+we do not use that value to update RTT or BDP, nor do we update any congestion
+control algorithm information that round.
+
+If the time delta is 0, that is always treated as a clock stall.
+
+If we have measured at least 'cc_bwe_min' RTT values or we have successfully
+exited slow start, then every sendme ACK, the new candidate RTT is compared to
+the stored EWMA RTT. If the new RTT is either 100 times larger than the EWMA
+RTT, or 100 times smaller than the stored EWMA RTT, then we do not record that
+estimate, and do not update BDP or the congestion control algorithms for that
+SENDME ack.
+
 2.2. SENDME behavior changes
 
 We will make four major changes to SENDME behavior to aid in computing
@@ -320,7 +343,8 @@ truncation, we compute the BDP using multiplication first:
 Note that the SENDME BDP estimation will only work after two (2) SENDME acks
 have been received. Additionally, it tends not to be stable unless at least
 five (5) num_sendme's are used, due to ack compression. This is controlled by
-the 'cc_bwe_min' consensus parameter.
+the 'cc_bwe_min' consensus parameter. Finally, if [CLOCK_HEURISTICS] have
+detected a clock jump or stall, this estimator is not updated.
 
 If all edge connections no longer have data available to send on a circuit
 and all circuit queues have drained without blocking the local orconn, we stop
@@ -430,6 +454,11 @@ each time we get a SENDME (aka sendme_process_circuit_level()):
  if next_cc_event:
    next_cc_event--
 
+ # Do not update anything if we detected a clock stall or jump,
+ # as per [CLOCK_HEURISTICS]
+ if clock_stalled_or_jumped:
+   return
+
  if next_cc_event == 0:
    # BOOTLEG_RTT_TOR threshold; can also be BACKWARD_ECN check:
    if (RTT_current <
@@ -497,6 +526,11 @@ ack:
   if next_cc_event:
     next_cc_event--
 
+  # Do not update anything if we detected a clock stall or jump,
+  # as per [CLOCK_HEURISTICS]
+  if clock_stalled_or_jumped:
+    return
+
   if next_cc_event == 0:
      if BDP > cwnd:
        queue_use = 0
@@ -535,6 +569,12 @@ and scores of others. What's up with that?
 
 Here's the pseudocode for TOR_NOLA that runs on every SENDME ack:
 
+  # Do not update anything if we detected a clock stall or jump,
+  # as per [CLOCK_HEURISTICS]
+  if clock_stalled_or_jumped:
+    return
+
+  # If the orconn is blocked, do not overshoot BDP
   if orconn_blocked:
     cwnd = BDP
   else:
