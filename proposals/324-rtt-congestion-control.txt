@@ -228,8 +228,8 @@ network traffic. This experimentation and tuning is detailed in section
 
 All of these algorithms have rules to update 'cwnd' - the current congestion
 window, which starts out at a value controlled by consensus parameter
-'cc_icw'. The algorithms also keep track of 'inflight', which is a count of
-the number of cells currently not yet acked by a SENDME. The algorithm MUST
+'cc_cwnd_init'. The algorithms also keep track of 'inflight', which is a count
+of the number of cells currently not yet acked by a SENDME. The algorithm MUST
 ensure that cells cease being sent if 'cwnd - inflight <= 0'. Note that this
 value CAN become negative in the case where the cwnd is reduced while packets
 are inflight.
@@ -922,7 +922,7 @@ These are sorted in order of importance to tune, most important first.
            The lower this value is, the sooner we can get an estimate of
            the true BDP of a circuit. Low values may lead to massive
            over-estimation, due to ack compression. However, if this
-           value is above the number of acks that fit in cc_icw, then
+           value is above the number of acks that fit in cc_cwnd_init, then
            we won't get a BDP estimate within the first use of the circuit.
            Additionally, if this value is above the number of acks that
            fit in cc_cwnd_min, we may not be able to estimate BDP
@@ -942,7 +942,7 @@ These are sorted in order of importance to tune, most important first.
            100, we can set this as low as 33 to have the same amount of
            overhead.
 
-  cc_icw:
+  cc_cwnd_init:
     - Description: Initial congestion window for new congestion
                    control Tor clients. This can be set much higher
                    than TCP, since actual TCP to the guard will prevent
