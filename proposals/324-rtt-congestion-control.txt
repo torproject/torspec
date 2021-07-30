@@ -332,13 +332,19 @@ timestamps.
 
 With this, the calculation becomes:
 
-   BWE = num_sendmes * cc_sendme_inc / num_sendme_timestamp_delta
+   BWE = (num_sendmes-1) * cc_sendme_inc / num_sendme_timestamp_delta
    BDP = BWE * RTT_min
 
-However, because the timestamps are microseconds, to avoid integer
+Note that because we are counting the number of cells *between* the first
+and last sendme of the congestion window, we must subtract 1 from the number
+of sendmes actually recieved. Over the time period between the first and last
+sendme of the congestion window, the other endpoint successfully read
+(num_sendmes-1) * cc_sendme_inc cells.
+
+Furthermore, because the timestamps are microseconds, to avoid integer
 truncation, we compute the BDP using multiplication first:
 
-   BDP = num_sendmes * cc_sendme_inc * RTT_min / num_sendme_timestamp_delta
+   BDP = (num_sendmes-1) * cc_sendme_inc * RTT_min / num_sendme_timestamp_delta
 
 Note that the SENDME BDP estimation will only work after two (2) SENDME acks
 have been received. Additionally, it tends not to be stable unless at least
