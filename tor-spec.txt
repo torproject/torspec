@@ -1967,7 +1967,7 @@ see tor-design.pdf.
    range bounds for randomized padding timeouts may be specified as unsigned
    integer values in milliseconds. The ito_low_ms field should not be lower
    than the current consensus parameter value for nf_ito_low (default:
-   1500).  The ito_high_ms field must should not be lower than ito_low_ms.
+   1500).  The ito_high_ms field should not be lower than ito_low_ms.
    (If any party receives an out-of-range value, they clamp it so
    that it is in-range.)
 
