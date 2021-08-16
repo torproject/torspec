@@ -1693,6 +1693,9 @@ see tor-design.pdf.
    dotted-quad format, or an IPv6 address surrounded by square brackets;
    and where PORT is a decimal integer between 1 and 65535, inclusive.
 
+   The ADDRPORT string SHOULD be sent in lower case, to avoid
+   fingerprinting.  Implementations MUST accept strings in any case.
+
    The FLAGS value has one or more of the following bits set, where
    "bit 1" is the LSB of the 32-bit value, and "bit 32" is the MSB.
    (Remember that all values in Tor are big-endian (see 0.1.1 above), so
