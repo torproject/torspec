@@ -2324,6 +2324,9 @@
         a measured bandwidth currently produced by measuring stream
         capacities. It does not occur in consensuses.
 
+        'Bandwidth=' and 'Measured=' values must be between 0 and
+        2^32 - 1 inclusive.
+
         The "Unmeasured=1" value is included in consensuses generated
         with method 17 or later when the 'Bandwidth=' value is not
         based on a threshold of 3 or more measurements for this relay.
