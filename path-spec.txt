@@ -144,6 +144,23 @@ of their choices.
         NUM_GUARDS_TO_USE guards among our primary guards. (see
         guard-spec.txt)
 
+   We define the "fraction of bandwidth-weighted paths" as the product of
+   these three fractions.
+
+      * The fraction of descriptors that we have for nodes with the Guard
+        flag, weighted by their bandwidth for the guard position.
+      * The fraction of descriptors that we have for all nodes,
+        weighted by their bandwidth for the middle position position.
+      * The fraction of descriptors that we have for nodes with the Exit
+        flag, weighted by their bandwidth for the exit position.
+
+   If the consensus has zero weighted bandwidth for a given kind of
+   relay (Guard, Middle, or Exit), Tor instead uses the fraction of relays
+   for which it has the descriptor (not weighted by bandwidth at all).
+
+   If the consensus lists zero exit-flagged relays, Tor instead uses the
+   fraction of middle relays.
+
 
 2.1.1. Clients build circuits preemptively
 
