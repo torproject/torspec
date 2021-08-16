@@ -892,7 +892,8 @@ see tor-design.pdf.
 
    The timestamp is a big-endian unsigned integer number of seconds
    since the Unix epoch. Implementations MUST ignore unexpected bytes
-   at the end of the cell.
+   at the end of the cell.  Clients SHOULD send "0" as their timestamp, to
+   avoid fingerprinting.
 
    Implementations MAY use the timestamp value to help decide if their
    clocks are skewed.  Initiators MAY use "other OR's address" to help
