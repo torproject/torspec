@@ -887,7 +887,8 @@ see tor-design.pdf.
      [06] IPv6.
 
    ALEN MUST be 4 when ATYPE is 0x04 (IPv4) and 16 when ATYPE is 0x06
-   (IPv6).
+   (IPv6).  If the ALEN value is wrong for the given ATYPE value, then
+   the provided address should be ignored.
 
    The timestamp is a big-endian unsigned integer number of seconds
    since the Unix epoch. Implementations MUST ignore unexpected bytes
