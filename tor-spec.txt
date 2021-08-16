@@ -1817,25 +1817,31 @@ see tor-design.pdf.
       14 -- REASON_NOTDIRECTORY   (Client sent RELAY_BEGIN_DIR to a
                                    non-directory relay.)
 
+   [*] Older versions of Tor also send this reason when connections are
+       reset.
 
-   For most reasons, the format is:
+   OPs and ORs MUST accept reasons not on the above list, since future
+   versions of Tor may provide more fine-grained reasons.
+
+   For most reasons, the format of RELAY_END is:
 
       Reason                      [1 byte]
 
-   For REASON_EXITPOLICY, the format is:
+   For REASON_EXITPOLICY, the format of RELAY_END is:
 
       Reason                      [1 byte]
       IPv4 or IPv6 address        [4 bytes or 16 bytes]
       TTL                         [4 bytes]
 
-   OPs and ORs MUST accept reasons not on the above list, since future
-   versions of Tor may provide more fine-grained reasons.
+   (If the TTL is absent, it should be treated as if it were 0xffffffff.
+   If the address is absent or is the wrong length, the RELAY_END message
+   should be processed anyway.)
 
    Tors SHOULD NOT send any reason except REASON_MISC for a stream that they
    have originated.
 
-   [*] Older versions of Tor also send this reason when connections are
-       reset.
+   Implementations SHOULD accept empty RELAY_END messages, and treat them
+   as if they specified REASON_MISC.
 
    Upon receiving a RELAY_END cell, the recipient may be sure that no further
    cells will arrive on that stream, and can treat such cells as a protocol
