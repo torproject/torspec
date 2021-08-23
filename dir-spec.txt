@@ -1,6 +1,72 @@
 
                       Tor directory protocol, version 3
 
+Table of Contents
+
+    0. Scope and preliminaries
+        0.1. History
+        0.2. Goals of the version 3 protoc
+        0.3. Some Remaining questions
+    1. Outline
+        1.1. What's different from version 2?
+        1.2. Document meta-format
+        1.3. Signing documents
+        1.4. Voting timeline
+    2. Router operation and formats
+        2.1. Uploading server descriptors and extra-info documents
+            2.1.1. Server descriptor format
+            2.1.2. Extra-info document format
+            2.1.3. Nonterminals in server descriptors
+    3. Directory authority operation and formats
+        3.1. Creating key certificates
+        3.2. Accepting server descriptor and extra-info document uploads
+        3.3. Computing microdescriptors
+        3.4. Exchanging votes
+            3.4.1. Vote and consensus status document formats
+            3.4.2. Assigning flags in a vote
+            3.4.3. Serving bandwidth list files
+        3.5. Downloading missing certificates from other directory authorities
+        3.6. Downloading server descriptors from other directory authorities
+        3.7. Downloading extra-info documents from other directory authorities
+        3.8. Computing a consensus from a set of votes
+            3.8.0.1. Deciding which Ids to include.
+            3.8.0.2. Deciding which descriptors to include
+            3.8.1. Forward compatibility
+            3.8.2. Encoding port lists
+            3.8.3. Computing Bandwidth Weights
+        3.9. Computing consensus flavors
+            3.9.1. ns consensus
+            3.9.2. Microdescriptor consensus
+        3.10. Exchanging detached signatures
+        3.11. Publishing the signed consensus
+    4. Directory cache operation
+        4.1. Downloading consensus status documents from directory authorities
+        4.2. Downloading server descriptors from directory authorities
+        4.3. Downloading microdescriptors from directory authorities
+        4.4. Downloading extra-info documents from directory authorities
+        4.5. Consensus diffs
+            4.5.1. Consensus diff format
+            4.5.2. Serving and requesting diff
+        4.6 Retrying failed downloads
+    5. Client operation
+        5.1. Downloading network-status documents
+        5.2. Downloading server descriptors or microdescriptors
+        5.3. Downloading extra-info documents
+        5.4. Using directory information
+        5.4.1. Choosing routers for circuits.
+        5.4.2. Managing naming
+        5.4.3. Software versions
+        5.4.4. Warning about a router's status.
+        5.5. Retrying failed downloads
+    6. Standards compliance
+        6.1. HTTP headers
+        6.2. HTTP status codes
+            A. Consensus-negotiation timeline.
+            B. General-use HTTP URLs
+            C. Converting a curve25519 public key to an ed25519 public key
+            D. Inferring missing proto lines.
+            E. Limited ed diff format
+
 0. Scope and preliminaries
 
    This directory protocol is used by Tor version 0.2.0.x-alpha and later.
