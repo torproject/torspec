@@ -1,6 +1,12 @@
 
                         HOW TOR VERSION NUMBERS WORK
 
+Table of Contents
+
+    1. The Old Way
+    2. The New Way
+    3. Version status.
+
 1. The Old Way
 
  Before 0.1.0, versions were of the format:
