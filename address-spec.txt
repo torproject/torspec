@@ -2,6 +2,13 @@
                           Special Hostnames in Tor
                                Nick Mathewson
 
+Table of Contents
+
+    1. Overview
+    2. .exit
+    3. .onion
+    4. .noconnect
+
 1. Overview
 
   Most of the time, Tor treats user-specified hostnames as opaque:  When
