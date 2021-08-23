@@ -1,6 +1,95 @@
 
                    TC: A Tor control protocol (Version 1)
 
+Table of Contents
+
+    0. Scope
+    1. Protocol outline
+        1.1. Forward-compatibility
+    2. Message format
+        2.1. Description format
+            2.1.1. Notes on an escaping bug
+        2.2. Commands from controller to Tor
+        2.3. Replies from Tor to the controller
+        2.4. General-use tokens
+    3. Commands
+        3.1. SETCONF
+        3.2. RESETCONF
+        3.3. GETCONF
+        3.4. SETEVENTS
+        3.5. AUTHENTICATE
+        3.6. SAVECONF
+        3.7. SIGNAL
+        3.8. MAPADDRESS
+        3.9. GETINFO
+        3.10. EXTENDCIRCUIT
+        3.11. SETCIRCUITPURPOSE
+        3.12. SETROUTERPURPOSE
+        3.13. ATTACHSTREAM
+        3.14. POSTDESCRIPTOR
+        3.15. REDIRECTSTREAM
+        3.16. CLOSESTREAM
+        3.17. CLOSECIRCUIT
+        3.18. QUIT
+        3.19. USEFEATURE
+        3.20. RESOLVE
+        3.21. PROTOCOLINFO
+        3.22. LOADCONF
+        3.23. TAKEOWNERSHIP
+        3.24. AUTHCHALLENGE
+        3.25. DROPGUARDS
+        3.26. HSFETCH
+        3.27. ADD_ONION
+        3.28. DEL_ONION
+        3.29. HSPOST
+        3.30. ONION_CLIENT_AUTH_ADD
+        3.31. ONION_CLIENT_AUTH_REMOVE
+        3.32. ONION_CLIENT_AUTH_VIEW
+        3.33. DROPOWNERSHIP
+        3.34. DROPTIMEOUTS
+    4. Replies
+        4.1. Asynchronous events
+            4.1.1. Circuit status changed
+            4.1.2. Stream status changed
+            4.1.3. OR Connection status changed
+            4.1.4. Bandwidth used in the last second
+            4.1.5. Log messages
+            4.1.6. New descriptors available
+            4.1.7. New Address mapping
+            4.1.8. Descriptors uploaded to us in our role as authoritative dirserver
+            4.1.9. Our descriptor changed
+            4.1.10. Status events
+            4.1.11. Our set of guard nodes has changed
+            4.1.12. Network status has changed
+            4.1.13. Bandwidth used on an application stream
+            4.1.14. Per-country client stats
+            4.1.15. New consensus networkstatus has arrived
+            4.1.16. New circuit buildtime has been set
+            4.1.17. Signal received
+            4.1.18. Configuration changed
+            4.1.19. Circuit status changed slightly
+            4.1.20. Pluggable transport launched
+            4.1.21. Bandwidth used on an OR or DIR or EXIT connection
+            4.1.22. Bandwidth used by all streams attached to a circuit
+            4.1.23. Per-circuit cell stats
+            4.1.24. Token buckets refilled
+            4.1.25. HiddenService descriptors
+            4.1.26. HiddenService descriptors content
+            4.1.27. Network liveness has changed
+            4.1.28. Pluggable Transport Logs
+            4.1.29. Pluggable Transport Status
+    5. Implementation notes
+        5.1. Authentication
+        5.2. Don't let the buffer get too big
+        5.3. Backward compatibility with v0 control protocol
+        5.4. Tor config options for use by controllers
+        5.5. Phases from the Bootstrap status event
+            5.5.1. Overview of Bootstrap reporting.
+            5.5.2. Phases in Bootstrap Stage 1
+            5.5.3. Phases in Bootstrap Stage 2
+            5.5.4. Phases in Bootstrap Stage 3
+        5.6 Bootstrap phases reported by older versions of Tor
+
 0. Scope
 
   This document describes an implementation-specific protocol that is used
