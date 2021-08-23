@@ -90,7 +90,7 @@ of their choices.
    is unknown (usually its target IP), but we believe the path probably
    supports the request according to the rules given below.
 
-1.1. A relay's bandwidth
+1.2. A relay's bandwidth
 
    Old versions of Tor did not report bandwidths in network status
    documents, so clients had to learn them from the routers' advertised
