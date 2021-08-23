@@ -1,6 +1,15 @@
 
                  Tor's extensions to the SOCKS protocol
 
+Table of Contents
+
+    1. Overview
+        1.1. Extent of support
+    2. Name lookup
+    3. Other command extensions.
+    4. HTTP-resistance
+    5. Optimistic data
+
 1. Overview
 
   The SOCKS protocol provides a generic interface for TCP proxies.  Client
