@@ -2,6 +2,18 @@
                               GetTor specification
                                  Jacob Appelbaum
 
+Table of Contents
+
+    0. Preface
+    1. Overview
+    2. Implementation
+        2.1. Reference implementation
+    3. SMTP transport
+        3.1. SMTP transport security considerations
+        3.2. SMTP transport privacy considerations
+    4. Other transports
+    5. Implementation suggestions
+
 0. Preface
 
  This document describes GetTor and how to properly implementation GetTor.
