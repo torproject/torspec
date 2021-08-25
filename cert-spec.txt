@@ -1,6 +1,21 @@
 
                     Ed25519 certificates in Tor
 
+Table of Contents
+
+    1. Scope and Preliminaries
+        1.1. Signing
+        1.2. Integer encoding
+    2. Document formats
+        2.1. Ed25519 Certificates
+        2.2. Basic extensions
+            2.2.1. Signed-with-ed25519-key extension [type 04]
+        2.3. RSA->Ed25519 cross-certificate
+    A.1. List of certificate types (CERT_TYPE field)
+    A.2. List of extension types
+    A.3. List of signature prefixes
+    A.4. List of certified key types (CERT_KEY_TYPE field)
+
 1. Scope and Preliminaries
 
    This document describes a certificate format that Tor uses for
