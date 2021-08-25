@@ -1,6 +1,20 @@
              Extended ORPort for pluggable transports
                  George Kadianakis, Nick Mathewson
 
+Table of Contents
+
+    1. Overview
+    2. Establishing a connection and authenticating.
+        2.1. Authentication type: SAFE_COOKIE
+            2.1.2. Cookie-file format
+            2.1.3.  SAFE_COOKIE Protocol specification
+    3. The extended ORPort protocol
+        3.1. Protocol
+        3.2. Command descriptions
+            3.2.1. USERADDR
+            3.2.2. TRANSPORT
+    4. Security Considerations
+
 1. Overview
 
   This document describes the "Extended ORPort" protocol, a wrapper
