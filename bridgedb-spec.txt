@@ -4,6 +4,21 @@
                              Karsten Loesing
                               Nick Mathewson
 
+Table of Contents
+
+    0. Preliminaries
+    1. Importing bridge network statuses and bridge descriptors
+        1.1. Parsing bridge network statuses
+        1.2. Parsing bridge descriptors
+        1.3. Parsing extra-info documents
+    2. Assigning bridges to distributors
+    3. Giving out bridges upon requests
+    4. Selecting bridges to be given out based on IP addresses
+    5. Selecting bridges to be given out based on email addresses
+    6. Selecting unallocated bridges to be stored in file buckets
+    7. Displaying Bridge Information
+    8. Writing bridge assignments for statistics
+
 0. Preliminaries
 
    This document specifies how BridgeDB processes bridge descriptor files
