@@ -109,7 +109,7 @@ We require the following crypto operations:
   * `H(s,t)` -- a tweakable hash function of output length
      `DIGEST_LEN`.
   * `MAC(k, msg, t)` -- a tweakable message-authentication-code function,
-     of output length `MAC_LEN`.
+     with key length `MAC_KEY_LEN` and output length `MAC_LEN`.
   * `EXP(pk,sk)` -- our Diffie Hellman group operation, taking a
      public key of length `PUB_KEY_LEN`.
   * `KEYGEN()` -- our Diffie-Hellman keypair generation algorithm,
@@ -280,18 +280,18 @@ using a new PROTOID.)
 
 # A.1 Instantiation
 
-Here are a set of functions based on SHA3, SHAKE128, Curve25519, and
+Here are a set of functions based on SHA3, SHAKE-256, Curve25519, and
 AES256:
 
 ```
 H(s, t) = SHA3_256(ENCAP(t) | s)
 MAC(k, msg, t) = SHA3_256(ENCAP(t) | ENCAP(k) | s)
-KDF(s, t) = SHAKE_128(ENCAP(t) | s)
+KDF(s, t) = SHAKE_256(ENCAP(t) | s)
 ENC(k, m) = AES_256_CTR(k, m)
 
 EXP(pk,sk), KEYGEN: defined as in curve25519
 
-DIGEST_LEN = MAC_LEN = ENC_KEY_LEN = PUB_KEY_LEN = 32
+DIGEST_LEN = MAC_LEN = MAC_KEY_LEN = ENC_KEY_LEN = PUB_KEY_LEN = 32
 
 ID_LEN = 32  (representing an ed25519 identity key)
 ```
