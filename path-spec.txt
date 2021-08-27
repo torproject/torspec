@@ -413,6 +413,9 @@ of their choices.
    good fit over the long term, clients store 1000 most recent circuit build
    times in a circular array.
 
+   These build times only include the times required to build three-hop
+   circuits. Other circuits' build times are not included.
+
    The Tor client should build test circuits at a rate of one every 'cbttestfreq'
    (10 seconds) until 'cbtmincircs' (100 circuits) are built, with a maximum of
    'cbtmaxopencircs' (default: 10) circuits open at once. This allows a fresh
