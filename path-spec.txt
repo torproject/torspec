@@ -423,9 +423,9 @@ of their choices.
    or network change (see section 2.4.5 below).
 
    Timeouts are stored on disk in a histogram of 10ms bin width, the same
-   width used to calculate the Xm value above. This histogram must be shuffled
-   after being read from disk, to preserve a proper expiration of old values
-   after restart.
+   width used to calculate the Xm value above. The timeouts recorded in the
+   histogram must be shuffled after being read from disk, to preserve a
+   proper expiration of old values after restart.
 
    Thus, some build time resolution is lost during restart. Implementations may
    choose a different persistence mechanism than this histogram, but be aware
@@ -533,6 +533,13 @@ of their choices.
 
    If the timeout was already at least `cbtinitialtimeout`,
    the client doubles the timeout.
+
+   The records here (of how many circuits succeeded or failed among the most
+   recent 'cbrrecentcount') are also stored as persistent state.  On reload,
+   the history here is reconstructed from the counts by placing successes and
+   failures in an arbitrary order.  (The C Tor implementation shuffles them,
+   whereas Arti always places failures before successes so that they expire
+   sooner.)
 
 2.4.6. Consensus parameters governing behavior
 
