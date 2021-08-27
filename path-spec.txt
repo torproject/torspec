@@ -481,7 +481,8 @@ of their choices.
 
       F(q) = Xm/((1.0-q)^(1.0/alpha))
 
-   Thus, clients obtain their circuit build timeout by computing:
+   Thus, clients obtain the circuit build timeout for 3-hop circuits by
+   computing:
 
      timeout_ms = F(0.8)    # 'cbtquantile' == 0.8
 
@@ -499,6 +500,27 @@ of their choices.
 
      timeout_ms = MIN(timeout_ms, max_observed_timeout)
      close_ms = MAX(MIN(close_ms, 2*max_observed_timeout), 'cbtinitialtimeout')
+
+2.4.3. Calculating timeouts thresholds for circuits of different lengths
+
+   The timeout_ms and close_ms estimates above are good only for 3-hop
+   circuits, since only 3-hop circuits are recorded in the list of build
+   times.
+
+   To calculate the appropriate timeouts and close timeouts for circuits of
+   other lengths, the client multiples the timeout_ms and close_ms values
+   by a scaling factor determined by the number of communication hops
+   needed to build their circuits:
+
+   timeout_ms[hops=n] = timeout_ms * Actions(N) / Actions(3)
+
+   close_ms[hops=n] = close_ms * Actions(N) / Actions(3)
+
+       where Actions(N) = N * (N + 1) / 2.
+
+   To calculate timeouts for operations other than circuit building,
+   the client should add X to Actions(N) for every round-trip communication
+   required with the Xth hop.
 
 2.4.4. How to record timeouts
 
