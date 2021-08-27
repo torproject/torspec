@@ -205,6 +205,11 @@ of their choices.
    might be supported by a pending or built circuit. For internal
    circuits, we pick an arbitrary acceptable path, repeating as needed.
 
+   Clients consider a circuit to become "dirty" as soon as a stream is
+   attached to it, or some other request is performed over the circuit.
+   If a circuit has been "dirty" for at least MaxCircuitDirtiness seconds,
+   new circuits may not be attached to it.
+
    In some cases we can reuse an already established circuit if it's
    clean; see Section 2.3 (cannibalizing circuits) for details.
 
@@ -242,8 +247,16 @@ of their choices.
 
 2.1.6. When to tear down circuits
 
-   XXXX
+   Clients should tear down circuits (in general) only when those circuits
+   have no streams on them.  Additionally, clients should tear-down
+   stream-less circuits only under one of the following conditions:
 
+     - The circuit has never had a stream attached, and it was created too
+       long in the past (based on CircuitsAvailableTimeout or
+       cbtlearntimeout, depending on timeout estimate status).
+
+     - The circuit is dirty (has had a stream attached), and it has been
+       dirty for at least MaxCircuitDirtiness.
 
 2.2. Path selection and constraints
 
