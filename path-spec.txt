@@ -643,8 +643,9 @@ of their choices.
         Default: 60000
         Min: Value of cbtmintimeout
         Max: 2147483647 (INT32_MAX)
-        Effect: This is the timeout value to use before computing a timeout,
-                in milliseconds.
+        Effect: This is the timeout value to use before we have enough data
+                to compute a timeout, in milliseconds.  The circuit close
+                time defaults to 1.5 times this value.
 
       cbtlearntimeout
         Default: 180
