@@ -1921,7 +1921,7 @@
   currently supported flags are:
 
     "Permanent" - This client's credentials should be stored in the filesystem.
-                  If this is not set, the client's credentials are epheremal
+                  If this is not set, the client's credentials are ephemeral
                   and stored in memory.
 
   If client auth credentials already existed for this service, replace them
