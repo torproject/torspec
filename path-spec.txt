@@ -414,8 +414,10 @@ of their choices.
    times in a circular array.
 
    These build times only include the times required to build three-hop
-   circuits. Other circuits' build times are not included.
-
+   circuits, and the times required to build the first three hops of circuits
+   with more than three hops.  Circuits of fewer than three hops are not
+   recorded, and hops past the third are not recorded.
+   
    The Tor client should build test circuits at a rate of one every 'cbttestfreq'
    (10 seconds) until 'cbtmincircs' (100 circuits) are built, with a maximum of
    'cbtmaxopencircs' (default: 10) circuits open at once. This allows a fresh
@@ -557,11 +559,8 @@ of their choices.
    the client doubles the timeout.
 
    The records here (of how many circuits succeeded or failed among the most
-   recent 'cbrrecentcount') are also stored as persistent state.  On reload,
-   the history here is reconstructed from the counts by placing successes and
-   failures in an arbitrary order.  (The C Tor implementation shuffles them,
-   whereas Arti always places failures before successes so that they expire
-   sooner.)
+   recent 'cbrrecentcount') are not stored as persistent state.  On reload,
+   we start with a new, empty state.
 
 2.4.6. Consensus parameters governing behavior
 
@@ -644,8 +643,10 @@ of their choices.
         Min: Value of cbtmintimeout
         Max: 2147483647 (INT32_MAX)
         Effect: This is the timeout value to use before we have enough data
-                to compute a timeout, in milliseconds.  The circuit close
-                time defaults to 1.5 times this value.
+                to compute a timeout, in milliseconds.  If we do not have
+                enough data to compute a timeout estimate (see cbtmincircs),
+                then we use this interval both for the close timeout and the
+                abandon timeout.
 
       cbtlearntimeout
         Default: 180
