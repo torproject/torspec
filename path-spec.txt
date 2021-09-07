@@ -205,6 +205,11 @@ of their choices.
    might be supported by a pending or built circuit. For internal
    circuits, we pick an arbitrary acceptable path, repeating as needed.
 
+   Clients consider a circuit to become "dirty" as soon as a stream is
+   attached to it, or some other request is performed over the circuit.
+   If a circuit has been "dirty" for at least MaxCircuitDirtiness seconds,
+   new circuits may not be attached to it.
+
    In some cases we can reuse an already established circuit if it's
    clean; see Section 2.3 (cannibalizing circuits) for details.
 
@@ -242,8 +247,16 @@ of their choices.
 
 2.1.6. When to tear down circuits
 
-   XXXX
+   Clients should tear down circuits (in general) only when those circuits
+   have no streams on them.  Additionally, clients should tear-down
+   stream-less circuits only under one of the following conditions:
 
+     - The circuit has never had a stream attached, and it was created too
+       long in the past (based on CircuitsAvailableTimeout or
+       cbtlearntimeout, depending on timeout estimate status).
+
+     - The circuit is dirty (has had a stream attached), and it has been
+       dirty for at least MaxCircuitDirtiness.
 
 2.2. Path selection and constraints
 
@@ -400,6 +413,11 @@ of their choices.
    good fit over the long term, clients store 1000 most recent circuit build
    times in a circular array.
 
+   These build times only include the times required to build three-hop
+   circuits, and the times required to build the first three hops of circuits
+   with more than three hops.  Circuits of fewer than three hops are not
+   recorded, and hops past the third are not recorded.
+   
    The Tor client should build test circuits at a rate of one every 'cbttestfreq'
    (10 seconds) until 'cbtmincircs' (100 circuits) are built, with a maximum of
    'cbtmaxopencircs' (default: 10) circuits open at once. This allows a fresh
@@ -407,9 +425,9 @@ of their choices.
    or network change (see section 2.4.5 below).
 
    Timeouts are stored on disk in a histogram of 10ms bin width, the same
-   width used to calculate the Xm value above. This histogram must be shuffled
-   after being read from disk, to preserve a proper expiration of old values
-   after restart.
+   width used to calculate the Xm value above. The timeouts recorded in the
+   histogram must be shuffled after being read from disk, to preserve a
+   proper expiration of old values after restart.
 
    Thus, some build time resolution is lost during restart. Implementations may
    choose a different persistence mechanism than this histogram, but be aware
@@ -433,7 +451,8 @@ of their choices.
    Instead of using the mode of discrete build times directly, Tor clients
    compute the Xm parameter using the weighted average of the the midpoints
    of the 'cbtnummodes' (10) most frequently occurring 10ms histogram bins.
-   Ties are broken in favor of earlier bins.
+   Ties are broken in favor of earlier bins (that is, in favor of bins
+   corresponding to shorter build times).
 
    (The use of 10 modes was found to minimize error from the selected
    cbtquantile, with 10ms bins for quantiles 60-80, compared to many other
@@ -464,7 +483,8 @@ of their choices.
 
       F(q) = Xm/((1.0-q)^(1.0/alpha))
 
-   Thus, clients obtain their circuit build timeout by computing:
+   Thus, clients obtain the circuit build timeout for 3-hop circuits by
+   computing:
 
      timeout_ms = F(0.8)    # 'cbtquantile' == 0.8
 
@@ -482,6 +502,27 @@ of their choices.
 
      timeout_ms = MIN(timeout_ms, max_observed_timeout)
      close_ms = MAX(MIN(close_ms, 2*max_observed_timeout), 'cbtinitialtimeout')
+
+2.4.3. Calculating timeouts thresholds for circuits of different lengths
+
+   The timeout_ms and close_ms estimates above are good only for 3-hop
+   circuits, since only 3-hop circuits are recorded in the list of build
+   times.
+
+   To calculate the appropriate timeouts and close timeouts for circuits of
+   other lengths, the client multiples the timeout_ms and close_ms values
+   by a scaling factor determined by the number of communication hops
+   needed to build their circuits:
+
+   timeout_ms[hops=n] = timeout_ms * Actions(N) / Actions(3)
+
+   close_ms[hops=n] = close_ms * Actions(N) / Actions(3)
+
+       where Actions(N) = N * (N + 1) / 2.
+
+   To calculate timeouts for operations other than circuit building,
+   the client should add X to Actions(N) for every round-trip communication
+   required with the Xth hop.
 
 2.4.4. How to record timeouts
 
@@ -516,6 +557,10 @@ of their choices.
 
    If the timeout was already at least `cbtinitialtimeout`,
    the client doubles the timeout.
+
+   The records here (of how many circuits succeeded or failed among the most
+   recent 'cbrrecentcount') are not stored as persistent state.  On reload,
+   we start with a new, empty state.
 
 2.4.6. Consensus parameters governing behavior
 
@@ -597,8 +642,11 @@ of their choices.
         Default: 60000
         Min: Value of cbtmintimeout
         Max: 2147483647 (INT32_MAX)
-        Effect: This is the timeout value to use before computing a timeout,
-                in milliseconds.
+        Effect: This is the timeout value to use before we have enough data
+                to compute a timeout, in milliseconds.  If we do not have
+                enough data to compute a timeout estimate (see cbtmincircs),
+                then we use this interval both for the close timeout and the
+                abandon timeout.
 
       cbtlearntimeout
         Default: 180
