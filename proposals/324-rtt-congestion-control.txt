@@ -1345,6 +1345,11 @@ Clients that are able to parse this line and know the protocol version can then
 send in the INTRODUCE1 cell congestion control parameters that they would like
 to use which is detailed in the next section.
 
+This line MUST be removed from the descriptor if the consensus disables
+congestion control by setting "cc_alg=0". In other words, a service should only
+advertise its flow control version if congestion control is enabled network
+wide.
+
 9.2 INTRODUCE cell extension
 
 We propose a new extension to the INTRODUCE cell which can be used to send
