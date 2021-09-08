@@ -1317,7 +1317,109 @@ also be used as a side channel. So we must limit its use to a couple of
 cells per circuit, at most.
   https://blog.torproject.org/tor-security-advisory-relay-early-traffic-confirmation-attack
 
-9. Acknowledgements
+9. Onion Services
+
+Onion service requires us to advertise the protocol version and congestion
+control parameters in a different way since the end points do not know each
+other like a client knows all the relays and what they support.
+
+To address this, this is done in two parts. First, the service needs to
+advertise to the world that it supports congestion control. This is done
+through a new line in the descriptor, see section 9.1 below.
+
+Second, the client needs to inform the service that it wants to use congestion
+control on the rendezvous circuit and with wich parameters. This is done
+through the INTRODUCE cell as an extension, see section 9.2 below.
+
+9.1. Descriptor
+
+We propose to add a new line to advertise the flow control protocol version:
+
+  "flow-control" SP version-number NL
+
+    The "version-number" value is the same as the protocol version FlowCtrl
+    that relay advertises which is defined earlier in this proposal. Current
+    value can only be "2".
+
+Clients that are able to parse this line and know the protocol version can then
+send in the INTRODUCE1 cell congestion control parameters that they would like
+to use which is detailed in the next section.
+
+9.2 INTRODUCE cell extension
+
+We propose a new extension to the INTRODUCE cell which can be used to send
+congestion control parameters down to the service. It is important to mention
+that this is an extension to be used in the encrypted setion of the cell and
+not its readable section by the introduction point.
+
+If used, it needs to be encoded within the N_EXTENSIONS field of the ENCRYPTED
+section of the INTRODUCE1 cell defined in rend-spec-v3.txt section 3.3. The
+content is defined as follow:
+
+  EXT_FIELD_TYPE:
+
+    [01] -- Congestion Control Parameters.
+
+    If this flag is set, the extension should be used by the service to learn
+    what are the congestion control parameters to use on the rendezvous
+    circuit.
+
+  EXT_FIELD content format is:
+
+    N_PARAMS          [1 byte]
+    N_PARAMS times:
+      PARAM_TYPE      [1 byte]
+      PARAM_VALUE     [8 byte]
+
+    The PARAM_TYPE possible values are:
+
+      [01] -- Newest protocol version supported
+              The newest protocol version that the client supports.
+
+      [02] -- SENDME increment
+              The initial SENDME increment that should be used by both end points
+              when using congestion control.
+
+    The PARAM_VALUE size is 8 bytes in order to accomodate 64bit values. It
+    MUST match the specified limits for the following PARAM_TYPE:
+
+      [01] -- Min: 2, Max: 255
+      [02] -- Min: 1, Max: 5000 (same as "cc_sendme_inc")
+
+9.3 Protocol Flow
+
+First, the client reads the "flow-control" line in the descriptor and gets the
+maximum value from what it supports and the service supports. As an example, if
+the client supports 2-3-4 and the service supports 2-3, then 3 is chosen.
+
+It then sends that value along its desired cc_sendme_inc value in the
+INTRODUCE1 cell in the extension.
+
+The service will then validate that is does support version 3 and that the
+parameter cc_sendme_inc is within range of the protocol. Congestion control is
+then applied to the rendezvous circuit.
+
+9.4 Circuit Behavior
+
+If the extension is not found in the cell, the service MUST not use congestion
+control on the rendezvous circuit.
+
+Any invalid values received in the extension should result in closing the
+introduction circuit and thus not continuing the rendezvous process. An invalid
+value is either if the value is not supported or out of the defined range.
+
+9.5 Security Considerations
+
+Advertising a new line in a descriptor does leak that a service is running at
+least a certain tor version. We believe that this is an acceptable risk in
+order to be able for service to take advantage of congestion control. Once a
+new tor stable is released, we hope that most service upgrades and thus
+everyone looks the same again.
+
+The new extension is located in the encrypted part of the INTRODUCE1 cell and
+thus the introduction point can't learn its content.
+
+10. Acknowledgements
 
 Immense thanks to Toke Høiland-Jørgensen for considerable input into all
 aspects of the TCP congestion control background material for this proposal,
@@ -1325,7 +1427,7 @@ as well as review of our versions of the algorithms.
 
 
 
-10. [CITATIONS]
+11. [CITATIONS]
 
 1. Options for Congestion Control in Tor-Like Networks.
    https://lists.torproject.org/pipermail/tor-dev/2020-January/014140.html
