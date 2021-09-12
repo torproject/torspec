@@ -1935,6 +1935,7 @@
 
     251 - Client auth credentials for this onion service already existed and replaced.
     252 - Added client auth credentials and successfully decrypted a cached descriptor.
+    451 - We reached authorized client capacity
     512 - Syntax error in "HSAddress", or "PrivateKeyBlob" or "Nickname"
     551 - Client with with this "Nickname" already exists
     552 - Unrecognized KeyType
