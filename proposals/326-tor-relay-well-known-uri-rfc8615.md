@@ -53,6 +53,27 @@ B234567890123456789012345678901234567890
 ```
 The RSA SHA1 relay fingerprint can be found in the file named "fingerprint" located in the Tor data directory on the relay.
 
+## /.well-known/tor-relay/ed25519-master-pubkey.txt
+
+* The file contains one or more ed25519 Tor relay public master keys of relays operated by the entity in control of this website.
+* Each line contains one public ed25519 master key in its base64 encoded form.
+* The file may contain comments (starting with #).
+* Non-comment lines must be exactly 43 characters long and consist of the following characters [a-zA-z0-9/+].
+* Each key MUST appear at most once.
+* The file MUST not be larger than one MByte.
+* The content MUST be a media type of "text/plain".
+
+Example file content:
+
+```
+# we operate these Tor relays
+yp0fwtp4aa/VMyZJGz8vN7Km3zYet1YBZwqZEk1CwHI
+kXdA5dmIhXblAquMx0M0ApWJJ4JGQGLsjUSn86cbIaU
+bHzOT41w56KHh+w6TYwUhN4KrGwPWQWJX04/+tw/+RU
+```
+
+The base64 encoded ed25519 public master key can be found in the file named "fingerprint-ed25519" located in the Tor data directory on the relay.
+
 
 # Change Controller
 
