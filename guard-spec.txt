@@ -6,6 +6,37 @@
                               Ola Bini
                            Nick Mathewson
 
+Table of Contents
+
+    1. Introduction and motivation
+    2. State instances
+    3. Circuit Creation, Entry Guard Selection (1000 foot view)
+        3.1 Path selection
+            3.1.1 Managing entry guards
+            3.1.2 Middle and exit node selection
+        3.2 Circuit Building
+    4. The algorithm.
+        4.0. The guards listed in the current consensus. [Section:GUARDS]
+        4.1. The Sampled Guard Set. [Section:SAMPLED]
+        4.2. The Usable Sample [Section:FILTERED]
+        4.3. The confirmed-guard list. [Section:CONFIRMED]
+        4.4. The Primary guards [Section:PRIMARY]
+        4.5. Retrying guards. [Section:RETRYING]
+        4.6. Selecting guards for circuits. [Section:SELECTING]
+        4.7. When a circuit fails. [Section:ON_FAIL]
+        4.8. When a circuit succeeds [Section:ON_SUCCESS]
+        4.9. Updating the list of waiting circuits [Section:UPDATE_WAITING]
+        4.10. Whenever we get a new consensus. [Section:ON_CONSENSUS]
+        4.11. Deciding whether to generate a new circuit.
+        4.12. When we are missing descriptors.
+    A. Appendices
+        A.0. Acknowledgements
+        A.1. Parameters with suggested values. [Section:PARAM_VALS]
+        A.2. Random values [Section:RANDOM]
+        A.3. Why not a sliding scale of primaryness? [Section:CVP]
+        A.4. Controller changes
+        A.5. Persistent state format
+
 1. Introduction and motivation
 
   Tor uses entry guards to prevent an attacker who controls some
@@ -771,7 +802,7 @@ A.3. Why not a sliding scale of primaryness? [Section:CVP]
         simple to make to the code after we implement the simpler
         version of the algorithm described above.
 
-A.3. Controller changes
+A.4. Controller changes
 
    We will add to control-spec.txt a new possible circuit state, GUARD_WAIT,
    that can be given as part of circuit events and GETINFO responses about
@@ -779,7 +810,7 @@ A.3. Controller changes
    but we will not use it because a circuit with a better guard might
    become built too.
 
-A.4. Persistent state format
+A.5. Persistent state format
 
    The persistent state format doesn't need to be part of this
    specification, since different implementations can do it
