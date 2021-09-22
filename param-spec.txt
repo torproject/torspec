@@ -4,6 +4,22 @@
 This file lists the recognized parameters that can appear on the "params"
 line of a directory consensus.
 
+Table of Contents
+
+    1. Network protocol parameters
+    2. Performance-tuning parameters
+    3. Voting-related parameters
+    4. Circuit-build-timeout parameters
+    5. Directory-related parameters
+    6. Pathbias parameters
+    7. Relay behavior
+    8. V3 onion service parameters
+    9. Denial-of-service parameters
+    10. Padding-related parameters
+    11. Guard-related parameters
+    12. Relay behavior
+    X. Obsolete parameters
+
 1. Network protocol parameters
 
     "circwindow" -- the default package window that circuits should be
