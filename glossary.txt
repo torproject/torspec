@@ -11,6 +11,27 @@ This glossary is not a design document; it is only a reference.
 This glossary is a work-in-progress; double-check its definitions before
 citing them authoritatively. ;)
 
+Table of Contents
+
+    0. Preliminaries
+    1.0. Commonly used Tor configuration terms
+    2.0. Tor network components
+        2.1. Relays, aka OR (onion router)
+            2.1.1. Specific roles
+        2.2. Client, aka OP (onion proxy)
+        2.3. Authorities
+        2.4. Hidden Service
+        2.5. Circuit
+        2.6. Edge connection
+        2.7. Consensus
+        2.8. Descriptor
+    3.0. Tor network protocols
+        3.1. Link handshake
+        3.2. Circuit handshake
+        3.3. Hidden Service Protocol
+        3.4. Directory Protocol
+    4.0. General network definitions
+
 0. Preliminaries
 
       The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
