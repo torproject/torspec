@@ -16,6 +16,26 @@ the anonymity and load-balancing implications of their choices.
       "OPTIONAL" in this document are to be interpreted as described in
       RFC 2119.
 
+Table of Contents
+
+    1. Overview
+    2. Connection-level padding
+        2.1. Background
+        2.2. Implementation
+        2.3. Padding Cell Timeout Distribution Statistics
+        2.4. Maximum overhead bounds
+        2.5. Reducing or Disabling Padding via Negotiation
+        2.6. Consensus Parameters Governing Behavior
+    3. Circuit-level padding
+        3.1. Circuit Padding Negotiation
+        3.2. Circuit Padding Machine Message Management
+        3.3. Obfuscating client-side onion service circuit setup
+            3.3.1. Common general circuit construction sequences
+            3.3.2. Client-side onion service introduction circuit obfuscation
+            3.3.3. Client-side rendezvous circuit hiding
+            3.3.4. Circuit setup machine overhead
+        3.4. Circuit padding consensus parameters
+    A. Acknowledgments
 
 1. Overview
 
