@@ -19,7 +19,7 @@ we can de-duplicate families which sometimes helps.)  Adding or
 removing a server from the family requires all the other servers to
 change their torrc settings.
 
-The is growth in size is not just a theoretical problem. Family
+This growth in size is not just a theoretical problem. Family
 declarations currently make up a little over 55% of the
 microdescriptors in the directory--around 24% after compression.
 The largest family has around 270 members.  With Walking Onions, 270
@@ -34,7 +34,7 @@ requirements and providing a more detailed migration plan.
 In this design, every family has a master ed25519 "family key".  A node
 is in the family iff its server descriptor includes a certificate of its
 ed25519 identity key with the family key.  The certificate
-format the one in the tor-certs.txt spec; we would allocate a new
+format is the one in the tor-certs.txt spec; we would allocate a new
 certificate type for this usage.  These certificates would need to
 include the signing key in the appropriate extension.
 
@@ -93,7 +93,7 @@ need to do in this event would be to move to a new private family
 key.
 
 A more orthodox method would be to keep the private key somewhere
-offline, and using it to generate a certificate for each relay in
+offline, and use it to generate a certificate for each relay in
 the family as needed.  These certificates should be made with
 long-enough lifetimes, and relays should warn when they are going to
 expire soon.
@@ -186,8 +186,8 @@ microdescriptors' family lines:
    digest of the microdescriptor listed in the original votes.  (This
    calculation is deterministic.)
 
-The problem with this approach is that authorities would have to s
-to fetch microdescriptors they do not have in order to replace their
+The problem with this approach is that authorities would have to
+fetch microdescriptors they do not have in order to replace their
 family lines.  Currently, voting never requires an authority to
 fetch a microdescriptor from another authority.  If we implement
 vote compression and diffs as in the Walking Onions proposal,
