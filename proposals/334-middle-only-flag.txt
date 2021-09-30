@@ -1,0 +1,115 @@
+Filename: 334-middle-only-flag.txt
+Title: A Directory Authority Flag To Mark Relays As Middle-only
+Author: Neel Chauhan
+Created: 2021-09-07
+Status: Open
+
+1. Introduction
+
+  The Health Team often deals with a large number of relays with an incorrect
+  configuration (e.g. not all relays in MyFamily), or needs validation that
+  requires contacting the relay operator. It is desirable to put the said
+  relays in a less powerful position, such as a middle only flag that prevents
+  a relay from being used in more powerful positions like an entry guard or an
+  exit relay. [1]
+
+1.1. Motivation
+
+  The proposed middle-only flag is needed by the Health Team to prevent
+  misconfigured relays from being used in positions capable of deanonymizing
+  users while the team evaluates the relay's risk to the network. An example
+  of this scenario is when a guard and exit relay run by the same operator
+  has an incomplete MyFamily, and the same operator's guard and exit are used
+  in a circuit.
+
+  The reason why we won't play with the Guard and Exit flags or weights to
+  achieve the same goal is because even if we were to reduce the guard and
+  exit weights of a misconfigured relay, it could keep some users at risk of
+  deanonymization. Even a small fraction of users at risk of deanonymization
+  isn't something we should aim for.
+
+  One case we could look out for is if all relays are exit relays (unlikely),
+  or if walking onions are working on the current Tor network. This proposal
+  should not affect those scenarios, but we should watch out for these cases.
+
+2. The MiddleOnly Flag
+
+  We propose a consensus flag MiddleOnly. As mentioned earlier, relays will be
+  assigned this flag from the directory authorities.
+
+  What this flag does is that a relay must not be used as an entry guard or
+  exit relay. This is to prevent issues with a misconfigured relay as described
+  in Section 1 (Introduction) while the Health Team assesses the risk with the
+  relay.
+
+3. Implementation details
+
+  The MiddleOnly flag can be assigned to relays whose IP addresses and/or
+  fingerprints are configured at the directory authority level, similar to
+  how the BadExit flag currently works. In short, if a relay's IP is
+  designated as middle-only, it must assign the MiddleOnly flag, otherwise
+  we must not assign it.
+
+  Relays which haven't gotten the Guard or Exit flags yet but have IP addresses
+  that aren't designated as middle-only in the dirauths must not get the
+  MiddleOnly flag. This is to allow new entry guards and exit relays to enter
+  the Tor network, while giving relay administrators flexibility to increase
+  and reduce bandwidth, or change their exit policy.
+
+3.1. Client Implementation
+
+  Clients should interpret the MiddleOnly flag while parsing relay descriptors
+  to determine whether a relay is to be avoided for non-middle purposes. If
+  a client parses the MiddleOnly flag, it must not use MiddleOnly-designated
+  relays as entry guards or exit relays.
+
+3.2. MiddleOnly Relay Purposes
+
+  If a relay has the MiddleOnly flag, we do not allow it to be used for the
+  following purposes:
+
+   * Entry Guard
+
+   * Directory Guard
+
+   * Exit Relay
+
+  The reason for this is to prevent a misconfigured relay from being used
+  in places where they may know about clients or destination traffic. This
+  is in case certain misconfigured relays are used to deanonymize clients.
+
+  We could also bar a MiddleOnly relay from other purposes such as rendezvous
+  and fallback directory purposes. However, while more secure in theory, this
+  adds unnecessary complexity to the Tor design and has the possibility of
+  breaking clients that aren't MiddleOnly-aware [2].
+
+4. Consensus Considerations
+
+4.1. Consensus Methods
+
+  We propose a new consensus method 32, which is to only use this flag if and
+  when all authorities understand the flag and agree on it. This is because the
+  MiddleOnly flag impacts path selection for clients.
+
+4.2. Consensus Requirements
+
+  The MiddleOnly flag would work like most other consensus flags where a
+  majority of dirauths have to assign a relay the flag in order for a relay
+  to have the MiddleOnly flag.
+
+  Another approach is to make it that only one dirauth is needed to give
+  relays this flag, however it would put too much power in the hands of a
+  single directory authority servre [3].
+
+5. Acknowledgements
+
+  Thank you so much to nusenu, s7r, David Goulet, and Roger Dingledine for your
+  suggestions to Prop334. My proposal wouldn't be what it is without you.
+
+6. Citations
+
+  [1] - https://gitlab.torproject.org/tpo/core/tor/-/issues/40448
+
+  [2] - https://lists.torproject.org/pipermail/tor-dev/2021-September/014627.html
+
+  [3] - https://lists.torproject.org/pipermail/tor-dev/2021-September/014630.html
