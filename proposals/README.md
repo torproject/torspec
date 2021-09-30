@@ -41,6 +41,7 @@ for discussion.
 * [`326-tor-relay-well-known-uri-rfc8615.md`](/proposals/326-tor-relay-well-known-uri-rfc8615.md): The "tor-relay" Well-Known Resource Identifier
 * [`330-authority-contact.md`](/proposals/330-authority-contact.md): Modernizing authority contact entries
 * [`332-ntor-v3-with-extra-data.md`](/proposals/332-ntor-v3-with-extra-data.md): Ntor protocol with extra data, version 3
+* [`334-middle-only-flag.txt`](/proposals/334-middle-only-flag.txt): A Directory Authority Flag To Mark Relays As Middle-only
 
 
 ## ACCEPTED proposals: slated for implementation
@@ -111,6 +112,7 @@ discussion.
 * [`328-relay-overload-report.md`](/proposals/328-relay-overload-report.md): Make Relays Report When They Are Overloaded
 * [`329-traffic-splitting.txt`](/proposals/329-traffic-splitting.txt): Overcoming Tor's Bottlenecks with Traffic Splitting
 * [`331-res-tokens-for-anti-dos.md`](/proposals/331-res-tokens-for-anti-dos.md): Res tokens: Anonymous Credentials for Onion Service DoS Resilience
+* [`333-vanguards-lite.md`](/proposals/333-vanguards-lite.md): Vanguards lite
 
 
 ## NEEDS-REVISION proposals: ideas that we can't implement as-is

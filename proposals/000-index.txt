@@ -253,6 +253,8 @@ Proposals by number:
 330  Modernizing authority contact entries [OPEN]
 331  Res tokens: Anonymous Credentials for Onion Service DoS Resilience [DRAFT]
 332  Ntor protocol with extra data, version 3 [OPEN]
+333  Vanguards lite [DRAFT]
+334  A Directory Authority Flag To Mark Relays As Middle-only [OPEN]
 
 
 Proposals by status:
@@ -265,6 +267,7 @@ Proposals by status:
    328  Make Relays Report When They Are Overloaded
    329  Overcoming Tor's Bottlenecks with Traffic Splitting
    331  Res tokens: Anonymous Credentials for Onion Service DoS Resilience
+   333  Vanguards lite
  NEEDS-REVISION:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
@@ -296,6 +299,7 @@ Proposals by status:
    326  The "tor-relay" Well-Known Resource Identifier
    330  Modernizing authority contact entries
    332  Ntor protocol with extra data, version 3
+   334  A Directory Authority Flag To Mark Relays As Middle-only
  ACCEPTED:
    265  Load Balancing with Overhead Parameters [for 0.2.9.x]
    275  Stop including meaningful "published" time in microdescriptor consensus [for 0.3.1.x-alpha]
