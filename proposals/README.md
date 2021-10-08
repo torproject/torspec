@@ -42,6 +42,7 @@ for discussion.
 * [`330-authority-contact.md`](/proposals/330-authority-contact.md): Modernizing authority contact entries
 * [`332-ntor-v3-with-extra-data.md`](/proposals/332-ntor-v3-with-extra-data.md): Ntor protocol with extra data, version 3
 * [`334-middle-only-flag.txt`](/proposals/334-middle-only-flag.txt): A Directory Authority Flag To Mark Relays As Middle-only
+* [`335-middle-only-redux.md`](/proposals/335-middle-only-redux.md): An authority-only design for MiddleOnly
 
 
 ## ACCEPTED proposals: slated for implementation

@@ -255,6 +255,7 @@ Proposals by number:
 332  Ntor protocol with extra data, version 3 [OPEN]
 333  Vanguards lite [DRAFT]
 334  A Directory Authority Flag To Mark Relays As Middle-only [OPEN]
+335  An authority-only design for MiddleOnly [OPEN]
 
 
 Proposals by status:
@@ -300,6 +301,7 @@ Proposals by status:
    330  Modernizing authority contact entries
    332  Ntor protocol with extra data, version 3
    334  A Directory Authority Flag To Mark Relays As Middle-only
+   335  An authority-only design for MiddleOnly
  ACCEPTED:
    265  Load Balancing with Overhead Parameters [for 0.2.9.x]
    275  Stop including meaningful "published" time in microdescriptor consensus [for 0.3.1.x-alpha]

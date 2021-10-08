@@ -252,4 +252,5 @@ Below are a list of proposals sorted by their proposal number.  See
 * [`332-ntor-v3-with-extra-data.md`](/proposals/332-ntor-v3-with-extra-data.md): Ntor protocol with extra data, version 3 [OPEN]
 * [`333-vanguards-lite.md`](/proposals/333-vanguards-lite.md): Vanguards lite [DRAFT]
 * [`334-middle-only-flag.txt`](/proposals/334-middle-only-flag.txt): A Directory Authority Flag To Mark Relays As Middle-only [OPEN]
+* [`335-middle-only-redux.md`](/proposals/335-middle-only-redux.md): An authority-only design for MiddleOnly [OPEN]
 
