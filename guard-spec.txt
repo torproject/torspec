@@ -426,6 +426,10 @@ Table of Contents
 
   Once an element has been added to {PRIMARY_GUARDS}, we do not remove it
   until it is replaced by some element from {CONFIRMED_GUARDS}.
+  That is: if a non-primary guard becomes confirmed and not every primary
+  guard is confirmed, then the list of primary guards list is regenerated,
+  first from the confirmed guards (as before), and then from any
+  non-confirmed primary guards guards.
 
   Note that {PRIMARY_GUARDS} do not have to be in
   {USABLE_FILTERED_GUARDS}: they might be unreachable.
