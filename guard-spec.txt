@@ -421,8 +421,8 @@ Table of Contents
   {CONFIRMED_GUARDS} and {FILTERED_GUARDS}, and take the first
   {N_PRIMARY_GUARDS} elements.  If there are fewer than
   {N_PRIMARY_GUARDS} elements, append additional elements to
-  PRIMARY_GUARDS chosen from ({FILTERED_GUARDS} - {CONFIRMED_GUARDS}) in
-  sample order.
+  PRIMARY_GUARDS chosen from ({FILTERED_GUARDS} - {CONFIRMED_GUARDS}),
+  ordered in "sample order" (that is, by {ADDED_ON_DATE}).
 
   Once an element has been added to {PRIMARY_GUARDS}, we do not remove it
   until it is replaced by some element from {CONFIRMED_GUARDS}.
