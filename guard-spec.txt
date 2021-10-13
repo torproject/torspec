@@ -719,15 +719,15 @@ A.1.  Parameters with suggested values. [Section:PARAM_VALS]
    {param:N_PRIMARY_GUARDS} -- 3
 
    {param:PRIMARY_GUARDS_RETRY_SCHED}
-      -- every 30 minutes for the first 6 hours.
-      -- every 2 hours for the next 3.75 days.
-      -- every 4 hours for the next 3 days.
+      -- every 10 minutes for the first six hours,
+      -- every 90 minutes for the next 90 hours,
+      -- every 4 hours for the next 3 days,
       -- every 9 hours thereafter.
 
-   {param:GUARDS_RETRY_SCHED} -- 1 hour
-      -- every hour for the first 6 hours.
-      -- every 4 hours for the next 3.75 days.
-      -- every 18 hours for the next 3 days.
+   {param:GUARDS_RETRY_SCHED} --
+      -- every hour for the first six hours,
+      -- every 4 hours for the 90 hours,
+      -- every 18 hours for the next 3 days,
       -- every 36 hours thereafter.
 
    {param:INTERNET_LIKELY_DOWN_INTERVAL} -- 10 minutes
