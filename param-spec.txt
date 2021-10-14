@@ -363,8 +363,9 @@ Table of Contents
     "guard-extreme-restriction-percent" -- Warn the user if they have
     configured tor to exclude so many guards that the available guard
     bandwidth is less than this percentage of the total.
-    Min: 1. Max: INT32_MAX. Default: 1.
-    First appeared: 0.3.0
+    Min: 1. Max: 100. Default: 1.
+    First appeared: 0.3.0.  MAX was INT32_MAX, which would have no meaningful
+    effect.  MAX lowered to 100 in 0.4.7.
 
     "guard-min-filtered-sample-size" -- If fewer than this number of
     guards is available in the sample after filtering out unusable
