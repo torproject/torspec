@@ -2153,6 +2153,8 @@ see tor-design.pdf.
 
 8.1. Memory exhaustion.
 
+   (See also dos-spec.md.)
+
    If RAM becomes low, an OR should begin destroying circuits until
    more memory is free again.  We recommend the following algorithm:
 
