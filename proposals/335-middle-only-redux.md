@@ -22,17 +22,17 @@ Chauhan, and the related discussions on tor-dev.
 ## Generating votes
 
 When voting for a relay with the `MiddleOnly` flag, an authority
-should set all flags indicating that a relay is unusable for a
-particular purpose, and against all flags indicating that the relay
+should vote _for_ all flags indicating that a relay is unusable for a
+particular purpose, and _against_ all flags indicating that the relay
 is usable for a particular position.
 
-These flags SHOULD be set in a vote whenever `MiddleOnly` is
-present, and only when the authority is configured to vote on the
-`BadExit` flag.
+Specifically, these flags SHOULD be set in a vote whenever
+`MiddleOnly` is present, and only when the authority is configured
+to vote on the `BadExit` flag.
 
   * `BadExit`
 
-These flags SHOULD be cleared in a vote whenever `MiddleOnly` is
+And these flags SHOULD be cleared in a vote whenever `MiddleOnly` is
 present.
 
   * `Exit`
