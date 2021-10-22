@@ -395,7 +395,7 @@ Table of Contents
    upload after this time. (0.4.4.1-alpha was the first version to reject votes
    in this way.)
 
-      Note: Refusing late uploaded votes minimises the chance of a consensus
+      Note: Refusing late uploaded votes minimizes the chance of a consensus
       split, particular when authorities are under bandwidth pressure. If an
       authority is struggling to upload its vote, and finally uploads to a
       fraction of authorities after this period, they will compute a consensus
@@ -1429,7 +1429,7 @@ Table of Contents
 
         The "{read|write}-overload-count" are the counts of how many times the
         reported limits of burst/rate were exhausted and thus the maximum
-        between the read and write count occurances. To make the counter more
+        between the read and write count occurrences. To make the counter more
         meaningful and to avoid multiple connections saturating the counter
         when a relay is overloaded, we only increment it once a minute.
 
@@ -2241,7 +2241,7 @@ Table of Contents
 
         [At most once]
 
-        See shared-rand-current-value decription above.
+        See shared-rand-current-value description above.
 
    The authority section of a consensus contains groups of the following items,
    in the order given, with one group for each authority that contributed to
@@ -2330,7 +2330,7 @@ Table of Contents
           "Guard" if the router is suitable for use as an entry guard.
           "HSDir" if the router is considered a v2 hidden service directory.
           "NoEdConsensus" if any Ed25519 key in the router's descriptor or
-             microdesriptor does not reflect authority consensus.
+             microdescriptor does not reflect authority consensus.
           "Stable" if the router is suitable for long-lived circuits.
           "StaleDesc" if the router should upload a new descriptor because
              the old one is too old.
@@ -2342,7 +2342,7 @@ Table of Contents
           "Valid" if the router has been 'validated'. Clients before
              0.2.9.4-alpha would not use routers without this flag by
              default. Currently, relays without this flag are omitted
-             fromthe consensus, and current (post-0.2.9.4-alpha) clients
+             from the consensus, and current (post-0.2.9.4-alpha) clients
              assume that every listed relay has this flag.
           "V2Dir" if the router implements the v2 directory protocol or
              higher.
@@ -2935,7 +2935,7 @@ Table of Contents
           entries.
 
         * If consensus-method 26 or later is in use, then we initialize
-          bandwith weights to 1 in our calculations, to avoid
+          bandwidth weights to 1 in our calculations, to avoid
           division-by-zero errors on unusual networks.
 
         * If consensus method 27 or later is used, the microdesc consensus
@@ -3026,7 +3026,7 @@ Table of Contents
      "11" -- Don't consider BadExits when calculating bandwidth weights
      "12" -- Params are only included if enough auths voted for them
      "13" -- Omit router entries with missing microdescriptors.
-     "14" -- Adds support for "a" lines in ns consensues and microdescriptors.
+     "14" -- Adds support for "a" lines in ns consensuses and microdescriptors.
      "15" -- Adds support for "p6" lines.
      "16" -- Adds ntor keys to microdescriptors
      "17" -- Adds "Unmeasured=1" flags to "w" lines
@@ -3039,7 +3039,7 @@ Table of Contents
      "24" -- No longer lists routers that are not Valid in the consensus.
      "25" -- Vote on recommended-protocols and required-protocols.
      "26" -- Initialize bandwidth weights to 1 to avoid division-by-zero.
-     "27" -- Adds support for "a" lines in microdescriptor consensues.
+     "27" -- Adds support for "a" lines in microdescriptor consensuses.
      "28" -- Removes "a" lines from microdescriptors.
      "29" -- Canonicalizes families in microdescriptors.
      "30" -- Removes padding from ntor-onion-key.
@@ -3560,7 +3560,7 @@ Table of Contents
    they're about to serve match the right hashes (either the hashes from
    the fetch URL or the hashes from the consensus, respectively).
 
-   (NOTE: Due to squid proxy url limitations at most 92 microdescrriptor hashes
+   (NOTE: Due to squid proxy url limitations at most 92 microdescriptor hashes
    can be retrieved in a single request.)
 
 4.4. Downloading extra-info documents from directory authorities
