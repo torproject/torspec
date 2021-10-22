@@ -183,7 +183,7 @@ Tables of Contents
         (F is as above.)
 
       * Having a descriptor for every one of the first
-        NUM_GUARDS_TO_USE guards among our primary guards. (see
+        NUM_USABLE_PRIMARY_GUARDS guards among our primary guards. (see
         guard-spec.txt)
 
    We define the "fraction of bandwidth-weighted paths" as the product of
