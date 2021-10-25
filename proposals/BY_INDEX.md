@@ -253,4 +253,6 @@ Below are a list of proposals sorted by their proposal number.  See
 * [`333-vanguards-lite.md`](/proposals/333-vanguards-lite.md): Vanguards lite [DRAFT]
 * [`334-middle-only-flag.txt`](/proposals/334-middle-only-flag.txt): A Directory Authority Flag To Mark Relays As Middle-only [OPEN]
 * [`335-middle-only-redux.md`](/proposals/335-middle-only-redux.md): An authority-only design for MiddleOnly [OPEN]
+* [`336-randomize-guard-retries.md`](/proposals/336-randomize-guard-retries.md): Randomized schedule for guard retries [OPEN]
+* [`337-simpler-guard-usability.md`](/proposals/337-simpler-guard-usability.md): A simpler way to decide, "Is this guard usable?" [OPEN]
 

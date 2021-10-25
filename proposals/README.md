@@ -43,6 +43,8 @@ for discussion.
 * [`332-ntor-v3-with-extra-data.md`](/proposals/332-ntor-v3-with-extra-data.md): Ntor protocol with extra data, version 3
 * [`334-middle-only-flag.txt`](/proposals/334-middle-only-flag.txt): A Directory Authority Flag To Mark Relays As Middle-only
 * [`335-middle-only-redux.md`](/proposals/335-middle-only-redux.md): An authority-only design for MiddleOnly
+* [`336-randomize-guard-retries.md`](/proposals/336-randomize-guard-retries.md): Randomized schedule for guard retries
+* [`337-simpler-guard-usability.md`](/proposals/337-simpler-guard-usability.md): A simpler way to decide, "Is this guard usable?"
 
 
 ## ACCEPTED proposals: slated for implementation

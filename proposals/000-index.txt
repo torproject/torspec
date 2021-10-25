@@ -256,6 +256,8 @@ Proposals by number:
 333  Vanguards lite [DRAFT]
 334  A Directory Authority Flag To Mark Relays As Middle-only [OPEN]
 335  An authority-only design for MiddleOnly [OPEN]
+336  Randomized schedule for guard retries [OPEN]
+337  A simpler way to decide, "Is this guard usable?" [OPEN]
 
 
 Proposals by status:
@@ -302,6 +304,8 @@ Proposals by status:
    332  Ntor protocol with extra data, version 3
    334  A Directory Authority Flag To Mark Relays As Middle-only
    335  An authority-only design for MiddleOnly
+   336  Randomized schedule for guard retries
+   337  A simpler way to decide, "Is this guard usable?"
  ACCEPTED:
    265  Load Balancing with Overhead Parameters [for 0.2.9.x]
    275  Stop including meaningful "published" time in microdescriptor consensus [for 0.3.1.x-alpha]
