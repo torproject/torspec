@@ -6,9 +6,9 @@ the reader to implement a compatible implementation of Tor without ever
 having to read the Tor source code.
 
 The [proposals](/proposals) directory holds our design proposals.  These
-include historical documents that have now been merged into.  For more
-information on the proposal process, including an explanation of how to
-make new proposals, see, see
+include historical documents that have now been merged into the main
+specifications.  For more information on the proposal process, including an
+explanation of how to make new proposals, see
 [001-process.txt](/proposals/001-process.txt).
 
 ## What you can find here
