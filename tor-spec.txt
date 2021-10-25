@@ -944,12 +944,12 @@ see tor-design.pdf.
       TIME       (Timestamp)                     [4 bytes]
       OTHERADDR  (Other OR's address)            [variable]
          ATYPE   (Address type)                  [1 byte]
-         ALEN    (Adress length)                 [1 byte]
+         ALEN    (Address length)                [1 byte]
          AVAL    (Address value in NBO)          [ALEN bytes]
       NMYADDR    (Number of this OR's addresses) [1 byte]
         NMYADDR times:
           ATYPE   (Address type)                 [1 byte]
-          ALEN    (Adress length)                [1 byte]
+          ALEN    (Address length)               [1 byte]
           AVAL    (Address value in NBO))        [ALEN bytes]
 
    Recognized address types (ATYPE) are:
@@ -1849,7 +1849,7 @@ see tor-design.pdf.
    and relays MUST ignore the payload.
 
    In response to a RELAY_BEGIN_DIR cell, relays respond either with a
-   RELAY_CONNECTED cell on succcess, or a RELAY_END cell on failure. They
+   RELAY_CONNECTED cell on success, or a RELAY_END cell on failure. They
    MUST send a RELAY_CONNECTED cell all-zero payload, and clients MUST ignore
    the payload.
 

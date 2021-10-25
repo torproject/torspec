@@ -452,7 +452,7 @@ Table of Contents
 
        The "VERSION" message is used to signal the Pluggable Transport
        Specification version (as in "TOR_PT_MANAGED_TRANSPORT_VER")
-       that the PT proxy will use to configure it's transports and
+       that the PT proxy will use to configure its transports and
        communicate with the parent process.
 
        The version for the environment values and reply messages
@@ -644,7 +644,7 @@ Table of Contents
 
    For example, the tor daemon logs those messages at the Severity level and
    sends them onto the control port using the PT_LOG (see control-spec.txt)
-   event so any third part can pick them up for debugging.
+   event so any third party can pick them up for debugging.
 
    The format of the message:
 
@@ -670,7 +670,7 @@ Table of Contents
 
       STATUS TRANSPORT=Transport <K_1>=<V_1> [<K_2>=<V_2>, ...]
 
-   The TRANSPORT value indicate a hint on what the PT is such has the name or
+   The TRANSPORT value indicates a hint on what the PT is such has the name or
    the protocol used for instance. As an example, obfs4proxy would use
    "obfs4". Thus, the Transport value can be anything the PT itself defines
    and it can be a String or CString (see section 2 in control-spec.txt).
@@ -711,7 +711,7 @@ Table of Contents
        causes cleanup and a graceful shutdown if able).
 
      - PT proxies SHOULD attempt to detect when the parent has
-       terminated (eg: via detecting that it's parent process ID haso
+       terminated (eg: via detecting that its parent process ID has
        changed on U*IX systems), and gracefully terminate.
 
 3.5. Pluggable Transport Client Per-Connection Arguments

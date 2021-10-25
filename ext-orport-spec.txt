@@ -63,14 +63,14 @@ Table of Contents
 
   We define one authentication type: SAFE_COOKIE.  Its AuthType
   value is 1.  It is based on the client proving to the bridge that
-  it can access a given "cookie" file on  disk.  The purpose of
+  it can access a given "cookie" file on disk.  The purpose of
   authentication is to defend against cross-protocol attacks.
 
   If the Extended ORPort is enabled, Tor should regenerate the cookie
   file on startup and store it in
   $DataDirectory/extended_orport_auth_cookie.
 
-  The location of the cookie can be overriden by using the
+  The location of the cookie can be overridden by using the
   configuration file parameter ExtORPortCookieAuthFile, which is
   defined as:
 
@@ -139,7 +139,7 @@ Table of Contents
      Status                                      [1 octet]
 
   Where,
-  + Status is 1 if the authentication was successfull. If the
+  + Status is 1 if the authentication was successful. If the
     authentication failed, Status is 0.
 
 3. The extended ORPort protocol

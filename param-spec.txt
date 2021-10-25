@@ -83,7 +83,7 @@ Table of Contents
 
     "perconnbwrate" and "perconnbwburst" -- if set, each relay sets up a
     separate token bucket for every client OR connection, and rate limits
-    that connection indepedently. Typically left unset, except when used for
+    that connection independently. Typically left unset, except when used for
     performance experiments around trac entry 1750. Only honored by relays
     running Tor 0.2.2.16-alpha and later. (Note that relays running
     0.2.2.7-alpha through 0.2.2.14-alpha looked for bwconnrate and
@@ -324,7 +324,7 @@ Table of Contents
     Min: 0. Max: 1. Default: 0.
     First appeared: 0.2.6
 
-    "guard-lifetime-days" -- Controls guard lifetime. If a unconfirmed
+    "guard-lifetime-days" -- Controls guard lifetime. If an unconfirmed
     guard has been sampled more than this many days ago, it should be
     removed from the guard sample.
     Min: 1. Max: 3650. Default: 120.
@@ -395,7 +395,7 @@ Table of Contents
     Min: 1. Max: INT32_MAX. Default: 15
     First appeared: 0.3.0
 
-    "guard-nonprimary-guard-idle-timeout" --  When trying to confirm
+    "guard-nonprimary-guard-idle-timeout" -- When trying to confirm
     nonprimary guards, if a guard doesn't answer for more than this long
     in seconds, treat it as down.
     Min: 1. Max: INT32_MAX. Default: 600

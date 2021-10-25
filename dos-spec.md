@@ -46,7 +46,7 @@ kinds of allocation:
   * Half-open stream records.
   * Cached onion service descriptors (hsdir only).
   * Cached DNS resolves (relay only).
-  * GEOIP-based  usage activity statistics.
+  * GEOIP-based usage activity statistics.
 
 Note that directory caches aren't counted, since those are stored on
 disk and accessed via mmap.

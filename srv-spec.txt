@@ -98,7 +98,7 @@ Tor works. This text used to be proposal 250-commit-reveal-consensus.txt.
 2.1. Ten thousand feet view of the protocol
 
    Our commit-and-reveal protocol aims to produce a fresh shared random value
-   everyday at 00:00UTC. The final fresh random value is embedded in the
+   every day at 00:00UTC. The final fresh random value is embedded in the
    consensus document at that time.
 
    Our protocol has two phases and uses the hourly voting procedure of Tor.
@@ -124,11 +124,11 @@ Tor works. This text used to be proposal 250-commit-reveal-consensus.txt.
         At 00:00UTC, the shared random value is computed from the agreed
         revealed values and added to the consensus.
 
-   This concludes the commit-and-reveal protocol at 00:00UTC everyday.
+   This concludes the commit-and-reveal protocol every day at 00:00UTC.
 
 2.3. How we use the consensus [CONS]
 
-   The produced shared random values needs to be readily available to
+   The produced shared random values need to be readily available to
    clients. For this reason we include them in the consensus documents.
 
    Every hour the consensus documents need to include the shared random value
@@ -403,7 +403,7 @@ Tor works. This text used to be proposal 250-commit-reveal-consensus.txt.
    from the COMMIT message. We say that the COMMIT and REVEAL messages
    correspond, if the comparison was successful.
 
-   Pariticipants MUST also check that corresponding COMMIT and REVEAL values
+   Participants MUST also check that corresponding COMMIT and REVEAL values
    have the same timestamp value.
 
    Authorities should ignore reveal values during the Reveal Phase that don't
@@ -578,7 +578,7 @@ Tor works. This text used to be proposal 250-commit-reveal-consensus.txt.
    different shared randomness value than the others.
 
    We claim that this attack is not particularly fruitful: Alice ends up
-   having two shared random values to chose from which is a fundamental
+   having two shared random values to choose from which is a fundamental
    problem of commit-and-reveal protocols as well (since the last person can
    always abort or reveal). The attacker can also sabotage the consensus, but
    there are other ways this can be done with the current voting system.
@@ -587,7 +587,7 @@ Tor works. This text used to be proposal 250-commit-reveal-consensus.txt.
    First of all, it requires the authority to sabotage two consensuses which
    will cause quite some noise. Furthermore, the authority needs to send
    different votes to different auths which is detectable. Like the commit
-   phase attack, the detection here is to make sure that the commiment values
+   phase attack, the detection here is to make sure that the commitment values
    in a vote coming from an authority are always the same for each authority.
 
 6. Discussion

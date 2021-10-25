@@ -1023,7 +1023,7 @@ Table of Contents
 
     "net/listeners/dir"
 
-      Listeners for Tor directory protocol, as decribed in dir-spec.txt.
+      Listeners for Tor directory protocol, as described in dir-spec.txt.
 
     "net/listeners/socks"
 
@@ -2699,7 +2699,7 @@ Table of Contents
 
   [NOTE: This feature was removed in Tor 0.3.2.1-alpha.]
 
-  Tor generates this event when it's an directory authority, and
+  Tor generates this event when it's a directory authority, and
   somebody has just uploaded a server descriptor.
 
   Syntax:
@@ -3736,7 +3736,7 @@ Table of Contents
 
       Program = The program path as defined in the *TransportPlugin
                 configuration option. Tor accepts relative and full path.
-      Transport = This value indicate a hint on what the PT is such as the
+      Transport = This value indicates a hint on what the PT is such as the
                   name or the protocol used for instance.
       Message = The status message that the PT sends back to the tor parent
                 process minus the "STATUS" string prefix. Formatted as

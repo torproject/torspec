@@ -35,7 +35,7 @@ Table of contents:
             2.2.5. Expiring hidden service descriptors [EXPIRE-DESC]
             2.2.6. URLs for anonymous uploading and downloading
         2.3. Publishing shared random values [PUB-SHAREDRANDOM]
-            2.3.1. Client behavior in the absense of shared random values
+            2.3.1. Client behavior in the absence of shared random values
             2.3.2. Hidden services and changing shared random values
         2.4. Hidden service descriptors: outer wrapper [DESC-OUTER]
         2.5. Hidden service descriptors: encryption format [HS-DESC-ENC]
@@ -457,7 +457,7 @@ Table of contents:
 
    To learn the introduction points, clients must decrypt the body of the
    hidden service descriptor. To do so, clients must know the _unblinded_
-   public key of the service, which makes the descriptor unuseable by entities
+   public key of the service, which makes the descriptor unusable by entities
    without that knowledge (e.g. HSDirs that don't know the onion address).
 
    Also, if optional client authorization is enabled, hidden service
@@ -626,7 +626,7 @@ Table of contents:
 1.9.1. In even more detail: Client authorization keys [CLIENT-AUTH]
 
    When client authorization is enabled, each authorized client of a hidden
-   service has two more assymetric keypairs which are shared with the hidden
+   service has two more asymmetric keypairs which are shared with the hidden
    service. An entity without those keys is not able to use the hidden
    service. Throughout this document, we assume that these pre-shared keys are
    exchanged between the hidden service and its clients in a secure out-of-band
@@ -746,7 +746,7 @@ Table of contents:
    HSDirs. The set of responsible HSDirs is determined as specified in
    [WHERE-HSDESC].
 
-   Specifically, everytime a hidden service publishes its descriptor, it also
+   Specifically, every time a hidden service publishes its descriptor, it also
    sets up a timer for a random time between 60 minutes and 120 minutes in the
    future. When the timer triggers, the hidden service needs to publish its
    descriptor again to the responsible HSDirs for that time period.
@@ -831,7 +831,7 @@ Table of contents:
 2.2.4. Using time periods and SRVs to fetch/upload HS descriptors [FETCHUPLOADDESC]
 
    Hidden services and clients need to make correct use of time periods (TP)
-   and shared random values (SRVs) to successfuly fetch and upload
+   and shared random values (SRVs) to successfully fetch and upload
    descriptors. Furthermore, to avoid problems with skewed clocks, both clients
    and services use the 'valid-after' time of a live consensus as a way to take
    decisions with regards to uploading and fetching descriptors. By using the
@@ -894,7 +894,7 @@ Table of contents:
 
    As discussed above, services maintain two active descriptors at any time. We
    call these the "first" and "second" service descriptors. Services rotate
-   their descriptor everytime they receive a consensus with a valid_after time
+   their descriptor every time they receive a consensus with a valid_after time
    past the next SRV calculation time. They rotate their descriptors by
    discarding their first descriptor, pushing the second descriptor to the
    first, and rebuilding their second descriptor with the latest data.
@@ -1008,7 +1008,7 @@ Table of contents:
    with a torsion component).
 
    The right way for clients to detect such fraudulent addresses (which should
-   only occur malevolently and never natutally) is to extract the ed25519
+   only occur malevolently and never naturally) is to extract the ed25519
    public key from the onion address and multiply it by the ed25519 group order
    and ensure that the result is the ed25519 identity element. For more
    details, please see [TORSION-REFS].
@@ -1028,7 +1028,7 @@ Table of contents:
      "shared-rand-previous-value" SP NUM_REVEALS SP VALUE NL
      "shared-rand-current-value" SP NUM_REVEALS SP VALUE NL
 
-2.3.1. Client behavior in the absense of shared random values
+2.3.1. Client behavior in the absence of shared random values
 
    If the previous or current shared random value cannot be found in a
    consensus, then Tor clients and services need to generate their own random
@@ -1424,7 +1424,7 @@ Table of contents:
           MUST be present if "legacy-key" is present.
 
           The certificate is a proposal 220 RSA->Ed cross-certificate wrapped
-          in "-----BEGIN CROSSCERT-----" armor, cross-certifying the the RSA
+          in "-----BEGIN CROSSCERT-----" armor, cross-certifying the RSA
           public key found in "legacy-key" using the descriptor signing key.
 
    To remain compatible with future revisions to the descriptor format,
@@ -1433,7 +1433,7 @@ Table of contents:
    should ignore ones they do not recognize.
 
    Clients who manage to extract the introduction points of the hidden service
-   can prroceed with the introduction protocol as specified in [INTRO-PROTOCOL].
+   can proceed with the introduction protocol as specified in [INTRO-PROTOCOL].
 
 2.5.3. Deriving hidden service descriptor encryption keys [HS-DESC-ENCRYPTION-KEYS]
 
@@ -1448,7 +1448,7 @@ Table of contents:
 
    Here is the key generation logic:
 
-       SALT = 16 bytes from H(random), changes each time we rebuld the
+       SALT = 16 bytes from H(random), changes each time we rebuild the
               descriptor even if the content of the descriptor hasn't changed.
               (So that we don't leak whether the intro point list etc. changed)
 
@@ -1615,7 +1615,7 @@ Table of contents:
                  The burst per second of INTRODUCE2 cell relayed to the
                  service.
 
-        The PARAM_VALUE size is 8 bytes in order to accomodate 64bit values.
+        The PARAM_VALUE size is 8 bytes in order to accommodate 64bit values.
         It MUST match the specified limit for the following PARAM_TYPE:
 
          [01] -- Min: 0, Max: 2147483647

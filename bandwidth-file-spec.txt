@@ -1161,7 +1161,7 @@ B.1. Scaling requirements
 
 B.2. A linear scaling method
 
-  If scaling is required, here is a simple linear bandwith scaling
+  If scaling is required, here is a simple linear bandwidth scaling
   method, which ensures that all bandwidth votes contain approximately
   the same total bandwidth:
 

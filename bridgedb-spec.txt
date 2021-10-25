@@ -94,7 +94,7 @@ Table of Contents
    in the bridge network status parsed earlier or if the bridge does not
    have the Running flag.
    BridgeDB discards bridge descriptors which have a different purpose
-   than "bridge".  BridgeDB can be configured to only accept descriptors
+   than "bridge". BridgeDB can be configured to only accept descriptors
    with another purpose or not discard descriptors based on purpose at
    all.
    BridgeDB memorizes the IP addresses and OR ports of the remaining

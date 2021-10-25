@@ -358,7 +358,7 @@ Table of Contents
        recent Tor versions.
 
        weight was removed in version 2.0.0, but is documented because it
-       may be of interest to libraries implementing Tor's fallaback
+       may be of interest to libraries implementing Tor's fallback
        behaviour.
 
      DQUOTE SP+ key_value DQUOTE SP* NL
@@ -457,7 +457,7 @@ Table of Contents
    Libraries SHOULD consider the potential load on the authorities, and
    whether other sources can meet their needs.
 
-   Libraries that require high-uptime availablility of Tor directory
+   Libraries that require high-uptime availability of Tor directory
    information should investigate the following options:
 
      * OnionOO: https://metrics.torproject.org/onionoo.html

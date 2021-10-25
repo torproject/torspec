@@ -192,7 +192,7 @@ Tables of Contents
       * The fraction of descriptors that we have for nodes with the Guard
         flag, weighted by their bandwidth for the guard position.
       * The fraction of descriptors that we have for all nodes,
-        weighted by their bandwidth for the middle position position.
+        weighted by their bandwidth for the middle position.
       * The fraction of descriptors that we have for nodes with the Exit
         flag, weighted by their bandwidth for the exit position.
 
@@ -491,7 +491,7 @@ Tables of Contents
    used directly as Xm.
 
    Instead of using the mode of discrete build times directly, Tor clients
-   compute the Xm parameter using the weighted average of the the midpoints
+   compute the Xm parameter using the weighted average of the midpoints
    of the 'cbtnummodes' (10) most frequently occurring 10ms histogram bins.
    Ties are broken in favor of earlier bins (that is, in favor of bins
    corresponding to shorter build times).
@@ -511,7 +511,7 @@ Tables of Contents
 
    All times below Xm are counted as having the Xm value via the MAX(),
    because in Pareto estimators, Xm is supposed to be the lowest value.
-   However, since clients use mode averaging to estimatre Xm, there can be
+   However, since clients use mode averaging to estimate Xm, there can be
    values below our Xm. Effectively, the Pareto estimator then treats that
    everything smaller than Xm happened at Xm. One can also see that if
    clients did not do this, alpha could underflow to become negative, which
@@ -577,7 +577,7 @@ Tables of Contents
    to the point 'cbtclosequantile' (default 99) on the Pareto curve, or 60
    seconds, whichever is greater.
 
-   The actual completion times for these measurements circuits should be
+   The actual completion times for these measurement circuits should be
    recorded.
 
    Implementations should completely abandon a circuit and ignore the circuit
