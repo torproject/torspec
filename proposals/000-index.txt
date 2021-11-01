@@ -248,7 +248,7 @@ Proposals by number:
 325  Packed relay cells: saving space on small commands [OPEN]
 326  The "tor-relay" Well-Known Resource Identifier [OPEN]
 327  A First Take at PoW Over Introduction Circuits [DRAFT]
-328  Make Relays Report When They Are Overloaded [DRAFT]
+328  Make Relays Report When They Are Overloaded [FINISHED]
 329  Overcoming Tor's Bottlenecks with Traffic Splitting [DRAFT]
 330  Modernizing authority contact entries [OPEN]
 331  Res tokens: Anonymous Credentials for Onion Service DoS Resilience [DRAFT]
@@ -267,7 +267,6 @@ Proposals by status:
    294  TLS 1.3 Migration
    316  FlashFlow: A Secure Speed Test for Tor (Parent Proposal)
    327  A First Take at PoW Over Introduction Circuits
-   328  Make Relays Report When They Are Overloaded
    329  Overcoming Tor's Bottlenecks with Traffic Splitting
    331  Res tokens: Anonymous Credentials for Onion Service DoS Resilience
    333  Vanguards lite
@@ -331,6 +330,7 @@ Proposals by status:
    301  Don't include package fingerprints in consensus documents
    310  Towards load-balancing in Prop 271
    314  Allow Markdown for proposal format
+   328  Make Relays Report When They Are Overloaded
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]

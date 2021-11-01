@@ -3,7 +3,7 @@ Filename: 328-relay-overload-report.md
 Title: Make Relays Report When They Are Overloaded
 Author: David Goulet, Mike Perry
 Created: November 3rd 2020
-Status: Draft
+Status: Finished
 ```
 
 # 0. Introduction
@@ -25,8 +25,8 @@ possibly misbehaving or under DDoS attack.
 We propose that relays start collecting several metrics (see section 2)
 reflecting their loads from different component of tor.
 
-Then, we propose that 3 new lines be added to the extra-info document (see
-dir-spec.txt, section 2.1.2) if only the overload case arises.
+Then, we propose that 3 new lines be added to the server descriptor document
+(see dir-spec.txt, section 2.1.1) if only the overload case arises.
 
 The following describes a series of metrics to collect but more might come in
 the future and thus this is not an exhaustive list.
@@ -43,8 +43,8 @@ state" which can be one or many of the following load metrics:
    - CPU utilization of Tor's mainloop CPU core above 90% for 60 sec
    - Control port overload (too many messages queued)
 
-The format of the overloaded line added in the extra-info document is as
-follows:
+The format of the overloaded line added in the server descriptor document is
+as follows:
 
 ```
 "overload-general" SP version SP YYYY-MM-DD HH:MM:SS NL
