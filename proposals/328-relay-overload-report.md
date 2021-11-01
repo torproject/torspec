@@ -3,7 +3,7 @@ Filename: 328-relay-overload-report.md
 Title: Make Relays Report When They Are Overloaded
 Author: David Goulet, Mike Perry
 Created: November 3rd 2020
-Status: Finished
+Status: Closed
 ```
 
 # 0. Introduction

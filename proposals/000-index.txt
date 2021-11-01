@@ -248,7 +248,7 @@ Proposals by number:
 325  Packed relay cells: saving space on small commands [OPEN]
 326  The "tor-relay" Well-Known Resource Identifier [OPEN]
 327  A First Take at PoW Over Introduction Circuits [DRAFT]
-328  Make Relays Report When They Are Overloaded [FINISHED]
+328  Make Relays Report When They Are Overloaded [CLOSED]
 329  Overcoming Tor's Bottlenecks with Traffic Splitting [DRAFT]
 330  Modernizing authority contact entries [OPEN]
 331  Res tokens: Anonymous Credentials for Onion Service DoS Resilience [DRAFT]
@@ -330,7 +330,6 @@ Proposals by status:
    301  Don't include package fingerprints in consensus documents
    310  Towards load-balancing in Prop 271
    314  Allow Markdown for proposal format
-   328  Make Relays Report When They Are Overloaded
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]
@@ -425,6 +424,7 @@ Proposals by status:
    304  Extending SOCKS5 Onion Service Error Codes
    305  ESTABLISH_INTRO Cell DoS Defense Extension
    318  Limit protover values to 0-63 [in 0.4.5.1-alpha]
+   328  Make Relays Report When They Are Overloaded
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration

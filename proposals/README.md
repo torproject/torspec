@@ -75,7 +75,6 @@ themselves still need to be merged into the specifications proper.
 * [`301-dont-vote-on-package-fingerprints.txt`](/proposals/301-dont-vote-on-package-fingerprints.txt): Don't include package fingerprints in consensus documents
 * [`310-bandaid-on-guard-selection.txt`](/proposals/310-bandaid-on-guard-selection.txt): Towards load-balancing in Prop 271
 * [`314-allow-markdown-proposals.md`](/proposals/314-allow-markdown-proposals.md): Allow Markdown for proposal format
-* [`328-relay-overload-report.md`](/proposals/328-relay-overload-report.md): Make Relays Report When They Are Overloaded
 
 
 ## META proposals: about the proposal process
@@ -243,6 +242,7 @@ necessary.
 * [`304-socks5-extending-hs-error-codes.txt`](/proposals/304-socks5-extending-hs-error-codes.txt): Extending SOCKS5 Onion Service Error Codes
 * [`305-establish-intro-dos-defense-extention.txt`](/proposals/305-establish-intro-dos-defense-extention.txt): ESTABLISH_INTRO Cell DoS Defense Extension
 * [`318-limit-protovers.md`](/proposals/318-limit-protovers.md): Limit protover values to 0-63
+* [`328-relay-overload-report.md`](/proposals/328-relay-overload-report.md): Make Relays Report When They Are Overloaded
 
 
 ## RESERVE proposals: saving for later
