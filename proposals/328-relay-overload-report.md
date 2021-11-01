@@ -25,8 +25,11 @@ possibly misbehaving or under DDoS attack.
 We propose that relays start collecting several metrics (see section 2)
 reflecting their loads from different component of tor.
 
-Then, we propose that 3 new lines be added to the server descriptor document
-(see dir-spec.txt, section 2.1.1) if only the overload case arises.
+Then, we propose that 1 new line be added to the server descriptor document
+(see dir-spec.txt, section 2.1.1) for the general overload case.
+
+And 2 new lines to the extra-info document (see dir-spec.txt, section 2.1.2)
+for more specific overload cases.
 
 The following describes a series of metrics to collect but more might come in
 the future and thus this is not an exhaustive list.
@@ -79,6 +82,9 @@ descriptor, as well as the number of times these limits were reached, for read
 and write, in the past 24 hours starting at the provided timestamp rounded down
 to the hour.
 
+The format of this overload line added in the extra-info document is as
+follows:
+
 ```
 "overload-ratelimits" SP version SP YYYY-MM-DD SP HH:MM:SS
                       SP rate-limit SP burst-limit
@@ -104,7 +110,8 @@ Not having enough file descriptors in this day of age is really a
 misconfiguration or a too old operation system. That way, we can very quickly
 notice which relay has a value too small and we can notify them.
 
-This should be published in this format:
+The format of this overload line added in the extra-info document is as
+follows:
 
 ```
 "overload-fd-exhausted" SP version YYYY-MM-DD HH:MM:SS NL
