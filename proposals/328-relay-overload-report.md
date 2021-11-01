@@ -39,9 +39,15 @@ state" which can be one or many of the following load metrics:
    - Any OOM invocation due to memory pressure
    - Any ntor onionskins are dropped
    - TCP port exhaustion
-   - DNS timeout reached
+   - DNS timeout reached (X% of timeouts over Y seconds).
    - CPU utilization of Tor's mainloop CPU core above 90% for 60 sec
+     [Never implemented]
    - Control port overload (too many messages queued)
+     [Never implemented]
+
+For DNS timeouts, the X and Y are consensus parameters
+(overload_dns_timeout_scale_percent and overload_dns_timeout_period_secs)
+defined in param-spec.txt.
 
 The format of the overloaded line added in the server descriptor document is
 as follows:
@@ -64,9 +70,7 @@ this 72 hour period restarts.
 
 The 'version' field is set to '1' for the initial implementation of this
 proposal which includes all the above overload metrics except from the CPU and
-control port overload. The first version also uses a primitive logic for
-detecting DNS timeouts (only if libevent failed a set of 3 DNS requests/retries
-in a row).
+control port overload. 
 
 # 1.2. Token bucket size
 
@@ -121,10 +125,7 @@ proposal which detects fd exhaustion only when a socket open fails.
 
 This section proposes a series of metrics that should be collected and
 reported to the MetricsPort. The Prometheus format (only one supported for
-now) is described for each metrics but each of them are prefixed with the
-following in order to have a proper namespace for "load" events:
-
-`tor_load_`
+now) is described for each metrics.
 
 ## 2.1 Out-Of-Memory (OOM) Invocation
 
@@ -134,7 +135,7 @@ so any invocation of the OOM should be reported.
 ```
 # HELP Total number of bytes the OOM has cleaned up
 # TYPE counter
-tor_load_oom_bytes_total{<LABEL>} <VALUE>
+tor_relay_load_oom_bytes_total{<LABEL>} <VALUE>
 ```
 
 Running counter of how many bytes were cleaned up by the OOM for a tor
@@ -157,7 +158,7 @@ thus one can provide a total processed versus dropped ratio:
 ```
 # HELP Total number of onionskins
 # TYPE counter
-tor_load_onionskin_total{<LABEL>} <NUM>
+tor_relay_load_onionskins_total{<LABEL>} <NUM>
 ```
 
 Possible LABELs are:
@@ -173,14 +174,14 @@ opened file descriptors. In Tor's use case, this is mostly sockets. File
 descriptors should be reported as follow:
 
 ```
-# HELP Total number of file descriptors
+# HELP Total number of sockets
 # TYPE gauge
-tor_load_fd_total{<LABEL>} <NUM>
+tor_relay_load_socket_total{<LABEL>} <NUM>
 ```
 
 Possible LABELs are:
-  - `state=total`: Maximum number of file descriptors allowed open
-  - `state=opened`: How many file descriptors are opened.
+  - <none>: How many available sockets.
+  - `state=opened`: How many sockets are opened.
 
 Note: since tor does track that value in order to reserve a block for critical
 port such as the Control Port, that value can easily be exported.
@@ -192,14 +193,10 @@ open more outbound sockets, that is an overloaded state. It should be
 reported:
 
 ```
-# HELP Total number of opened outbound connections.
+# HELP Total number of times we ran out of TCP ports
 # TYPE gauge
-tor_load_socket_total{<LABEL>} <NUM>
+tor_relay_load_tcp_exhaustion_total <NUM>
 ```
-
-Possible LABELs are:
-  - `state=total`: Maximum number of sockets allowed open
-  - `state=opened`: How sockets are opened.
 
 ## 2.5 Connection Bucket Limit
 
@@ -210,7 +207,7 @@ second later. Once that is hit, it should be reported:
 ```
 # HELP Total number of global connection bucket limit reached
 # TYPE counter
-tor_load_global_rate_limit_reached_total{<LABEL>} <NUM>
+tor_relay_load_global_rate_limit_reached_total{<LABEL>} <NUM>
 ```
 
 Possible LABELs are:
