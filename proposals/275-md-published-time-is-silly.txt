@@ -2,14 +2,17 @@ Filename: 275-md-published-time-is-silly.txt
 Title: Stop including meaningful "published" time in microdescriptor consensus
 Author: Nick Mathewson
 Created: 20-Feb-2017
-Status: Accepted
+Status: Closed
 Target: 0.3.1.x-alpha
+Implemented-In: 0.4.7.3-alpha
 
 0. Status:
 
    As of 0.2.9.11 / 0.3.0.7 / 0.3.1.1-alpha, Tor no longer takes any
    special action on "future" published times, as proposed in section 4.
 
+   As of 0.4.0.1-alpha, we implemented a better mechanism for relays to know
+   when to publish. (See proposal 293.)
 
 1. Overview
 

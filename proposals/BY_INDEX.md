@@ -192,7 +192,7 @@ Below are a list of proposals sorted by their proposal number.  See
 * [`272-valid-and-running-by-default.txt`](/proposals/272-valid-and-running-by-default.txt): Listed routers should be Valid, Running, and treated as such [CLOSED]
 * [`273-exit-relay-pinning.txt`](/proposals/273-exit-relay-pinning.txt): Exit relay pinning for web services [DRAFT]
 * [`274-rotate-onion-keys-less.txt`](/proposals/274-rotate-onion-keys-less.txt): Rotate onion keys less frequently [CLOSED]
-* [`275-md-published-time-is-silly.txt`](/proposals/275-md-published-time-is-silly.txt): Stop including meaningful "published" time in microdescriptor consensus [ACCEPTED]
+* [`275-md-published-time-is-silly.txt`](/proposals/275-md-published-time-is-silly.txt): Stop including meaningful "published" time in microdescriptor consensus [CLOSED]
 * [`276-lower-bw-granularity.txt`](/proposals/276-lower-bw-granularity.txt): Report bandwidth with lower granularity in consensus documents [DEAD]
 * [`277-detect-id-sharing.txt`](/proposals/277-detect-id-sharing.txt): Detect multiple relay instances running with same ID [OPEN]
 * [`278-directory-compression-scheme-negotiation.txt`](/proposals/278-directory-compression-scheme-negotiation.txt): Directory Compression Scheme Negotiation [CLOSED]
