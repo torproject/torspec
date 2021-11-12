@@ -3,7 +3,8 @@ Filename: 333-vanguards-lite.md
 Title: Vanguards lite
 Author: George Kadianakis, Mike Perry
 Created: 2021-05-20
-Status: Draft
+Status: Finished
+Implemented-In: 0.4.7.1-alpha
 ```
 
 # 0. Introduction & Motivation

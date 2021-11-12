@@ -253,7 +253,7 @@ Proposals by number:
 330  Modernizing authority contact entries [OPEN]
 331  Res tokens: Anonymous Credentials for Onion Service DoS Resilience [DRAFT]
 332  Ntor protocol with extra data, version 3 [OPEN]
-333  Vanguards lite [DRAFT]
+333  Vanguards lite [FINISHED]
 334  A Directory Authority Flag To Mark Relays As Middle-only [OPEN]
 335  An authority-only design for MiddleOnly [OPEN]
 336  Randomized schedule for guard retries [OPEN]
@@ -269,7 +269,6 @@ Proposals by status:
    327  A First Take at PoW Over Introduction Circuits
    329  Overcoming Tor's Bottlenecks with Traffic Splitting
    331  Res tokens: Anonymous Credentials for Onion Service DoS Resilience
-   333  Vanguards lite
  NEEDS-REVISION:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
@@ -330,6 +329,7 @@ Proposals by status:
    301  Don't include package fingerprints in consensus documents
    310  Towards load-balancing in Prop 271
    314  Allow Markdown for proposal format
+   333  Vanguards lite [in 0.4.7.1-alpha]
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]

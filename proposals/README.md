@@ -75,6 +75,7 @@ themselves still need to be merged into the specifications proper.
 * [`301-dont-vote-on-package-fingerprints.txt`](/proposals/301-dont-vote-on-package-fingerprints.txt): Don't include package fingerprints in consensus documents
 * [`310-bandaid-on-guard-selection.txt`](/proposals/310-bandaid-on-guard-selection.txt): Towards load-balancing in Prop 271
 * [`314-allow-markdown-proposals.md`](/proposals/314-allow-markdown-proposals.md): Allow Markdown for proposal format
+* [`333-vanguards-lite.md`](/proposals/333-vanguards-lite.md): Vanguards lite
 
 
 ## META proposals: about the proposal process
@@ -114,7 +115,6 @@ discussion.
 * [`327-pow-over-intro.txt`](/proposals/327-pow-over-intro.txt): A First Take at PoW Over Introduction Circuits
 * [`329-traffic-splitting.txt`](/proposals/329-traffic-splitting.txt): Overcoming Tor's Bottlenecks with Traffic Splitting
 * [`331-res-tokens-for-anti-dos.md`](/proposals/331-res-tokens-for-anti-dos.md): Res tokens: Anonymous Credentials for Onion Service DoS Resilience
-* [`333-vanguards-lite.md`](/proposals/333-vanguards-lite.md): Vanguards lite
 
 
 ## NEEDS-REVISION proposals: ideas that we can't implement as-is
