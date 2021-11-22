@@ -62,8 +62,10 @@ We add a new entry to microdescriptors: `family-keys`.
 
 This line contains one or more space-separated strings describing
 families to which the node belongs.  These strings MUST be sorted in
-lexicographic order.  Clients MUST NOT depend on any particular property
-of these strings.
+lexicographic order.  These strings MAY be base64-formated nonpadded
+ed25519 family keys, or may represent some future encoding.
+
+Clients SHOULD accept unrecognized key formats.
 
 ## Changes to voting algorithm
 
@@ -125,7 +127,9 @@ family if ANY of these is true:
   in its family line, and B's descriptor lists A in its family line.
 
 * Client A has descriptors for A and B, and they both contain the
-  same entry in their family-keys or family-cert.
+  same entry in their family-keys or family-cert.  (Note that a
+  family-cert key may match a base64-encoded entry in the family-keys
+  entry.)
 
 ## Migration
 
