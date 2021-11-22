@@ -32,7 +32,6 @@ for discussion.
 * [`306-ipv6-happy-eyeballs.txt`](/proposals/306-ipv6-happy-eyeballs.txt): A Tor Implementation of IPv6 Happy Eyeballs
 * [`308-counter-galois-onion.txt`](/proposals/308-counter-galois-onion.txt): Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography
 * [`309-optimistic-socks-in-tor.txt`](/proposals/309-optimistic-socks-in-tor.txt): Optimistic SOCKS Data
-* [`315-update-dir-required-fields.txt`](/proposals/315-update-dir-required-fields.txt): Updating the list of fields required in directory documents
 * [`319-wide-everything.md`](/proposals/319-wide-everything.md): RELAY_FRAGMENT cells
 * [`321-happy-families.md`](/proposals/321-happy-families.md): Better performance and usability for the MyFamily option (v2)
 * [`322-dirport-linkspec.md`](/proposals/322-dirport-linkspec.md): Extending link specifiers to include the directory port
@@ -239,6 +238,7 @@ necessary.
 * [`305-establish-intro-dos-defense-extention.txt`](/proposals/305-establish-intro-dos-defense-extention.txt): ESTABLISH_INTRO Cell DoS Defense Extension
 * [`310-bandaid-on-guard-selection.txt`](/proposals/310-bandaid-on-guard-selection.txt): Towards load-balancing in Prop 271
 * [`314-allow-markdown-proposals.md`](/proposals/314-allow-markdown-proposals.md): Allow Markdown for proposal format
+* [`315-update-dir-required-fields.txt`](/proposals/315-update-dir-required-fields.txt): Updating the list of fields required in directory documents
 * [`318-limit-protovers.md`](/proposals/318-limit-protovers.md): Limit protover values to 0-63
 * [`328-relay-overload-report.md`](/proposals/328-relay-overload-report.md): Make Relays Report When They Are Overloaded
 

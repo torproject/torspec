@@ -235,7 +235,7 @@ Proposals by number:
 312  Tor Relay Automatic IPv6 Address Discovery [ACCEPTED]
 313  Tor Relay IPv6 Statistics [ACCEPTED]
 314  Allow Markdown for proposal format [CLOSED]
-315  Updating the list of fields required in directory documents [OPEN]
+315  Updating the list of fields required in directory documents [CLOSED]
 316  FlashFlow: A Secure Speed Test for Tor (Parent Proposal) [DRAFT]
 317  Improve security aspects of DNS name resolution [NEEDS-REVISION]
 318  Limit protover values to 0-63 [CLOSED]
@@ -290,7 +290,6 @@ Proposals by status:
    306  A Tor Implementation of IPv6 Happy Eyeballs
    308  Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography
    309  Optimistic SOCKS Data
-   315  Updating the list of fields required in directory documents
    319  RELAY_FRAGMENT cells
    321  Better performance and usability for the MyFamily option (v2)
    322  Extending link specifiers to include the directory port
@@ -421,6 +420,7 @@ Proposals by status:
    305  ESTABLISH_INTRO Cell DoS Defense Extension
    310  Towards load-balancing in Prop 271
    314  Allow Markdown for proposal format
+   315  Updating the list of fields required in directory documents [in 0.4.5.1-alpha]
    318  Limit protover values to 0-63 [in 0.4.5.1-alpha]
    328  Make Relays Report When They Are Overloaded
  SUPERSEDED:

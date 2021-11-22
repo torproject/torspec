@@ -2,7 +2,13 @@ Filename: 315-update-dir-required-fields.txt
 Title: Updating the list of fields required in directory documents
 Author: Nick Mathewson
 Created: 23 April 2020
-Status: Open
+Status: Closed
+Implemented-In: 0.4.5.1-alpha
+
+Notes:
+
+   The "hidden-service-dir" field was not made assumed-present; all other
+    fields were updated.
 
 1. Introduction
 
