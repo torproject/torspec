@@ -27,6 +27,7 @@ for discussion.
 * [`287-reduce-lifetime.txt`](/proposals/287-reduce-lifetime.txt): Reduce circuit lifetime without overloading the network
 * [`295-relay-crypto-with-adl.txt`](/proposals/295-relay-crypto-with-adl.txt): Using ADL for relay cryptography (solving the crypto-tagging attack)
 * [`296-expose-bandwidth-files.txt`](/proposals/296-expose-bandwidth-files.txt): Have Directory Authorities expose raw bandwidth list files
+* [`301-dont-vote-on-package-fingerprints.txt`](/proposals/301-dont-vote-on-package-fingerprints.txt): Don't include package fingerprints in consensus documents
 * [`303-protover-removal-policy.txt`](/proposals/303-protover-removal-policy.txt): When and how to remove support for protocol versions
 * [`306-ipv6-happy-eyeballs.txt`](/proposals/306-ipv6-happy-eyeballs.txt): A Tor Implementation of IPv6 Happy Eyeballs
 * [`308-counter-galois-onion.txt`](/proposals/308-counter-galois-onion.txt): Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography
@@ -40,7 +41,6 @@ for discussion.
 * [`325-packed-relay-cells.md`](/proposals/325-packed-relay-cells.md): Packed relay cells: saving space on small commands
 * [`326-tor-relay-well-known-uri-rfc8615.md`](/proposals/326-tor-relay-well-known-uri-rfc8615.md): The "tor-relay" Well-Known Resource Identifier
 * [`330-authority-contact.md`](/proposals/330-authority-contact.md): Modernizing authority contact entries
-* [`332-ntor-v3-with-extra-data.md`](/proposals/332-ntor-v3-with-extra-data.md): Ntor protocol with extra data, version 3
 * [`334-middle-only-flag.txt`](/proposals/334-middle-only-flag.txt): A Directory Authority Flag To Mark Relays As Middle-only
 * [`335-middle-only-redux.md`](/proposals/335-middle-only-redux.md): An authority-only design for MiddleOnly
 * [`336-randomize-guard-retries.md`](/proposals/336-randomize-guard-retries.md): Randomized schedule for guard retries
@@ -55,12 +55,13 @@ implementation.
 
 * [`265-load-balancing-with-overhead.txt`](/proposals/265-load-balancing-with-overhead.txt): Load Balancing with Overhead Parameters
 * [`275-md-published-time-is-silly.txt`](/proposals/275-md-published-time-is-silly.txt): Stop including meaningful "published" time in microdescriptor consensus
+* [`282-remove-named-from-consensus.txt`](/proposals/282-remove-named-from-consensus.txt): Remove "Named" and "Unnamed" handling from consensus voting
 * [`285-utf-8.txt`](/proposals/285-utf-8.txt): Directory documents should be standardized as UTF-8
-* [`288-privcount-with-shamir.txt`](/proposals/288-privcount-with-shamir.txt): Privacy-Preserving Statistics with Privcount in Tor (Shamir version)
 * [`292-mesh-vanguards.txt`](/proposals/292-mesh-vanguards.txt): Mesh-based vanguards
 * [`311-relay-ipv6-reachability.txt`](/proposals/311-relay-ipv6-reachability.txt): Tor Relay IPv6 Reachability
 * [`312-relay-auto-ipv6-addr.txt`](/proposals/312-relay-auto-ipv6-addr.txt): Tor Relay Automatic IPv6 Address Discovery
 * [`313-relay-ipv6-stats.txt`](/proposals/313-relay-ipv6-stats.txt): Tor Relay IPv6 Statistics
+* [`332-ntor-v3-with-extra-data.md`](/proposals/332-ntor-v3-with-extra-data.md): Ntor protocol with extra data, version 3
 
 
 ## FINISHED proposals: implemented, specs not merged
@@ -68,13 +69,7 @@ implementation.
 These proposals are implemented in some version of Tor; the proposals
 themselves still need to be merged into the specifications proper.
 
-* [`160-bandwidth-offset.txt`](/proposals/160-bandwidth-offset.txt): Authorities vote for bandwidth offsets in consensus
-* [`232-pluggable-transports-through-proxy.txt`](/proposals/232-pluggable-transports-through-proxy.txt): Pluggable Transport through SOCKS proxy
 * [`260-rend-single-onion.txt`](/proposals/260-rend-single-onion.txt): Rendezvous Single Onion Services
-* [`282-remove-named-from-consensus.txt`](/proposals/282-remove-named-from-consensus.txt): Remove "Named" and "Unnamed" handling from consensus voting
-* [`301-dont-vote-on-package-fingerprints.txt`](/proposals/301-dont-vote-on-package-fingerprints.txt): Don't include package fingerprints in consensus documents
-* [`310-bandaid-on-guard-selection.txt`](/proposals/310-bandaid-on-guard-selection.txt): Towards load-balancing in Prop 271
-* [`314-allow-markdown-proposals.md`](/proposals/314-allow-markdown-proposals.md): Allow Markdown for proposal format
 * [`333-vanguards-lite.md`](/proposals/333-vanguards-lite.md): Vanguards lite
 
 
@@ -109,7 +104,6 @@ These proposals have been marked as a draft by their author or the editors,
 indicating that they aren't yet in a complete form.  They're still open for
 discussion.
 
-* [`273-exit-relay-pinning.txt`](/proposals/273-exit-relay-pinning.txt): Exit relay pinning for web services
 * [`294-tls-1.3.txt`](/proposals/294-tls-1.3.txt): TLS 1.3 Migration
 * [`316-flashflow.md`](/proposals/316-flashflow.md): FlashFlow: A Secure Speed Test for Tor (Parent Proposal)
 * [`327-pow-over-intro.txt`](/proposals/327-pow-over-intro.txt): A First Take at PoW Over Introduction Circuits
@@ -183,6 +177,7 @@ necessary.
 * [`155-four-hidden-service-improvements.txt`](/proposals/155-four-hidden-service-improvements.txt): Four Improvements of Hidden Service Performance
 * [`157-specific-cert-download.txt`](/proposals/157-specific-cert-download.txt): Make certificate downloads specific
 * [`158-microdescriptors.txt`](/proposals/158-microdescriptors.txt): Clients download consensus + microdescriptors
+* [`160-bandwidth-offset.txt`](/proposals/160-bandwidth-offset.txt): Authorities vote for bandwidth offsets in consensus
 * [`161-computing-bandwidth-adjustments.txt`](/proposals/161-computing-bandwidth-adjustments.txt): Computing Bandwidth Adjustments
 * [`162-consensus-flavors.txt`](/proposals/162-consensus-flavors.txt): Publish the consensus in multiple flavors
 * [`166-statistics-extra-info-docs.txt`](/proposals/166-statistics-extra-info-docs.txt): Including Network Statistics in Extra-Info Documents
@@ -218,6 +213,7 @@ necessary.
 * [`224-rend-spec-ng.txt`](/proposals/224-rend-spec-ng.txt): Next-Generation Hidden Services in Tor
 * [`227-vote-on-package-fingerprints.txt`](/proposals/227-vote-on-package-fingerprints.txt): Include package fingerprints in consensus documents
 * [`228-cross-certification-onionkeys.txt`](/proposals/228-cross-certification-onionkeys.txt): Cross-certifying identity keys with onion keys
+* [`232-pluggable-transports-through-proxy.txt`](/proposals/232-pluggable-transports-through-proxy.txt): Pluggable Transport through SOCKS proxy
 * [`235-kill-named-flag.txt`](/proposals/235-kill-named-flag.txt): Stop assigning (and eventually supporting) the Named flag
 * [`236-single-guard-node.txt`](/proposals/236-single-guard-node.txt): The move to a single guard node
 * [`237-directory-servers-for-all.txt`](/proposals/237-directory-servers-for-all.txt): All relays are directory servers
@@ -241,6 +237,8 @@ necessary.
 * [`302-padding-machines-for-onion-clients.txt`](/proposals/302-padding-machines-for-onion-clients.txt): Hiding onion service clients using padding
 * [`304-socks5-extending-hs-error-codes.txt`](/proposals/304-socks5-extending-hs-error-codes.txt): Extending SOCKS5 Onion Service Error Codes
 * [`305-establish-intro-dos-defense-extention.txt`](/proposals/305-establish-intro-dos-defense-extention.txt): ESTABLISH_INTRO Cell DoS Defense Extension
+* [`310-bandaid-on-guard-selection.txt`](/proposals/310-bandaid-on-guard-selection.txt): Towards load-balancing in Prop 271
+* [`314-allow-markdown-proposals.md`](/proposals/314-allow-markdown-proposals.md): Allow Markdown for proposal format
 * [`318-limit-protovers.md`](/proposals/318-limit-protovers.md): Limit protover values to 0-63
 * [`328-relay-overload-report.md`](/proposals/328-relay-overload-report.md): Make Relays Report When They Are Overloaded
 
@@ -260,11 +258,12 @@ confront the problems that they try to solve.
 * [`211-mapaddress-tor-status.txt`](/proposals/211-mapaddress-tor-status.txt): Internal Mapaddress for Tor Configuration Testing
 * [`223-ace-handshake.txt`](/proposals/223-ace-handshake.txt): Ace: Improved circuit-creation key exchange
 * [`226-bridgedb-database-improvements.txt`](/proposals/226-bridgedb-database-improvements.txt): "Scalability and Stability Improvements to BridgeDB: Switching to a Distributed Database System and RDBMS"
-* [`242-better-families.txt`](/proposals/242-better-families.txt): Better performance and usability for the MyFamily option
 * [`255-hs-load-balancing.txt`](/proposals/255-hs-load-balancing.txt): Controller features to allow for load-balancing hidden services
 * [`256-key-revocation.txt`](/proposals/256-key-revocation.txt): Key revocation for relays and authorities
 * [`262-rekey-circuits.txt`](/proposals/262-rekey-circuits.txt): Re-keying live circuits with new cryptographic material
+* [`273-exit-relay-pinning.txt`](/proposals/273-exit-relay-pinning.txt): Exit relay pinning for web services
 * [`281-bulk-md-download.txt`](/proposals/281-bulk-md-download.txt): Downloading microdescriptors in bulk
+* [`288-privcount-with-shamir.txt`](/proposals/288-privcount-with-shamir.txt): Privacy-Preserving Statistics with Privcount in Tor (Shamir version)
 * [`307-onionbalance-v3.txt`](/proposals/307-onionbalance-v3.txt): Onion Balance Support for Onion Service v3
 
 
@@ -291,6 +290,7 @@ implemented.
 * [`194-mnemonic-urls.txt`](/proposals/194-mnemonic-urls.txt): Mnemonic .onion URLs
 * [`210-faster-headless-consensus-bootstrap.txt`](/proposals/210-faster-headless-consensus-bootstrap.txt): Faster Headless Consensus Bootstrapping
 * [`225-strawman-shared-rand.txt`](/proposals/225-strawman-shared-rand.txt): Strawman proposal: commit-and-reveal shared rng
+* [`242-better-families.txt`](/proposals/242-better-families.txt): Better performance and usability for the MyFamily option
 * [`247-hs-guard-discovery.txt`](/proposals/247-hs-guard-discovery.txt): Defending Against Guard Discovery Attacks using Vanguards
 * [`249-large-create-cells.txt`](/proposals/249-large-create-cells.txt): Allow CREATE cells with >505 bytes of handshake data
 * [`252-single-onion.txt`](/proposals/252-single-onion.txt): Single Onion Services
