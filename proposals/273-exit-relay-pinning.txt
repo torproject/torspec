@@ -2,7 +2,7 @@ Filename: 273-exit-relay-pinning.txt
 Title: Exit relay pinning for web services
 Author: Philipp Winter, Tobias Pulls, Roya Ensafi, and Nick Feamster
 Created: 2016-09-22
-Status: Draft
+Status: Reserve
 Target: n/a
 
 0. Overview
