@@ -254,8 +254,8 @@ Proposals by number:
 331  Res tokens: Anonymous Credentials for Onion Service DoS Resilience [DRAFT]
 332  Ntor protocol with extra data, version 3 [ACCEPTED]
 333  Vanguards lite [FINISHED]
-334  A Directory Authority Flag To Mark Relays As Middle-only [OPEN]
-335  An authority-only design for MiddleOnly [OPEN]
+334  A Directory Authority Flag To Mark Relays As Middle-only [SUPERSEDED]
+335  An authority-only design for MiddleOnly [FINISHED]
 336  Randomized schedule for guard retries [OPEN]
 337  A simpler way to decide, "Is this guard usable?" [OPEN]
 
@@ -298,8 +298,6 @@ Proposals by status:
    325  Packed relay cells: saving space on small commands
    326  The "tor-relay" Well-Known Resource Identifier
    330  Modernizing authority contact entries
-   334  A Directory Authority Flag To Mark Relays As Middle-only
-   335  An authority-only design for MiddleOnly
    336  Randomized schedule for guard retries
    337  A simpler way to decide, "Is this guard usable?"
  ACCEPTED:
@@ -323,6 +321,7 @@ Proposals by status:
  FINISHED:
    260  Rendezvous Single Onion Services [in 0.2.9.3-alpha]
    333  Vanguards lite [in 0.4.7.1-alpha]
+   335  An authority-only design for MiddleOnly [in 0.4.7.2-alpha]
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]
@@ -449,6 +448,7 @@ Proposals by status:
    266  Removing current obsolete clients from the Tor network
    280  Privacy-Preserving Statistics with Privcount in Tor
    299  Preferring IPv4 or IPv6 based on IP Version Failure Count
+   334  A Directory Authority Flag To Mark Relays As Middle-only
  DEAD:
    100  Tor Unreliable Datagram Extension Proposal
    115  Two Hop Paths

@@ -251,8 +251,8 @@ Below are a list of proposals sorted by their proposal number.  See
 * [`331-res-tokens-for-anti-dos.md`](/proposals/331-res-tokens-for-anti-dos.md): Res tokens: Anonymous Credentials for Onion Service DoS Resilience [DRAFT]
 * [`332-ntor-v3-with-extra-data.md`](/proposals/332-ntor-v3-with-extra-data.md): Ntor protocol with extra data, version 3 [ACCEPTED]
 * [`333-vanguards-lite.md`](/proposals/333-vanguards-lite.md): Vanguards lite [FINISHED]
-* [`334-middle-only-flag.txt`](/proposals/334-middle-only-flag.txt): A Directory Authority Flag To Mark Relays As Middle-only [OPEN]
-* [`335-middle-only-redux.md`](/proposals/335-middle-only-redux.md): An authority-only design for MiddleOnly [OPEN]
+* [`334-middle-only-flag.txt`](/proposals/334-middle-only-flag.txt): A Directory Authority Flag To Mark Relays As Middle-only [SUPERSEDED]
+* [`335-middle-only-redux.md`](/proposals/335-middle-only-redux.md): An authority-only design for MiddleOnly [FINISHED]
 * [`336-randomize-guard-retries.md`](/proposals/336-randomize-guard-retries.md): Randomized schedule for guard retries [OPEN]
 * [`337-simpler-guard-usability.md`](/proposals/337-simpler-guard-usability.md): A simpler way to decide, "Is this guard usable?" [OPEN]
 

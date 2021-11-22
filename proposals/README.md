@@ -40,8 +40,6 @@ for discussion.
 * [`325-packed-relay-cells.md`](/proposals/325-packed-relay-cells.md): Packed relay cells: saving space on small commands
 * [`326-tor-relay-well-known-uri-rfc8615.md`](/proposals/326-tor-relay-well-known-uri-rfc8615.md): The "tor-relay" Well-Known Resource Identifier
 * [`330-authority-contact.md`](/proposals/330-authority-contact.md): Modernizing authority contact entries
-* [`334-middle-only-flag.txt`](/proposals/334-middle-only-flag.txt): A Directory Authority Flag To Mark Relays As Middle-only
-* [`335-middle-only-redux.md`](/proposals/335-middle-only-redux.md): An authority-only design for MiddleOnly
 * [`336-randomize-guard-retries.md`](/proposals/336-randomize-guard-retries.md): Randomized schedule for guard retries
 * [`337-simpler-guard-usability.md`](/proposals/337-simpler-guard-usability.md): A simpler way to decide, "Is this guard usable?"
 
@@ -70,6 +68,7 @@ themselves still need to be merged into the specifications proper.
 
 * [`260-rend-single-onion.txt`](/proposals/260-rend-single-onion.txt): Rendezvous Single Onion Services
 * [`333-vanguards-lite.md`](/proposals/333-vanguards-lite.md): Vanguards lite
+* [`335-middle-only-redux.md`](/proposals/335-middle-only-redux.md): An authority-only design for MiddleOnly
 
 
 ## META proposals: about the proposal process
@@ -297,6 +296,7 @@ implemented.
 * [`266-removing-current-obsolete-clients.txt`](/proposals/266-removing-current-obsolete-clients.txt): Removing current obsolete clients from the Tor network
 * [`280-privcount-in-tor.txt`](/proposals/280-privcount-in-tor.txt): Privacy-Preserving Statistics with Privcount in Tor
 * [`299-ip-failure-count.txt`](/proposals/299-ip-failure-count.txt): Preferring IPv4 or IPv6 based on IP Version Failure Count
+* [`334-middle-only-flag.txt`](/proposals/334-middle-only-flag.txt): A Directory Authority Flag To Mark Relays As Middle-only
 
 
 ## DEAD, REJECTED, OBSOLETE proposals: not in our plans

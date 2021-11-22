@@ -2,7 +2,8 @@ Filename: 334-middle-only-flag.txt
 Title: A Directory Authority Flag To Mark Relays As Middle-only
 Author: Neel Chauhan
 Created: 2021-09-07
-Status: Open
+Status: Superseded
+Superseded-by: 335-middle-only-redux.md
 
 1. Introduction
 
