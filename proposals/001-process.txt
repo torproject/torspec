@@ -145,6 +145,12 @@ What should go in a proposal:
         can avoid really expensive performance regressions, and so we can
         avoid wasting time on insignificant gains.
 
+How to format proposals:
+
+   Proposals may be written in plain text (like this one), or in Markdown.
+   If using Markdown, the header must be wrapped in triple-backtick ("```")
+   lines.  Whenever possible, we prefer the Commonmark dialect of Markdown.
+
 Proposal status:
 
    Open: A proposal under discussion.
