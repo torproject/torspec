@@ -2,7 +2,8 @@ Filename: 242-better-families.txt
 Title: Better performance and usability for the MyFamily option
 Author: Nick Mathewson
 Created: 2015-02-27
-Status: Reserve
+Status: Superseded
+Superseded-by: 321-happy-families.md
 
 1. Problem statement.
 
