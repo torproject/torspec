@@ -3,7 +3,7 @@ Filename: 332-ntor-v3-with-extra-data.md
 Title: Ntor protocol with extra data, version 3.
 Author: Nick Mathewson
 Created: 12 July 2021
-Status: Open
+Status: Accepted
 ```
 
 # Overview
