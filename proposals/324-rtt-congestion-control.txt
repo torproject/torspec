@@ -51,6 +51,9 @@ be found at:
 An exhaustive list of citations for further reading is in Section
 [CITATIONS].
 
+A glossary of common congestion control acronyms and terminology is in
+Section [GLOSSARY].
+
 
 1. Overview [OVERVIEW]
 
@@ -115,15 +118,14 @@ RELAY_COMMAND_SENDME relay cells every CIRCWINDOW_INCREMENT (100) cells
 of received RELAY_COMMAND_DATA.
 
 This allows those endpoints to measure the current circuit RTT, by
-measuring the amount of time between sending of every 100th data cell
-and the arrival of the SENDME command that the other endpoint
-immediately sends to ack that 100th cell.
+measuring the amount of time between sending a RELAY_COMMAND_DATA cell
+that would trigger a SENDME from the other endpoint, and the arrival of
+that SENDME cell. This means that RTT is measured every 'cc_sendme_inc'
+data cells.
 
-Circuits will record the current RTT measurement as a field in their
-circuit_t data structure. The current RTT is N-EWMA smoothed[27] over a
-'cc_ewma_cwnd_cnt' multiple of congestion window worth of sendme acks.
-
-Circuits will also record the minimum and maximum RTT seen so far.
+Circuits will record the minimum and maximum RTT measurement, as well as
+a smoothed value of representing the current RTT. The smoothing for the
+current RTT is performed as specified in [N_EWMA_SMOOTHING].
 
 Algorithms that make use of this RTT measurement for congestion
 window update are specified in [CONTROL_ALGORITHMS].
@@ -146,8 +148,8 @@ If the time delta is 0, that is always treated as a clock stall.
 
 If we have measured at least 'cc_bwe_min' RTT values or we have successfully
 exited slow start, then every sendme ACK, the new candidate RTT is compared to
-the stored EWMA RTT. If the new RTT is either 100 times larger than the EWMA
-RTT, or 100 times smaller than the stored EWMA RTT, then we do not record that
+the stored EWMA RTT. If the new RTT is either 5000 times larger than the EWMA
+RTT, or 5000 times smaller than the stored EWMA RTT, then we do not record that
 estimate, and do not update BDP or the congestion control algorithms for that
 SENDME ack.
 
@@ -156,6 +158,28 @@ cached, and this cached value is used on circuits for which we do not
 have enough data to compute the above heueristics. This cached value is
 also exported for use by the edge connection rate calculations done by
 [XON_ADVISORY].
+
+2.1.2. N_EWMA Smoothing [N_EWMA_SMOOTHING]
+
+Both RTT estimation and SENDME BDP estimation require smoothing, to
+reduce the effects of packet jitter.
+
+This smoothing is performed using N_EWMA[27], which is an Exponential
+Moving Average with alpha = 2/(N+1):
+
+  N_EWMA = BDP*2/(N+1) + N_EWMA_prev*(N-1)/(N+1).
+
+Flow control rate limiting uses this function
+
+For both RTT and SENDME BDP estimation, N is the number of SENDME acks
+between congestion window updates, divided by the value of consensus
+parameter 'cc_ewma_cwnd_pct', and then capped at a max of 'cc_ewma_max',
+but always at least 2:
+
+  N = MAX(MIN(CWND_UPDATE_RATE(cc)*cc_ewma_cwnd_pct/100, cc_ewma_max), 2);
+
+CWND_UPDATE_RATE is normally just round(CWND/cc_sendme_inc), but after
+slow start, it is round(CWND/(cc_cwnd_inc_rate*cc_sendme_inc)).
 
 2.2. SENDME behavior changes
 
@@ -174,10 +198,9 @@ congestion, since the RTT will be measured more often. If
 experimentation in Shadow shows that more frequent SENDMEs reduce
 congestion and improve performance but add significant overhead, we can
 reduce SENDME overhead by allowing SENDME cells to carry stream data, as
-well, using Proposal 325.
-
-  TODO: Refer to or include final version of the negotiation proposal for
-  this: https://gitlab.torproject.org/tpo/core/tor/-/issues/40377
+well, using Proposal 325. The method for negotiating a common value of
+cc_sendme_inc on a circuit is covered in [ONION_NEGOTIATION] and
+[EXIT_NEGOTIATION].
 
 Third, authenticated SENDMEs can remain as-is in terms of protocol
 behavior, but will require some implementation updates to account for
@@ -294,23 +317,11 @@ BDP.
 We specify all three because they are all useful in various cases. These cases
 are broken up and combined to form the Piecewise BDP estimator.
 
-The SENDME estimator is smoothed through N-EWMA averaging on these
-estimators[27], to smooth out temporary effects. This is accomplished by using
-an EWMA function with alpha = 2/(N+1):
-
-  N_EWMA = BDP*2/(N+1) + N_EWMA_prev*(N-1)/(N+1).
-
-N is specified in terms of the number of current congestion windows worth of
-SENDMEs to average, via consensus parameter 'cc_ewma_cwnd_cnt'.
-
-The cwnd and inflight estimators also use N-EWMA smoothing in the same way,
-but only smooth the current RTT estimate, not the congestion window value.
-
 3.1.1. SENDME arrival BDP estimation
 
-The most accurate way to estimate BDP is to measure the amount of time between
-SENDME acks. In this period of time, we know that the endpoint successfully
-received 'cc_sendme_inc' cells.
+It is possible to directly measure BDP via the amount of time between SENDME
+acks. In this period of time, we know that the endpoint successfully received
+'cc_sendme_inc' cells.
 
 This means that the bandwidth of the circuit is then calculated as:
 
@@ -343,16 +354,21 @@ truncation, we compute the BDP using multiplication first:
 
    BDP = (num_sendmes-1) * cc_sendme_inc * RTT_min / num_sendme_timestamp_delta
 
-Note that the SENDME BDP estimation will only work after two (2) SENDME acks
-have been received. Additionally, it tends not to be stable unless at least
-five (5) num_sendme's are used, due to ack compression. This is controlled by
-the 'cc_bwe_min' consensus parameter. Finally, if [CLOCK_HEURISTICS] have
-detected a clock jump or stall, this estimator is not updated.
+After all of this, the BDP is smoothed using [N_EWMA_SMOOTHING].
+
+This smoothing means that the SENDME BDP estimation will only work after two
+(2) SENDME acks have been received. Additionally, it tends not to be stable
+unless at least 'cc_bwe_min' sendme's are used. This is controlled by the
+'cc_bwe_min' consensus parameter. Finally, if [CLOCK_HEURISTICS] have detected
+a clock jump or stall, this estimator is not updated.
 
 If all edge connections no longer have data available to send on a circuit
 and all circuit queues have drained without blocking the local orconn, we stop
 updating this BDP estimate and discard old timestamps. However, we retain the
 actual estimator value.
+
+Unfortunately, even after all of this, SENDME BDP estimation proved unreliable
+in Shadow simulation, due to ack compression.
 
 3.1.2. Congestion Window BDP Estimation
 
@@ -422,8 +438,9 @@ and RTT_current. These are measured using the time delta between every
 measured arbitrarily, so long as it is larger than what we would get from
 SENDME.
 
-RTT_current is N-EWMA smoothed over 'cc_ewma_cwnd_cnt' congestion windows
-worth of SENDME acks.
+RTT_current is N-EWMA smoothed over 'cc_ewma_cwnd_pct' percent of
+congestion windows worth of SENDME acks, up to a max of 'cc_ewma_max' acks, as
+described in [N_EWMA_SMOOTHING].
 
 Recall that BOOTLEG_RTT_TOR emits a congestion signal when the current
 RTT falls below some fractional threshold ('cc_westwood_rtt_thresh') fraction
@@ -502,27 +519,29 @@ Thus, Vegas estimates estimates the queue use caused by congestion as:
 
    queue_use = cwnd - BDP
 
-Original TCP Vegas used a cwnd BDP estimator only. However, because the SENDME
-BDP estimate is more accurate, and because Piecewise BDP allows us to back off
-more when the local OR connection is blocked, we use Piecewise BDP here.
-
-For testing, we also parameterize this queue_use calculation as a tunable
+Original TCP Vegas used a cwnd BDP estimator only. We added the ability to
+switch this BDP estimator in the implementation, and experimented with various
+options. We also parameterized this queue_use calculation as a tunable
 weighted average between the cwnd-based BDP estimate and the piecewise
-estimate (consensus parameter 'cc_vegas_bdp_mix').
+estimate (consensus parameter 'cc_vegas_bdp_mix'). After much testing of
+various ways to compute BDP, we were still unable to do much better than the
+original cwnd estimator. So while this capability to change the BDP estimator
+remains in the C implementation, we do not expect it to be used.
 
-Additionally, if the local OR connection is blocked at the time of SENDME ack
-arrival, this is treated as an immediate congestion signal.
+However, it was useful to use a local OR connection block at the time of
+SENDME ack arrival, as an immediate congestion signal.
 
-(We can also optionally use the ECN signal described in
-ideas/xxx-backward-ecn.txt, to exit Slow Start.)
+(As an additional optimization, we could also use the ECN signal described in
+ideas/xxx-backward-ecn.txt, but this is not implemented. It is likely only of
+any benefit during Slow Start, and even that benefit is likely small.)
 
 Congestion signals from RTT, blocked OR connections, or ECN are processed only
 once per congestion window. This is achieved through the next_cc_event flag,
 which is initialized to a cwnd worth of SENDME acks, and is decremented
 each ack. Congestion signals are only evaluated when it reaches 0.
 
-Here is the complete pseudocode for TOR_VEGAS, which is run once per SENDME
-ack:
+Here is the complete pseudocode for TOR_VEGAS, which is run every time
+an endpoint receives a SENDME ack:
 
   # Update acked cells
   inflight -= cc_sendme_inc
@@ -543,18 +562,30 @@ ack:
 
      if in_slow_start:
        if queue_use < cc_vegas_gamma and not orconn_blocked:
-         cwnd = MAX(cwnd * cc_cwnd_inc_pct_ss, BDP)    # Exponential or BDP
+         # Increment by slow start %, or at least 2 sendme_inc's worth
+         cwnd = cwnd + MAX(cwnd * cc_cwnd_inc_pct_ss, 2*cc_sendme_inc)
+         # If our BDP estimator thinks the BDP is still larger, use that
+         cwnd = MAX(cwnd, BDP)
        else:
-         cwnd = BDP
+         cwnd = BDP + cc_vegas_gamma
          in_slow_start = 0
      else:
-       if queue_use > cc_vegas_beta or orconn_blocked:
-         cwnd += cc_cwnd_inc
-       elif queue_use < cc_vegas_alpha:
+       if queue_use > cc_vegas_delta:
+         cwnd = BDP + cc_vegas_delta - cc_cwnd_inc
+       elif queue_use > cc_vegas_beta or orconn_blocked:
          cwnd -= cc_cwnd_inc
+       elif queue_use < cc_vegas_alpha:
+         cwnd += cc_cwnd_inc
 
      cwnd = MAX(cwnd, cc_circwindow_min)
-     next_cc_event = cwnd / (cc_cwnd_inc_rate * cc_sendme_inc)
+
+     # Count the number of sendme acks until next update of cwnd,
+     # rounded to nearest integer
+     if in_slow_start:
+       next_cc_event = round(cwnd / cc_sendme_inc)
+     else
+       # Never increment faster in slow start, only steady state.
+       next_cc_event = round(cwnd / (cc_cwnd_inc_rate * cc_sendme_inc))
 
 
 3.4. Tor NOLA: Direct BDP tracker [TOR_NOLA]
@@ -1081,6 +1112,11 @@ These are sorted in order of importance to tune, most important first.
            values, and even the optimal algorithm itself, will likely depend
            upon how much fixed sendme traffic is in competition. See the
            algorithm-specific parameters for additional tuning notes.
+    - Shadow Tuning Results:
+           Westwood exhibited responsiveness problems, drift, and overshoot.
+           NOLA exhibited ack compression resulting in over-estimating the
+           BDP. Vegas, when tuned properly, kept queues low and throughput
+           high, but even.
 
   cc_bwe_min:
     - Description:
@@ -1100,11 +1136,15 @@ These are sorted in order of importance to tune, most important first.
            when the congestion window is small. If we need small congestion
            windows, we should also lower cc_sendme_inc, which will get us more
            frequent acks with less data.
+    - Shadow Tuning Results:
+           Regarless of how high this was set, there were still cases where
+           queues built up, causing BDP over-estimation. As a result, we disable
+           use of the BDP estimator, and only use the Vegas CWND estimator.
 
   cc_sendme_inc:
     - Description: Specifies how many cells a SENDME acks
-    - Range: [1, 5000]
-    - Default: 50
+    - Range: [1, 255]
+    - Default: 31
     - Tuning Values: 25,33,50
     - Tuning Notes:
            Increasing this increases overhead, but also increases BDP
@@ -1112,14 +1152,22 @@ These are sorted in order of importance to tune, most important first.
            and the old code sent sendmes at both every 50 cells, and every
            100, we can set this as low as 33 to have the same amount of
            overhead.
+    - Shadow Tuning Results:
+           This was optimal at 31-32 cells, which is also the number of
+           cells that fit in a TLS frame. Much of the rest of Tor has
+           processing values at 32 cells, as well.
+    - Consensus Update Notes:
+           This value MUST only be changed by a factor of 2, every 4 hours.
+           If greater changes are needed, they MUST be spread out over
+           multiple consensus updates.
 
   cc_cwnd_init:
     - Description: Initial congestion window for new congestion
                    control Tor clients. This can be set much higher
                    than TCP, since actual TCP to the guard will prevent
                    buffer bloat issues at local routers.
-    - Range: [100, 10000]
-    - Default: 500
+    - Range: [31, 10000]
+    - Default: 4*31
     - Tuning Values: 150,200,250,500
     - Tuning Notes:
            Higher initial congestion windows allow the algorithms to
@@ -1127,10 +1175,16 @@ These are sorted in order of importance to tune, most important first.
            and latency.  Ultimately, the ICW should be set to approximately
            'cc_bwe_min'*'cc_sendme_inc', but the presence of competing
            fixed window clients may require higher values.
+    - Shadow Tuning Results:
+           Setting this too high caused excessive cell queues at relays.
+           4*31 ended up being a sweet spot.
+    - Consensus Update Notes:
+           This value must never be set below cc_sendme_inc.
 
   cc_cwnd_min:
     - Description: The minimum allowed cwnd.
-    - Range: [cc_sendme_inc, 1000]
+    - Range: [31, 1000]
+    - Default: 31
     - Tuning Values: [100, 150, 200]
     - Tuning Notes:
            If the cwnd falls below cc_sendme_inc, connections can't send
@@ -1138,10 +1192,14 @@ These are sorted in order of importance to tune, most important first.
            cc_bwe_min*cc_sendme_inc, connections can't use SENDME BDP
            estimates. Likely we want to set this around
            cc_bwe_min*cc_sendme_inc, but no lower than cc_sendme_inc.
+    - Shadow Tuning Results:
+           We set this at 31 cells, the cc_sendme_inc.
+    - Consensus Update Notes:
+           This value must never be set below cc_sendme_inc.
 
   cc_cwnd_max:
     - Description: The maximum allowed cwnd.
-    - Range: [cc_sendme_inc, INT32_MAX]
+    - Range: [500, INT32_MAX]
     - Default: INT32_MAX
     - Tuning Values: [5000, 10000, 20000]
     - Tuning Notes:
@@ -1151,6 +1209,8 @@ These are sorted in order of importance to tune, most important first.
        queues large enough to cause ack compression should become rare. This
        parameter exists primarily to verify this in Shadow, but we preserve it
        as a consensus parameter for emergency use in the live network, as well.
+    - Shadow Tuning Results:
+       We kept this at INT32_MAX.
 
   circwindow:
     - Description: Initial congestion window for legacy Tor clients
@@ -1175,39 +1235,69 @@ These are sorted in order of importance to tune, most important first.
            only be updated once every cwnd worth of packets. We may find it
            better to update more frequently, but this is probably unlikely
            to help a great deal.
+    - Shadow Tuning Results:
+           Increasing this during slow start caused overshoot and excessive
+           queues. Increasing this after slow start was suboptimal for
+           performance. We keep this at 1.
 
-  cc_ewma_cwnd_cnt:
+  cc_ewma_cwnd_pct:
     - Description: This specifies the N in N-EWMA smoothing of RTT and BDP
-                   estimation. It allows us to average these values over 1
-                   or more congestion windows.
-    - Range: [1, 100]
-    - Default: 2
-    - Tuning Values: [1,2,3]
+                   estimation, as a percent of the number of SENDME acks
+                   in a congestion window. It allows us to average these RTT
+                   values over a percentage of the congestion window,
+                   capped by 'cc_ewma_max' below, and specified in
+                   [N_EWMA_SMOOTHING].
+    - Range: [1, 255]
+    - Default: 50,100
+    - Tuning Values: [25,50,100]
     - Tuning Notes:
            Smoothing our estimates reduces the effects of ack compression and
            other ephemeral network hiccups; changing this much is unlikely
            to have a huge impact on performance.
+    - Shadow Tuning Results:
+           Setting this to 50 seemed to reduce cell queues, but this may also
+           have impacted performance.
+
+  cc_ewma_max:
+    - Description: This specifies the max N in N_EWMA smoothing of RTT and BDP
+                   estimation. It allows us to place a cap on the N of EWMA
+                   smoothing, as specified in [N_EWMA_SMOOTHING].
+    - Range: [2, INT32_MAX]
+    - Default: 10
+    - Tuning Values: [10,20]
+    - Shadow Tuning Results:
+           We ended up needing this to make Vegas more responsive to
+           congestion, to avoid overloading slow relays. Values of 10 or 20
+           were best.
 
   cc_cwnd_inc:
     - Description: How much to increment the congestion window by during
                    steady state, every cwnd.
     - Range: [1, 1000]
-    - Default: 50
+    - Default: 31
     - Tuning Values: 25,50,100
     - Tuning Notes:
            We are unlikely to need to tune this much, but it might be worth
            trying a couple values.
+    - Shadow Tuning Results:
+           Increasing this negatively impacted performance. Keeping it at
+           cc_sendme_inc is best.
 
   cc_cwnd_inc_pct_ss:
     - Description: Percentage of the current congestion window to increment
                    by during slow start, every cwnd.
-    - Range: [10, 300]
-    - Default: 100
+    - Range: [1, 500]
+    - Default: 50
     - Tuning Values: 50,100,200
     - Tuning Notes:
            On the current live network, the algorithms tended to exit slow
            start early, so we did not exercise this much. This may not be the
            case in Shadow, or once clients upgrade to the new algorithms.
+    - Shadow Tuning Results:
+           Setting this above 50 caused excessive queues to build up in
+           Shadow. This may have been due to imbalances in Shadow client
+           allocation, though. Values of 50-100 will be explored after
+           examining Shadow Guard Relay Utilization.
 
   cc_bdp_alg:
     - Description: The BDP estimation algorithm to use.
@@ -1215,6 +1305,8 @@ These are sorted in order of importance to tune, most important first.
     - Default: 7 (Piecewise EWMA)
     - Tuning Notes:
            We don't expect to need to tune this.
+    - Shadow Tuning Results:
+           We leave this as-is, but disable it in Vegas instead, below.
 
 6.5.2. Westwood parameters
 
@@ -1273,13 +1365,18 @@ These are sorted in order of importance to tune, most important first.
 
 6.5.3. Vegas Parameters
 
-  cc_vegas_alpha:
-  cc_vegas_beta:
-  cc_vegas_gamma:
+  cc_vegas_alpha_{exit,onion,sos,vg,sbws}:
+  cc_vegas_beta_{exit,onion,sos,vg,sbws}:
+  cc_vegas_gamma_{exit,onion,sos,vg,sbws}:
+  cc_vegas_delta_{exit,onion,sos,vg,sbws}:
     - Description: These parameters govern the number of cells
                    that [TOR_VEGAS] can detect in queue before reacting.
-    - Range: [1, 1000]
-    - Defaults: 6*cc_sendme_inc for gamma and beta; 3*cc_sendme_inc for alpha
+    - Range: [0, 1000] (except delta, which has max of INT32_MAX)
+    - Defaults:
+           alpha: path_len*2*31-31
+           beta: path_len*2*31
+           gamma: path_len*2*31
+           delta: path_len*2*31 + 2*31
     - Tuning Notes:
            The amount of queued cells that Vegas should tolerate is heavily
            dependent upon competing congestion control algorithms. The specified
@@ -1288,18 +1385,30 @@ These are sorted in order of importance to tune, most important first.
            clients using fixed windows is reduced (or circwindow is lowered), we
            can reduce these parameters, which will result in less overall queuing
            and congestion on the network.
+    - Shadow Tuning Results:
+           We found that the best values for 3-hop Exit circuits was to set
+           beta and gamma to the size of the outbufs times the number of hops.
+           This has the effect that Vegas detects congestion and backs off
+           when this much queue delay is detected. Alpha is set to one TLS
+           record/sendme_inc below this value. If the queue length is detected
+           to be below that, we increase the congestion window. We still
+           need to verify that the path length multiplier still holds for
+           other types of circuits, specifically onion services.
 
   cc_vegas_bdp_mix:
     - Description: This parameter allows us to specify a weighted percent
                    average between the cwnd BDP estimator and the piecewise
                    estimator.
     - Range: [0, 100]
-    - Default: 0 (use 100% Piecewise EWMA)
+    - Default: 100 (use 100% CWND estimator)
     - Tuning Notes:
            The original Vegas literature specified the CWND estimator, but
            the Piecewise estimator is very likely more suited for our use
            case. This parameter allows us to average them. We're unlikely to
            need it.
+    - Shadow Tuning Results:
+           Because the BDP estimator had ack compression and over-estimation,
+           we the CWND estimator.
 
 6.5.4. NOLA Parameters
 
@@ -1358,7 +1467,7 @@ These are sorted in order of importance to tune, most important first.
  cc_xon_change_pct
     - Description: Specifies how much the edge drain rate can change before
                    we send another advisory cell.
-    - Range: [1, 100]
+    - Range: [1, 99]
     - Default: 25
     - Tuning values: [25, 50, 75]
     - Tuning Notes:
@@ -1465,6 +1574,9 @@ These are sorted in order of importance to tune, most important first.
         expensive. We will need to trace or monitor epoll() invocations in
         Shadow or on a Tor exit to verify that low values do not lead to
         more mainloop invocations.
+    - Shadow Tuning Results:
+        After extensive tuning, it turned out that the defaults were optimal
+        in terms of throughput.
 
   orconn_high
   orconn_low
@@ -1658,38 +1770,67 @@ also be used as a side channel. So we must limit its use to a couple of
 cells per circuit, at most.
   https://blog.torproject.org/tor-security-advisory-relay-early-traffic-confirmation-attack
 
-9. Onion Services
+
+9. Onion Service Negotiation [ONION_NEGOTIATION]
 
 Onion service requires us to advertise the protocol version and congestion
 control parameters in a different way since the end points do not know each
-other like a client knows all the relays and what they support.
+other like a client knows all the relays and what they support. Additionally,
+we cannot use ntorv3 for onion service negotiation, because it is not
+supported at all rendezvous and introduction points.
 
 To address this, this is done in two parts. First, the service needs to
-advertise to the world that it supports congestion control. This is done
-through a new line in the descriptor, see section 9.1 below.
+advertise to the world that it supports congestion control, and its view of
+the current cc_sendme_inc consensus parameter. This is done through a new
+line in the onion service descriptor, see section 9.1 below.
 
 Second, the client needs to inform the service that it wants to use congestion
-control on the rendezvous circuit and with wich parameters. This is done
-through the INTRODUCE cell as an extension, see section 9.2 below.
+control on the rendezvous circuit. This is done through the INTRODUCE cell as
+an extension, see section 9.2 below.
 
-9.1. Descriptor
+9.1. Onion Service Descriptor
 
-We propose to add a new line to advertise the flow control protocol version:
+We propose to add a new line to advertise the flow control protocol version,
+in the encrypted section of the onion service descriptor:
 
-  "flow-control" SP version-number NL
+  "flow-control" SP version-range SP sendme-inc NL
 
-    The "version-number" value is the same as the protocol version FlowCtrl
-    that relay advertises which is defined earlier in this proposal. Current
-    value can only be "2".
+    The "version-range" value is the same as the protocol version FlowCtrl
+    that relay advertises which is defined earlier in this proposal. The
+    current value is "1-2".
 
-Clients that are able to parse this line and know the protocol version can then
-send in the INTRODUCE1 cell congestion control parameters that they would like
-to use which is detailed in the next section.
+    The "sendme-inc" value comes from the service's current cc_sendme_inc
+    consensus parameter.
 
-This line MUST be removed from the descriptor if the consensus disables
-congestion control by setting "cc_alg=0". In other words, a service should only
-advertise its flow control version if congestion control is enabled network
-wide.
+Clients MUST ignore additional unknown versions in "version-range", and MUST
+ignore any additional values on this line.
+
+Clients SHOULD use the highest value in "version-range" to govern their
+protocol choice for "FlowCtrl" and INTRODUCE cell format, as per Section 9.2
+below.
+
+If clients do not support any of the versions in "version-range", they SHOULD
+reject the descriptor. (They MAY choose to ignore this line instead, but doing
+so means using the old fixed-window SENDME flow control, which will likely be
+bad for the network).
+
+Clients that are able to parse this line and know the protocol version
+MUST validate that the "sendme-inc" value is within a multiple of 2 of the
+"cc_sendme_inc" in the consensus that they see. If "sendme-inc" is not within
+range, they MUST reject the descriptor.
+
+If their consensus also lists a non-zero "cc_alg", they MAY then send in the
+INTRODUCE1 cell congestion control request extention field, which is detailed
+in the next section.
+
+A service should only advertise its flow control version if congestion control is
+enabled. It MUST remove this line if congestion control is disabled.
+
+If the service observes a change in 'cc_sendme_inc' consensus parameter since
+it last published its descriptor, it MUST immediately close its introduction
+points, and publish a new descriptor with the new "sendme-inc" value. The
+additional step of closing the introduction points ensures that no clients
+arrive using a cached descriptor, with the old "sendme-inc" value.
 
 9.2 INTRODUCE cell extension
 
@@ -1698,45 +1839,27 @@ congestion control parameters down to the service. It is important to mention
 that this is an extension to be used in the encrypted setion of the cell and
 not its readable section by the introduction point.
 
-If used, it needs to be encoded within the N_EXTENSIONS field of the ENCRYPTED
-section of the INTRODUCE1 cell defined in rend-spec-v3.txt section 3.3. The
-content is defined as follow:
+If used, it needs to be encoded within the ENCRYPTED section of the INTRODUCE1
+cell defined in rend-spec-v3.txt section 3.3. The content is defined as follow:
 
   EXT_FIELD_TYPE:
 
-    [01] -- Congestion Control Parameters.
+    [01] -- Congestion Control Request.
 
-    If this flag is set, the extension should be used by the service to learn
-    what are the congestion control parameters to use on the rendezvous
-    circuit.
+This field is has zero payload length. Its presence signifies that the client wants to
+use congestion control. The client MUST NOT set this field, or use
+ntorv3, if the service did not list "2" in the "FlowCtrl" line in the
+descriptor. The client SHOULD NOT provide this field if the consensus parameter
+'cc_alg' is 0.
 
-  EXT_FIELD content format is:
-
-    N_PARAMS          [1 byte]
-    N_PARAMS times:
-      PARAM_TYPE      [1 byte]
-      PARAM_VALUE     [8 byte]
-
-    The PARAM_TYPE possible values are:
-
-      [01] -- Newest protocol version supported
-              The newest protocol version that the client supports.
-
-      [02] -- SENDME increment
-              The initial SENDME increment that should be used by both end points
-              when using congestion control.
-
-    The PARAM_VALUE size is 8 bytes in order to accomodate 64bit values. It
-    MUST match the specified limits for the following PARAM_TYPE:
-
-      [01] -- Min: 2, Max: 255
-      [02] -- Min: 1, Max: 5000 (same as "cc_sendme_inc")
+The service MUST ignore any unknown fields.
 
 9.3 Protocol Flow
 
 First, the client reads the "flow-control" line in the descriptor and gets the
-maximum value from what it supports and the service supports. As an example, if
-the client supports 2-3-4 and the service supports 2-3, then 3 is chosen.
+maximum value from that line's "version-range" and the service supports. As an
+example, if the client supports 2-3-4 and the service supports 2-3, then 3 is
+chosen.
 
 It then sends that value along its desired cc_sendme_inc value in the
 INTRODUCE1 cell in the extension.
@@ -1747,7 +1870,7 @@ then applied to the rendezvous circuit.
 
 9.4 Circuit Behavior
 
-If the extension is not found in the cell, the service MUST not use congestion
+If the extension is not found in the cell, the service MUST NOT use congestion
 control on the rendezvous circuit.
 
 Any invalid values received in the extension should result in closing the
@@ -1765,15 +1888,159 @@ everyone looks the same again.
 The new extension is located in the encrypted part of the INTRODUCE1 cell and
 thus the introduction point can't learn its content.
 
-10. Acknowledgements
+
+10. Exit negotiation [EXIT_NEGOTIATION]
+
+Similar to onion services, clients and exits will need to negotiate the
+decision to use congestion control, as well as a common value for
+'cc_sendme_inc', for a given circuit.
+
+10.1. When to negotiate
+
+Clients decide to initiate a negotiation attempt for a circuit if the
+consensus lists a non-zero 'cc_alg' parameter value, and the protover line
+for their chosen exit includes a value of 2 in the "FlowCtrl" field.
+
+If the FlowCtrl=2 subprotocol is absent, a client MUST NOT attempt negotiation.
+
+If 'cc_alg' is absent or zero, a client SHOULD NOT attempt
+negotiation, or use ntorv3.
+
+If the protover and consensus conditions are met, clients SHOULD negotiate
+with the Exit if the circuit is to be used for exit stream activity. Clients
+SHOULD NOT negotiate congestion control for one-hop circuits, or internal
+circuits.
+
+10.2. What to negotiate
+
+Clients and exits need not agree on a specific congestion control algorithm,
+or any aspects of its behavior. Each endpoint's management of its congestion
+window is independent. However, because the new algorithms no longer use
+stream SENDMEs or fixed window sizes, they cannot be used with an endpoint
+expecting the old behavior.
+
+Additionally, each endpoint must agree on the the SENDME increment rate, in
+order to synchronize SENDME authentication and pacing.
+
+For this reason, negotiation needs to establish a boolean: "use congestion
+control", and an integer value for SENDME increment.
+
+No other parameters need to be negotiated.
+
+10.3. How to negotiate
+
+Negotiation is performed by sending an ntorv3 onionskin, as specified in
+Proposal 332, to the Exit node. The encrypted payload contents from the
+clients are encoded as an extension field, as in the onion service INTRO1
+cell:
+
+  EXT_FIELD_TYPE:
+
+    [01] -- Congestion Control Request.
+
+As in the INTRO1 extension field, this field is has zero payload length.
+
+Its presence signifies that the client wants to use congestion control.
+Again, the client MUST NOT set this field, or use ntorv3, if this exit did not
+list "2" in the "FlowCtrl" version line. The client SHOULD NOT set this to 1
+if the consensus parameter 'cc_alg' is 0.
+
+The Exit MUST ignore any additional unknown extension fields.
+
+The server's encrypted ntorv3 reply payload is encoded as:
+
+   EXT_FIELD_TYPE:
+
+    [02] -- Congestion Control Response.
+
+    If this flag is set, the extension should be used by the service to learn
+    what are the congestion control parameters to use on the rendezvous
+    circuit.
+
+  EXT_FIELD content payload is a single byte:
+
+    sendme_inc        [1 byte]
+
+The Exit MUST provide its current view of 'cc_sendme_inc' in this payload if it
+observes a non-zero 'cc_alg' consensus parameter. Exits SHOULD only include
+this field once.
+
+The client MUST use the FIRST such field value, and ignore any duplicate field
+specifiers. The client MUST ignore any unknown additional fields.
+
+10.5. Client checks
+
+The client MUST reject any ntorv3 replies for non-ntorv3 onionskins.
+
+The client MUST reject an ntorv3 reply with field EXT_FIELD_TYPE=02, if the
+client did not include EXT_FIELD_TYPE=01 in its handshake.
+
+The client SHOULD reject a sendme_inc field value that differs from the
+current 'cc_sendme_inc' consensus parameter by more than a factor of 2, in
+either direction.
+
+If a client rejects a handshake, it MUST close the circuit.
+
+10.6. Managing consenus updates
+
+The pedantic reader will note that a rogue consensus can cause all clients
+to decide to close circuits by changing 'cc_sendme_inc' by a large margin.
+
+As a matter of policy, the directory authorities MUST NOT change
+'cc_sendme_inc' by more than a factor of two (2), within a four (4) hour
+window, for this reason.
+
+In Shadow simulation, the optimal 'cc_sendme_inc' value to be ~31 cells, or
+one (1) TLS record worth of cells. We do not expect to change this value
+significantly.
+
+
+11. Acknowledgements
 
 Immense thanks to Toke Høiland-Jørgensen for considerable input into all
 aspects of the TCP congestion control background material for this proposal,
 as well as review of our versions of the algorithms.
 
 
+12. Glossary [GLOSSARY]
 
-11. [CITATIONS]
+ACK - Acknowledgment. In congestion control, this is a type of packet that
+signals that the endpoint received a packet or packet set. In Tor, ACKs are
+called SENDMEs.
+
+BDP - Bandwidth Delay Product. This is the quantity of bytes that are actively
+in transit on a path at any given time. Typically, this does not count packets
+waiting in queues. It is essentially RTT*BWE - queue_delay.
+
+BWE - BandWidth Estimate. This is the estimated throughput on a path.
+
+CWND - Congestion WiNDow. This is the total number of packets that are allowed
+to be "outstanding" (aka not ACKed) on a path at any given time. An ideal
+congestion control algorithm sets CWND=BDP.
+
+EWMA - Exponential Weighted Moving Average. This is a mechanism for smoothing
+out high-frequency changes in a value, due to temporary effects.
+
+ICW - Initial Congestion Window. This is the initial value of the congestion
+window at the start of a connection.
+
+RTT - Round Trip Time. This is the time it takes for one endpoint to send a
+packet to the other endpoint, and get a response.
+
+SS - Slow Start. This is the initial phase of most congestion control
+algorithms. Despite the name, it is an exponential growth phase, to quickly
+increase the congestion window from the ICW value up the path BDP. After Slow
+Start, changes to the congestion window are linear.
+
+XOFF - Transmitter Off. In flow control, XOFF means that the receiver is
+receiving data too fast and is beginning to queue. It is sent to tell the
+sender to stop sending.
+
+XON - Transmitter On. In flow control, XON means that the receiver is ready to
+receive more data. It is sent to tell the sender to resume sending.
+
+
+13. [CITATIONS]
 
 1. Options for Congestion Control in Tor-Like Networks.
    https://lists.torproject.org/pipermail/tor-dev/2020-January/014140.html
@@ -1866,4 +2133,3 @@ as well as review of our versions of the algorithms.
 
 31. KIST: Kernel-Informed Socket Transport for Tor
     https://matt.traudt.xyz/static/papers/kist-tops2018.pdf
-
