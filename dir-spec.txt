@@ -2329,6 +2329,11 @@ Table of Contents
           "Fast" if the router is suitable for high-bandwidth circuits.
           "Guard" if the router is suitable for use as an entry guard.
           "HSDir" if the router is considered a v2 hidden service directory.
+          "MiddleOnly" if the router is considered unsuitable for
+             usage other than as a middle relay. Clients do not need
+             to handle this option, since when it is present, the authorities
+             will automatically vote against flags that would make the router
+             usable in other positions. (Since 0.4.7.2-alpha.)
           "NoEdConsensus" if any Ed25519 key in the router's descriptor or
              microdescriptor does not reflect authority consensus.
           "Stable" if the router is suitable for long-lived circuits.
@@ -2637,6 +2642,13 @@ Table of Contents
    serves v2 hidden service descriptors, has the Stable and Fast flag, and the
    authority believes that it's been up for at least 96 hours (or the current
    value of MinUptimeHidServDirectoryV2).
+
+   "MiddleOnly" -- An authority should vote for this flag if it believes
+   that a relay is unsuitable for use except as a middle relay.  When
+   voting for this flag, the authority should also vote against "Exit",
+   "Guard", "HsDir", and "V2Dir".  When voting for this flag, if the
+   authority votes on the "BadExit" flag, the authority should vote in
+   favor of "BadExit".  (This flag was added in 0.4.7.2-alpha.)
 
    "NoEdConsensus" -- authorities should not vote on this flag; it is
    produced as part of the consensus for consensus method 22 or later.
@@ -2956,6 +2968,13 @@ Table of Contents
         * If consensus method 31 or later is used, authorities parse the
           "bwweightscale" and "maxunmeasuredbw" parameters correctly when
           computing votes.
+
+        * If consensus method 32 or later is used, authorities handle the
+          "MiddleOnly" flag specially when computing a consensus.  When the
+          voters agree to include "MiddleOnly" in a routerstatus, they
+          automatically remove "Exit", "Guard", "V2Dir", and "HSDir".  If
+          the BadExit flag is included in the consensus, they automatically
+          add it to the routerstatus.
 
      The signatures at the end of a consensus document are sorted in
      ascending order by identity digest.

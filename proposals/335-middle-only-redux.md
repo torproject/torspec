@@ -3,7 +3,7 @@ Filename: 335-middle-only-redux.md
 Title: An authority-only design for MiddleOnly
 Author: Nick Mathewson
 Created: 2021-10-08
-Status: Finished
+Status: Closed
 Implemented-In: 0.4.7.2-alpha
 ```
 

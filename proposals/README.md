@@ -68,7 +68,6 @@ themselves still need to be merged into the specifications proper.
 
 * [`260-rend-single-onion.txt`](/proposals/260-rend-single-onion.txt): Rendezvous Single Onion Services
 * [`333-vanguards-lite.md`](/proposals/333-vanguards-lite.md): Vanguards lite
-* [`335-middle-only-redux.md`](/proposals/335-middle-only-redux.md): An authority-only design for MiddleOnly
 
 
 ## META proposals: about the proposal process
@@ -240,6 +239,7 @@ necessary.
 * [`315-update-dir-required-fields.txt`](/proposals/315-update-dir-required-fields.txt): Updating the list of fields required in directory documents
 * [`318-limit-protovers.md`](/proposals/318-limit-protovers.md): Limit protover values to 0-63
 * [`328-relay-overload-report.md`](/proposals/328-relay-overload-report.md): Make Relays Report When They Are Overloaded
+* [`335-middle-only-redux.md`](/proposals/335-middle-only-redux.md): An authority-only design for MiddleOnly
 
 
 ## RESERVE proposals: saving for later
