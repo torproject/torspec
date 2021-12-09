@@ -255,7 +255,7 @@ Proposals by number:
 332  Ntor protocol with extra data, version 3 [ACCEPTED]
 333  Vanguards lite [FINISHED]
 334  A Directory Authority Flag To Mark Relays As Middle-only [SUPERSEDED]
-335  An authority-only design for MiddleOnly [FINISHED]
+335  An authority-only design for MiddleOnly [CLOSED]
 336  Randomized schedule for guard retries [OPEN]
 337  A simpler way to decide, "Is this guard usable?" [OPEN]
 
@@ -321,7 +321,6 @@ Proposals by status:
  FINISHED:
    260  Rendezvous Single Onion Services [in 0.2.9.3-alpha]
    333  Vanguards lite [in 0.4.7.1-alpha]
-   335  An authority-only design for MiddleOnly [in 0.4.7.2-alpha]
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
    102  Dropping "opt" from the directory format [in 0.2.0.x]
@@ -422,6 +421,7 @@ Proposals by status:
    315  Updating the list of fields required in directory documents [in 0.4.5.1-alpha]
    318  Limit protover values to 0-63 [in 0.4.5.1-alpha]
    328  Make Relays Report When They Are Overloaded
+   335  An authority-only design for MiddleOnly [in 0.4.7.2-alpha]
  SUPERSEDED:
    112  Bring Back Pathlen Coin Weight
    113  Simplifying directory authority administration
