@@ -197,6 +197,7 @@ Table of Contents
     represent decimal point. As an example, a value of 1000 means 1%.
     Min: 0. Max: 100000. Default: 1000.
     First-appeared: 0.4.6.8
+    Deprecated: 0.4.7.3-alpha-dev
 
     "overload_dns_timeout_period_secs" -- This value is the period in seconds
     of the DNS timeout measurements (the N in the
@@ -205,6 +206,7 @@ Table of Contents
     assessment on the overload general signal with regards to DNS timeouts.
     Min: 0. Max: 2147483647. Default: 600
     First-appeared: 0.4.6.8
+    Deprecated: 0.4.7.3-alpha-dev
 
 8. V3 onion service parameters
 
