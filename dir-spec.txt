@@ -4181,10 +4181,20 @@ C. Converting a curve25519 public key to an ed25519 public key
    [Recomputing the sign bit from the private key every time sounds
    rather strange and inefficient to me… —isis]
 
-   Alternatively, without access to the corresponding ed25519 private
-   key, one may use the Montgomery u-coordinate to recover the
-   Montgomery v-coordinate by computing the right-hand side of the
-   Montgomery curve equation:
+   Note that in addition to its coordinates, an expanded Ed25519 private key
+   also has a 32-byte random value, "prefix", used to compute internal `r`
+   values in the signature.  For security, this prefix value should be
+   derived deterministically from the curve25519 key.  The Tor
+   implementation derives it as SHA512(private_key | STR)[0..32], where
+   STR is the nul-terminated string:
+
+        "Derive high part of ed25519 key from curve25519 key\0"
+
+
+   On the client side, where there is no access to the curve25519 private
+   keys, one may use the curve25519 public key's Montgomery u-coordinate to
+   recover the Montgomery v-coordinate by computing the right-hand side of
+   the Montgomery curve equation:
 
          bv^2 = u(u^2 + au +1)
 
