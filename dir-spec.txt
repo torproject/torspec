@@ -1331,6 +1331,8 @@ Table of Contents
         is first added after the relay has been running for at least 24
         hours.
 
+        (Introduced in tor-0.4.6.1-alpha)
+
     "hidserv-rend-relayed-cells" SP NUM SP key=val SP key=val ... NL
         [At most once.]
     "hidserv-rend-v3-relayed-cells" SP NUM SP key=val SP key=val ... NL
@@ -1351,6 +1353,8 @@ Table of Contents
         integer and included as 'NUM'. Note that the overall reported
         value can be negative.
 
+        (Introduced in tor-0.4.6.1-alpha)
+
     "hidserv-dir-onions-seen" SP NUM SP key=val SP key=val ... NL
         [At most once.]
     "hidserv-dir-v3-onions-seen" SP NUM SP key=val SP key=val ... NL
@@ -1365,6 +1369,8 @@ Table of Contents
         possibly with different parameters as reported in the key=val part
         of this line. Note that the overall reported value can be
         negative.
+
+        (Introduced in tor-0.4.6.1-alpha)
 
     "transport" transportname address:port [arglist] NL
         [Any number.]
