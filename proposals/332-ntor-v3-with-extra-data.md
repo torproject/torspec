@@ -343,6 +343,8 @@ server messages.
        EXT_FIELD_LEN      [one byte]
        EXT_FIELD          [EXT_FIELD_LEN bytes]
 
+(`EXT_FIELD_LEN` may be zero, in which case EXT_FIELD is absent.)
+
 All parties MUST reject messages that are not well-formed per the
 rules above.
 

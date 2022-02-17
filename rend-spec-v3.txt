@@ -1550,6 +1550,7 @@ Table of contents:
    The EXT_FIELD_TYPE, EXT_FIELD_LEN, EXT_FIELD entries are reserved for
    extensions to the introduction protocol. Extensions with
    unrecognized EXT_FIELD_TYPE values must be ignored.
+   (`EXT_FIELD_LEN` may be zero, in which case EXT_FIELD is absent.)
 
    Unless otherwise specified in the documentation for an extension type:
       * Each extension type SHOULD be sent only once in a message.
