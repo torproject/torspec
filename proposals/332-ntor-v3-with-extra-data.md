@@ -338,20 +338,28 @@ We use the following meta-encoding for the contents of client and
 server messages.
 
     [Any number of times]:
-       TYPE     [one byte]
-       LEN      [one byte]
-       BODY     [LEN bytes]
-
-We do not specify specific TYPE semantics here; we leave those for
-other proposals.
+    EXTENSION
+       EXT_FIELD_TYPE     [one byte]
+       EXT_FIELD_LEN      [one byte]
+       EXT_FIELD          [EXT_FIELD_LEN bytes]
 
 All parties MUST reject messages that are not well-formed per the
 rules above.
 
-To avoid partitioning, clients MUST reject messages with TYPEs that
-they do not recognize.  (Therefore, whenever we specify a new server
-message TYPE, we must say that it can only be included if the client
-signals that it understands it.)
+We do not specify specific TYPE semantics here; we leave those for
+other proposals and specifications.
+
+Parties MUST ignore extensions with `EXT_FIELD_TYPE` bodies they do not
+recognize.
+
+Unless otherwise specified in the documentation for an extension type:
+* Each extension type SHOULD be sent only once in a message.
+* Parties MUST ignore any occurrences all occurrences of an extension
+  with a given type after the first such occurrence.
+* Extensions SHOULD be sent in numerically ascending order by type.
+
+(The above extension sorting and multiplicity rules are only defaults;
+they may be overridden in the description of individual extensions.)
 
 # A.3 How much space is available?
 
