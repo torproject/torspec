@@ -1548,8 +1548,17 @@ Table of contents:
    authentication key.
 
    The EXT_FIELD_TYPE, EXT_FIELD_LEN, EXT_FIELD entries are reserved for
-   future extensions to the introduction protocol. Extensions with
+   extensions to the introduction protocol. Extensions with
    unrecognized EXT_FIELD_TYPE values must be ignored.
+   (`EXT_FIELD_LEN` may be zero, in which case EXT_FIELD is absent.)
+
+   Unless otherwise specified in the documentation for an extension type:
+      * Each extension type SHOULD be sent only once in a message.
+      * Parties MUST ignore any occurrences all occurrences of an extension
+        with a given type after the first such occurrence.
+      * Extensions SHOULD be sent in numerically ascending order by type.
+   (The above extension sorting and multiplicity rules are only defaults;
+   they may be overridden in the descriptions of individual extensions.)
 
    The HANDSHAKE_AUTH field contains the MAC of all earlier fields in
    the cell using as its key the shared per-circuit material ("KH")
@@ -1685,6 +1694,10 @@ Table of contents:
    Older versions of Tor send back an empty INTRO_ESTABLISHED cell instead.
    Services must accept an empty INTRO_ESTABLISHED cell from a legacy relay.
 
+   The same rules for multiplicity, ordering, and handling unknown types
+   apply to the extension fields here as described [EST_INTRO] above.
+
+
 3.2. Sending an INTRODUCE1 cell to the introduction point. [SEND_INTRO1]
 
    In order to participate in the introduction protocol, a client must
@@ -1737,6 +1750,10 @@ Table of contents:
    INTRODUCE2 cell with exactly the same contents to the service, and sends an
    INTRODUCE_ACK response to the client.
 
+   The same rules for multiplicity, ordering, and handling unknown types
+   apply to the extension fields here as described [EST_INTRO] above.
+
+
 3.2.2. INTRODUCE_ACK cell format. [INTRO_ACK]
 
    An INTRODUCE_ACK cell has the following fields:
@@ -1754,6 +1771,10 @@ Table of contents:
      [00 01] -- Failure: service ID not recognized
      [00 02] -- Bad message format
      [00 03] -- Can't relay cell to service
+
+   The same rules for multiplicity, ordering, and handling unknown types
+   apply to the extension fields here as described [EST_INTRO] above.
+
 
 3.3. Processing an INTRODUCE2 cell at the hidden service. [PROCESS_INTRO2]
 
@@ -1830,6 +1851,10 @@ Table of contents:
      * The second half of a handshake to authenticate and establish a
        shared key with the hidden service client.
      * A set of shared keys to use for end-to-end encryption.
+
+   The same rules for multiplicity, ordering, and handling unknown types
+   apply to the extension fields here as described [EST_INTRO] above.
+
 
 3.3.1. Introduction handshake encryption requirements [INTRO-HANDSHAKE-REQS]
 
