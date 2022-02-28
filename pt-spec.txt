@@ -1,4 +1,3 @@
-
              Pluggable Transport Specification (Version 1)
 
 Abstract
@@ -668,7 +667,7 @@ Table of Contents
 
    The format of the message:
 
-      STATUS TRANSPORT=Transport <K_1>=<V_1> [<K_2>=<V_2>, ...]
+      STATUS TRANSPORT=Transport <K_1>=<V_1> [<K_2>=<V_2> ...]
 
    The TRANSPORT value indicates a hint on what the PT is such has the name or
    the protocol used for instance. As an example, obfs4proxy would use
