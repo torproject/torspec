@@ -208,6 +208,21 @@ Table of Contents
     First-appeared: 0.4.6.8
     Deprecated: 0.4.7.3-alpha-dev
 
+    "overload_onionskin_ntor_scale_percent" -- This value is a percentage of
+    how many onionskin ntor drop over N seconds we accept before reporting the
+    overload general state. It is scaled by a factor of 1000 in order to be
+    able to represent decimal point. As an example, a value of 1000 means 1%.
+    Min: 0. Max: 100000. Default: 1000.
+    First-appeared: 0.4.7.5-alpha
+
+    "overload_onionskin_ntor_period_secs" -- This value is the period in
+    seconds of the onionskin ntor overload measurements (the N in the
+    "overload_onionskin_ntor_scale_percent" parameter). For this amount of
+    seconds, we will gather onionskin ntor statistics and at the end, we'll do
+    an assessment on the overload general signal.
+    Min: 0. Max: 2147483647. Default: 21600 (6 hours)
+    First-appeared: 0.4.7.5-alpha
+
 8. V3 onion service parameters
 
     "hs_intro_min_introduce2", "hs_intro_max_introduce2" --
