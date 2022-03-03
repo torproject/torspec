@@ -3430,14 +3430,21 @@ Table of Contents
               "WRITTEN=" BytesWritten SP "TIME=" Time SP
               "DELIVERED_READ=" DeliveredBytesRead SP
               "OVERHEAD_READ=" OverheadBytesRead SP
-              "DELIVERED_WRITTEN=" DeliveredBytesWritten CRLF
+              "DELIVERED_WRITTEN=" DeliveredBytesWritten SP
               "OVERHEAD_WRITTEN=" OverheadBytesWritten SP
+              "SS=" SlowStartState SP
+              "CWND=" CWNDCells SP
+              "RTT=" RTTMilliseconds SP
+              "MIN_RTT=" RTTMilliseconds CRLF
      BytesRead = 1*DIGIT
      BytesWritten = 1*DIGIT
      OverheadBytesRead = 1*DIGIT
      OverheadBytesWritten = 1*DIGIT
      DeliveredBytesRead = 1*DIGIT
      DeliveredBytesWritten = 1*DIGIT
+     SlowStartState = 0 or 1
+     CWNDCells = 1*DIGIT
+     RTTMilliseconds= 1*DIGIT
      Time = ISOTime2Frac
 
   BytesRead and BytesWritten are the number of bytes read and written
@@ -3465,6 +3472,16 @@ Table of Contents
   The Time field is provided only in versions 0.3.2.1-alpha and later. It
   records when Tor created the bandwidth event.
 
+  The SS, CWND, RTT, and MIN_RTT fields are present only if the circuit
+  has negotiated congestion control to an onion service or Exit hop (any
+  intermediate leaky pipe congestion control hops are not examined here).
+  SS provides an indication if the circuit is in slow start (1), or not (0).
+  CWND is the size of the congestion window in terms of number of cells.
+  RTT is the N_EWMA smoothed current RTT value, and MIN_RTT is the minimum
+  RTT value of the circuit. The SS and CWND fields apply only to the
+  upstream direction of the circuit. The slow start state and CWND values
+  of the other endpoint may be different.
+
   These events are generated about once per second per circuit; no events
   are generated for circuits that had no attached stream writing or
   reading.
@@ -3473,6 +3490,8 @@ Table of Contents
 
   [DELIVERED_READ, OVERHEAD_READ, DELIVERED_WRITTEN, and OVERHEAD_WRITTEN
   were added in Tor 0.3.4.0-alpha]
+
+  [SS, CWND, RTT, and MIN_RTT were added in Tor 0.4.7.5-alpha]
 
 4.1.23. Per-circuit cell stats
 
