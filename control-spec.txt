@@ -2425,6 +2425,14 @@ Table of Contents
                "DETACHED"     / ; Detached from circuit; still retriable
                "CONTROLLER_WAIT"  ; Waiting for controller to use ATTACHSTREAM
                                   ; (new in 0.4.5.1-alpha)
+               "XOFF_SENT"  ; XOFF has been sent for this stream
+                            ; (new in 0.4.7.5-alpha)
+               "XOFF_RECV"  ; XOFF has been received for this stream
+                            ; (new in 0.4.7.5-alpha)
+               "XON_SENT"  ; XON has been sent for this stream
+                           ; (new in 0.4.7.5-alpha)
+               "XON_RECV"  ; XON has been received for this stream
+                           ; (new in 0.4.7.5-alpha)
 
        Target = TargetAddress ":" Port
        Port = an integer from 0 to 65535 inclusive
