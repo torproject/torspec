@@ -258,6 +258,7 @@ Proposals by number:
 335  An authority-only design for MiddleOnly [CLOSED]
 336  Randomized schedule for guard retries [OPEN]
 337  A simpler way to decide, "Is this guard usable?" [OPEN]
+338  Use an 8-byte timestamp in NETINFO cells [OPEN]
 
 
 Proposals by status:
@@ -300,6 +301,7 @@ Proposals by status:
    330  Modernizing authority contact entries
    336  Randomized schedule for guard retries
    337  A simpler way to decide, "Is this guard usable?"
+   338  Use an 8-byte timestamp in NETINFO cells
  ACCEPTED:
    265  Load Balancing with Overhead Parameters [for 0.2.9.x]
    275  Stop including meaningful "published" time in microdescriptor consensus [for 0.3.1.x-alpha]

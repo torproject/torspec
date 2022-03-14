@@ -42,6 +42,7 @@ for discussion.
 * [`330-authority-contact.md`](/proposals/330-authority-contact.md): Modernizing authority contact entries
 * [`336-randomize-guard-retries.md`](/proposals/336-randomize-guard-retries.md): Randomized schedule for guard retries
 * [`337-simpler-guard-usability.md`](/proposals/337-simpler-guard-usability.md): A simpler way to decide, "Is this guard usable?"
+* [`338-netinfo-y2038.md`](/proposals/338-netinfo-y2038.md): Use an 8-byte timestamp in NETINFO cells
 
 
 ## ACCEPTED proposals: slated for implementation

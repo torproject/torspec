@@ -255,4 +255,5 @@ Below are a list of proposals sorted by their proposal number.  See
 * [`335-middle-only-redux.md`](/proposals/335-middle-only-redux.md): An authority-only design for MiddleOnly [CLOSED]
 * [`336-randomize-guard-retries.md`](/proposals/336-randomize-guard-retries.md): Randomized schedule for guard retries [OPEN]
 * [`337-simpler-guard-usability.md`](/proposals/337-simpler-guard-usability.md): A simpler way to decide, "Is this guard usable?" [OPEN]
+* [`338-netinfo-y2038.md`](/proposals/338-netinfo-y2038.md): Use an 8-byte timestamp in NETINFO cells [OPEN]
 
