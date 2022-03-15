@@ -17,7 +17,6 @@ Table of Contents
     9. Denial-of-service parameters
     10. Padding-related parameters
     11. Guard-related parameters
-    12. Relay behavior
     X. Obsolete parameters
 
 1. Network protocol parameters
@@ -222,6 +221,18 @@ Table of Contents
     an assessment on the overload general signal.
     Min: 0. Max: 2147483647. Default: 21600 (6 hours)
     First-appeared: 0.4.7.5-alpha
+
+    "assume-reachable" -- If true, relays should publish descriptors
+    even when they cannot make a connection to their IPv4 ORPort.
+    Min: 0. Max: 1. Default: 0.
+    First appeared: 0.4.5.1-alpha.
+
+    "assume-reachable-ipv6" -- If true, relays should publish
+    descriptors even when they cannot make a connection to their IPv6
+    ORPort.
+    Min: 0. Max: 1. Default: 0.
+    First appeared: 0.4.5.1-alpha.
+
 
 8. V3 onion service parameters
 
@@ -438,19 +449,6 @@ Table of Contents
     from the sample.
     Min: 1. Max: 3650. Default: 20.
     First appeared: 0.3.0
-
-12. Relay behavior
-
-    "assume-reachable" -- If true, relays should publish descriptors
-    even when they cannot make a connection to their IPv4 ORPort.
-    Min: 0. Max: 1. Default: 0.
-    First appeared: 0.4.5.1-alpha.
-
-    "assume-reachable-ipv6" -- If true, relays should publish
-    descriptors even when they cannot make a connection to their IPv6
-    ORPort.
-    Min: 0. Max: 1. Default: 0.
-    First appeared: 0.4.5.1-alpha.
 
 X. Obsolete parameters
 
