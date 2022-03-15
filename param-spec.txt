@@ -233,6 +233,17 @@ Table of Contents
     Min: 0. Max: 1. Default: 0.
     First appeared: 0.4.5.1-alpha.
 
+    "exit_dns_timeout" -- The time in milliseconds an Exit sets libevent to
+    wait before it considers the DNS timed out. The corresponding libevent
+    option is "timeout:".
+    Min: 1. Max: 120000. Default: 1000 (1sec)
+    First appeared: 0.4.7.5-alpha.
+
+    "exit_dns_num_attempts" -- Number of resolving attempts an Exit sets
+    libevent which controls how many times libevent will retry until declaring
+    it an error (timeout). The corresponding libevent option is "attempts:".
+    Min: 0. Max: 255. Default: 2
+    First appeared: 0.4.7.5-alpha.
 
 8. V3 onion service parameters
 
