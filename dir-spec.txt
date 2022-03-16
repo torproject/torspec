@@ -711,7 +711,6 @@ Table of Contents
          - Any OOM invocation due to memory pressure
          - Any ntor onionskins are dropped
          - TCP port exhaustion
-         - DNS timeout reached
 
       The timestamp is when at least one metrics was detected. It should always
       be at the hour and thus, as an example, "2020-01-10 13:00:00" is an

@@ -43,6 +43,7 @@ state" which can be one or many of the following load metrics:
    - Any ntor onionskins are dropped
    - TCP port exhaustion
    - DNS timeout reached (X% of timeouts over Y seconds).
+     [Removed in tor-0.4.7.3-alpha]
    - CPU utilization of Tor's mainloop CPU core above 90% for 60 sec
      [Never implemented]
    - Control port overload (too many messages queued)
@@ -73,7 +74,7 @@ this 72 hour period restarts.
 
 The 'version' field is set to '1' for the initial implementation of this
 proposal which includes all the above overload metrics except from the CPU and
-control port overload. 
+control port overload.
 
 # 1.2. Token bucket size
 
