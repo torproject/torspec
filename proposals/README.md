@@ -52,7 +52,6 @@ might or might not have a specific timeframe planned for their
 implementation.
 
 * [`265-load-balancing-with-overhead.txt`](/proposals/265-load-balancing-with-overhead.txt): Load Balancing with Overhead Parameters
-* [`275-md-published-time-is-silly.txt`](/proposals/275-md-published-time-is-silly.txt): Stop including meaningful "published" time in microdescriptor consensus
 * [`282-remove-named-from-consensus.txt`](/proposals/282-remove-named-from-consensus.txt): Remove "Named" and "Unnamed" handling from consensus voting
 * [`285-utf-8.txt`](/proposals/285-utf-8.txt): Directory documents should be standardized as UTF-8
 * [`292-mesh-vanguards.txt`](/proposals/292-mesh-vanguards.txt): Mesh-based vanguards
@@ -225,6 +224,7 @@ necessary.
 * [`271-another-guard-selection.txt`](/proposals/271-another-guard-selection.txt): Another algorithm for guard selection
 * [`272-valid-and-running-by-default.txt`](/proposals/272-valid-and-running-by-default.txt): Listed routers should be Valid, Running, and treated as such
 * [`274-rotate-onion-keys-less.txt`](/proposals/274-rotate-onion-keys-less.txt): Rotate onion keys less frequently
+* [`275-md-published-time-is-silly.txt`](/proposals/275-md-published-time-is-silly.txt): Stop including meaningful "published" time in microdescriptor consensus
 * [`278-directory-compression-scheme-negotiation.txt`](/proposals/278-directory-compression-scheme-negotiation.txt): Directory Compression Scheme Negotiation
 * [`283-ipv6-in-micro-consensus.txt`](/proposals/283-ipv6-in-micro-consensus.txt): Move IPv6 ORPorts from microdescriptors to the microdesc consensus
 * [`284-hsv3-control-port.txt`](/proposals/284-hsv3-control-port.txt): Hidden Service v3 Control Port

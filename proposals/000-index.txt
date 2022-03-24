@@ -195,7 +195,7 @@ Proposals by number:
 272  Listed routers should be Valid, Running, and treated as such [CLOSED]
 273  Exit relay pinning for web services [RESERVE]
 274  Rotate onion keys less frequently [CLOSED]
-275  Stop including meaningful "published" time in microdescriptor consensus [ACCEPTED]
+275  Stop including meaningful "published" time in microdescriptor consensus [CLOSED]
 276  Report bandwidth with lower granularity in consensus documents [DEAD]
 277  Detect multiple relay instances running with same ID [OPEN]
 278  Directory Compression Scheme Negotiation [CLOSED]
@@ -304,7 +304,6 @@ Proposals by status:
    338  Use an 8-byte timestamp in NETINFO cells
  ACCEPTED:
    265  Load Balancing with Overhead Parameters [for 0.2.9.x]
-   275  Stop including meaningful "published" time in microdescriptor consensus [for 0.3.1.x-alpha]
    282  Remove "Named" and "Unnamed" handling from consensus voting [for 0.3.3.x]
    285  Directory documents should be standardized as UTF-8
    292  Mesh-based vanguards
@@ -408,6 +407,7 @@ Proposals by status:
    271  Another algorithm for guard selection [in 0.3.0.1-alpha]
    272  Listed routers should be Valid, Running, and treated as such [in 0.2.9.3-alpha, 0.2.9.4-alpha]
    274  Rotate onion keys less frequently [in 0.3.1.1-alpha]
+   275  Stop including meaningful "published" time in microdescriptor consensus [for 0.3.1.x-alpha] [in 0.4.7.3-alpha]
    278  Directory Compression Scheme Negotiation [in 0.3.1.1-alpha]
    283  Move IPv6 ORPorts from microdescriptors to the microdesc consensus [for 0.3.3.x] [in 0.3.3.1-alpha]
    284  Hidden Service v3 Control Port
