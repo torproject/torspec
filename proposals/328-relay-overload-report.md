@@ -41,6 +41,9 @@ state" which can be one or many of the following load metrics:
 
    - Any OOM invocation due to memory pressure
    - Any ntor onionskins are dropped
+     [Removed in tor-0.4.6.11 and 0.4.7.5-alpha]
+   - A certain ratio of ntor onionskins dropped.
+     [Added in tor-0.4.6.11 and 0.4.7.5-alpha]
    - TCP port exhaustion
    - DNS timeout reached (X% of timeouts over Y seconds).
      [Removed in tor-0.4.7.3-alpha]
