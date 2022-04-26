@@ -1805,7 +1805,7 @@ Table of Contents
     ClientBlob = Authorization data for the client, in an opaque format
                  specific to the authorization method (v2 only).
 
-    V3Key = The client's base32-encoded ed25519 public key, using only the key
+    V3Key = The client's base32-encoded x25519 public key, using only the key
             part of rend-spec-v3.txt section G.1.2 (v3 only).
 
   The server reply format is:
