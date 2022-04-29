@@ -3,7 +3,7 @@ Filename: 336-randomize-guard-retries.md
 Title: Randomized schedule for guard retries
 Author: Nick Mathewson
 Created: 2021-10-22
-Status: Open
+Status: Accepted
 ```
 
 # Introduction

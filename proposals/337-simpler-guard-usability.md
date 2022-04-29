@@ -3,7 +3,7 @@ Filename: 337-simpler-guard-usability.md
 Title: A simpler way to decide, "Is this guard usable?"
 Author: Nick Mathewson
 Created: 2021-10-22
-Status: Open
+Status: Accepted
 ```
 
 # Introduction

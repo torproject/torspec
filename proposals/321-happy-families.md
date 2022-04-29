@@ -3,7 +3,7 @@ Filename: 321-happy-families.md
 Title: Better performance and usability for the MyFamily option (v2)
 Author: Nick Mathewson
 Created: 27 May 2020
-Status: Open
+Status: Accepted
 ```
 
 ## Problem statement.

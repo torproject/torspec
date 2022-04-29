@@ -3,7 +3,7 @@ Filename: 338-netinfo-y2038.md
 Title: Use an 8-byte timestamp in NETINFO cells
 Author: Nick Mathewson
 Created: 2022-03-14
-Status: Open
+Status: Accepted
 ```
 
 # Introduction

@@ -33,16 +33,12 @@ for discussion.
 * [`308-counter-galois-onion.txt`](/proposals/308-counter-galois-onion.txt): Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography
 * [`309-optimistic-socks-in-tor.txt`](/proposals/309-optimistic-socks-in-tor.txt): Optimistic SOCKS Data
 * [`319-wide-everything.md`](/proposals/319-wide-everything.md): RELAY_FRAGMENT cells
-* [`321-happy-families.md`](/proposals/321-happy-families.md): Better performance and usability for the MyFamily option (v2)
 * [`322-dirport-linkspec.md`](/proposals/322-dirport-linkspec.md): Extending link specifiers to include the directory port
 * [`323-walking-onions-full.md`](/proposals/323-walking-onions-full.md): Specification for Walking Onions
 * [`324-rtt-congestion-control.txt`](/proposals/324-rtt-congestion-control.txt): RTT-based Congestion Control for Tor
 * [`325-packed-relay-cells.md`](/proposals/325-packed-relay-cells.md): Packed relay cells: saving space on small commands
 * [`326-tor-relay-well-known-uri-rfc8615.md`](/proposals/326-tor-relay-well-known-uri-rfc8615.md): The "tor-relay" Well-Known Resource Identifier
 * [`330-authority-contact.md`](/proposals/330-authority-contact.md): Modernizing authority contact entries
-* [`336-randomize-guard-retries.md`](/proposals/336-randomize-guard-retries.md): Randomized schedule for guard retries
-* [`337-simpler-guard-usability.md`](/proposals/337-simpler-guard-usability.md): A simpler way to decide, "Is this guard usable?"
-* [`338-netinfo-y2038.md`](/proposals/338-netinfo-y2038.md): Use an 8-byte timestamp in NETINFO cells
 
 
 ## ACCEPTED proposals: slated for implementation
@@ -58,7 +54,10 @@ implementation.
 * [`311-relay-ipv6-reachability.txt`](/proposals/311-relay-ipv6-reachability.txt): Tor Relay IPv6 Reachability
 * [`312-relay-auto-ipv6-addr.txt`](/proposals/312-relay-auto-ipv6-addr.txt): Tor Relay Automatic IPv6 Address Discovery
 * [`313-relay-ipv6-stats.txt`](/proposals/313-relay-ipv6-stats.txt): Tor Relay IPv6 Statistics
-* [`332-ntor-v3-with-extra-data.md`](/proposals/332-ntor-v3-with-extra-data.md): Ntor protocol with extra data, version 3
+* [`321-happy-families.md`](/proposals/321-happy-families.md): Better performance and usability for the MyFamily option (v2)
+* [`336-randomize-guard-retries.md`](/proposals/336-randomize-guard-retries.md): Randomized schedule for guard retries
+* [`337-simpler-guard-usability.md`](/proposals/337-simpler-guard-usability.md): A simpler way to decide, "Is this guard usable?"
+* [`338-netinfo-y2038.md`](/proposals/338-netinfo-y2038.md): Use an 8-byte timestamp in NETINFO cells
 
 
 ## FINISHED proposals: implemented, specs not merged
@@ -67,6 +66,7 @@ These proposals are implemented in some version of Tor; the proposals
 themselves still need to be merged into the specifications proper.
 
 * [`260-rend-single-onion.txt`](/proposals/260-rend-single-onion.txt): Rendezvous Single Onion Services
+* [`332-ntor-v3-with-extra-data.md`](/proposals/332-ntor-v3-with-extra-data.md): Ntor protocol with extra data, version 3
 * [`333-vanguards-lite.md`](/proposals/333-vanguards-lite.md): Vanguards lite
 
 

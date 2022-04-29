@@ -241,7 +241,7 @@ Proposals by number:
 318  Limit protover values to 0-63 [CLOSED]
 319  RELAY_FRAGMENT cells [OPEN]
 320  Removing TAP usage from v2 onion services [REJECTED]
-321  Better performance and usability for the MyFamily option (v2) [OPEN]
+321  Better performance and usability for the MyFamily option (v2) [ACCEPTED]
 322  Extending link specifiers to include the directory port [OPEN]
 323  Specification for Walking Onions [OPEN]
 324  RTT-based Congestion Control for Tor [OPEN]
@@ -252,13 +252,13 @@ Proposals by number:
 329  Overcoming Tor's Bottlenecks with Traffic Splitting [DRAFT]
 330  Modernizing authority contact entries [OPEN]
 331  Res tokens: Anonymous Credentials for Onion Service DoS Resilience [DRAFT]
-332  Ntor protocol with extra data, version 3 [ACCEPTED]
+332  Ntor protocol with extra data, version 3 [FINISHED]
 333  Vanguards lite [FINISHED]
 334  A Directory Authority Flag To Mark Relays As Middle-only [SUPERSEDED]
 335  An authority-only design for MiddleOnly [CLOSED]
-336  Randomized schedule for guard retries [OPEN]
-337  A simpler way to decide, "Is this guard usable?" [OPEN]
-338  Use an 8-byte timestamp in NETINFO cells [OPEN]
+336  Randomized schedule for guard retries [ACCEPTED]
+337  A simpler way to decide, "Is this guard usable?" [ACCEPTED]
+338  Use an 8-byte timestamp in NETINFO cells [ACCEPTED]
 
 
 Proposals by status:
@@ -292,16 +292,12 @@ Proposals by status:
    308  Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography
    309  Optimistic SOCKS Data
    319  RELAY_FRAGMENT cells
-   321  Better performance and usability for the MyFamily option (v2)
    322  Extending link specifiers to include the directory port
    323  Specification for Walking Onions
    324  RTT-based Congestion Control for Tor
    325  Packed relay cells: saving space on small commands
    326  The "tor-relay" Well-Known Resource Identifier
    330  Modernizing authority contact entries
-   336  Randomized schedule for guard retries
-   337  A simpler way to decide, "Is this guard usable?"
-   338  Use an 8-byte timestamp in NETINFO cells
  ACCEPTED:
    265  Load Balancing with Overhead Parameters [for 0.2.9.x]
    282  Remove "Named" and "Unnamed" handling from consensus voting [for 0.3.3.x]
@@ -310,7 +306,10 @@ Proposals by status:
    311  Tor Relay IPv6 Reachability
    312  Tor Relay Automatic IPv6 Address Discovery
    313  Tor Relay IPv6 Statistics
-   332  Ntor protocol with extra data, version 3
+   321  Better performance and usability for the MyFamily option (v2)
+   336  Randomized schedule for guard retries
+   337  A simpler way to decide, "Is this guard usable?"
+   338  Use an 8-byte timestamp in NETINFO cells
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process
@@ -321,6 +320,7 @@ Proposals by status:
    290  Continuously update consensus methods
  FINISHED:
    260  Rendezvous Single Onion Services [in 0.2.9.3-alpha]
+   332  Ntor protocol with extra data, version 3
    333  Vanguards lite [in 0.4.7.1-alpha]
  CLOSED:
    101  Voting on the Tor Directory System [in 0.2.0.x]
