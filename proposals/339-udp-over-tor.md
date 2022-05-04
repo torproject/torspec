@@ -100,7 +100,7 @@ a while, to know when we can treat a stream as definitively gone-away.)
 
 Optimistic traffic is permitted as with TCP streams: a client MAY send
 `DATAGRAM` messages immediately after its `BIND_UDP` message, without
-waiting for a `CONNECTED`.  These are dropped if the `BIND` fails.
+waiting for a `CONNECTED`.  These are dropped if the `BIND_UDP` fails.
 
 Clients and exits MAY drop incoming datagrams if their stream
 or circuit buffers are too full.  (Once a DATAGRAM message has been sent
@@ -249,7 +249,7 @@ Because of security concerns I don't suggest that we support unconnected
 sockets in the first version of this protocol.  But _if we did_, here's how
 I'd suggest we do it.
 
-1. We would add a new "`FLAG_UNCONNECTED`" flag for `BIND_UDP` messaages.
+1. We would add a new "`FLAG_UNCONNECTED`" flag for `BIND_UDP` messages.
 
 2. We would designate the ANY addresses 0.0.0.0:0 and [::]:0 as permitted in
    `BIND_UDP` messages, and as indicating unconnected sockets.  These would
@@ -278,7 +278,6 @@ p4u accept PortList
 p6u accept PortList
 ```
 
-
 (We need to include the policies in relay descriptors so that the
 authorities can include them in the microdescriptors when voting.)
 
@@ -291,7 +290,6 @@ This proposal would also add a new subprotocol, "Datagram".  Only relays
 that implement this proposal would advertise "Datagram=1".  Doing so
 would not necessarily mean that they permitted datagram streams, if
 their exit policies did not say so.
-
 
 
 # MTU notes and issues
