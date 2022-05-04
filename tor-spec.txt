@@ -2324,6 +2324,10 @@ see tor-design.pdf.
           This subprotocol version is described in proposal 311, and
           implemented in Tor 0.4.5.1-alpha.
 
+   "4" -- support the ntorv3 (version 3) key exchange and all features in
+          0.4.7.3-alpha. This adds a new CREATE2 cell type. See proposal 332
+          for more details.
+
 9.4. "HSIntro"
 
    The "HSIntro" protocol handles introduction points.
