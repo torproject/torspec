@@ -1688,6 +1688,8 @@ see tor-design.pdf.
 
         41..42 -- Used for circuit padding; see Section 3 of padding-spec.txt.
 
+        43..44 -- Used for flow control; see Section 4 of prop324.
+
    Commands labelled as "forward" must only be sent by the originator
    of the circuit. Commands labelled as "backward" must only be sent by
    other nodes in the circuit back to the originator. Commands marked
