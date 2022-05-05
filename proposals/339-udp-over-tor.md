@@ -63,16 +63,17 @@ _unconnected_ socket support.
 
 ## Overview
 
-We reserve two new relay commands: `BIND_UDP` and `DATAGRAM`.
+We reserve three new relay commands: `CONNECT_UDP`, `CONNECTED_UDP` and
+`DATAGRAM`.
 
-The `BIND_UDP` command is sent by a client to an exit relay to tell it
+The `CONNECT_UDP` command is sent by a client to an exit relay to tell it
 to open a new UDP stream "connected" to a targeted address and UDP port.
 The same restrictions apply as for CONNECT cells: the target must be
 permitted by the relay's exit policy, the target must not be private,
 localhost, or ANY, the circuit must appear to be multi-hop, there must
 not be a stream with the same ID on the same circuit, and so on.
 
-On success, the relay replies with a `CONNECTED` cell telling the client
+On success, the relay replies with a `CONNECTED_UDP` cell telling the client
 the IP address it is connected to, and which IP address and port (on the
 relay) it has bound to.  On failure, the relay replies immediately with
 an `END` cell.
@@ -99,8 +100,8 @@ response to resource exhaustion, time-out signals, or (TODO what else?).
 a while, to know when we can treat a stream as definitively gone-away.)
 
 Optimistic traffic is permitted as with TCP streams: a client MAY send
-`DATAGRAM` messages immediately after its `BIND_UDP` message, without
-waiting for a `CONNECTED`.  These are dropped if the `BIND_UDP` fails.
+`DATAGRAM` messages immediately after its `CONNECT_UDP` message, without
+waiting for a `CONNECTED_UDP`.  These are dropped if the `CONNECT_UDP` fails.
 
 Clients and exits MAY drop incoming datagrams if their stream
 or circuit buffers are too full.  (Once a DATAGRAM message has been sent
@@ -149,15 +150,15 @@ passing how we could extend these messages to support unconnected UDP
 sockets in the future.
 
 
-### BIND_UDP
+### CONNECT_UDP
 
 ```
-/* Tells an exit to bind a UDP port for connecting to a new target
+/* Tells an exit to connect a UDP port for connecting to a new target
    address.  The stream ID is chosen by the client, and is part of
    the relay header.
 */
 
-struct bind_udp_body {
+struct connect_udp_body {
    /* As in BEGIN cells. */
    u32 flags;
    /* Tag for union below. */
@@ -167,9 +168,9 @@ struct bind_udp_body {
    /* The address to connect to. */
    union address[addr_type] with length addr_len {
       T_IPV4: u32 ipv4;
-      T_IPV6: u128 ipv6;
+      T_IPV6: u8 ipv6[16];
       T_HOSTNAME: nulterm name
-   }
+   };
    u16 port;
    // The rest is ignored.
 
@@ -177,9 +178,9 @@ struct bind_udp_body {
    // research.
 }
 /* Address types */
-const T_HOSTNAME = 1;
-const T_IPV4 = 4;
-const T_IPV6 = 6;
+const T_HOSTNAME = 0x01;
+const T_IPV4     = 0x04;
+const T_IPV6     = 0x06;
 
 /* As in BEGIN cells: these control how hostnames are interpreted.
    Clients MUST NOT send unrecognized flags; relays MUST ignore them.
@@ -190,19 +191,19 @@ const FLAG_IPV4_NOT_OKAY  = 0x02;
 const FLAG_IPV6_PREFERRED = 0x04;
 ```
 
-### CONNECTED
+### CONNECTED_UDP
 
-A CONNECTED cell sent in response to a BIND_UDP cell has the following
+A CONNECTED_UDP cell sent in response to a CONNECT_UDP cell has the following
 format.
 
 ```
 struct udp_connected_body {
-   /* 5 bytes to distinguish from other CONNECTED cells.  This is not
+   /* 5 bytes to distinguish from other CONNECTED_UDP cells.  This is not
     * strictly necessary, since we can distinguish by context, but
     * it's nice to have a way to tell them apart at the parsing stage.
     */
-   u32 zero in [0];
-   u8 ff in [0xFF];
+   u32 zero IN [0];
+   u8 ff IN [0xFF];
    /* The address that the relay has bound locally.  This might not
     * be an address that is advertised in the relay's descriptor. */
    struct address our_address;
@@ -214,19 +215,20 @@ struct udp_connected_body {
    // research.
 }
 
-/* Note that this is a subset of the allowable address parts of a bind_udp
+/* Note that this is a subset of the allowable address parts of a CONNECT_UDP 
    message */
 struct address {
-   u8 tag in [T_IPV4, T_IPV6];
+   u8 tag IN [T_IPV4, T_IPV6];
    u8 len;
    union addr[tag] with length len {
-      T_IPV4: u32 ipv4; u16 port;
-      T_IPV6: u128 ipv6; u16 port;
-   }
+      T_IPV4: u32 ipv4;
+      T_IPV6: u8 ipv6[16];
+   };
+   u16 port;
 }
 ```
 
-### DATAGRAM_BODY
+### DATAGRAM
 
 ```
 struct datagram_body {
@@ -249,15 +251,15 @@ Because of security concerns I don't suggest that we support unconnected
 sockets in the first version of this protocol.  But _if we did_, here's how
 I'd suggest we do it.
 
-1. We would add a new "`FLAG_UNCONNECTED`" flag for `BIND_UDP` messages.
+1. We would add a new "`FLAG_UNCONNECTED`" flag for `CONNECT_UDP` messages.
 
 2. We would designate the ANY addresses 0.0.0.0:0 and [::]:0 as permitted in
-   `BIND_UDP` messages, and as indicating unconnected sockets.  These would
+   `CONNECT_UDP` messages, and as indicating unconnected sockets.  These would
    be only permitted along with the `FLAG_UNCONNECTED` flag, and not
    permitted otherwise.
 
 3. We would designate the ANY addresses above as permitted for the
-   `their_address` field in the `CONNECTED` message, in the case when
+   `their_address` field in the `CONNECTED_UDP` message, in the case when
    `FLAG_UNCONNECTED` was used.
 
 4. We would define a new `DATAGRAM` message format for unconnected streams,
