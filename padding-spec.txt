@@ -283,10 +283,18 @@ Table of Contents
       - Default: 14000
 
     * nf_conntimeout_clients
-      - The number of seconds to keep circuits opened and available for
-        clients to use. Note that the actual client timeout is randomized
-        uniformly from this value to twice this value. This governs client
-        OR conn lifespan. Reduced padding clients use half the consensus
+      - The number of seconds to keep never-used circuits opened and
+        available for clients to use. Note that the actual client timeout is
+        randomized uniformly from this value to twice this value.
+      - The number of seconds to keep idle (not currently used) canonical
+        channels are open and available. (We do this to ensure a sufficient
+        time duration of padding, which is the ultimate goal.)
+      - This value is also used to determine how long, after a port has been
+        used, we should attempt to keep building predicted circuits for that
+        port. (See path-spec.txt section 2.1.1.)  This behavior was
+        originally added to work around implementation limitations, but it
+        serves as a reasonable default regardless of implementation.
+      - For all use cases, reduced padding clients use half the consensus
         value.
       - Default: 1800
 
