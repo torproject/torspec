@@ -252,6 +252,13 @@ Table of Contents
   CELL_PADDING_NEGOTIATE to instruct the relay not to pad, and then does not
   send any further padding itself.
 
+  Currently, clients negotiate padding only when a channel is created,
+  immediately after sending their NETINFO cell.  Recipients SHOULD, however,
+  accept padding negotiation messages at any time.
+
+  Clients and bridges MUST reject padding negotiation messages from relays,
+  and close the channel if they receive one.
+
 2.6. Consensus Parameters Governing Behavior
 
   Connection-level padding is controlled by the following consensus parameters:
