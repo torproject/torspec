@@ -180,6 +180,16 @@ Table of Contents
   the event that it is idle in that direction, and will always transmit a
   packet before the minimum 10 second inactive timeout.
 
+  (In practice, an implementation may not be able to determine when,
+  exactly, a cell is sent on a given channel.  For example, even though the
+  cell has been given to the kernel via a call to `send(2)`, the kernel may
+  still be buffering that cell.  In cases such as these, implementations
+  should use a reasonable proxy for the time at which a cell is sent: for
+  example, when the cell is queued.  If this strategy is used,
+  implementations should try to observe the innermost (closest to the wire)
+  queue that the practically can, and if this queue is already nonempty,
+  padding should not be scheduled until after the queue does become empty.)
+
 2.3. Padding Cell Timeout Distribution Statistics
 
   To limit the amount of padding sent, instead of sampling each endpoint
