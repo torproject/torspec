@@ -143,6 +143,12 @@ Table of Contents
   user traffic in that time period is multiplexed over a single connection
   (as it is with Tor).
 
+  Though flow measurement in principle can be bidirectional (counting cells
+  sent in both directions between a pair of IPs) or unidirectional (counting
+  only cells sent from one IP to another), we assume for safety that all
+  measurement is unidirectional, and so traffic must be sent by both parties
+  in order to prevent record splitting.
+
 2.2. Implementation
 
   Tor clients currently maintain one TLS connection to their Guard node to
@@ -154,35 +160,31 @@ Table of Contents
   connections, and pad them, but otherwise not pad between normal relays.
 
   Both clients and Guards will maintain a timer for all application (ie:
-  non-directory) TLS connections. Every time a non-padding packet is sent or
-  received by either end, that endpoint will sample a timeout value from
-  between 1.5 seconds and 9.5 seconds using the max(X,X) distribution
-  described in Section 2.3. The time range is subject to consensus
+  non-directory) TLS connections. Every time a padding packet sent by an
+  endpoint, that endpoint will sample a timeout value from
+  the max(X,X) distribution described in Section 2.3. The default
+  range is from 1.5 seconds to 9.5 seconds time range, subject to consensus
   parameters as specified in Section 2.6.
 
-  If the connection becomes active for any reason before this timer
-  expires, the timer is reset to a new random value between 1.5 and 9.5
-  seconds. If the connection remains inactive until the timer expires, a
-  single CELL_PADDING cell will be sent on that connection.
+  (The timing is randomized to avoid making it obvious which cells are
+  padding.)
 
-  In this way, the connection will only be padded in the event that it is
-  idle, and will always transmit a packet before the minimum 10 second inactive
-  timeout.
+  If another cell is sent for any reason before this timer expires, the timer
+  is reset to a new random value.
+
+  If the connection remains inactive until the timer expires, a
+  single CELL_PADDING cell will be sent on that connection (which will
+  also start a new timer).
+
+  In this way, the connection will only be padded in a given direction in
+  the event that it is idle in that direction, and will always transmit a
+  packet before the minimum 10 second inactive timeout.
 
 2.3. Padding Cell Timeout Distribution Statistics
 
-  It turns out that because the padding is bidirectional, and because both
-  endpoints are maintaining timers, this creates the situation where the time
-  before sending a padding packet in either direction is actually
-  min(client_timeout, server_timeout).
-
-  If client_timeout and server_timeout are uniformly sampled, then the
-  distribution of min(client_timeout,server_timeout) is no longer uniform, and
-  the resulting average timeout (Exp[min(X,X)]) is much lower than the
-  midpoint of the timeout range.
-
-  To compensate for this, instead of sampling each endpoint timeout uniformly,
-  we instead sample it from max(X,X), where X is uniformly distributed.
+  To limit the amount of padding sent, instead of sampling each endpoint
+  timeout uniformly, we instead sample it from max(X,X), where X is
+  uniformly distributed.
 
   If X is a random variable uniform from 0..R-1 (where R=high-low), then the
   random variable Y = max(X,X) has Prob(Y == i) = (2.0*i + 1)/(R*R).
@@ -206,9 +208,6 @@ Table of Contents
      15000   7499.5    7995       4999.5           9999.5
      20000   9900.5    10661      6666.2           13332.8
 
-  In this way, we maintain the property that the midpoint of the timeout range
-  is the expected mean time before a padding packet is sent in either
-  direction.
 
 2.4. Maximum overhead bounds
 
