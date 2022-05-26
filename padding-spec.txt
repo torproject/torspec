@@ -306,6 +306,9 @@ Table of Contents
         serves as a reasonable default regardless of implementation.
       - For all use cases, reduced padding clients use half the consensus
         value.
+      - Implementations MAY mark circuits held open past the reduced padding
+        quantity (half the consensus value) as "not to be used for streams",
+        to prevent their use from becoming a distinguisher.
       - Default: 1800
 
     * nf_pad_before_usage
