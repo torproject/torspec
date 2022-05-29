@@ -73,6 +73,25 @@ bHzOT41w56KHh+w6TYwUhN4KrGwPWQWJX04/+tw/+RU
 
 The base64 encoded ed25519 public master key can be found in the file named "fingerprint-ed25519" located in the Tor data directory on the relay.
 
+## /.well-known/tor-relay/hashed-bridge-rsa-fingerprint.txt
+
+* The file contains one or more SHA1 hashed Tor bridge SHA1 fingerprints operated by the entity in control of this website.
+* Each line contains one hashed fingerprint.
+* The file may contain comments (starting with #).
+* Non-comment lines must be exactly 40 characters long and consist of the following characters [a-fA-F0-9].
+* Hashed fingerprints are not case-sensitive.
+* Each hashed fingerprint MUST appear at most once.
+* The file MUST not be larger than one MByte.
+* The file MUST NOT contain fingerprints of Tor relays.
+* The content MUST be a media type of "text/plain".
+
+Example file content:
+
+```
+# we operate these Tor bridges
+1234567890123456789012345678901234567ABC
+4234567890123456789012345678901234567890
+```
 
 # Change Controller
 
