@@ -3,7 +3,7 @@ Filename: 339-udp-over-tor.md
 Title: UDP traffic over Tor
 Author: Nick Mathewson
 Created: 11 May 2020
-Status: Draft
+Status: Accepted
 ```
 
 # Introduction

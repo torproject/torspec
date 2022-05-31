@@ -259,7 +259,7 @@ Proposals by number:
 336  Randomized schedule for guard retries [ACCEPTED]
 337  A simpler way to decide, "Is this guard usable?" [ACCEPTED]
 338  Use an 8-byte timestamp in NETINFO cells [ACCEPTED]
-339  UDP traffic over Tor [DRAFT]
+339  UDP traffic over Tor [ACCEPTED]
 
 
 Proposals by status:
@@ -270,7 +270,6 @@ Proposals by status:
    327  A First Take at PoW Over Introduction Circuits
    329  Overcoming Tor's Bottlenecks with Traffic Splitting
    331  Res tokens: Anonymous Credentials for Onion Service DoS Resilience
-   339  UDP traffic over Tor
  NEEDS-REVISION:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
@@ -312,6 +311,7 @@ Proposals by status:
    336  Randomized schedule for guard retries
    337  A simpler way to decide, "Is this guard usable?"
    338  Use an 8-byte timestamp in NETINFO cells
+   339  UDP traffic over Tor
  META:
    000  Index of Tor Proposals
    001  The Tor Proposal Process

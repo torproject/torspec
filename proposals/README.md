@@ -58,6 +58,7 @@ implementation.
 * [`336-randomize-guard-retries.md`](/proposals/336-randomize-guard-retries.md): Randomized schedule for guard retries
 * [`337-simpler-guard-usability.md`](/proposals/337-simpler-guard-usability.md): A simpler way to decide, "Is this guard usable?"
 * [`338-netinfo-y2038.md`](/proposals/338-netinfo-y2038.md): Use an 8-byte timestamp in NETINFO cells
+* [`339-udp-over-tor.md`](/proposals/339-udp-over-tor.md): UDP traffic over Tor
 
 
 ## FINISHED proposals: implemented, specs not merged
@@ -106,7 +107,6 @@ discussion.
 * [`327-pow-over-intro.txt`](/proposals/327-pow-over-intro.txt): A First Take at PoW Over Introduction Circuits
 * [`329-traffic-splitting.txt`](/proposals/329-traffic-splitting.txt): Overcoming Tor's Bottlenecks with Traffic Splitting
 * [`331-res-tokens-for-anti-dos.md`](/proposals/331-res-tokens-for-anti-dos.md): Res tokens: Anonymous Credentials for Onion Service DoS Resilience
-* [`339-udp-over-tor.md`](/proposals/339-udp-over-tor.md): UDP traffic over Tor
 
 
 ## NEEDS-REVISION proposals: ideas that we can't implement as-is

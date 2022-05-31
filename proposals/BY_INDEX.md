@@ -256,5 +256,5 @@ Below are a list of proposals sorted by their proposal number.  See
 * [`336-randomize-guard-retries.md`](/proposals/336-randomize-guard-retries.md): Randomized schedule for guard retries [ACCEPTED]
 * [`337-simpler-guard-usability.md`](/proposals/337-simpler-guard-usability.md): A simpler way to decide, "Is this guard usable?" [ACCEPTED]
 * [`338-netinfo-y2038.md`](/proposals/338-netinfo-y2038.md): Use an 8-byte timestamp in NETINFO cells [ACCEPTED]
-* [`339-udp-over-tor.md`](/proposals/339-udp-over-tor.md): UDP traffic over Tor [DRAFT]
+* [`339-udp-over-tor.md`](/proposals/339-udp-over-tor.md): UDP traffic over Tor [ACCEPTED]
 
