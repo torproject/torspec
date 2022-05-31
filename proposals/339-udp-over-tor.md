@@ -198,12 +198,6 @@ format.
 
 ```
 struct udp_connected_body {
-   /* 5 bytes to distinguish from other CONNECTED_UDP cells.  This is not
-    * strictly necessary, since we can distinguish by context, but
-    * it's nice to have a way to tell them apart at the parsing stage.
-    */
-   u32 zero IN [0];
-   u8 ff IN [0xFF];
    /* The address that the relay has bound locally.  This might not
     * be an address that is advertised in the relay's descriptor. */
    struct address our_address;
@@ -216,7 +210,7 @@ struct udp_connected_body {
 }
 
 /* Note that this is a subset of the allowable address parts of a CONNECT_UDP 
-   message */
+ * message */
 struct address {
    u8 tag IN [T_IPV4, T_IPV6];
    u8 len;
@@ -233,8 +227,7 @@ struct address {
 ```
 struct datagram_body {
    /* The datagram body is the entire body of the message.
-      This length is in the relay message header.
-    */
+    * This length is in the relay message header. */
    u8 body[..];
 }
 ```
