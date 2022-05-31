@@ -1684,6 +1684,8 @@ see tor-design.pdf.
         14 -- RELAY_EXTEND2   [forward]             [control]
         15 -- RELAY_EXTENDED2 [backward]            [control]
 
+        16..18 -- Reserved for UDP; Not yet in use, see prop339.
+
         32..40 -- Used for hidden services; see rend-spec-{v2,v3}.txt.
 
         41..42 -- Used for circuit padding; see Section 3 of padding-spec.txt.
@@ -2435,3 +2437,11 @@ see tor-design.pdf.
    "2" -- supports congestion control by the Exits which implies a new SENDME
           format and algorithm. See proposal 324 for more details. Advertised
           in tor 0.4.7.3-alpha.
+
+9.13. "Datagram"
+
+   Describes the UDP protocol capabilities of a relay.
+
+   "1" -- [RESERVED] supports UDP by an Exit as in the relay command
+          CONNECT_UDP, CONNECTED_UDP and DATAGRAM. See proposal
+          339 for more details. (Not yet advertised, reserved)
