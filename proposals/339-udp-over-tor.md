@@ -169,7 +169,7 @@ struct connect_udp_body {
    union address[addr_type] with length addr_len {
       T_IPV4: u32 ipv4;
       T_IPV6: u8 ipv6[16];
-      T_HOSTNAME: nulterm name
+      T_HOSTNAME: hostname;
    };
    u16 port;
    // The rest is ignored.
@@ -190,6 +190,10 @@ const FLAG_IPV6_OKAY      = 0x01;
 const FLAG_IPV4_NOT_OKAY  = 0x02;
 const FLAG_IPV6_PREFERRED = 0x04;
 ```
+
+A "hostname" is a DNS hostname that can only contain ascii characters. It is
+NOT following the large and broad DNS syntax. These behaves exacly like BEGIN
+cell behave with regards to the hostname given.
 
 ### CONNECTED_UDP
 
