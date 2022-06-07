@@ -187,7 +187,7 @@ Table of Contents
   should use a reasonable proxy for the time at which a cell is sent: for
   example, when the cell is queued.  If this strategy is used,
   implementations should try to observe the innermost (closest to the wire)
-  queue that the practically can, and if this queue is already nonempty,
+  queue that they practically can, and if this queue is already nonempty,
   padding should not be scheduled until after the queue does become empty.)
 
 2.3. Padding Cell Timeout Distribution Statistics
