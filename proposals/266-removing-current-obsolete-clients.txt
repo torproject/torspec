@@ -110,7 +110,7 @@ Superseded-by: 264, 272.
 
 2.1. Dropping connections based on link protocols.
 
-   Tor versions before before 0.2.3.6-alpha use a renegotiation-based
+   Tor versions before 0.2.3.6-alpha use a renegotiation-based
    handshake instead of our current handshake.  We could detect these
    handshakes and close the connection at the relay side if the client
    attempts to renegotiate.
@@ -137,7 +137,7 @@ Superseded-by: 264, 272.
    behavior would probably be the same, though.)
 
    If we throttled connections rather than closing them, we'd only get
-   one connnection per authority per hour, but authorities would have to
+   one connection per authority per hour, but authorities would have to
    keep open a potentially huge number of sockets.
 
 2.2. Blocking circuit creation under certain circumstances
@@ -210,7 +210,7 @@ A. How to "pull the switch."
 
      TIME 0:
         Implement the client/relay side of proposal 264, backported
-        to every currently existant Tor version that we still
+        to every currently extant Tor version that we still
         support.
 
         At the same time, add support for the new consensus type to
@@ -227,7 +227,7 @@ A. How to "pull the switch."
 
 
      LATER:
-        At some point after nearly all clients and relays hav
+        At some point after nearly all clients and relays have
         upgraded to the versions released at Time 0 or later, we
         could make the switchover to publishing the new consensus
         type.
