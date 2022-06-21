@@ -144,20 +144,22 @@ measured by the RTT estimator, and if these heurtics detect a stall or a jump,
 we do not use that value to update RTT or BDP, nor do we update any congestion
 control algorithm information that round.
 
-If the time delta is 0, that is always treated as a clock stall.
+If the time delta is 0, that is always treated as a clock stall, the RTT is
+not used, congestion control is not updated, and this fact is cached globally.
 
-If we have measured at least 'cc_bwe_min' RTT values or we have successfully
-exited slow start, then every sendme ACK, the new candidate RTT is compared to
-the stored EWMA RTT. If the new RTT is either 5000 times larger than the EWMA
-RTT, or 5000 times smaller than the stored EWMA RTT, then we do not record that
-estimate, and do not update BDP or the congestion control algorithms for that
-SENDME ack.
+If the circuit does not yet have an EWMA RTT or it is still in Slow Start, then
+no further checks are performed, and the RTT is used.
 
-Moreover, if a clock stall is detected by *any* circuit, this fact is
-cached, and this cached value is used on circuits for which we do not
-have enough data to compute the above heueristics. This cached value is
-also exported for use by the edge connection rate calculations done by
-[XON_ADVISORY].
+If the circuit has stored an EWMA RTT and has exited Slow Start, then every
+sendme ACK, the new candidate RTT is compared to the stored EWMA RTT. If the
+new RTT is 5000 times larger than the EWMA RTT, then the circuit does not
+record that estimate, and does not update BDP or the congestion control
+algorithms for that SENDME ack. If the new RTT is 5000 times smaller than the
+EWMA RTT, then the circuit uses the globally cached value from above (ie: it
+assumes the clock is stalled *only* if there was previously *also* a 0-delta RTT).
+
+If both ratio checks pass, the globally cached clock stall state is set to
+false (no stall), and the RTT value is used.
 
 2.1.2. N_EWMA Smoothing [N_EWMA_SMOOTHING]
 
