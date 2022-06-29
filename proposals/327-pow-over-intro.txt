@@ -278,7 +278,7 @@ Status: Draft
 
   We propose a new EXT_FIELD_TYPE value:
 
-     [01] -- PROOF_OF_WORK
+     [02] -- PROOF_OF_WORK
 
    The EXT_FIELD content format is:
 
