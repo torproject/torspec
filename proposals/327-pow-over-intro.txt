@@ -207,7 +207,8 @@ Status: Draft
   This whole protocol starts with the service encoding the PoW parameters in
   the 'encrypted' (inner) part of the v3 descriptor. As follows:
 
-       "pow-params" SP type SP seed-b64 SP expiration-time NL
+       "pow-params" SP type SP seed-b64 SP suggested-effort
+                    SP expiration-time NL
 
         [At most once]
 
