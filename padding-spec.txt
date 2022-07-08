@@ -273,7 +273,7 @@ Table of Contents
   from its own established consensus into the CELL_PADDING_NEGOTIATE cell.)
   This avoids the client needing to send updated padding negotiations if the
   consensus parameters should change.  The recipient's clamping of the timing
-  parameters will cause the recipienty to use its notion of the consensus
+  parameters will cause the recipient to use its notion of the consensus
   parameters.
 
   Clients and bridges MUST reject padding negotiation messages from relays,
