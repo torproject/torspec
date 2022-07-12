@@ -1,6 +1,6 @@
 ```
 Filename: 326-tor-relay-well-known-uri-rfc8615.md
-Title: The "tor-relay" Well-Known Resource Identifier 
+Title: The "tor-relay" Well-Known Resource Identifier
 Author: nusenu
 Created: 14 August 2020
 Status: Open
@@ -23,7 +23,7 @@ organization by pointing to its website: Tor relay/bridge contact information fi
 under the specified URI, because attackers can not easily place these files at the given location.
 
 * By publishing Tor relay IDs or hashed bridge IDs under this URI the website operator claims to be the responsible entity for these Tor relays/bridges.
-The verification of listed Tor relay/bridge IDs only succeeds if the claim can be verified bidirectionally 
+The verification of listed Tor relay/bridge IDs only succeeds if the claim can be verified bidirectionally
 (website -> relay/bridge and relay/bridge -> website).
 
 * This URI is not related to Tor onion services.

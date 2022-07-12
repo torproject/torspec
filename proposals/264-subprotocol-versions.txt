@@ -151,9 +151,7 @@ Implemented-In: 0.2.9.4-alpha
     versions we expect to continue supporting.]]
 
    These lines should be voted on.  A majority of votes is sufficient to
-   make a protocol un-supported.
-
-   and should require a supermajority of
+   make a protocol un-supported and it should require a supermajority of
    authorities (2/3) to make a protocol required.  The required protocols
    should not be torrc-configurable, but rather should be hardwired in the
    Tor code.
@@ -301,7 +299,7 @@ Implemented-In: 0.2.9.4-alpha
 
    Adding new protocol types is pretty cheap, given compression.
 
-A.1.  Inferring missing proto lines.
+A.1.  Inferring missing proto lines
 
    The directory authorities no longer allow versions of Tor before
    0.2.4.18-rc.  But right now, there is no version of Tor in the
