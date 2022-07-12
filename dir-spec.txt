@@ -1547,11 +1547,17 @@ Table of Contents
         The time (in UTC) when this document and corresponding key were
         last generated.
 
+        Implementations SHOULD reject certificates that are published
+        too far in the future, though they MAY tolerate some clock skew.
+
     "dir-key-expires" YYYY-MM-DD HH:MM:SS NL
 
         [Exactly once.]
 
         A time (in UTC) after which this key is no longer valid.
+
+        Implementations SHOULD reject expired certificates, though they
+        MAY tolerate some clock skew.
 
     "dir-signing-key" NL a key in PEM format
 
