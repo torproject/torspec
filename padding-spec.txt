@@ -266,6 +266,16 @@ Table of Contents
   immediately after sending their NETINFO cell.  Recipients SHOULD, however,
   accept padding negotiation messages at any time.
 
+  If a client which previously negotiated reduced, or disabled, padding, and
+  wishes to re-enable default padding (ie padding according to the consensus
+  parameters), it SHOULD send CELL_PADDING_NEGOTIATE START with zero in the
+  ito_low_ms and ito_high_ms fields.  (It therefore SHOULD NOT copy the values
+  from its own established consensus into the CELL_PADDING_NEGOTIATE cell.)
+  This avoids the client needing to send updated padding negotiations if the
+  consensus parameters should change.  The recipient's clamping of the timing
+  parameters will cause the recipient to use its notion of the consensus
+  parameters.
+
   Clients and bridges MUST reject padding negotiation messages from relays,
   and close the channel if they receive one.
 
