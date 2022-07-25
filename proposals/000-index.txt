@@ -261,6 +261,7 @@ Proposals by number:
 338  Use an 8-byte timestamp in NETINFO cells [ACCEPTED]
 339  UDP traffic over Tor [ACCEPTED]
 340  Packed and fragmented relay messages [OPEN]
+341  A better algorithm for out-of-sockets eviction [OPEN]
 
 
 Proposals by status:
@@ -301,6 +302,7 @@ Proposals by status:
    326  The "tor-relay" Well-Known Resource Identifier
    330  Modernizing authority contact entries
    340  Packed and fragmented relay messages
+   341  A better algorithm for out-of-sockets eviction
  ACCEPTED:
    265  Load Balancing with Overhead Parameters [for 0.2.9.x]
    282  Remove "Named" and "Unnamed" handling from consensus voting [for 0.3.3.x]

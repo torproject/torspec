@@ -258,4 +258,5 @@ Below are a list of proposals sorted by their proposal number.  See
 * [`338-netinfo-y2038.md`](/proposals/338-netinfo-y2038.md): Use an 8-byte timestamp in NETINFO cells [ACCEPTED]
 * [`339-udp-over-tor.md`](/proposals/339-udp-over-tor.md): UDP traffic over Tor [ACCEPTED]
 * [`340-packed-and-fragmented.md`](/proposals/340-packed-and-fragmented.md): Packed and fragmented relay messages [OPEN]
+* [`341-better-oos.md`](/proposals/341-better-oos.md): A better algorithm for out-of-sockets eviction [OPEN]
 
