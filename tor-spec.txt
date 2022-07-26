@@ -1522,18 +1522,27 @@ see tor-design.pdf.
    version of Tor if a) they have sent relay cells through that node,
    and b) they aren't sure whether those cells have been sent on yet.]
 
-   When an unrecoverable error occurs along one connection in a
-   circuit, the nodes on either side of the connection should, if they
-   are able, act as follows:  the node closer to the OP should send a
-   RELAY_TRUNCATED cell towards the OP; the node farther from the OP
-   should send a DESTROY cell down the circuit.
+   When an unrecoverable error occurs along one connection in a circuit, the
+   nodes on either side of the connection MAY, if they are able, act as
+   follows: the node closer to the OP can send a RELAY_TRUNCATED cell towards
+   the OP or a DESTROY cell to the previous OR.
 
-   The payload of a DESTROY cell contains a single octet, describing the
-   reason that the circuit was closed. Similarly, the data of a
-   RELAY_TRUNCATED cell also contains this single octet "reason" field. When
-   sending a TRUNCATED or DESTROY cell because of another TRUNCATED or
-   DESTROY cell, the error code should be propagated. The origin of a circuit
-   always sets this error code to 0, to avoid leaking its version.
+   An OP, upon receiving a RELAY_TRUNCATED, should send forward a DESTROY cell
+   in order to entirely teardown the circuit.
+
+   NOTE:
+     In tor version >= 0.4.5.13, 0.4.6.11 and 0.4.7.9, upon receiving a DESTROY
+     cell from upstream of the circuit, an OR won't send a RELAY_TRUNCATED to
+     the OP but instead will send a DESTROY down the circuit in order to signal
+     every intermediary ORs to stop queuing data on the circuit. Before that,
+     the delay between the OP receiving the RELAY_TRUNCATED cell and sending a
+     DESTROY cell upward would create queuing pressure on the intermediary ORs.
+
+   The payload of a DESTROY and RELAY_TRUNCATED cell contains a single octet,
+   describing the reason that the circuit was closed. The emitter of such cell
+   should use the right reason found below however it should NEVER be
+   propagated downward or upward due to potential side channel risk. An OR
+   receiving a DESTROY should use the DESTROYED reason for its next cell.
 
    The error codes are:
 
