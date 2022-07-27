@@ -56,7 +56,7 @@ other words, when you see "A - B" below, read it as "MAX(A-B, 0)".
 
 ## Phase 1: Deciding how many connections to close
 
-When we are find that we are low on sockets, we pick a number of sockets
+When we find that we are low on sockets, we pick a number of sockets
 that we want to close according to our existing algorithm.  (That is, we
 try to close 1/4 of our maximum sockets if we have reached our upper
 limit, or 1/10 of our maximum sockets if we have encountered a failure
@@ -133,8 +133,8 @@ until we have closed at least our target number of exit connections.
 > This approach probabilistically favors closing circuits with a large
 > number of sockets open, regardless of how long those sockets have been
 > open.  This defeats the easiest way of opening a large number of exit
-> streams ("open them all on once circuit") without making the
-> counter-approach ("open each exit stream on a its own circuit") much
+> streams ("open them all on one circuit") without making the
+> counter-approach ("open each exit stream on its own circuit") much
 > more attractive.
 
 ## Phase 3: Closing OR connections.

@@ -339,7 +339,7 @@ Status: Draft
   tuple. For this reason a replay protection mechanism must be employed.
 
   The simplest way is to use a simple hash table to check whether a (seed,
-  nonce) tuple has been used before for the actiev duration of a
+  nonce) tuple has been used before for the active duration of a
   seed. Depending on how long a seed stays active this might be a viable
   solution with reasonable memory/time overhead.
 
@@ -439,7 +439,7 @@ Status: Draft
   Every HS_UPDATE_PERIOD seconds the service should upload a new descriptor
   with a new suggested-effort value.
 
-  The service should avoid uploading descriptors too often to avoid overwheming
+  The service should avoid uploading descriptors too often to avoid overwhelming
   the HSDirs. The service SHOULD NOT upload descriptors more often than
   HS_UPDATE_PERIOD. The service SHOULD NOT upload a new descriptor if the
   suggested-effort value changes by less than 15%.

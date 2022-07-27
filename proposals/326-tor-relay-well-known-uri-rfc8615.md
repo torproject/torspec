@@ -12,7 +12,7 @@ This is a specification for a well-known [registry](https://www.iana.org/assignm
 
 This resource identifier can be used for serving and finding proofs related to [Tor](https://www.torproject.org/) relay and bridge contact information.
 It can also be used for autodiscovery of Tor relays run by a given entity, if the entity's domain is known.
-It solves the issue that Tor relay/bridge contact information is an unidirectional and unverified claim by nature.
+It solves the issue that Tor relay/bridge contact information is a unidirectional and unverified claim by nature.
 This well-known URI aims to allow the verification of the unidirectional claim.
 It aims to reduce the risk of impersonation attacks, where a Tor relay/bridge claims to be operated by a certain entity, but actually isn't.
 The automated verification will also support the [visualization of relay/bridge groups](https://gitlab.torproject.org/tpo/metrics/relay-search/-/issues/40001).
