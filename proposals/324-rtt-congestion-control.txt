@@ -389,6 +389,13 @@ Simplifying:
 
    BDP = cwnd * RTT_min / RTT_current_ewma
 
+The RTT_min for this calculation comes from the minimum RTT_current_ewma
+seen in the lifetime of this circuit. If the congestion window falls to
+`cc_cwnd_min`, implementations MAY choose to reset RTT_min for use in this
+calculation to either the RTT_current_ewma, or a percentile-weighted average
+between RTT_min and RTT_current_ewma, specified by `cc_rtt_reset_pct`. This
+helps with escaping starvation conditions.
+
 The net effect of this estimation is to correct for any overshoot of
 the cwnd over the actual BDP. It will obviously underestimate BDP if cwnd
 is below BDP.
@@ -1303,6 +1310,16 @@ These are sorted in order of importance to tune, most important first.
     - Tuning Values: [2,4]
     - Shadow Tuning Results:
            Setting this to 2 helped reduce overshoot during Slow Start.
+
+  cc_rtt_reset_pct:
+    - Description: Describes a percentile average between RTT_min and
+                   RTT_current_ewma, for use to reset RTT_min, when the
+                   congestion window hits cwnd_min.
+    - Range: [0, 100]
+    - Default: 100
+    - Shadow Tuning Results:
+           cwnd_min is not hit in Shadow simulations, but it can be hit
+           on the live network while under DoS conditions, and with cheaters.
 
   cc_cwnd_inc:
     - Description: How much to increment the congestion window by during
