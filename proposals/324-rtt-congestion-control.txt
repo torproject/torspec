@@ -169,10 +169,12 @@ Moving Average with alpha = 2/(N+1):
 
   N_EWMA = BDP*2/(N+1) + N_EWMA_prev*(N-1)/(N+1).
 
-Flow control rate limiting uses this function
+Flow control rate limiting uses this function.
 
-For both RTT and SENDME BDP estimation, N is the number of SENDME acks
-between congestion window updates, divided by the value of consensus
+During Slow Start, N is set to `cc_ewma_ss`, for RTT estimation.
+
+After Slow Start, for both RTT and SENDME BDP estimation, N is the number
+of SENDME acks between congestion window updates, divided by the value of consensus
 parameter 'cc_ewma_cwnd_pct', and then capped at a max of 'cc_ewma_max',
 but always at least 2:
 
@@ -1292,6 +1294,15 @@ These are sorted in order of importance to tune, most important first.
            We ended up needing this to make Vegas more responsive to
            congestion, to avoid overloading slow relays. Values of 10 or 20
            were best.
+
+  cc_ewma_ss:
+    - Description: This specifies the N in N_EWMA smoothing of RTT during
+                   Slow Start.
+    - Range: [2, INT32_MAX]
+    - Default: 2
+    - Tuning Values: [2,4]
+    - Shadow Tuning Results:
+           Setting this to 2 helped reduce overshoot during Slow Start.
 
   cc_cwnd_inc:
     - Description: How much to increment the congestion window by during
