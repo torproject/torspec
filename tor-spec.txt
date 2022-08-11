@@ -1690,7 +1690,9 @@ see tor-design.pdf.
 
         41..42 -- Used for circuit padding; see Section 3 of padding-spec.txt.
 
-        43..44 -- Used for flow control; see Section 4 of prop324.
+        Used for flow control; see Section 4 of prop324.
+        43 -- XON             [forward or backward]
+        44 -- XOFF            [forward or backward]
 
    Commands labelled as "forward" must only be sent by the originator
    of the circuit. Commands labelled as "backward" must only be sent by
