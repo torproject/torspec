@@ -214,7 +214,7 @@ Table of Contents
       It does not follow the KeyValue format for backwards compatibility
       with version 1.0.0.
 
-    "version=" version_number NL
+    "version" version_number NL
 
       [In second position, zero or one time.]
 
@@ -226,7 +226,7 @@ Table of Contents
       Version 1.0.0 documents do not contain this Line, and the
       version_number is considered to be "1.0.0".
 
-    "software=" Value NL
+    "software" Value NL
 
       [Zero or one time.]
 
@@ -237,7 +237,7 @@ Table of Contents
       Version 1.0.0 documents do not contain this Line, and the software
       is considered to be "torflow".
 
-    "software_version=" Value NL
+    "software_version" Value NL
 
       [Zero or one time.]
 
@@ -247,7 +247,7 @@ Table of Contents
 
       This Line was added in version 1.1.0 of this specification.
 
-    "file_created=" DateTime NL
+    "file_created" DateTime NL
 
       [Zero or one time.]
 
@@ -256,7 +256,7 @@ Table of Contents
 
       This Line was added in version 1.1.0 of this specification.
 
-    "generator_started=" DateTime NL
+    "generator_started" DateTime NL
 
       [Zero or one time.]
 
@@ -265,7 +265,7 @@ Table of Contents
 
       This Line was added in version 1.1.0 of this specification.
 
-    "earliest_bandwidth=" DateTime NL
+    "earliest_bandwidth" DateTime NL
 
       [Zero or one time.]
 
@@ -274,7 +274,7 @@ Table of Contents
 
       This Line was added in version 1.1.0 of this specification.
 
-    "latest_bandwidth=" DateTime NL
+    "latest_bandwidth" DateTime NL
 
       [Zero or one time.]
 
@@ -288,7 +288,7 @@ Table of Contents
 
       This Line was added in version 1.1.0 of this specification.
 
-    "number_eligible_relays=" Int NL
+    "number_eligible_relays" Int NL
 
       [Zero or one time.]
 
@@ -297,7 +297,7 @@ Table of Contents
 
       This Line was added in version 1.2.0 of this specification.
 
-    "minimum_percent_eligible_relays=" Int NL
+    "minimum_percent_eligible_relays" Int NL
 
       [Zero or one time.]
 
@@ -318,7 +318,7 @@ Table of Contents
 
       This Line was added in version 1.2.0 of this specification.
 
-    "number_consensus_relays=" Int NL
+    "number_consensus_relays" Int NL
 
       [Zero or one time.]
 
@@ -326,7 +326,7 @@ Table of Contents
 
       This Line was added in version 1.2.0 of this specification.
 
-    "percent_eligible_relays=" Int NL
+    "percent_eligible_relays" Int NL
 
       [Zero or one time.]
 
@@ -339,7 +339,7 @@ Table of Contents
 
       This Line was added in version 1.2.0 of this specification.
 
-    "minimum_number_eligible_relays=" Int NL
+    "minimum_number_eligible_relays" Int NL
 
       [Zero or one time.]
 
@@ -351,7 +351,7 @@ Table of Contents
 
       This Line was added in version 1.2.0 of this specification.
 
-    "scanner_country=" CountryCode NL
+    "scanner_country" CountryCode NL
 
       [Zero or one time.]
 
@@ -359,7 +359,7 @@ Table of Contents
 
       This Line was added in version 1.2.0 of this specification.
 
-    "destinations_countries=" CountryCodeList NL
+    "destinations_countries" CountryCodeList NL
 
       [Zero or one time.]
 
@@ -370,7 +370,7 @@ Table of Contents
 
       This Line was added in version 1.2.0 of this specification.
 
-    "recent_consensus_count=" Int NL
+    "recent_consensus_count" Int NL
 
       [Zero or one time.].
 
@@ -385,7 +385,7 @@ Table of Contents
 
       This Line was added in version 1.4.0 of this specification.
 
-    "recent_priority_list_count=" Int NL
+    "recent_priority_list_count" Int NL
 
       [Zero or one time.]
 
@@ -402,7 +402,7 @@ Table of Contents
 
       This Line was added in version 1.4.0 of this specification.
 
-    "recent_priority_relay_count=" Int NL
+    "recent_priority_relay_count" Int NL
 
       [Zero or one time.]
 
@@ -419,7 +419,7 @@ Table of Contents
 
       This Line was added in version 1.4.0 of this specification.
 
-    "recent_measurement_attempt_count=" Int NL
+    "recent_measurement_attempt_count" Int NL
 
       [Zero or one time.]
 
@@ -435,7 +435,7 @@ Table of Contents
       This Line was added in version 1.4.0 of this specification and removed
       in version 1.5.0.
 
-    "recent_measurement_failure_count=" Int NL
+    "recent_measurement_failure_count" Int NL
 
       [Zero or one time.]
 
@@ -445,7 +445,7 @@ Table of Contents
 
       This Line was added in version 1.4.0 of this specification.
 
-    "recent_measurements_excluded_error_count=" Int NL
+    "recent_measurements_excluded_error_count" Int NL
 
       [Zero or one time.]
 
@@ -456,7 +456,7 @@ Table of Contents
 
       This Line was added in version 1.4.0 of this specification.
 
-    "recent_measurements_excluded_near_count=" Int NL
+    "recent_measurements_excluded_near_count" Int NL
 
       [Zero or one time.]
 
@@ -468,7 +468,7 @@ Table of Contents
 
       This Line was added in version 1.4.0 of this specification.
 
-    "recent_measurements_excluded_old_count=" Int NL
+    "recent_measurements_excluded_old_count" Int NL
 
       [Zero or one time.]
 
@@ -482,7 +482,7 @@ Table of Contents
 
       This Line was added in version 1.4.0 of this specification.
 
-    "recent_measurements_excluded_few_count=" Int NL
+    "recent_measurements_excluded_few_count" Int NL
 
       [Zero or one time.]
 
@@ -498,7 +498,7 @@ Table of Contents
 
       This Line was added in version 1.4.0 of this specification.
 
-    "time_to_report_half_network=" Int NL
+    "time_to_report_half_network" Int NL
 
       [Zero or one time.]
 
@@ -510,7 +510,7 @@ Table of Contents
 
       This Line was added in version 1.4.0 of this specification.
 
-    "tor_version=" version_number NL
+    "tor_version" version_number NL
 
       [Zero or one time.]
 
@@ -576,7 +576,7 @@ Table of Contents
 
   Each RelayLine includes the following KeyValue pairs:
 
-    "node_id=" hexdigest
+    "node_id" hexdigest
 
       [Exactly once.]
 
@@ -593,7 +593,7 @@ Table of Contents
       and master_key_ed25519. Parsers SHOULD accept Lines that contain at
       least one of them.
 
-    "master_key_ed25519=" MasterKey
+    "master_key_ed25519" MasterKey
 
       [Zero or one time.]
 
@@ -605,7 +605,7 @@ Table of Contents
 
       This KeyValue was added in version 1.1.0 of this specification.
 
-    "bw=" Bandwidth
+    "bw" Bandwidth
 
       [Exactly once.]
 
@@ -704,23 +704,23 @@ Table of Contents
 
   sbws RelayLines contain these keys:
 
-    "node_id=" hexdigest
+    "node_id" hexdigest
 
       As above.
 
-    "bw=" Bandwidth
+    "bw" Bandwidth
 
       As above.
 
-    "nick=" nickname
+    "nick" nickname
 
       [Exactly once.]
 
       The relay nickname.
 
-      Torflow also has a "nick=" KeyValue.
+      Torflow also has a "nick" KeyValue.
 
-    "rtt=" Int
+    "rtt" Int
 
       [Zero or one time.]
 
@@ -729,7 +729,7 @@ Table of Contents
       This KeyValue was added in version 1.1.0 of this specification.
       It became optional in version 1.3.0 or 1.4.0 of this specification.
 
-    "time=" DateTime
+    "time" DateTime
 
       [Exactly once.]
 
@@ -737,9 +737,9 @@ Table of Contents
       when the last bandwidth was obtained.
 
       This KeyValue was added in version 1.1.0 of this specification.
-      The Torflow equivalent is "measured_at=".
+      The Torflow equivalent is "measured_at".
 
-    "success=" Int
+    "success" Int
 
       [Zero or one time.]
 
@@ -748,7 +748,7 @@ Table of Contents
 
       This KeyValue was added in version 1.1.0 of this specification.
 
-    "error_circ=" Int
+    "error_circ" Int
 
       [Zero or one time.]
 
@@ -756,9 +756,9 @@ Table of Contents
       failed because of circuit failures.
 
       This KeyValue was added in version 1.1.0 of this specification.
-      The Torflow equivalent is "circ_fail=".
+      The Torflow equivalent is "circ_fail".
 
-    "error_stream=" Int
+    "error_stream" Int
 
       [Zero or one time.]
 
@@ -767,7 +767,7 @@ Table of Contents
 
       This KeyValue was added in version 1.1.0 of this specification.
 
-    "error_destination=" Int
+    "error_destination" Int
 
       [Zero or one time.]
 
@@ -776,7 +776,7 @@ Table of Contents
 
       This KeyValue was added in version 1.4.0 of this specification.
 
-    "error_second_relay=" Int
+    "error_second_relay" Int
 
       [Zero or one time.]
 
@@ -785,7 +785,7 @@ Table of Contents
 
       This KeyValue was added in version 1.4.0 of this specification.
 
-    "error_misc=" Int
+    "error_misc" Int
 
       [Zero or one time.]
 
@@ -794,7 +794,7 @@ Table of Contents
 
       This KeyValue was added in version 1.1.0 of this specification.
 
-    "bw_mean=" Int
+    "bw_mean" Int
 
       [Zero or one time.]
 
@@ -802,7 +802,7 @@ Table of Contents
 
       This KeyValue was added in version 1.2.0 of this specification.
 
-    "bw_median=" Int
+    "bw_median" Int
 
       [Zero or one time.]
 
@@ -810,7 +810,7 @@ Table of Contents
 
       This KeyValue was added in version 1.2.0 of this specification.
 
-    "desc_bw_avg=" Int
+    "desc_bw_avg" Int
 
       [Zero or one time.]
 
@@ -818,7 +818,7 @@ Table of Contents
 
       This KeyValue was added in version 1.2.0 of this specification.
 
-    "desc_bw_obs_last=" Int
+    "desc_bw_obs_last" Int
 
       [Zero or one time.]
 
@@ -827,7 +827,7 @@ Table of Contents
 
       This KeyValue was added in version 1.2.0 of this specification.
 
-    "desc_bw_obs_mean=" Int
+    "desc_bw_obs_mean" Int
 
       [Zero or one time.]
 
@@ -836,7 +836,7 @@ Table of Contents
 
       This KeyValue was added in version 1.2.0 of this specification.
 
-    "desc_bw_bur=" Int
+    "desc_bw_bur" Int
 
       [Zero or one time.]
 
@@ -901,7 +901,7 @@ Table of Contents
 
       This KeyValue was added in version 1.4.0 of this specification.
 
-    "relay_recent_measurements_excluded_error_count=" Int
+    "relay_recent_measurements_excluded_error_count" Int
 
       [Zero or one time.]
 
@@ -913,7 +913,7 @@ Table of Contents
 
       This KeyValue was added in version 1.4.0 of this specification.
 
-    "relay_recent_measurements_excluded_near_count=" Int
+    "relay_recent_measurements_excluded_near_count" Int
 
       [Zero or one time.]
 
@@ -926,7 +926,7 @@ Table of Contents
 
       This KeyValue was added in version 1.4.0 of this specification.
 
-    "relay_recent_measurements_excluded_old_count=" Int
+    "relay_recent_measurements_excluded_old_count" Int
 
       [Zero or one time.]
 
@@ -940,7 +940,7 @@ Table of Contents
 
       This KeyValue was added in version 1.4.0 of this specification.
 
-    "relay_recent_measurements_excluded_few_count=" Int
+    "relay_recent_measurements_excluded_few_count" Int
 
       [Zero or one time.]
 
@@ -956,7 +956,7 @@ Table of Contents
 
       This KeyValue was added in version 1.4.0 of this specification.
 
-    "under_min_report=" bool
+    "under_min_report" bool
 
       [Zero or one time.]
 
@@ -978,7 +978,7 @@ Table of Contents
 
       This KeyValue was added in version 1.4.0 of this specification.
 
-    "unmeasured=" bool
+    "unmeasured" bool
 
       [Zero or one time.]
 
@@ -998,7 +998,7 @@ Table of Contents
 
       This KeyValue was added in version 1.4.0 of this specification.
 
-    "vote=" bool
+    "vote" bool
 
       [Zero or one time.]
 
