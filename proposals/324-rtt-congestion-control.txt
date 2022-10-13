@@ -747,6 +747,12 @@ struct xon_cell {
   u32 kbps_ewma;
 }
 
+Parties SHOULD treat XON or XOFF cells with unrecognized versions as a
+protocol violation.
+
+In `xon_cell`, a zero value for `kbps_ewma` means that the stream's rate is
+unlimited.  Parties should therefore not send "0" to mean "do not send data".
+
 4.1.1. XON/XOFF behavior
 
 If the length of an edge outbuf queue exceeds the size provided in the
