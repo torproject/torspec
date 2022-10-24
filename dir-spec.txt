@@ -2694,6 +2694,14 @@ Table of Contents
    a router, the authorities produce a consensus containing a "w"
    Bandwidth= keyword equal to the median of the Measured= votes.
 
+   As a special case, if the "w" line in a vote is about a relay with the
+   Authority flag, it should not include a Measured= keyword. The goal is
+   to leave such relays marked as Unmeasured, so they can reserve their
+   attention for authority-specific activities. "w" lines for votes about
+   authorities may include the bandwidth authority's measurement using
+   a different keyword, e.g. MeasuredButAuthority=, so it can still be
+   reported and recorded for posterity.
+
    The ports listed in a "p" line should be taken as those ports for
    which the router's exit policy permits 'most' addresses, ignoring any
    accept not for all addresses, ignoring all rejects for private
