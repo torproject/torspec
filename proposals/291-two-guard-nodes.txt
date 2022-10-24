@@ -154,7 +154,7 @@ Status: Needs-Revision
 
   However, while removing path restrictions will solve the immediate
   problem, it will not address other instances where Tor temporarily opts
-  use a second guard due to congestion, OOM, or failure of its primary
+  to use a second guard due to congestion, OOM, or failure of its primary
   guard, and we're still running into bugs where this can be adversarially
   controlled or just happen randomly[5].
 
