@@ -125,15 +125,23 @@ Status: Draft
 
 2.1. Advertising support for conflux
 
+2.1.1 Relay
+
   We propose a new protocol version in order to advertise support for
   circuit linking on the relay side:
 
-     "Relay=4" -- Relay supports an 2 byte sequence number in a RELAY cell
-                  header used for multipath circuit which are linked with the
-                  new RELAY_CIRCUIT_LINK relay cell command.
+     "Relay=5" -- Relay supports Conflux as in linking circuits together using
+                  the new LINK, LINKED and SWITCH relay command.
 
-  XXX: Advertise this in onion service descriptor.
-  XXX: Onion service descriptor can advertise more than two circuits?
+2.1.2 Onion Service
+
+  We propose to add a new line in order to advertise conflux support in the
+  onion service descriptor:
+
+    "conflux" SP max-num-circ NL
+
+      The "max-num-circ" value indicate the maximum number of rendezvous
+      circuits that are allowed to be linked together.
 
   The next section describes how the circuits are linked together.
 
@@ -148,29 +156,28 @@ Status: Draft
   All three stages of this handshake are sent on *each* circuit leg to be
   linked.
 
-  To save round trips, these cells SHOULD be combined with the initial
-  RELAY_BEGIN cell on the faster circuit leg, using Proposal 325. See
-  [LINKING_EXIT] and [LINKING_SERVICE] for more details on setup in each
-  case.
+  When packed cells are a reality (proposal 340), these cells SHOULD be
+  combined with the initial RELAY_BEGIN cell on the faster circuit leg. See
+  [LINKING_EXIT] and [LINKING_SERVICE] for more details on setup in each case.
 
-  There are other ways to do this linking that we have considered, but
-  they seem not to be significantly better than this method, especially
-  since we can use Proposal 325 to eliminate the RTT cost of this setup
-  before sending data. For those other ideas, see [ALTERNATIVE_LINKING]
-  and [ALTERNATIVE_RTT], in the appendix.
+  There are other ways to do this linking that we have considered, but they
+  seem not to be significantly better than this method, especially since we can
+  use Proposal 340 to eliminate the RTT cost of this setup before sending data.
+  For those other ideas, see [ALTERNATIVE_LINKING] and [ALTERNATIVE_RTT], in
+  the appendix.
 
   The first two parts of the handshake establish the link, and enable
   resumption:
 
-     16 -- RELAY_CIRCUIT_LINK
+    45 -- RELAY_CONFLUX_LINK
 
-           Sent from the OP to the exit/service in order to link
-           circuits together at the end point.
+          Sent from the OP to the exit/service in order to link circuits
+          together at the end point.
 
-     17 -- RELAY_CIRCUIT_LINKED
+    46 -- RELAY_CONFLUX_LINKED
 
-           Sent from the exit/service to the OP, to confirm the circuits
-           were linked.
+          Sent from the exit/service to the OP, to confirm the circuits were
+          linked.
 
   These cells have the following contents:
 
@@ -201,41 +208,51 @@ Status: Draft
   The two sequence number fields are 0 upon initial link, but non-zero in
   the case of a resumption attempt (See [RESUMPTION]).
 
-  If either circuit does not receive a RELAY_CIRCUIT_LINKED response, both
+  If either circuit does not receive a RELAY_CONFLUX_LINKED response, both
   circuits MUST be closed.
 
   The third stage of the handshake exists to help the exit/service measure
   initial RTT, for use in [SCHEDULING]:
 
-     18 -- RELAY_CIRCUIT_LINKED_RTT_ACK
+    47 -- RELAY_CONFLUX_LINKED_ACK
 
-           Sent from the OP to the exit/service, to provide initial RTT
-           measurement for the exit/service.
+          Sent from the OP to the exit/service, to provide initial RTT
+          measurement for the exit/service.
 
   For timeout of the handshake, clients SHOULD use the normal SOCKS/stream
   timeout already in use for RELAY_BEGIN.
 
-  These three relay commands (RELAY_CIRCUIT_LINK, RELAY_CIRCUIT_LINKED,
-  and RELAY_CIRCUIT_LINKED_RTT_ACK) are send on *each* leg, to allow each
-  endpoint to measure the initial RTT of each leg.
+  These three relay commands are send on *each* leg, to allow each endpoint to
+  measure the initial RTT of each leg.
+
+  The circuit SHOULD be closed if at least one of these conditions is met:
+
+    - Once a LINK is received, if the next cell relay command is not a
+      LINKED_ACK.
+    - Once a LINKED_ACK is received, receiving any other command than these:
+        * BEGIN, DATA, END, CONNECTED, RESOLVE, RESOLVED, XON, XOFF, SWITCH
+    - Receiving a LINKED without a LINK.
+    - Receiving a LINKED_ACK without having sent a LINKED.
+
+    XXX Must define our LINK rate limiting parameters.
 
 2.2. Linking Circuits from OP to Exit [LINKING_EXIT]
 
   To link exit circuits, two circuits to the same exit are built. The
   client records the circuit build time of each.
 
-  If the circuits are being built on-demand, for immediate use, the
-  circuit with the lower build time SHOULD use Proposal 325 to append its
-  first RELAY cell to the RELAY_COMMAND_LINK, on the circuit with the
-  lower circuit build time. The exit MUST respond on this same leg.  After
-  that, actual RTT measurements MUST be used to determine future
-  transmissions, as specified in [SCHEDULING].
+  If the circuits are being built on-demand, for immediate use, the circuit
+  with the lower build time SHOULD use Proposal 340 to append its first RELAY
+  cell to the RELAY_CONFLUX_LINK, on the circuit with the lower circuit build
+  time. The exit MUST respond on this same leg.  After that, actual RTT
+  measurements MUST be used to determine future transmissions, as specified in
+  [SCHEDULING].
 
-  The RTT times between RELAY_COMMAND_LINK and RELAY_COMMAND_LINKED are
-  measured by the client, to determine each circuit RTT to determine
-  primary vs secondary circuit use, and for packet scheduling.  Similarly,
-  the exit measures the RTT times between RELAY_COMMAND_LINKED and
-  RELAY_COMMAND_LINKED_RTT_ACK, for the same purpose.
+  The RTT times between RELAY_CONFLUX_LINK and RELAY_CONFLUX_LINKED are
+  measured by the client, to determine each circuit RTT to determine primary vs
+  secondary circuit use, and for packet scheduling. Similarly, the exit
+  measures the RTT times between RELAY_CONFLUX_LINKED and
+  RELAY_CONFLUX_LINKED_ACK, for the same purpose.
 
 2.3. Linking circuits to an onion service [LINKING_SERVICE]
 
@@ -247,9 +264,9 @@ Status: Draft
   meet the client at two separate rendezvous points. These introduce
   requests MUST be sent to the same intropoint (due to potential use of
   onionbalance), and SHOULD be sent back-to-back on the same intro
-  circuit. They MAY be combined with Proposal 325.
+  circuit. They MAY be combined with Proposal 340.
 
-  The first rendezvous circuit to get joined SHOULD use Proposal 325 to
+  The first rendezvous circuit to get joined SHOULD use Proposal 340 to
   append the RELAY_BEGIN command, and the service MUST answer on this
   circuit, until RTT can be measured.
 
@@ -283,50 +300,42 @@ Status: Draft
   small. It only has to signal that a cell comes after those arriving on
   another circuit.
 
-  To achieve this, we add a small sequence number to the common relay
-  header for all relay cells on linked circuits. This sequence number is
-  meant to signal the number of cells sent on the *other* leg, so that
-  each endpoint knows how many cells are still in-flight on another leg.
-  It is different from the absolute sequence number used in
-  [LINKING_CIRCUITS] and [RESUMPTION], but can be derived from that
-  number, using relative arithmetic.
+  To achieve this, we propose a new relay command used to indicate a switch to
+  another leg:
 
-    Relay command   [1 byte]
-    Recognized      [2 bytes]
-    StreamID        [2 bytes]
-    Digest          [4 bytes]
-    Length          [2 bytes]
-  > LongSeq         [1 bit]  # If this bit is set, use 31 bits for Seq
-  > Sequencing      [7 or 31 bits]
-    Data            [Remainder]
+    48 -- RELAY_CONFLUX_SWITCH
 
-  The sequence number is only set for the first cell after the endpoint
-  switches legs. In this case, LongSeq is set to 1, and the Sequencing
-  field is 31 more bits. Otherwise it is a 1 byte 0 value.
+          Sent from the client to the exit/service when switching leg in an
+          already linked circuit construction.
 
-  These fields MUST be present on ALL end-to-end relay cells on each leg
-  that come from the endpoint, following a RELAY_CIRCUIT_LINK command.
+  The cell payload format is:
 
-  They are absent on 'leaky pipe' RELAY_COMMAND_DROP and
-  RELAY_COMMAND_PADDING_NEGOTIATED cells that come from middle relays, as
-  opposed to the endpoint, to support padding.
+    SeqNum  [4 bytes]
 
-  When an endpoint switches legs, on the first cell in a new leg, LongSeq
-  is set to 1, and the following 31 bits represent the *total* number of
-  cells sent on the *other* leg, before the switch. The receiver MUST wait
-  for that number of cells to arrive from the previous leg before
-  delivering that cell.
+  The "SeqNum" value is a relative sequence number which is the number of cells
+  that was sent on the current leg until the switch. That way, we can always
+  keep up with the absolute sequence number and learn how many are inflights on
+  the current leg.
 
-  XXX: In the rare event that we send more than 2^31 cells (~1TB) on a
-  single leg, do we force a switch of legs, or expand the field further?
+  As an example, if on the first leg we just sent 21 cells after sending 10
+  cells (for a total of 31), then the RELAY_CONFLUX_SWITCH cell contains "21"
+  as the SeqNum then it can compute the absolute number to be 10 + 21 which
+  means that the first cell coming on the new leg should be considered the 32nd
+  cell in the sequence for reordering.
 
-  An alternative method of sequencing, that assumes that the endpoint
-  knows when it is going to switch, the cell before it switches, is
-  specified in [ALTERNATIVE_SEQUENCING]. Note that that method requires
-  only 1 byte for sequence number and switch signaling, but requires that
-  the sender know that it is planning to switch, the cell before it
-  switches.  (This is possible with [BLEST_TOR], but [LOWRTT_TOR] can
-  switch based on RTT change, so it may be one cell late in that case).
+  In the rare event that we send more than 2^31 cells (~1TB) on a single leg,
+  the leg should be switched in order to reset that relative sequence number to
+  fit within 4 bytes.
+
+  The circuit SHOULD be closed if at least one of these conditions is met:
+
+    - The SeqNum value is below the "cwnd_min" which is currently set at 31.
+    - If immediately after receiving a SWITCH, another one is received.
+
+      XXX: We should define our rate limiting.
+
+    - If we are NOT an exit circuit.
+    - If the SeqNum makes our absolute sequence number to overflow.
 
 2.6. Resumption [RESUMPTION]
 
@@ -636,7 +645,7 @@ Status: Draft
   [LINKING_CIRCUITS] may be quite noticeable.
 
   As one countermeasure, it may be possible to eliminate the third leg
-  (RELAY_CIRCUIT_LINKED_RTT_ACK) by computing the exit/service RTT via
+  (RELAY_CIRCUIT_LINKED_ACK) by computing the exit/service RTT via
   measuring the time between CREATED/REND_JOINED and RELAY_CIRCUIT_LINK,
   but this will introduce cross-component complexity into Tor's protocol
   that could quickly become unwieldy and fragile.
@@ -774,7 +783,7 @@ A.2 Alternative Link Handshake [ALTERNATIVE_LINKING]
 
   Additionally, it is not clear that this approach actually saves us
   anything in terms of setup time, because we can optimize away the
-  linking phase using Proposal 325, to combine initial RELAY_BEGIN cells
+  linking phase using Proposal 340, to combine initial RELAY_BEGIN cells
   with RELAY_CIRCUIT_LINK.
 
 A.3. Alternative RTT measurement [ALTERNATIVE_RTT]
