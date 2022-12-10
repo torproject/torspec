@@ -143,6 +143,10 @@ Status: Draft
       The "max-num-circ" value indicate the maximum number of rendezvous
       circuits that are allowed to be linked together.
 
+  XXX: We should let the service specify the conflux algorithm to use.
+  Some services may prefer latency (LowRTT), where as some may prefer
+  throughput (BLEST).
+
   The next section describes how the circuits are linked together.
 
 2.2. Linking circuits [LINKING_CIRCUITS]
@@ -193,12 +197,18 @@ Status: Draft
      NONCE              [32 bytes]
      LAST_SEQNO_SENT    [8 bytes]
      LAST_SEQNO_RECV    [8 bytes]
+     ALGORITHM          [1 byte]
 
   XXX: Should we let endpoints specify their preferred [SCHEDULING] alg
   here, to override consensus params? This has benefits: eg low-memory
   mobile clients can ask for an alg that is better for their reorder
   queues. But it also has complexity risk, if the other endpoint does not
   want to support it, because of its own memory issues.
+    - YES. At least for Exit circuits, we *will* want to let clients
+      request LowRTT or BLEST/CWND scheduling. So we need an algorithm
+      field here.
+    - XXX: We need to define rules for negotiation then, for onions and
+      exits vs consensus.
 
   The NONCE contains a random 256-bit secret, used to associate the two
   circuits together. The nonce MUST NOT be shared outside of the circuit
@@ -228,7 +238,7 @@ Status: Draft
   The circuit SHOULD be closed if at least one of these conditions is met:
 
     - Once a LINK is received, if the next cell relay command is not a
-      LINKED_ACK.
+      LINKED_ACK, unless the command is in a packed cell.
     - Once a LINKED_ACK is received, receiving any other command than these:
         * BEGIN, DATA, END, CONNECTED, RESOLVE, RESOLVED, XON, XOFF, SWITCH
     - Receiving a LINKED without a LINK.
@@ -312,24 +322,38 @@ Status: Draft
 
     SeqNum  [4 bytes]
 
-  The "SeqNum" value is a relative sequence number which is the number of cells
-  that was sent on the current leg until the switch. That way, we can always
-  keep up with the absolute sequence number and learn how many are inflights on
-  the current leg.
+  The "SeqNum" value is a relative sequence number, which is the difference
+  between the last absolute sequence number sent on the new leg and the last
+  absolute sequence number sent on all other legs prior to the switch. In this
+  way, the endpoint knows what to increment its local absolute sequence number
+  by, before cells start to arrive.
 
-  As an example, if on the first leg we just sent 21 cells after sending 10
-  cells (for a total of 31), then the RELAY_CONFLUX_SWITCH cell contains "21"
-  as the SeqNum then it can compute the absolute number to be 10 + 21 which
-  means that the first cell coming on the new leg should be considered the 32nd
-  cell in the sequence for reordering.
+  To achieve this, the sender must maintain the last absolute sequence sent for
+  each leg, and the receiver must maintain the last absolute sequence number
+  received for each leg.
+
+  As an example, let's say we send 10 cells on the first leg, so our absolute
+  sequence number is 10. If we then switch to the second leg, it is trivial to
+  see that we should send a SWITCH with 10 as the relative sequence number, to
+  indicate that regardless of the order in which the first cells are received,
+  subsequent cells on the second leg should start counting at 10.
+
+  However, if we then send 21 cells on this leg, our local absolute sequence
+  number as the sender is 31. So when we switch back to the first leg, where
+  the last absolute sequence sent was 10, we must send a SWITCH cell with 21,
+  so that when the first leg receives subsequent cells, it assigns those cells
+  an absolute sequence number starting at 31.
 
   In the rare event that we send more than 2^31 cells (~1TB) on a single leg,
   the leg should be switched in order to reset that relative sequence number to
   fit within 4 bytes.
 
-  The circuit SHOULD be closed if at least one of these conditions is met:
+  In order to rate limit the use of SWITCH to prevent its use as a DropMark
+  side channel, the circuit SHOULD be closed if at least one of these
+  conditions is met:
 
-    - The SeqNum value is below the "cwnd_min" which is currently set at 31.
+    - The SeqNum value is below the "cc_sendme_inc" which is currently set
+      at 31.
     - If immediately after receiving a SWITCH, another one is received.
 
       XXX: We should define our rate limiting.
@@ -503,6 +527,10 @@ Status: Draft
   Note that BLEST also has a parameter lambda that is updated whenever HoL
   blocking occurs. Because it is expensive and takes significant time to
   signal this over Tor, we omit this.
+
+  XXX: We may want a third algorithm that only uses cwnd, for comparison.
+  The above algorithm may have issues if the primary cwnd grows while the
+  secondary does not. Expect this section to change.
 
   XXX: See [REORDER_SIGNALING] section if we want this lambda feedback.
 
