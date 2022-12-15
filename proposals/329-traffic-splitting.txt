@@ -173,12 +173,12 @@ Status: Draft
   The first two parts of the handshake establish the link, and enable
   resumption:
 
-    45 -- RELAY_CONFLUX_LINK
+    19 -- RELAY_CONFLUX_LINK
 
           Sent from the OP to the exit/service in order to link circuits
           together at the end point.
 
-    46 -- RELAY_CONFLUX_LINKED
+    20 -- RELAY_CONFLUX_LINKED
 
           Sent from the exit/service to the OP, to confirm the circuits were
           linked.
@@ -224,7 +224,7 @@ Status: Draft
   The third stage of the handshake exists to help the exit/service measure
   initial RTT, for use in [SCHEDULING]:
 
-    47 -- RELAY_CONFLUX_LINKED_ACK
+    21 -- RELAY_CONFLUX_LINKED_ACK
 
           Sent from the OP to the exit/service, to provide initial RTT
           measurement for the exit/service.
@@ -313,7 +313,7 @@ Status: Draft
   To achieve this, we propose a new relay command used to indicate a switch to
   another leg:
 
-    48 -- RELAY_CONFLUX_SWITCH
+    22 -- RELAY_CONFLUX_SWITCH
 
           Sent from the client to the exit/service when switching leg in an
           already linked circuit construction.
@@ -750,47 +750,7 @@ Status: Draft
 
 Appended A [ALTERNATIVES]
 
-A.1 BEGIN/END sequencing [ALTERNATIVE_SEQUENCING]
-
-  In this method of signaling, we increment the sequence number by 1 only
-  when we switch legs, and use BEGIN/END "bookends" to know that all data
-  on a leg has been received.
-
-  To achieve this, we add a small sequence number to the common relay
-  header for all relay cells on linked circuits, as well as a field to
-  signal the beginning of a sequence, intermediate data, and the end of a
-  sequence.
-
-    Relay command   [1 byte]
-    Recognized      [2 bytes]
-    StreamID        [2 bytes]
-    Digest          [4 bytes]
-    Length          [2 bytes]
-  > Switching       [2 bits]    # 01 = BEGIN, 00 = CONTINUE, 10 = END
-  > Sequencing      [6 bits]
-    Data            [PAYLOAD_LEN - 12 - Length bytes]
-
-  These fields MUST be present on ALL end-to-end relay cells on each leg
-  that come from the endpoint, following a RELAY_CIRCUIT_LINK command.
-
-  They are absent on 'leaky pipe' RELAY_COMMAND_DROP and
-  RELAY_COMMAND_PADDING_NEGOTIATED cells that come from middle relays, as
-  opposed to the endpoint, to support padding.
-
-  Sequence numbers are incremented by one when an endpoint switches legs
-  to transmit a cell. This number will wrap; implementations MUST treat
-  0 as the next sequence after 2^6-1. Because we do not expect to support
-  significantly more than 2 legs, and much fewer than 63, this is not an
-  issue.
-
-  The first cell on a new circuit MUST use the BEGIN code for switching.
-  Cells are delivered from that circuit until an END switching signal is
-  received, even if cells arrive first on another circuit with the next
-  sequence number before and END switching field. Recipients MUST only
-  deliver cells with a BEGIN, if their Sequencing number is one more than
-  the last END.
-
-A.2 Alternative Link Handshake [ALTERNATIVE_LINKING]
+A.1 Alternative Link Handshake [ALTERNATIVE_LINKING]
 
   The circuit linking in [LINKING_CIRCUITS] could be done as encrypted
   ntor onionskin extension fields, similar to those used by v3 onions.
@@ -814,7 +774,7 @@ A.2 Alternative Link Handshake [ALTERNATIVE_LINKING]
   linking phase using Proposal 340, to combine initial RELAY_BEGIN cells
   with RELAY_CIRCUIT_LINK.
 
-A.3. Alternative RTT measurement [ALTERNATIVE_RTT]
+A.2. Alternative RTT measurement [ALTERNATIVE_RTT]
 
   Instead of measuring RTTs during [LINKING_CIRCUITS], we could create
   PING/PONG cells, whose sole purpose is to allow endpoints to measure
