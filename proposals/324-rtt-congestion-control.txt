@@ -538,7 +538,10 @@ original cwnd estimator. So while this capability to change the BDP estimator
 remains in the C implementation, we do not expect it to be used.
 
 However, it was useful to use a local OR connection block at the time of
-SENDME ack arrival, as an immediate congestion signal.
+SENDME ack arrival, as an immediate congestion signal. Note that in C-Tor,
+this orconn_block state is not derived from any socket info, but instead is a
+heuristic that declares an orconn as blocked if any circuit cell queue
+exceeds the 'cellq_high' consensus parameter.
 
 (As an additional optimization, we could also use the ECN signal described in
 ideas/xxx-backward-ecn.txt, but this is not implemented. It is likely only of
@@ -554,70 +557,132 @@ per the rules in RFC3742:
       # Below the cap, we increment as per cc_cwnd_inc_pct_ss percent:
       return round(cc_cwnd_inc_pct_ss*cc_sendme_inc/100)
     else:
-      # This returns an increment equivalent to RFC3742, rounded:
-      # K = int(cwnd/(0.5 max_ssthresh));
-      # inc = int(MSS/K);
-      return round((cc_sendme_inc*cc_ss_cap_pathtype)/(2*cwnd));
+      # This returns an increment equivalent to RFC3742, rounded,
+      # with a minimum of inc=1.
+      # From RFC3742:
+      #  K = int(cwnd/(0.5 max_ssthresh));
+      #  inc = int(MSS/K);
+      return MAX(round((cc_sendme_inc*cc_ss_cap_pathtype)/(2*cwnd)), 1);
 
-After Slow Start, congestion signals from RTT, blocked OR connections, or ECN
-are processed only once per congestion window. This is achieved through the
-next_cc_event flag, which is initialized to a cwnd worth of SENDME acks, and
-is decremented each ack. Congestion signals are only evaluated when it reaches
-0.
+During both Slow Start, and Steady State, if the congestion window is not full,
+we never increase the congestion window. We can still decrease it, or exit slow
+start, in this case. This is done to avoid causing overshoot. The original TCP
+Vegas addressed this problem by computing BDP and queue_use from inflight,
+instead of cwnd, but we found that approach to have signficantly worse
+performance.
+
+Because C-Tor is single-threaded, multiple SENDME acks may arrive during one
+processing loop, before edge connections resume reading. For this reason,
+we provide two heuristics to provide some slack in determining the full
+condition. The first is to allow a gap between inflight and cwnd,
+parameterized as 'cc_cwnd_full_gap' multiples of 'cc_sendme_inc':
+   cwnd_is_full(cwnd, inflight):
+     if inflight + 'cc_cwnd_full_gap'*'cc_sendme_inc' >= cwnd:
+       return true
+     else
+       return false
+
+The second heuristic immediately resets the full state if it falls below
+'cc_cwnd_full_minpct' full:
+   cwnd_is_nonfull(cwnd, inflight):
+     if 100*inflight < 'cc_cwnd_full_minpct'*cwnd:
+       return true
+     else
+       return false
+
+This full status is cached once per cwnd if 'cc_cwnd_full_per_cwnd=1';
+otherwise it is cached once per cwnd update. These two helper functions
+determine the number of acks in each case:
+   SENDME_PER_CWND(cwnd):
+     return ((cwnd + 'cc_sendme_inc'/2)/'cc_sendme_inc')
+   CWND_UPDATE_RATE(cwnd, in_slow_start):
+     # In Slow Start, update every SENDME
+     if in_slow_start:
+       return 1
+     else: # Otherwise, update as per the 'cc_inc_rate' (31)
+       return ((cwnd + 'cc_cwnd_inc_rate'*'cc_sendme_inc'/2)
+           / ('cc_cwnd_inc_rate'*'cc_sendme_inc'));
+
+Shadow experimentation indicates that 'cc_cwnd_full_gap=2' and
+'cc_cwnd_full_per_cwnd=0' minimizes queue overshoot, where as
+'cc_cwnd_full_per_cwnd=1' and 'cc_cwnd_full_gap=1' is slightly better
+for performance. Since there may be a difference between Shadow and live,
+we leave this parmeterization in place.
 
 Here is the complete pseudocode for TOR_VEGAS with RFC3742, which is run every
-time an endpoint receives a SENDME ack:
+time an endpoint receives a SENDME ack. All variables are scoped to the
+circuit, unless prefixed by an underscore (local), or in single quotes
+(consensus parameters):
 
-  # Update acked cells
-  inflight -= cc_sendme_inc
-
+  # Decrement counters that signal either an update or cwnd event
   if next_cc_event:
     next_cc_event--
+  if next_cwnd_event:
+    next_cwnd_event--
 
   # Do not update anything if we detected a clock stall or jump,
   # as per [CLOCK_HEURISTICS]
   if clock_stalled_or_jumped:
+    inflight -= 'cc_sendme_inc'
     return
 
   if BDP > cwnd:
-    queue_use = 0
+    _queue_use = 0
   else:
-    queue_use = cwnd - BDP
+    _queue_use = cwnd - BDP
+
+  if cwnd_is_full(cwnd, inflight):
+    cwnd_full = 1
+  else if cwnd_is_nonfull(cwnd, inflight):
+    cwnd_full = 0
 
   if in_slow_start:
-    if queue_use < cc_vegas_gamma and not orconn_blocked:
-      inc = rfc3742_ss_inc(cwnd);
-      cwnd += inc
-      next_cc_event = 1
+    if _queue_use < 'cc_vegas_gamma' and not orconn_blocked:
+      # Only increase cwnd if the cwnd is full
+      if cwnd_full:
+        _inc = rfc3742_ss_inc(cwnd);
+        cwnd += _inc
 
-      # If the RFC3742 increment drops below steady-state increment
-      # over a full cwnd worth of acks, exit slow start
-      if inc*SENDME_PER_CWND(cwnd) <= cc_cwnd_inc:
-        in_slow_start = 0
-        next_cc_event = round(cwnd / (cc_cwnd_inc_rate * cc_sendme_inc))
-    else:
+        # If the RFC3742 increment drops below steady-state increment
+        # over a full cwnd worth of acks, exit slow start.
+        if _inc*SENDME_PER_CWND(cwnd) <= 'cc_cwnd_inc'*'cc_cwnd_inc_rate':
+          in_slow_start = 0
+    else: # Limit hit. Exit Slow start (even if cwnd not full)
       in_slow_start = 0
-      cwnd = BDP + cc_vegas_gamma
-      next_cc_event = round(cwnd / (cc_cwnd_inc_rate * cc_sendme_inc))
+      cwnd = BDP + 'cc_vegas_gamma'
 
     # Provide an emergency hard-max on slow start:
-    if cwnd >= cc_ss_max:
-      cwnd = cc_ss_max
+    if cwnd >= 'cc_ss_max':
+      cwnd = 'cc_ss_max'
       in_slow_start = 0
-      next_cc_event = round(cwnd / (cc_cwnd_inc_rate * cc_sendme_inc))
   else if next_cc_event == 0:
-    if queue_use > cc_vegas_delta:
-      cwnd = BDP + cc_vegas_delta - cc_cwnd_inc
-    elif queue_use > cc_vegas_beta or orconn_blocked:
-      cwnd -= cc_cwnd_inc
-    elif queue_use < cc_vegas_alpha:
-      cwnd += cc_cwnd_inc
+    if _queue_use > 'cc_vegas_delta':
+      cwnd = BDP + 'cc_vegas_delta' - 'cc_cwnd_inc'
+    elif _queue_use > cc_vegas_beta or orconn_blocked:
+      cwnd -= 'cc_cwnd_inc'
+    elif cwnd_full and _queue_use < 'cc_vegas_alpha':
+      # Only increment if queue is low, *and* the cwnd is full
+      cwnd += 'cc_cwnd_inc'
 
-    cwnd = MAX(cwnd, cc_circwindow_min)
+    cwnd = MAX(cwnd, 'cc_circwindow_min')
 
-    # Count the number of sendme acks until next update of cwnd,
-    # rounded to nearest integer
-    next_cc_event = round(cwnd / (cc_cwnd_inc_rate * cc_sendme_inc))
+  # Specify next cwnd and cc update
+  if next_cc_event == 0:
+    next_cc_event = CWND_UPDATE_RATE(cwnd)
+  if next_cwnd_event == 0:
+    next_cwnd_event = SENDME_PER_CWND(cwnd)
+
+  # Determine if we need to reset the cwnd_full state
+  # (Parameterized)
+  if 'cc_cwnd_full_per_cwnd' == 1:
+    if next_cwnd_event == SENDME_PER_CWND(cwnd):
+      cwnd_full = 0
+  else:
+    if next_cc_event == CWND_UPDATE_RATE(cwnd):
+      cwnd_full = 0
+
+  # Update acked cells
+  inflight -= 'cc_sendme_inc'
 
 
 3.4. Tor NOLA: Direct BDP tracker [TOR_NOLA]
@@ -1478,6 +1543,39 @@ These are sorted in order of importance to tune, most important first.
       - Shadow Tuning Results:
          The largest congestion window seen in Shadow is ~3000, so this was
          set as a safety valve above that.
+
+   cc_cwnd_full_gap:
+      - Description: This parameter defines the integer number of
+        'cc_sendme_inc' multiples of gap allowed between inflight and
+        cwnd, to still declare the cwnd full.
+      - Range: [0, INT32_MAX]
+      - Default: 1-2
+      - Shadow Tuning Results:
+        A value of 0 resulted in a slight loss of performance, and increased
+        variance in throughput. The optimal number here likely depends on
+        edgeconn inbuf size, edgeconn kernel buffer size, and eventloop
+        behavior.
+
+   cc_cwnd_full_minpct:
+      - Description: This paramter defines a low watermark in percent. If 
+        inflight falls below this percent of cwnd, the congestion window
+        is immediately declared non-full.
+      - Range: [0, 100]
+      - Default: 75
+
+   cc_cwnd_full_per_cwnd:
+      - Description: This parameter governs how often a cwnd must be
+        full, in order to allow congestion window increase. If it is 1,
+        then the cwnd only needs to be full once per cwnd worth of acks.
+        If it is 0, then it must be full once every cwnd update (ie:
+        every SENDME).
+      - Range: [0, 1]
+      - Default: 1
+      - Shadow Tuning Results:
+        A value of 0 resulted in a slight loss of performance, and increased
+        variance in throughput. The optimal number here likely depends on
+        edgeconn inbuf size, edgeconn kernel buffer size, and eventloop
+        behavior.
 
 6.5.4. NOLA Parameters
 
