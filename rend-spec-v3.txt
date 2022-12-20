@@ -1412,6 +1412,8 @@ Table of contents:
         "legacy-key" NL key NL
 
           [None or at most once per introduction point]
+          [This field is obsolete and should never be generated; it
+           is included for historical reasons only.]
 
           The key is an ASN.1 encoded RSA public key in PEM format used for a
           legacy introduction point as described in [LEGACY_EST_INTRO].
@@ -1423,6 +1425,8 @@ Table of contents:
         "legacy-key-cert" NL certificate NL
 
           [None or at most once per introduction point]
+          [This field is obsolete and should never be generated; it
+           is included for historical reasons only.]
 
           MUST be present if "legacy-key" is present.
 
@@ -1656,6 +1660,9 @@ Table of contents:
 3.1.2. Registering an introduction point on a legacy Tor node
        [LEGACY_EST_INTRO]
 
+   [This section is obsolete and refers to a workaround for now-obsolete Tor
+    relay versions. It is included for historical reasons.]
+
    Tor nodes should also support an older version of the ESTABLISH_INTRO
    cell, first documented in rend-spec.txt. New hidden service hosts
    must use this format when establishing introduction points at older
@@ -1696,6 +1703,8 @@ Table of contents:
 
    Older versions of Tor send back an empty INTRO_ESTABLISHED cell instead.
    Services must accept an empty INTRO_ESTABLISHED cell from a legacy relay.
+   [The above paragraph is obsolete and refers to a workaround for
+   now-obsolete Tor relay versions. It is included for historical reasons.]
 
    The same rules for multiplicity, ordering, and handling unknown types
    apply to the extension fields here as described [EST_INTRO] above.
@@ -2135,6 +2144,9 @@ Table of contents:
    should make it extensible.]
 
 4.3. Using legacy hosts as rendezvous points
+
+   [This section is obsolete and refers to a workaround for now-obsolete Tor
+   relay versions. It is included for historical reasons.]
 
    The behavior of ESTABLISH_RENDEZVOUS is unchanged from older versions
    of this protocol, except that relays should now ignore unexpected
