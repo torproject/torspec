@@ -1100,6 +1100,9 @@ Table of contents:
        prevents an attacker from replacing a newer descriptor signed by
        a given key with a copy of an older version.)
 
+       Implementations MUST be able to parse 64-bit values for these
+       counters.
+
      "superencrypted" NL encrypted-string
 
        [Exactly once.]
