@@ -2115,8 +2115,9 @@ Table of Contents
         this value, and see section [CONS] for why we include old shared random
         values in votes and consensus.
 
-        Value is the actual shared random value encoded in base64. NumReveals
-        is the number of commits used to generate this SRV.
+        Value is the actual shared random value encoded in base64.  It will
+        be exactly 256 bits long.  NumReveals is the number of commits used
+        to generate this SRV.
 
     "shared-rand-current-value" SP NumReveals SP Value NL
 
@@ -2133,8 +2134,9 @@ Table of Contents
         See section [SRCALC] of srv-spec.txt for instructions on how to compute
         this value given the active commits.
 
-        Value is the actual shared random value encoded in base64. NumReveals
-        is the number of commits used to generate this SRV.
+        Value is the actual shared random value encoded in base64.  It will
+        be exactly 256 bits long. NumReveals is the number of commits used to
+        generate this SRV.
 
     "bandwidth-file-headers" SP KeyValues NL
 
