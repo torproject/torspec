@@ -662,7 +662,7 @@ see tor-design.pdf.
    versions cell they received.  If they have no such version in common,
    they cannot communicate and MUST close the connection.  Either party MUST
    close the connection if the versions cell is not well-formed (for example,
-   if it contains an odd number of bytes).
+   if the payload contains an odd number of bytes).
 
    Any VERSIONS cells sent after the first VERSIONS cell MUST be ignored.
    (To be interpreted correctly, later VERSIONS cells MUST have a CIRCID_LEN
