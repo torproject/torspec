@@ -169,7 +169,11 @@ reduce the effects of packet jitter.
 This smoothing is performed using N_EWMA[27], which is an Exponential
 Moving Average with alpha = 2/(N+1):
 
-  N_EWMA = BDP*2/(N+1) + N_EWMA_prev*(N-1)/(N+1).
+  N_EWMA = BDP*2/(N+1) + N_EWMA_prev*(N-1)/(N+1)
+         = (BDP*2 + N_EWMA_prev*(N-1))/(N+1).
+
+Note that the second rearranged form MUST be used in order to ensure that
+rounding errors are handled in the same manner as other implementations.
 
 Flow control rate limiting uses this function.
 
