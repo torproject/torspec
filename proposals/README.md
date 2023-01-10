@@ -109,6 +109,7 @@ discussion.
 * [`327-pow-over-intro.txt`](/proposals/327-pow-over-intro.txt): A First Take at PoW Over Introduction Circuits
 * [`329-traffic-splitting.txt`](/proposals/329-traffic-splitting.txt): Overcoming Tor's Bottlenecks with Traffic Splitting
 * [`331-res-tokens-for-anti-dos.md`](/proposals/331-res-tokens-for-anti-dos.md): Res tokens: Anonymous Credentials for Onion Service DoS Resilience
+* [`342-decouple-hs-interval.md`](/proposals/342-decouple-hs-interval.md): Decoupling hs_interval and SRV lifetime
 
 
 ## NEEDS-REVISION proposals: ideas that we can't implement as-is

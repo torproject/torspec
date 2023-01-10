@@ -262,6 +262,7 @@ Proposals by number:
 339  UDP traffic over Tor [ACCEPTED]
 340  Packed and fragmented relay messages [OPEN]
 341  A better algorithm for out-of-sockets eviction [OPEN]
+342  Decoupling hs_interval and SRV lifetime [DRAFT]
 
 
 Proposals by status:
@@ -272,6 +273,7 @@ Proposals by status:
    327  A First Take at PoW Over Introduction Circuits
    329  Overcoming Tor's Bottlenecks with Traffic Splitting
    331  Res tokens: Anonymous Credentials for Onion Service DoS Resilience
+   342  Decoupling hs_interval and SRV lifetime
  NEEDS-REVISION:
    212  Increase Acceptable Consensus Age [for 0.2.4.x+]
    219  Support for full DNS and DNSSEC resolution in Tor [for 0.2.5.x]
