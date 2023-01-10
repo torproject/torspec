@@ -4075,8 +4075,7 @@ B. General-use HTTP URLs
 
       http://<hostname>/tor/keys/all.z
 
-   The key certificate for this server (if it is an authority) should be
-   available at:
+   The key certificate for this server should be available at:
 
       http://<hostname>/tor/keys/authority.z
 
@@ -4133,10 +4132,10 @@ B. General-use HTTP URLs
 
       http://<hostname>/tor/server/authority.z
 
-    [Nothing in the Tor protocol uses this resource yet, but it is useful
-     for debugging purposes. Also, the official Tor implementations
-     (starting at 0.1.1.x) use this resource to test whether a server's
-     own DirPort is reachable.]
+     This is used for authorities, and also if a server is configured
+     as a bridge.  The official Tor implementations (starting at
+     0.1.1.x) use this resource to test whether a server's own DirPort
+     is reachable.  It is also useful for debugging purposes. 
 
    A concatenated set of the most recent descriptors for all known servers
    should be available at:
