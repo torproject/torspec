@@ -487,6 +487,12 @@ Table of Contents
    accepted and ignored.  Many of the nonterminals below are defined in
    section 2.1.3.
 
+   Note that many versions of Tor will generate an extra newline at the
+   end of their descriptors.  Implementations MUST tolerate one or
+   more blank lines at the end of a single descriptor or a list of
+   concatenated descriptors.  New implementations SHOULD NOT generate
+   such blank lines.
+
      "router" nickname address ORPort SOCKSPort DirPort NL
 
        [At start, exactly once.]
