@@ -1522,27 +1522,34 @@ see tor-design.pdf.
    version of Tor if a) they have sent relay cells through that node,
    and b) they aren't sure whether those cells have been sent on yet.]
 
-   When an unrecoverable error occurs along one connection in a circuit, the
-   nodes on either side of the connection MAY, if they are able, act as
-   follows: the node closer to the OP can send a RELAY_TRUNCATED cell towards
-   the OP or a DESTROY cell to the previous OR.
+   When an unrecoverable error occurs along one a circuit, the nodes
+   must report it as follows:
+     * If possible, send a DESTROY cell to ORs _away_ from the client.
+     * If possible, send *either* a DESTROY cell towards the client, or
+       a RELAY_TRUNCATED cell towards the client.
 
-   An OP, upon receiving a RELAY_TRUNCATED, should send forward a DESTROY cell
-   in order to entirely teardown the circuit.
+   Current versions of Tor do not reuse truncated RELAY_TRUNCATED
+   circuits: An OP, upon receiving a RELAY_TRUNCATED, will send
+   forward a DESTROY cell in order to entirely tear down the circuit.
+   Because of this, we recommend that relays should send DESTROY
+   towards the client, not RELAY_TRUNCATED.
 
    NOTE:
-     In tor version >= 0.4.5.13, 0.4.6.11 and 0.4.7.9, upon receiving a DESTROY
-     cell from upstream of the circuit, an OR won't send a RELAY_TRUNCATED to
-     the OP but instead will send a DESTROY down the circuit in order to signal
-     every intermediary ORs to stop queuing data on the circuit. Before that,
-     the delay between the OP receiving the RELAY_TRUNCATED cell and sending a
-     DESTROY cell upward would create queuing pressure on the intermediary ORs.
+     In tor versions before 0.4.5.13, 0.4.6.11 and 0.4.7.9, relays would
+     handle an inbound DESTROY by sending the client a RELAY_TRUNCATED
+     message.  Beginning with those versions, relays now propagate
+     DESTROY cells in either direction, in order to tell every
+     intermediary ORs to stop queuing data on the circuit.  The earlier
+     behavior created queuing pressure on the intermediary ORs.
 
-   The payload of a DESTROY and RELAY_TRUNCATED cell contains a single octet,
-   describing the reason that the circuit was closed. The emitter of such cell
-   should use the right reason found below however it should NEVER be
-   propagated downward or upward due to potential side channel risk. An OR
-   receiving a DESTROY should use the DESTROYED reason for its next cell.
+   The payload of a DESTROY and RELAY_TRUNCATED cell contains a single
+   octet, describing the reason that the circuit was
+   closed. RELAY_TRUNCATED cells, and DESTROY cells sent _towards the
+   client, should contain the actual reason from the list of error codes
+   below.  Reasons in DESTROY cell SHOULD NOT be propagated downward or
+   upward, due to potential side channel risk: An OR receiving a DESTROY
+   command should use the DESTROYED reason for its next cell. An OP
+   should always use the NONE reason for its own DESTROY cells.
 
    The error codes are:
 
