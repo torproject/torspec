@@ -66,11 +66,15 @@ Relay _messages_ now follow the following format:
   Header
     command   u8
     length    u16
-    stream_id u16
   Body
     data      u8[length]
 
 We require that "command" is never 0.
+
+One big change from the current tor protocol is the missing `stream_id` which
+we propose to move into the body because most commands set it to 0 because
+they don't need it. Meaning that the `stream_id` becomes a value specified
+per-command.
 
 Messages can be split across relay cells; multiple messages can occur in
 a single relay cell.  We enforce the following rules:
@@ -191,8 +195,8 @@ cell.  Here it is a BEGIN message.
     message header:
        command        BEGIN             [1 byte]
        length         23                [2 bytes]
-       stream_id      (...)             [2 bytes]
     message body
+       stream_id      (...)             [2 bytes]
       "www.torproject.org:443\0"        [23 bytes]
     end-of-messages marker
       0                                 [1 byte]
@@ -215,8 +219,8 @@ across two relay cells.
     message header:
        command        EXTEND            [1 byte]
        length         800               [2 bytes]
-       stream_id      0                 [2 bytes]
     message body
+       stream_id      0                 [2 bytes]
        (extend body, part 1)            [488 bytes]
 
   Cell 2:
@@ -249,14 +253,13 @@ message in the same cell.
     message header:
        command        BEGIN_DIR         [1 byte]
        length         0                 [2 bytes]
-       stream_id      32                [2 bytes]
     message body:
-       (empty)        ---               [0 bytes]
+       stream_id      32                [2 bytes]
     message header:
        command        DATA              [1 byte]
        length         25                [2 bytes]
-       stream_id      32                [2 bytes]
     message body:
+       stream_id      32                [2 bytes]
        "HTTP/1.0 GET /tor/foo\r\n\r\n"  [25 bytes]
     end-of-messages marker
       0                                 [1 byte]
@@ -281,8 +284,8 @@ above; this is only an example of what parties need to accept.)
     message header:
        command        DATAGRAM         [1 byte]
        length         1200             [2 bytes]
-       stream_id      99               [2 bytes]
     message body
+       stream_id      99               [2 bytes]
        (datagram body, part 1)         [488 bytes]
 
   Cell 2:
@@ -307,16 +310,16 @@ above; this is only an example of what parties need to accept.)
     message header:
        command        SENDME           [1 byte]
        length         23               [2 bytes]
-       stream_id      0                [2 bytes]
     message body:
+       stream_id      0                [2 bytes]
        version        1                [1 byte]
        datalen        20               [2 bytes]
        data           (digest to ack)  [20 bytes]
     message header:
        command        XON              [1 byte]
        length         1                [2 bytes]
-       stream_id      50               [2 bytes]
     message body:
+       stream_id      50               [2 bytes]
        version        1                [1 byte]
     end-of-messages marker
       0                                [1 byte]
