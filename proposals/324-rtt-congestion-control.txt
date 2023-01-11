@@ -1548,7 +1548,7 @@ These are sorted in order of importance to tune, most important first.
       - Description: This parameter defines the integer number of
         'cc_sendme_inc' multiples of gap allowed between inflight and
         cwnd, to still declare the cwnd full.
-      - Range: [0, INT32_MAX]
+      - Range: [0, INT16_MAX]
       - Default: 1-2
       - Shadow Tuning Results:
         A value of 0 resulted in a slight loss of performance, and increased
