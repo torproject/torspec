@@ -586,7 +586,7 @@ Table of contents:
         KP_hsid, KS_hsid.
 
         For services which run on a relay, this key SHOULD NOT be the
-        same as the Tor instance's KP_relayid_ntor.
+        same as the Tor instance's KP_relayid_ed.
 
       Blinded signing key -- A keypair derived from the identity key,
         used to sign descriptor signing keys. It changes periodically for
@@ -631,7 +631,7 @@ Table of contents:
 
    Public/private keypairs defined elsewhere:
 
-      Onion key -- Short-term encryption keypair (K_onion_ntor).
+      Onion key -- Short-term encryption keypair (K_onion_ed).
 
       (Node) identity key (K_relayid).
 

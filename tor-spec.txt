@@ -252,30 +252,30 @@ see tor-design.pdf.
       longer advertised.  Because of this, relays MUST retain old keys for a
       while after they're rotated. (See "onion key lifetime parameters" in
       dir-spec.txt.)
-      KP_onion_ntor, KS_onion_ntor.
+      KP_onion_ed, KS_onion_ed.
 
    These are Ed25519 keys:
 
     - A long-term "master identity" key.  This key never
       changes; it is used only to sign the "signing" key below.  It may be
       kept offline.
-      KP_relayid_ntor, KS_relayid_ntor.
+      KP_relayid_ed, KS_relayid_ed.
     - A medium-term "signing" key.  This key is signed by the master identity
       key, and must be kept online.  A new one should be generated
       periodically.  It signs nearly everything else.
-      KP_relaysign_ntor, KS_relaysign_ntor.
+      KP_relaysign_ed, KS_relaysign_ed.
     - A short-term "link authentication" key, used to authenticate
       the link handshake: see section 4 below.  This key is signed
       by the "signing" key, and should be regenerated frequently.
-      KP_link_ntor, KS_link_ntor.
+      KP_link_ed, KS_link_ed.
 
    KP_relayid_* together identify a router uniquely.  Once a router
-   has used a KP_relayid_ntor (an Ed25519 master identity key)
+   has used a KP_relayid_ed (an Ed25519 master identity key)
    together with a given KP_relayid_rsa (RSA identity key), neither of
    those keys may ever be used with a different key.
 
    We write KP_relayid to refer to a key which is either
-   KP_relayid_rsa or KP_relayid_ntor.
+   KP_relayid_rsa or KP_relayid_ed.
 
 2. Connections
 
