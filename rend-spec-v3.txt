@@ -574,6 +574,8 @@ Table of contents:
         to generate blinded signing keys as described in [KEYBLIND]
         and [SUBCRED]. The public key is encoded in the ".onion"
         address according to [NAMING].
+        KP_hsid, KS_hsid.
+
 
       Blinded signing key -- A keypair derived from the identity key,
         used to sign descriptor signing keys. It changes periodically for
@@ -582,6 +584,7 @@ Table of contents:
         the public blinded identity key for a service.  This key is used
         as an index in the DHT-like structure of the directory system
         (see [SUBCRED]).
+        KP_blind_id, KS_blind_id.
 
       Descriptor signing key -- A key used to sign hidden service
         descriptors.  This is signed by blinded signing keys. Unlike
@@ -589,6 +592,7 @@ Table of contents:
         of this key must be stored online by hidden service hosts. The
         public part of this key is included in the unencrypted section
         of HS descriptors (see [DESC-OUTER]).
+        KP_desc_sign, KS_desc_sign.
 
       Introduction point authentication key -- A short-term signing
         keypair used to identify a hidden service to a given
@@ -599,23 +603,26 @@ Table of contents:
         can get their introduction requests sent to the right
         service. No keypair is ever used with more than one introduction
         point. (previously called a "service key" in rend-spec.txt)
+        KP_intro_auth, KS_intro_auth.
 
       Introduction point encryption key -- A short-term encryption
         keypair used when establishing connections via an introduction
         point. Plays a role analogous to Tor nodes' onion keys. A fresh
         keypair is made for each introduction point.
+        K_intro_enc.
 
    Symmetric keys defined in this document:
 
       Descriptor encryption keys -- A symmetric encryption key used to
         encrypt the body of hidden service descriptors. Derived from the
         current period and the hidden service credential.
+        K_desc_enc.
 
    Public/private keypairs defined elsewhere:
 
-      Onion key -- Short-term encryption keypair
+      Onion key -- Short-term encryption keypair (K_onion_ntor).
 
-      (Node) identity key
+      (Node) identity key (K_relayid).
 
    Symmetric key-like things defined elsewhere:
 
