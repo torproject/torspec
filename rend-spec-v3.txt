@@ -576,6 +576,8 @@ Table of contents:
         address according to [NAMING].
         KP_hsid, KS_hsid.
 
+        For services which run on a relay, this key SHOULD NOT be the
+        same as the Tor instance's KP_relayid_ntor.
 
       Blinded signing key -- A keypair derived from the identity key,
         used to sign descriptor signing keys. It changes periodically for
