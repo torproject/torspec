@@ -230,14 +230,17 @@ see tor-design.pdf.
 
     - A long-term signing-only "Identity key" used to sign documents and
       certificates, and used to establish relay identity.
+      KP_relayid_rsa, KS_relayid_rsa.
     - A medium-term TAP "Onion key" used to decrypt onion skins when accepting
       circuit extend attempts.  (See 5.1.)  Old keys MUST be accepted for a
       while after they are no longer advertised.  Because of this,
       relays MUST retain old keys for a while after they're rotated.  (See
       "onion key lifetime parameters" in dir-spec.txt.)
+      KP_onion_tap, KS_onion_tap.
     - A short-term "Connection key" used to negotiate TLS connections.
       Tor implementations MAY rotate this key as often as they like, and
       SHOULD rotate this key at least once a day.
+      KP_conn_tls, KS_conn_tls.
 
    This is Curve25519 key:
 
@@ -247,23 +250,30 @@ see tor-design.pdf.
       longer advertised.  Because of this, relays MUST retain old keys for a
       while after they're rotated. (See "onion key lifetime parameters" in
       dir-spec.txt.)
+      KP_onion_ntor, KS_onion_ntor.
 
    These are Ed25519 keys:
 
     - A long-term "master identity" key.  This key never
       changes; it is used only to sign the "signing" key below.  It may be
       kept offline.
+      KP_relayid_ntor, KS_relayid_ntor.
     - A medium-term "signing" key.  This key is signed by the master identity
       key, and must be kept online.  A new one should be generated
       periodically.  It signs nearly everything else.
+      KP_relaysign_ntor, KS_relaysign_ntor.
     - A short-term "link authentication" key, used to authenticate
       the link handshake: see section 4 below.  This key is signed
       by the "signing" key, and should be regenerated frequently.
+      KP_link_ntor, KS_link_ntor.
 
-   The RSA identity key and Ed25519 master identity key together identify a
-   router uniquely.  Once a router has used an Ed25519 master identity key
-   together with a given RSA identity key, neither of those keys may ever be
-   used with a different key.
+   KP_relayid_* together identify a router uniquely.  Once a router
+   has used a KP_relayid_ntor (an Ed25519 master identity key)
+   together with a given KP_relayid_rsa (RSA identity key), neither of
+   those keys may ever be used with a different key.
+
+   We write KP_relayid to refer to a key which is either
+   KP_relayid_rsa or KP_relayid_ntor.
 
 2. Connections
 
