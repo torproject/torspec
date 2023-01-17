@@ -620,7 +620,7 @@ Table of contents:
         keypair used when establishing connections via an introduction
         point. Plays a role analogous to Tor nodes' onion keys. A fresh
         keypair is made for each introduction point.
-        K_hs_intro_enc.
+        KP_hs_intro_ntor, KS_hs_intro_ntor.
 
    Symmetric keys defined in this document:
 
