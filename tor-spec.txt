@@ -277,6 +277,11 @@ see tor-design.pdf.
    We write KP_relayid to refer to a key which is either
    KP_relayid_rsa or KP_relayid_ed.
 
+   The same key or keypair should never be used for separate roles within
+   the Tor protocol suite, unless specifically stated.  For example,
+   a relay's identity keys K_relayid should not also be used as the
+   identity keypair for a hidden service K_hs_id (see rend-spec-v3.txt).
+
 2. Connections
 
    Connections between two Tor relays, or between a client and a relay,
