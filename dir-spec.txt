@@ -279,7 +279,7 @@ Table of Contents
 
     NL = The ascii LF character (hex value 0x0a).
     Document ::= (Item | NL)+
-    Item ::= KeywordLine Object*
+    Item ::= KeywordLine Object?
     KeywordLine ::= Keyword NL | Keyword WS ArgumentChar+ NL
     Keyword = KeywordStart KeywordChar*
     KeywordStart ::= 'A' ... 'Z' | 'a' ... 'z' | '0' ... '9'
