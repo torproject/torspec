@@ -502,9 +502,11 @@ Table of contents:
    This is achieved using two nonces:
 
     * A "credential", derived from the public identity key KP_hsid.
+      N_hs_cred.
 
     * A "subcredential", derived from the credential N_hs_cred
       and information which various with the current time period.
+      N_hs_subcred.
 
    The body of each descriptor is also encrypted with a key derived from
    the public signing key.
@@ -697,11 +699,11 @@ Table of contents:
 
    The subcredential for a period is derived as:
 
-       subcredential = H("subcredential" | credential | blinded-public-key).
+       N_hs_subcred = H("subcredential" | N_hs_cred | blinded-public-key).
 
    In the above formula, credential corresponds to:
 
-       credential = H("credential" | public-identity-key)
+       N_hs_cred = H("credential" | public-identity-key)
 
    where public-identity-key is the public identity master key of the hidden
    service.
@@ -1243,7 +1245,7 @@ Table of contents:
       And here is what the hidden service computes:
 
           SECRET_SEED = x25519(hs_y, client_X)
-          KEYS = KDF(subcredential | SECRET_SEED, 40)
+          KEYS = KDF(N_hs_subcred | SECRET_SEED, 40)
           CLIENT-ID = fist 8 bytes of KEYS
           COOKIE-KEY = last 32 bytes of KEYS
 
@@ -1476,7 +1478,7 @@ Table of contents:
               descriptor even if the content of the descriptor hasn't changed.
               (So that we don't leak whether the intro point list etc. changed)
 
-       secret_input = SECRET_DATA | subcredential | INT_8(revision_counter)
+       secret_input = SECRET_DATA | N_hs_subcred | INT_8(revision_counter)
 
        keys = KDF(secret_input | salt | STRING_CONSTANT, S_KEY_LEN + S_IV_LEN + MAC_KEY_LEN)
 
@@ -1937,7 +1939,7 @@ Table of contents:
    and computes:
 
              intro_secret_hs_input = EXP(B,x) | AUTH_KEY | X | B | PROTOID
-             info = m_hsexpand | subcredential
+             info = m_hsexpand | N_hs_subcred
              hs_keys = KDF(intro_secret_hs_input | t_hsenc | info, S_KEY_LEN+MAC_LEN)
              ENC_KEY = hs_keys[0:S_KEY_LEN]
              MAC_KEY = hs_keys[S_KEY_LEN:S_KEY_LEN+MAC_KEY_LEN]
@@ -1991,7 +1993,7 @@ Table of contents:
    introduction point encryption key 'b' to compute:
 
       intro_secret_hs_input = EXP(X,b) | AUTH_KEY | X | B | PROTOID
-      info = m_hsexpand | subcredential
+      info = m_hsexpand | N_hs_subcred
       hs_keys = KDF(intro_secret_hs_input | t_hsenc | info, S_KEY_LEN+MAC_LEN)
       HS_DEC_KEY = hs_keys[0:S_KEY_LEN]
       HS_MAC_KEY = hs_keys[S_KEY_LEN:S_KEY_LEN+MAC_KEY_LEN]
