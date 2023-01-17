@@ -501,7 +501,7 @@ Table of contents:
 
    This is achieved using two nonces:
 
-    * A "credential", derived from the public identity key KP_hsid.
+    * A "credential", derived from the public identity key KP_hs_id.
       N_hs_cred.
 
     * A "subcredential", derived from the credential N_hs_cred
@@ -583,7 +583,7 @@ Table of contents:
         to generate blinded signing keys as described in [KEYBLIND]
         and [SUBCRED]. The public key is encoded in the ".onion"
         address according to [NAMING].
-        KP_hsid, KS_hsid.
+        KP_hs_id, KS_hs_id.
 
         For services which run on a relay, this key SHOULD NOT be the
         same as the Tor instance's KP_relayid_ed.
@@ -603,7 +603,7 @@ Table of contents:
         of this key must be stored online by hidden service hosts. The
         public part of this key is included in the unencrypted section
         of HS descriptors (see [DESC-OUTER]).
-        KP_desc_sign, KS_desc_sign.
+        KP_hs_desc_sign, KS_hs_desc_sign.
 
       Introduction point authentication key -- A short-term signing
         keypair used to identify a hidden service to a given
@@ -614,13 +614,13 @@ Table of contents:
         can get their introduction requests sent to the right
         service. No keypair is ever used with more than one introduction
         point. (previously called a "service key" in rend-spec.txt)
-        KP_intro_auth, KS_intro_auth.
+        KP_hs_intro_auth, KS_hs_intro_auth.
 
       Introduction point encryption key -- A short-term encryption
         keypair used when establishing connections via an introduction
         point. Plays a role analogous to Tor nodes' onion keys. A fresh
         keypair is made for each introduction point.
-        K_intro_enc.
+        K_hs_intro_enc.
 
    Symmetric keys defined in this document:
 
