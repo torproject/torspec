@@ -495,12 +495,19 @@ Table of contents:
    hidden service descriptors are not signed with the services' public
    keys directly. Instead, we use a key-blinding system [KEYBLIND] to
    create a new key-of-the-day for each hidden service. Any client that
-   knows the hidden service's credential can derive these blinded
+   knows the hidden service's public identity key can derive these blinded
    signing keys for a given period. It should be impossible to derive
-   the blinded signing key lacking that credential.
+   the blinded signing key lacking that knowledge.
+
+   This is achieved using two nonces:
+
+    * A "credential", derived from the public identity key KP_hsid.
+
+    * A "subcredential", derived from the credential N_hs_cred
+      and information which various with the current time period.
 
    The body of each descriptor is also encrypted with a key derived from
-   the credential.
+   the public signing key.
 
    To avoid a "thundering herd" problem where every service generates
    and uploads a new descriptor at the start of each period, each
