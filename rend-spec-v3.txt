@@ -633,7 +633,7 @@ Table of contents:
 
       Onion key -- Short-term encryption keypair (KS_onion_ed, KP_onion_ed).
 
-      (Node) identity key (K_relayid).
+      (Node) identity key (KP_relayid).
 
    Symmetric key-like things defined elsewhere:
 
