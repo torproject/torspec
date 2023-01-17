@@ -2112,7 +2112,7 @@ Table of Contents
         NumReveals ::= An integer greater or equal to 0.
         Value ::= Base64-encoded-data
 
-        The shared random value that was generated during the second-to-last
+        The shared_random_value that was generated during the second-to-last
         shared randomness protocol run. For example, if this document was
         created on the 5th of November, this field carries the shared random
         value generated during the protocol run of the 3rd of November.
@@ -2132,7 +2132,7 @@ Table of Contents
         NumReveals ::= An integer greater or equal to 0.
         Value ::= Base64-encoded-data
 
-        The shared random value that was generated during the latest shared
+        The shared_random_value that was generated during the latest shared
         randomness protocol run. For example, if this document was created on
         the 5th of November, this field carries the shared random value
         generated during the protocol run of the 4th of November

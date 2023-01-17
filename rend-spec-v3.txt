@@ -720,6 +720,7 @@ Table of contents:
          * the daily subcredential,
          * the hidden service directories' public keys,
          * a shared random value that changes in each time period,
+	   shared_random_value.
          * a set of network-wide networkstatus consensus parameters.
            (Consensus parameters are integer values voted on by authorities
            and published in the consensus documents, described in

@@ -98,8 +98,9 @@ Tor works. This text used to be proposal 250-commit-reveal-consensus.txt.
 2.1. Ten thousand feet view of the protocol
 
    Our commit-and-reveal protocol aims to produce a fresh shared random value
-   every day at 00:00UTC. The final fresh random value is embedded in the
-   consensus document at that time.
+   (denoted shared_random_value here and elsewhere) every day at 00:00UTC. The
+   final fresh random value is embedded in the consensus document at that
+   time.
 
    Our protocol has two phases and uses the hourly voting procedure of Tor.
    Each phase lasts 12 hours, which means that 12 voting rounds happen in
