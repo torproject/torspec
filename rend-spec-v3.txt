@@ -652,11 +652,13 @@ Table of contents:
 
    - An x25519 keypair used to compute decryption keys that allow the client to
      decrypt the hidden service descriptor. See [HS-DESC-ENC].
+     KP_hsc_desc_enc, KS_hsd_desc_enc.
 
    - An ed25519 keypair which allows the client to compute signatures which
      prove to the hidden service that the client is authorized. These
      signatures are inserted into the INTRODUCE1 cell, and without them the
      introduction to the hidden service cannot be completed. See [INTRO-AUTH].
+     KP_hsc_intro_auth, KS_hsc_intro_auth.
 
    The right way to exchange these keys is to have the client generate keys and
    send the corresponding public keys to the hidden service out-of-band. An
