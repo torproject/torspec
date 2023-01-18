@@ -629,7 +629,7 @@ Table of contents:
 
    Public/private keypairs defined elsewhere:
 
-      Onion key -- Short-term encryption keypair (KS_onion_ed, KP_onion_ed).
+      Onion key -- Short-term encryption keypair (KS_onion_ntor, KP_onion_ntor).
 
       (Node) identity key (KP_relayid).
 
