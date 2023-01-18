@@ -611,7 +611,8 @@ Table of contents:
         can get their introduction requests sent to the right
         service. No keypair is ever used with more than one introduction
         point. (previously called a "service key" in rend-spec.txt)
-        KP_hs_intro_auth, KS_hs_intro_auth.
+        KP_hs_intro_tid, KS_hs_intro_tid
+	("hidden service introduction point temporary id").
 
       Introduction point encryption key -- A short-term encryption
         keypair used when establishing connections via an introduction
