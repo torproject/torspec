@@ -123,10 +123,10 @@ see tor-design.pdf.
 
    KEY_LEN -- the length of the stream cipher's key, in bytes.
 
-   PK_ENC_LEN -- the length of a public-key encrypted message, in bytes.
-   PK_PAD_LEN -- the number of bytes added in padding for public-key
+   KP_ENC_LEN -- the length of a public-key encrypted message, in bytes.
+   KP_PAD_LEN -- the number of bytes added in padding for public-key
      encryption, in bytes. (The largest number of bytes that can be encrypted
-     in a single public-key operation is therefore PK_ENC_LEN-PK_PAD_LEN.)
+     in a single public-key operation is therefore KP_ENC_LEN-KP_PAD_LEN.)
 
    DH_LEN -- the number of bytes used to represent a member of the
      Diffie-Hellman group.
@@ -180,7 +180,7 @@ see tor-design.pdf.
 
    KEY_LEN=16.
    DH_LEN=128; DH_SEC_LEN=40.
-   PK_ENC_LEN=128; PK_PAD_LEN=42.
+   KP_ENC_LEN=128; KP_PAD_LEN=42.
    HASH_LEN=20.
 
    We also use SHA256 and SHA3-256 in some places.
@@ -196,14 +196,14 @@ see tor-design.pdf.
 0.4. A bad hybrid encryption algorithm, for legacy purposes.
 
    Some specifications will refer to the "legacy hybrid encryption" of a
-   byte sequence M with a public key PK.  It is computed as follows:
+   byte sequence M with a public key KP.  It is computed as follows:
 
-      1. If the length of M is no more than PK_ENC_LEN-PK_PAD_LEN,
-         pad and encrypt M with PK.
+      1. If the length of M is no more than KP_ENC_LEN-KP_PAD_LEN,
+         pad and encrypt M with KP.
       2. Otherwise, generate a KEY_LEN byte random key K.
-         Let M1 = the first PK_ENC_LEN-PK_PAD_LEN-KEY_LEN bytes of M,
+         Let M1 = the first KP_ENC_LEN-KP_PAD_LEN-KEY_LEN bytes of M,
          and let M2 = the rest of M.
-         Pad and encrypt K|M1 with PK.  Encrypt M2 with our stream cipher,
+         Pad and encrypt K|M1 with KP.  Encrypt M2 with our stream cipher,
          using the key K.  Concatenate these encrypted values.
 
    Note that this "hybrid encryption" approach does not prevent
@@ -547,8 +547,8 @@ see tor-design.pdf.
          2 -- CREATED     (Acknowledge create)      (See Sec 5.1)
          3 -- RELAY       (End-to-end data)         (See Sec 5.5 and 6)
          4 -- DESTROY     (Stop using a circuit)    (See Sec 5.4)
-         5 -- CREATE_FAST (Create a circuit, no PK) (See Sec 5.1)
-         6 -- CREATED_FAST (Circuit created, no PK) (See Sec 5.1)
+         5 -- CREATE_FAST (Create a circuit, no KP) (See Sec 5.1)
+         6 -- CREATED_FAST (Circuit created, no KP) (See Sec 5.1)
          8 -- NETINFO     (Time and address info)   (See Sec 4.5)
          9 -- RELAY_EARLY (End-to-end data; limited)(See Sec 5.6)
          10 -- CREATE2    (Extended CREATE cell)    (See Sec 5.1)
@@ -1196,7 +1196,7 @@ see tor-design.pdf.
    not very good.  (See Goldberg's "On the Security of the Tor
    Authentication Protocol".)
 
-   Define TAP_C_HANDSHAKE_LEN as DH_LEN+KEY_LEN+PK_PAD_LEN.
+   Define TAP_C_HANDSHAKE_LEN as DH_LEN+KEY_LEN+KP_PAD_LEN.
    Define TAP_S_HANDSHAKE_LEN as DH_LEN+HASH_LEN.
 
    The payload for a CREATE cell is an 'onion skin', which consists of
@@ -1204,12 +1204,12 @@ see tor-design.pdf.
    value is encrypted using the "legacy hybrid encryption" algorithm
    (see 0.4 above) to the server's onion key, giving a client handshake:
 
-       PK-encrypted:
-         Padding                       [PK_PAD_LEN bytes]
+       KP-encrypted:
+         Padding                       [KP_PAD_LEN bytes]
          Symmetric key                 [KEY_LEN bytes]
-         First part of g^x             [PK_ENC_LEN-PK_PAD_LEN-KEY_LEN bytes]
+         First part of g^x             [KP_ENC_LEN-KP_PAD_LEN-KEY_LEN bytes]
        Symmetrically encrypted:
-         Second part of g^x            [DH_LEN-(PK_ENC_LEN-PK_PAD_LEN-KEY_LEN)
+         Second part of g^x            [DH_LEN-(KP_ENC_LEN-KP_PAD_LEN-KEY_LEN)
                                            bytes]
 
    The payload for a CREATED cell, or the relay payload for an
@@ -1275,7 +1275,7 @@ see tor-design.pdf.
 
        NODEID      Server identity digest  [ID_LENGTH bytes]
        KEYID       KEYID(B)                [H_LENGTH bytes]
-       CLIENT_PK   X                       [G_LENGTH bytes]
+       CLIENT_KP   X                       [G_LENGTH bytes]
 
    The server generates a keypair of y,Y = KEYGEN(), and uses its ntor
    private key 'b' to compute:
@@ -1287,7 +1287,7 @@ see tor-design.pdf.
 
    The server's handshake reply is:
 
-       SERVER_PK   Y                       [G_LENGTH bytes]
+       SERVER_KP   Y                       [G_LENGTH bytes]
        AUTH        H(auth_input, t_mac)    [H_LENGTH bytes]
 
    The client then checks Y is in G^* [see NOTE below], and computes
