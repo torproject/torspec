@@ -94,8 +94,8 @@ see tor-design.pdf.
 
 0.1.  Notation and encoding
 
-   KP -- a public key.
-   KS -- a private key.
+   KP -- a public key for an asymmetric cipher.
+   KS -- a private key for an asymmetric cipher.
    K  -- a key for a symmetric cipher.
    N  -- a "nonce", a random value, usually deterministically chosen
          from other inputs using hashing.
