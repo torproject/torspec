@@ -280,11 +280,12 @@ Table of Contents
     NL = The ascii LF character (hex value 0x0a).
     Document ::= (Item | NL)+
     Item ::= KeywordLine Object*
-    KeywordLine ::= Keyword NL | Keyword WS ArgumentChar+ NL
+    KeywordLine ::= Keyword (WS Argument)* NL
     Keyword = KeywordStart KeywordChar*
     KeywordStart ::= 'A' ... 'Z' | 'a' ... 'z' | '0' ... '9'
     KeywordChar ::= KeywordStart | '-'
-    ArgumentChar ::= any printing ASCII character except NL.
+    Argument := ArgumentChar+
+    ArgumentChar ::= any graphical printing ASCII character.
     WS = (SP | TAB)+
     Object ::= BeginLine Base64-encoded-data EndLine
     BeginLine ::= "-----BEGIN " Keyword (" " Keyword)* "-----" NL
