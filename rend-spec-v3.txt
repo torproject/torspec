@@ -743,10 +743,11 @@ Table of contents:
 
    Time periods start at the Unix epoch (Jan 1, 1970), and are computed by
    taking the number of minutes since the epoch and dividing by the time
-   period. However, we want our time periods to start at 12:00UTC every day, so
-   we subtract a "rotation time offset" of 12*60 minutes from the number of
-   minutes since the epoch, before dividing by the time period (effectively
-   making "our" epoch start at Jan 1, 1970 12:00UTC).
+   period. However, we want our time periods to start at a regular offset
+   from the SRV voting schedule, so  we subtract a "rotation time offset"
+   of 12 voting periods from the number of minutes since the epoch, before
+   dividing by the time period (effectively making "our" epoch start at Jan
+   1, 1970 12:00UTC when the voting period is 1 hour.)
 
    Example: If the current time is 2016-04-13 11:15:01 UTC, making the seconds
    since the epoch 1460546101, and the number of minutes since the epoch
