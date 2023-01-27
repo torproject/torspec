@@ -149,6 +149,42 @@ along with extensions to some older relay message types.  We note in
 passing how we could extend these messages to support unconnected UDP
 sockets in the future.
 
+### Common Format
+
+We define here a common format for an "address" that is used both in a
+CONNECT_UDP and CONNECTED_UDP cell.
+
+#### Address
+
+Defines an IP or Hostname address along with its port. This can be seen as the
+`ADDRPORT` of a `BEGIN` cell defined in tor-spec.txt but with a different
+format.
+
+```
+/* Address types.
+
+  Note that these are the same as in RESOLVED cells.
+*/
+const T_HOSTNAME = 0x00;
+const T_IPV4     = 0x04;
+const T_IPV6     = 0x06;
+
+struct address {
+   u8 type IN [T_IPV4, T_IPV6, T_HOSTNAME];
+   u8 len;
+   union addr[type] with length len {
+      T_IPV4: u32 ipv4;
+      T_IPV6: u8 ipv6[16];
+      T_HOSTNAME: u8 hostname[];
+   };
+   u16 port;
+}
+```
+
+The `hostname` follows the RFC1035 for its accepted length that is 63
+characters or less that is a `len` between 0 and 255 (bytes). It should
+contain a sequence of nonzero octets as in any nul byte results in a malformed
+cell.
 
 ### CONNECT_UDP
 
@@ -161,26 +197,13 @@ sockets in the future.
 struct connect_udp_body {
    /* As in BEGIN cells. */
    u32 flags;
-   /* Tag for union below. */
-   u8 addr_type IN [T_HOSTNAME, T_IPV4, T_IPV6];
-   /* Length of the following union */
-   u8 addr_len;
-   /* The address to connect to. */
-   union address[addr_type] with length addr_len {
-      T_IPV4: u32 ipv4;
-      T_IPV6: u8 ipv6[16];
-      T_HOSTNAME: nulterm name
-   };
-   u16 port;
+   /* Address to connect to. */
+   struct address addr;
    // The rest is ignored.
 
    // TODO: Is "the rest is ignored" still a good idea? Look at Rochet's
    // research.
 }
-/* Address types */
-const T_HOSTNAME = 0x01;
-const T_IPV4     = 0x04;
-const T_IPV6     = 0x06;
 
 /* As in BEGIN cells: these control how hostnames are interpreted.
    Clients MUST NOT send unrecognized flags; relays MUST ignore them.
@@ -190,6 +213,10 @@ const FLAG_IPV6_OKAY      = 0x01;
 const FLAG_IPV4_NOT_OKAY  = 0x02;
 const FLAG_IPV6_PREFERRED = 0x04;
 ```
+
+A "hostname" is a DNS hostname that can only contain ascii characters. It is
+NOT following the large and broad DNS syntax. These behaves exacly like BEGIN
+cell behave with regards to the hostname given.
 
 ### CONNECTED_UDP
 
@@ -208,19 +235,10 @@ struct udp_connected_body {
    // TODO: Is "the rest is ignored" still a good idea? Look at Rochet's
    // research.
 }
-
-/* Note that this is a subset of the allowable address parts of a CONNECT_UDP 
- * message */
-struct address {
-   u8 tag IN [T_IPV4, T_IPV6];
-   u8 len;
-   union addr[tag] with length len {
-      T_IPV4: u32 ipv4;
-      T_IPV6: u8 ipv6[16];
-   };
-   u16 port;
-}
 ```
+
+Both `our_address` and `their_address` MUST NOT be of type `T_HOSTNAME` else
+the cell is considered malformed.
 
 ### DATAGRAM
 
