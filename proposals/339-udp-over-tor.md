@@ -161,20 +161,23 @@ Defines an IP or Hostname address along with its port. This can be seen as the
 format.
 
 ```
-/* Address types */
-const T_HOSTNAME = 0x01;
+/* Address types.
+
+  Note that these are the same as in RESOLVED cells.
+*/
+const T_HOSTNAME = 0x00;
 const T_IPV4     = 0x04;
 const T_IPV6     = 0x06;
 
 struct address {
    u8 type IN [T_IPV4, T_IPV6, T_HOSTNAME];
-   u8 len IN [0, 255];
+   u8 len;
    union addr[type] with length len {
       T_IPV4: u32 ipv4;
       T_IPV6: u8 ipv6[16];
       T_HOSTNAME: u8 hostname[];
    };
-   u16 port IN [1, 65535];
+   u16 port;
 }
 ```
 
