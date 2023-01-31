@@ -1417,18 +1417,28 @@ Table of contents:
 
           [Exactly once per introduction point]
 
-          The certificate is a proposal 220 certificate wrapped in "-----BEGIN
-          ED25519 CERT-----" cross-certifying the introduction point
-          authentication key using the descriptor signing key. The introduction
-          point authentication key is included in the mandatory signing-key
-          extension.  The certificate type must be [09].
+          The certificate is a proposal 220 certificate wrapped in
+          "-----BEGIN ED25519 CERT-----".  It contains the introduction
+          point authentication key (`KP_hs_intro_tid`), signed by
+          the descriptor signing key (`KP_hs_desc_sign`).  The
+          certificate type must be [09], and the signing key extension
+          is mandatory.
+
+          NOTE: This certificate was originally intended to be
+          constructed the other way around: the signing and signed keys
+          are meant to be reversed.  However, C tor implemented it
+          backwards, and other implementations now need to do the same
+          in order to conform.  (Since this section is inside the
+          descriptor, which is _already_ signed by `KP_hs_desc_sign`,
+          the verification aspect of this certificate serves no point in
+          its current form.)
 
         "enc-key" SP "ntor" SP key NL
 
           [Exactly once per introduction point]
 
           The key is a base64 encoded curve25519 public key used to encrypt
-          the introduction request to service.
+          the introduction request to service. (`KP_hs_intro_ntor`)
 
         "enc-key" SP KeyType SP key.. NL
 
@@ -1445,12 +1455,21 @@ Table of contents:
           Cross-certification of the encryption key using the descriptor
           signing key.
 
-          For "ntor" keys, certificate is a proposal 220 certificate wrapped
-          in "-----BEGIN ED25519 CERT-----" armor, cross-certifying the
-          descriptor signing key with the ed25519 equivalent of a curve25519
-          public encryption key derived using the process in proposal 228
-          appendix A. The certificate type must be [0B], and the signing-key
+          For "ntor" keys, certificate is a proposal 220 certificate
+          wrapped in "-----BEGIN ED25519 CERT-----" armor.  The subject
+          key is the the ed25519 equivalent of a curve25519 public
+          encryption key (`KP_hs_intro_ntor`), with the ed25519 key
+          derived using the process in proposal 228 appendix A.  The
+          signing key is the descriptor signing key (`KP_hs_desc_sign`).
+          The certificate type must be [0B], and the signing-key
           extension is mandatory.
+
+          NOTE: As with "auth-key", this certificate was intended to be
+          constructed the other way around.  However, for compatibility
+          with C tor, implementations need to construct it this way.  It
+          serves even less point than "auth-key", however, since the
+          encryption key `KP_hs_intro_ntor` is already available from
+          the `enc-key` entry.
 
         "legacy-key" NL key NL
 
