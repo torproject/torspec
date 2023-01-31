@@ -1405,6 +1405,14 @@ Table of contents:
           key of the introduction point Tor node used for the ntor handshake
           when a client extends to it.
 
+        "onion-key" SP KeyType SP key.. NL
+
+          [Any number of times]
+
+          Implementations should accept other types of onion keys using this
+          syntax (where "KeyType" is some string other than "ntor");
+          unrecognized key types should be ignored.
+
         "auth-key" NL certificate NL
 
           [Exactly once per introduction point]
@@ -1421,6 +1429,14 @@ Table of contents:
 
           The key is a base64 encoded curve25519 public key used to encrypt
           the introduction request to service.
+
+        "enc-key" SP KeyType SP key.. NL
+
+          [Any number of times]
+
+          Implementations should accept other types of onion keys using this
+          syntax (where "KeyType" is some string other than "ntor");
+          unrecognized key types should be ignored.
 
         "enc-key-cert" NL certificate NL
 
