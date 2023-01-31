@@ -1271,6 +1271,13 @@ Table of contents:
       discussed in [HS-DESC-SECOND-LAYER] below. The blob is base64 encoded
       and enclosed in -----BEGIN MESSAGE---- and ----END MESSAGE---- wrappers.
 
+
+    Compatibility note: The C Tor implementation does not include a final
+    newline when generating this first-layer-plaintext section; other
+    implementations MUST accept this section even if it is missing its final
+    newline.  Other implementations MAY generate this section without a final
+    newline themselves, to avoid being distinguishable from C tor.
+
 2.5.1.3. Client behavior [FIRST-LAYER-CLIENT-BEHAVIOR]
 
     The goal of clients at this stage is to decrypt the "encrypted" field as
