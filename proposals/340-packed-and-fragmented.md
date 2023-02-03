@@ -33,6 +33,9 @@ This proposal combines ideas from
 [ntor v3](./332-ntor-v3-with-extra-data.md) and prepares for
 [next-generation relay cryptography](./308-counter-galois-onion).
 
+Additionally, this proposal has been revised to incorporate another
+protocol change, and remove StreamId from the relay cell header.
+
 ## A preliminary change: Relay encryption, version 1.5
 
 We are fairly sure that, whatever we do for our next batch of relay
@@ -71,10 +74,9 @@ Relay _messages_ now follow the following format:
 
 We require that "command" is never 0.
 
-One big change from the current tor protocol is the missing `stream_id` which
-we propose to move into the body because most commands set it to 0 because
-they don't need it. Meaning that the `stream_id` becomes a value specified
-per-command.
+One big change from the current tor protocol is something that is _not_
+here: we have moved `stream_id` into the body of the relay message of
+those commands that need it.
 
 Messages can be split across relay cells; multiple messages can occur in
 a single relay cell.  We enforce the following rules:
@@ -96,7 +98,7 @@ Receivers MUST validate that headers are well-formed and have valid
 lengths while handling the cell in which the header is encoded.  If the
 header is invalid, the receiver must destroy the circuit.
 
-### Some examples
+
 
 
 ## Negotiation
@@ -112,6 +114,42 @@ handshake:
 The `version` field is the `Relay` subprotocol version that the client
 wants to use. The relay must send back the same extension in its ntor3
 handshake to acknowledge support.
+
+
+## Specifying the message format with moved stream ID.
+
+Here, we'll specify how to adjust tor-spec to describe the `stream_id`
+move correctly.
+
+Below, suppose that `Relay=V` denotes whatever version of the relay
+message subprotocol denotes support for this proposal.
+
+For all relay message types that include a stream ID, we insert
+the following at the beginning of their fields:
+
+>```
+>        STREAM_ID [2 bytes] (Present when Relay protocol version >= V).
+>```
+
+We add a note saying:
+
+> STREAM_ID is part of many message types, when using Relay protocol
+> version V or later.  Earlier versions of the Relay protocol put
+> STREAM_ID in the RELAY header.  In those versions, the field is
+> STREAM_ID omitted from the message.
+>
+> Except when noted, STREAM_ID may not be zero.
+
+The following message types take required stream IDs: `BEGIN`, `DATA`, `END`,
+`CONNECTED`, `RESOLVE`, `RESOLVED`, and `BEGIN_DIR`, `XON`, `XOFF`.
+
+The following message type takes an *optional* stream ID: `SENDME`.
+(*Stream-level sendmes are not a thing anymore with proposal 324, but I
+want to give implementations the freedom to implement prop324 and this
+proposal in either order.*)
+
+The following message types from proposal 339 (UDP) take required stream
+IDs: `CONNECT_UDP`, `CONNECTED_UDP` and `DATAGRAM`.
 
 ## Migration
 
