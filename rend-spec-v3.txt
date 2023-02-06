@@ -1348,10 +1348,10 @@ Table of contents:
 
       [Exactly once]
 
-      A space-separated list of integers denoting CREATE2 cell format numbers
-      that the server recognizes. Must include at least ntor as described in
-      tor-spec.txt. See tor-spec section 5.1 for a list of recognized
-      handshake types.
+      A space-separated list of integers denoting CREATE2 cell HTYPEs
+      (handshake types) that the server recognizes. Must include at least
+      ntor as described in tor-spec.txt. See tor-spec section 5.1 for a list
+      of recognized handshake types.
 
      "intro-auth-required" SP types NL
 
