@@ -2071,6 +2071,8 @@ Table of contents:
    One mechanism to do so is the credential mechanism, where only users who
    know the credential for a hidden service may connect at all.
 
+   There are two defined authentication types, `ed25519` and `password`.
+
 3.4.1. Ed25519-based authentication `ed25519`.
 
    To authenticate with an Ed25519 private key, the user must include an
