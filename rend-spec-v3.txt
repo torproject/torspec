@@ -2071,7 +2071,7 @@ Table of contents:
    One mechanism to do so is the credential mechanism, where only users who
    know the credential for a hidden service may connect at all.
 
-3.4.1. Ed25519-based authentication.
+3.4.1. Ed25519-based authentication `ed25519`.
 
    To authenticate with an Ed25519 private key, the user must include an
    extension field in the encrypted part of the INTRODUCE1 cell with an
