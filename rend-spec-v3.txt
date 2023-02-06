@@ -1208,7 +1208,7 @@ Table of contents:
 
       If client authorization is disabled, the value here should be "x25519".
 
-     "desc-auth-ephemeral-key" SP key NL
+     "desc-auth-ephemeral-key" SP KP_hs_desc_ephem NL
 
       [Exactly once]
 
@@ -1231,21 +1231,17 @@ Table of contents:
 
       When client authorization is enabled, each "auth-client" line contains
       the descriptor cookie encrypted to each individual client. We assume that
-      each authorized client possesses a pre-shared x25519 keypair which is
-      used to decrypt the descriptor cookie.
+      each authorized client possesses a pre-shared x25519 keypair
+      KS/KP_hsc_desc_enc which is used to decrypt the descriptor cookie.
 
       We now describe the descriptor cookie encryption scheme. Here are the
       relevant keys:
 
-          client_x = private x25519 key of authorized client
-          client_X = public x25519 key of authorized client
-          hs_y = private key of ephemeral x25519 keypair of hidden service
-          hs_Y = public key of ephemeral x25519 keypair of hidden service
           descriptor_cookie = descriptor cookie used to encrypt the descriptor
 
       And here is what the hidden service computes:
 
-          SECRET_SEED = x25519(hs_y, client_X)
+          SECRET_SEED = x25519(KS_hs_desc_ephem, KP_hsc_desc_enc)
           KEYS = KDF(N_hs_subcred | SECRET_SEED, 40)
           CLIENT-ID = fist 8 bytes of KEYS
           COOKIE-KEY = last 32 bytes of KEYS
