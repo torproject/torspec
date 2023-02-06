@@ -2073,6 +2073,9 @@ Table of contents:
 
    There are two defined authentication types, `ed25519` and `password`.
 
+   However, the `password` authentication type is not documented
+   and ??? ??? ???.
+
 3.4.1. Ed25519-based authentication `ed25519`.
 
    To authenticate with an Ed25519 private key, the user must include an
