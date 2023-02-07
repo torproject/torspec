@@ -611,14 +611,14 @@ Table of contents:
         can get their introduction requests sent to the right
         service. No keypair is ever used with more than one introduction
         point. (previously called a "service key" in rend-spec.txt)
-        KP_hs_intro_tid, KS_hs_intro_tid
+        KP_hs_ipt_sid, KS_hs_ipt_sid
 	("hidden service introduction point temporary id").
 
       Introduction point encryption key -- A short-term encryption
         keypair used when establishing connections via an introduction
         point. Plays a role analogous to Tor nodes' onion keys. A fresh
         keypair is made for each introduction point.
-        KP_hs_intro_ntor, KS_hs_intro_ntor.
+        KP_hss_ntor, KS_hss_ntor.
 
    Symmetric keys defined in this document:
 
@@ -629,7 +629,7 @@ Table of contents:
 
    Public/private keypairs defined elsewhere:
 
-      Onion key -- Short-term encryption keypair (KS_onion_ntor, KP_onion_ntor).
+      Onion key -- Short-term encryption keypair (KS_ntor, KP_ntor).
 
       (Node) identity key (KP_relayid).
 
@@ -1419,7 +1419,7 @@ Table of contents:
 
           The certificate is a proposal 220 certificate wrapped in
           "-----BEGIN ED25519 CERT-----".  It contains the introduction
-          point authentication key (`KP_hs_intro_tid`), signed by
+          point authentication key (`KP_hs_ipt_sid`), signed by
           the descriptor signing key (`KP_hs_desc_sign`).  The
           certificate type must be [09], and the signing key extension
           is mandatory.
@@ -1438,7 +1438,7 @@ Table of contents:
           [Exactly once per introduction point]
 
           The key is a base64 encoded curve25519 public key used to encrypt
-          the introduction request to service. (`KP_hs_intro_ntor`)
+          the introduction request to service. (`KP_hss_ntor`)
 
         "enc-key" SP KeyType SP key.. NL
 
@@ -1458,7 +1458,7 @@ Table of contents:
           For "ntor" keys, certificate is a proposal 220 certificate
           wrapped in "-----BEGIN ED25519 CERT-----" armor.  The subject
           key is the the ed25519 equivalent of a curve25519 public
-          encryption key (`KP_hs_intro_ntor`), with the ed25519 key
+          encryption key (`KP_hss_ntor`), with the ed25519 key
           derived using the process in proposal 228 appendix A.  The
           signing key is the descriptor signing key (`KP_hs_desc_sign`).
           The certificate type must be [0B], and the signing-key
@@ -1468,7 +1468,7 @@ Table of contents:
           constructed the other way around.  However, for compatibility
           with C tor, implementations need to construct it this way.  It
           serves even less point than "auth-key", however, since the
-          encryption key `KP_hs_intro_ntor` is already available from
+          encryption key `KP_hss_ntor` is already available from
           the `enc-key` entry.
 
         "legacy-key" NL key NL

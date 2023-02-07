@@ -252,7 +252,7 @@ see tor-design.pdf.
       longer advertised.  Because of this, relays MUST retain old keys for a
       while after they're rotated. (See "onion key lifetime parameters" in
       dir-spec.txt.)
-      KP_onion_ntor, KS_onion_ntor.
+      KP_ntor, KS_ntor.
 
    These are Ed25519 keys:
 
