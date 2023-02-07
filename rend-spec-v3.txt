@@ -1371,7 +1371,7 @@ Table of contents:
       A space-separated list of introduction-layer authentication types; see
       section [INTRO-AUTH] for more info. A client that does not support at
       least one of these authentication types will not be able to contact the
-      host. Recognized types are: 'password' and 'ed25519'.
+      host. Recognized types are: 'ed25519'.
 
      "single-onion-service"
 
