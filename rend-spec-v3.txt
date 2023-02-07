@@ -626,13 +626,6 @@ Table of contents:
         use.
         KP_hss_desc_enc, KS_hss_desc_enc
 
-   Symmetric keys defined in this document:
-
-      Descriptor encryption keys -- A symmetric encryption key used to
-        encrypt the body of hidden service descriptors. Derived from the
-        current period and the hidden service credential.
-        K_desc_enc.
-
    Nonces defined in this document:
 
       N_hs_desc_enc -- a nonce used to derive keys to decrypt the inner
