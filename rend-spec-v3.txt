@@ -592,7 +592,7 @@ Table of contents:
         the public blinded identity key for a service.  This key is used
         as an index in the DHT-like structure of the directory system
         (see [SUBCRED]).
-        KP_blind_id, KS_blind_id.
+        KP_hs_blind_id, KS_hs_blind_id.
 
       Descriptor signing key -- A key used to sign hidden service
         descriptors.  This is signed by blinded signing keys. Unlike
