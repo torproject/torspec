@@ -604,7 +604,7 @@ Table of contents:
 
       Introduction point authentication key -- A short-term signing
         keypair used to identify a hidden service's session at a given
-        introduction point. The service makes a fresh keypair is made for each
+        introduction point. The service makes a fresh keypair for each
         introduction point; these are used to sign the request that a
         hidden service host makes when establishing an introduction
         point, so that clients who know the public component of this key
