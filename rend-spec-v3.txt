@@ -612,12 +612,12 @@ Table of contents:
         service. No keypair is ever used with more than one introduction
         point. (previously called a "service key" in rend-spec.txt)
         KP_hs_ipt_sid, KS_hs_ipt_sid
-	("hidden service introduction point session id").
+        ("hidden service introduction point session id").
 
       Introduction point encryption key -- A short-term encryption
         keypair used when establishing connections via an introduction
         point. Plays a role analogous to Tor nodes' onion keys. The service
-        makes a fresh keypair is made for each introduction point.
+        makes a fresh keypair for each introduction point.
         KP_hss_ntor, KS_hss_ntor.
 
       Ephemeral descriptor encryption key -- A short-lived encryption
@@ -728,7 +728,7 @@ Table of contents:
          * the daily subcredential,
          * the hidden service directories' public keys,
          * a shared random value that changes in each time period,
-	   shared_random_value.
+           shared_random_value.
          * a set of network-wide networkstatus consensus parameters.
            (Consensus parameters are integer values voted on by authorities
            and published in the consensus documents, described in
