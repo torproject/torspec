@@ -811,7 +811,7 @@ Table of contents:
    derived, the uploading or downloading party calculates:
 
         for replicanum in 1...hsdir_n_replicas:
-            hs_index(replicanum) = H("store-at-idx" |
+            hs_service_index(replicanum) = H("store-at-idx" |
                                      blinded_public_key |
                                      INT_8(replicanum) |
                                      INT_8(period_length) |
@@ -825,7 +825,7 @@ Table of contents:
    Then, for each node listed in the current consensus with the HSDir flag,
    we compute a directory index for that node as:
 
-           hsdir_index(node) = H("node-idx" | node_identity |
+           hs_relay_index(node) = H("node-idx" | node_identity |
                                  shared_random_value |
                                  INT_8(period_num) |
                                  INT_8(period_length) )
@@ -836,7 +836,7 @@ Table of contents:
 
    Finally, for replicanum in 1...hsdir_n_replicas, the hidden service
    host uploads descriptors to the first hsdir_spread_store nodes whose
-   indices immediately follow hs_index(replicanum). If any of those
+   indices immediately follow hs_service_index(replicanum). If any of those
    nodes have already been selected for a lower-numbered replica of the
    service, any nodes already chosen are disregarded (i.e. skipped over)
    when choosing a replica's hsdir_spread_store nodes.
