@@ -817,7 +817,7 @@ Table of contents:
    derived, the uploading or downloading party calculates:
 
         for replicanum in 1...hsdir_n_replicas:
-            hs_index(replicanum) = H("store-at-idx" |
+            hs_service_index(replicanum) = H("store-at-idx" |
                                      blinded_public_key |
                                      INT_8(replicanum) |
                                      INT_8(period_length) |
@@ -831,7 +831,7 @@ Table of contents:
    Then, for each node listed in the current consensus with the HSDir flag,
    we compute a directory index for that node as:
 
-           hsdir_index(node) = H("node-idx" | node_identity |
+           hs_relay_index(node) = H("node-idx" | node_identity |
                                  shared_random_value |
                                  INT_8(period_num) |
                                  INT_8(period_length) )
@@ -842,7 +842,7 @@ Table of contents:
 
    Finally, for replicanum in 1...hsdir_n_replicas, the hidden service
    host uploads descriptors to the first hsdir_spread_store nodes whose
-   indices immediately follow hs_index(replicanum). If any of those
+   indices immediately follow hs_service_index(replicanum). If any of those
    nodes have already been selected for a lower-numbered replica of the
    service, any nodes already chosen are disregarded (i.e. skipped over)
    when choosing a replica's hsdir_spread_store nodes.
@@ -1215,7 +1215,7 @@ Table of contents:
 
       If client authorization is disabled, the value here should be "x25519".
 
-     "desc-auth-ephemeral-key" SP key NL
+     "desc-auth-ephemeral-key" SP KP_hs_desc_ephem NL
 
       [Exactly once]
 
@@ -1242,21 +1242,15 @@ Table of contents:
       a pre-shared x25519 keypair (`KP_hsc_desc_enc`) which is used to
       decrypt the descriptor cookie.
 
+
       We now describe the descriptor cookie encryption scheme. Here are the
       relevant keys:
 
-          # KS/KP_hsc_desc_enc
-          client_x = private x25519 key of authorized client
-          client_X = public x25519 key of authorized client
-          # KS/KP_hss_desc_enc
-          hs_y = private key of ephemeral x25519 keypair of hidden service
-          hs_Y = public key of ephemeral x25519 keypair of hidden service
-          # N_hs_desc_enc
           descriptor_cookie = descriptor cookie used to encrypt the descriptor
 
       And here is what the hidden service computes:
 
-          SECRET_SEED = x25519(hs_y, client_X)
+          SECRET_SEED = x25519(KS_hs_desc_ephem, KP_hsc_desc_enc)
           KEYS = KDF(N_hs_subcred | SECRET_SEED, 40)
           CLIENT-ID = fist 8 bytes of KEYS
           COOKIE-KEY = last 32 bytes of KEYS
@@ -1359,10 +1353,10 @@ Table of contents:
 
       [Exactly once]
 
-      A space-separated list of integers denoting CREATE2 cell format numbers
-      that the server recognizes. Must include at least ntor as described in
-      tor-spec.txt. See tor-spec section 5.1 for a list of recognized
-      handshake types.
+      A space-separated list of integers denoting CREATE2 cell HTYPEs
+      (handshake types) that the server recognizes. Must include at least
+      ntor as described in tor-spec.txt. See tor-spec section 5.1 for a list
+      of recognized handshake types.
 
      "intro-auth-required" SP types NL
 
