@@ -1638,8 +1638,8 @@ Table of contents:
    SIG_LEN is the length of the signature.
 
    SIG is a signature, using AUTH_KEY, of all contents of the cell, up
-   to but not including SIG. These contents are prefixed with the string
-   "Tor establish-intro cell v1".
+   to but not including SIG_LEN and SIG. These contents are prefixed
+   with the string "Tor establish-intro cell v1".
 
    Upon receiving an ESTABLISH_INTRO cell, a Tor node first decodes the
    key and the signature, and checks the signature. The node must reject
