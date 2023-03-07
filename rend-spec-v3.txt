@@ -1614,7 +1614,7 @@ Table of contents:
 
    The AUTH_KEY_LEN field determines the length of the AUTH_KEY
    field. The AUTH_KEY field contains the public introduction point
-   authentication key.
+   authentication key, KP_hs_ipt_sid.
 
    The EXT_FIELD_TYPE, EXT_FIELD_LEN, EXT_FIELD entries are reserved for
    extensions to the introduction protocol. Extensions with
