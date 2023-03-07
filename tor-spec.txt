@@ -109,6 +109,8 @@ see tor-design.pdf.
 
    We use "byte" and "octet" interchangeably.  Possibly we shouldn't.
 
+   Some specs mention "base32".  This means RFC4648, without "=" padding.
+
 0.1.1. Encoding integers
 
    Unless we explicitly say otherwise below, all numeric values in the
