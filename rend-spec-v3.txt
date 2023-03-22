@@ -238,7 +238,7 @@ Table of contents:
            LSPEC  (Link specifier)                [LSLEN bytes]
 
    Link specifier types are as described in tor-spec.txt. Every set of
-   link specifiers MUST include at minimum specifiers of type [00]
+   link specifiers SHOULD include at minimum specifiers of type [00]
    (TLS-over-TCP, IPv4), [02] (legacy node identity) and [03] (ed25519
    identity key).
 
@@ -1380,7 +1380,7 @@ Table of contents:
             point section]
 
           The link-specifiers is a base64 encoding of a link specifier
-          block in the format described in BUILDING-BLOCKS.
+          block in the format described in [BUILDING-BLOCKS] above.
 
           As of 0.4.1.1-alpha, services include both IPv4 and IPv6 link
           specifiers in descriptors. All available addresses SHOULD be
@@ -1392,8 +1392,9 @@ Table of contents:
           recognize; instead, it should use them verbatim in its EXTEND
           request to the introduction point.
 
-          The client MAY perform basic validity checks on the link
-          specifiers in the descriptor. These checks SHOULD NOT leak
+          The client SHOULD perform the basic validity checks on the link
+          specifiers in the descriptor, described in `tor-spec.txt`
+          section 5.1.2. These checks SHOULD NOT leak
           detailed information about the client's version, configuration,
           or consensus. (See 3.3 for service link specifier handling.)
 
@@ -1903,7 +1904,7 @@ Table of contents:
 
    The hidden service should handle invalid or unrecognised link specifiers
    the same way as clients do in section 2.5.2.2. In particular, services
-   MAY perform basic validity checks on link specifiers, and SHOULD NOT
+   SHOULD perform basic validity checks on link specifiers, and SHOULD NOT
    reject unrecognised link specifiers, to avoid information leaks.
 
    The ONION_KEY_TYPE field is:

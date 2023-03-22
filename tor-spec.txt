@@ -1128,7 +1128,9 @@ see tor-design.pdf.
            be listed.
 
    Nodes MUST ignore unrecognized specifiers, and MUST accept multiple
-   instances of specifiers other than 'legacy identity'.
+   instances of specifiers other than 'legacy identity' and
+   'Ed25519 identity'.  (Nodes SHOULD reject link specifier lists
+   that include multiple instances of either one of those specifiers.)
 
    For purposes of indistinguishability, implementations SHOULD send
    these link specifiers, if using them, in this order: [00], [02], [03],
@@ -1154,7 +1156,7 @@ see tor-design.pdf.
    target OR did not prove its ownership of any such identity key.
    If only one identity key is provided, but the extending OR knows
    the other (from directory information), then the OR SHOULD also
-   enforce that key.
+   enforce the key in the directory.
 
    If an extending OR has a channel with a given Ed25519 ID and RSA
    identity, and receives a request for that Ed25519 ID and a
