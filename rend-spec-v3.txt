@@ -1398,6 +1398,10 @@ Table of contents:
           detailed information about the client's version, configuration,
           or consensus. (See 3.3 for service link specifier handling.)
 
+          When connecting to the introduction point, the client SHOULD send
+          this list of link specifiers verbatim, in the same order as given
+          here.
+
         "onion-key" SP "ntor" SP key NL
 
           [Exactly once per introduction point]
@@ -1906,6 +1910,9 @@ Table of contents:
    the same way as clients do in section 2.5.2.2. In particular, services
    SHOULD perform basic validity checks on link specifiers, and SHOULD NOT
    reject unrecognised link specifiers, to avoid information leaks.
+   The list of link specifiers received here SHOULD either be rejected, or
+   sent verbatim when extending to the rendezvous point, in the same order
+   received.
 
    The ONION_KEY_TYPE field is:
 
