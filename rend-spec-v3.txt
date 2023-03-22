@@ -1403,6 +1403,10 @@ Table of contents:
           this list of link specifiers verbatim, in the same order as given
           here.
 
+          The client MAY reject the list of link specifiers if it is
+          inconsistent with relay information from the directory, but SHOULD
+          NOT modify it.
+
         "onion-key" SP "ntor" SP key NL
 
           [Exactly once per introduction point]
@@ -1914,6 +1918,10 @@ Table of contents:
    The list of link specifiers received here SHOULD either be rejected, or
    sent verbatim when extending to the rendezvous point, in the same order
    received.
+
+   The service MAY reject the list of link specifiers if it is
+   inconsistent with relay information from the directory, but SHOULD
+   NOT modify it.
 
    The ONION_KEY_TYPE field is:
 
