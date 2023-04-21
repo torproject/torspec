@@ -56,8 +56,8 @@ Status: Draft
 
     The small botnet is a bunch of computers lined up to do an introduction
     flooding attack. Assuming 500 medium-range computers, we are talking about
-    an attacker with total access to 10 Thz of CPU and 10 TB of RAM. We consider
-    the upfront cost for this attacker to be about $400.
+    an attacker with total access to 10 Thz of CPU and 10 TB of RAM. We
+    consider the upfront cost for this attacker to be about $400.
 
   "The large botnet"
 
@@ -68,7 +68,7 @@ Status: Draft
 
   We hope that this proposal can help us defend against the script-kiddie
   attacker and small botnets. To defend against a large botnet we would need
-  more tools in our disposal (see [FUTURE_DESIGNS]).
+  more tools at our disposal (see [FUTURE_DESIGNS]).
 
 1.2.2. User profiles [USER_MODEL]
 
@@ -104,8 +104,8 @@ Status: Draft
   This proposal is not perfect and it does not cover all the use cases. Still,
   we think that by covering some use cases and giving reachability to the
   people who really need it, we will severely demotivate the attackers from
-  continuing the DoS attacks and hence stop the DoS threat all
-  together. Furthermore, by increasing the cost to launch a DoS attack, a big
+  continuing the DoS attacks and hence stop the DoS threat all together.
+  Furthermore, by increasing the cost to launch a DoS attack, a big
   class of DoS attackers will disappear from the map, since the expected ROI
   will decrease.
 
@@ -135,33 +135,73 @@ Status: Draft
   introduction phase of the onion service protocol.
 
   The system described in this proposal is not meant to be on all the time, and
-  should only be enabled by services when under duress. The percentage of
-  clients receiving puzzles can also be configured based on the load of the
-  service.
+  it can be entirely disabled for services that do not experience DoS attacks.
 
-  In summary, the following steps are taken for the protocol to complete:
+  When the subsystem is enabled, suggested effort is continuously adjusted and
+  the computational puzzle can be bypassed entirely when the effort reaches
+  zero. In these cases, the proof-of-work subsystem can be dormant but still
+  provide the necessary parameters for clients to voluntarily provide effort
+  in order to get better placement in the priority queue.
+
+  The protocol involves the following major steps:
 
   1) Service encodes PoW parameters in descriptor [DESC_POW]
   2) Client fetches descriptor and computes PoW [CLIENT_POW]
   3) Client completes PoW and sends results in INTRO1 cell [INTRO1_POW]
-  4) Service verifies PoW and queues introduction based on PoW effort [SERVICE_VERIFY]
+  4) Service verifies PoW and queues introduction based on PoW effort
+     [SERVICE_VERIFY]
+  5) Requests are continuously drained from the queue, highest effort first,
+     subject to multiple constraints on speed [HANDLE_QUEUE]
 
 2.2. Proof-of-work overview
 
-2.2.1. Primitives
+2.2.1. Algorithm overview
 
-  For our proof-of-work function we will use the 'equix' scheme by tevador
-  [REF_EQUIX].  Equix is an assymetric PoW function based on Equihash<60,3>. It
-  features lightning fast verification speed, and also aims to minimize the
-  assymetry between CPU and GPU. Furthermore, it's designed for this particular
-  use-case and hence cryptocurrency miners are not incentivized to make
-  optimized ASICs for it.
+  For our proof-of-work function we will use the Equi-X scheme by tevador
+  [REF_EQUIX].  Equi-X is an assymetric PoW function based on Equihash<60,3>,
+  using HashX as the underlying layer. It features lightning fast verification
+  speed, and also aims to minimize the assymetry between CPU and GPU.
+  Furthermore, it's designed for this particular use-case and hence
+  cryptocurrency miners are not incentivized to make optimized ASICs for it.
 
-  The Equix scheme provides two functions that will be used in this proposal:
-      - equix_solve(seed, nonce, effort) which solves a puzzle instance.
-      - equix_verify(seed, nonce, effort, solution) which verifies a puzzle solution.
+  The overall scheme consists of several layers that provide different pieces
+  of this functionality:
 
-  We tune equix in section [EQUIX_TUNING].
+  1) At the lowest layers, blake2b and siphash are used as hashing and PRNG
+     algorithms that are well suited to common 64-bit CPUs.
+  2) A custom hash function, HashX, uses dynamically generated functions that
+     are tuned to be a good match for pipelined integer and floating point
+     performance on current 64-bit CPUs. This layer provides the strongest ASIC
+     resistance, since a reimplementation in hardware would need to implement
+     much of a CPU to compute these functions efficiently.
+  3) The Equi-X layer itself builds on HashX and adds an algorithmic puzzle
+     that's designed to be strongly asymmetric and to require RAM to solve
+     efficiently.
+  4) The PoW protocol itself builds on this Equi-X function with a particular
+     construction of the challenge input and particular constraints on the
+     allowed blake2b hash of the solution. This layer provides a linearly
+     adjustible effort that we can verify.
+  5) Above the level of individual PoW handshakes, the client and service
+     form a closed-loop system that adjusts the effort of future handshakes.
+
+  The Equi-X scheme provides two functions that will be used in this proposal:
+      - equix_solve(challenge) which solves a puzzle instance, returning
+        a variable number of solutions per invocation depending on the specific
+        challenge value.
+      - equix_verify(challenge, solution) which verifies a puzzle solution
+        quickly. Verification still depends on executing the HashX function,
+        but far fewer times than when searching for a solution.
+
+  For the purposes of this proposal, all cryptographic algorithms are assumed
+  to produce and consume byte strings, even if internally they operate on
+  some other data type like 64-bit words. This is conventionally little endian
+  order for blake2b, which contrasts with Tor's typical use of big endian.
+  HashX itself is configured with an 8-byte output but its input is a single
+  64-bit word of undefined byte order, of which only the low 16 bits are used
+  by Equi-X in its solution output. We treat Equi-X solution arrays as byte
+  arrays using their packed little endian 16-bit representation.
+
+  We tune Equi-X in section [EQUIX_TUNING].
 
 2.2.2. Dynamic PoW
 
@@ -184,21 +224,31 @@ Status: Draft
 
 2.2.3. PoW effort
 
-  For our dynamic PoW system to work, we will need to be able to compare PoW
-  tokens with each other. To do so we define a function:
+  It's common for proof-of-work systems to define an exponential effort
+  function based on a particular number of leading zero bits or equivalent.
+  For the benefit of our effort estimation system, it's quite useful if we
+  instead have a linear scale. We use the first 32 bits of a hashed version
+  of the Equi-X solution as compared to the full 32-bit range.
+
+  Conceptually we could define a function:
          unsigned effort(uint8_t *token)
-  which takes as its argument a hash output token, interprets it as a
+  which takes as its argument a hashed solution, interprets it as a
   bitstring, and returns the quotient of dividing a bitstring of 1s by it.
 
   So for example:
-         effort(00000001100010101101) = 11111111111111111111 / 00000001100010101101
+         effort(00000001100010101101) = 11111111111111111111
+                                          / 00000001100010101101
   or the same in decimal:
          effort(6317) = 1048575 / 6317 = 165.
 
-  This definition of effort has the advantage of directly expressing the
-  expected number of hashes that the client had to calculate to reach the
-  effort. This is in contrast to the (cheaper) exponential effort definition of
-  taking the number of leading zero bits.
+  In practice we can avoid even having to perform this division, performing
+  just one multiply instead to see if a request's claimed effort is supported
+  by the smallness of the resulting 32-bit hash prefix. This assumes we send
+  the desired effort explicitly as part of each PoW solution. We do want to
+  force clients to pick a specific effort before looking for a solution,
+  otherwise a client could opportunistically claim a very large effort any
+  time a lucky hash prefix comes up. Thus the effort is communicated explicitly
+  in our protocol, and it forms part of the concatenated Equi-X challenge.
 
 3. Protocol specification
 
@@ -219,14 +269,16 @@ Status: Draft
                   without trailing padding.
 
         suggested-effort: An unsigned integer specifying an effort value that
-                  clients should aim for when contacting the service. See
+                  clients should aim for when contacting the service. Can be
+                  zero to mean that PoW is available but not currently
+                  suggested for a first connection attempt. See
                   [EFFORT_ESTIMATION] for more details here.
 
-        expiration-time: A timestamp in "YYYY-MM-DD SP HH:MM:SS" format after
-                         which the above seed expires and is no longer valid as
-                         the input for PoW. It's needed so that the size of our
-                         replay cache does not grow infinitely. It should be
-                         set to RAND_TIME(now+7200, 900) seconds.
+        expiration-time: A timestamp in "YYYY-MM-DDTHH:MM:SS" format (iso time
+                         with no space) after which the above seed expires and
+                         is no longer valid as the input for PoW. It's needed
+                         so that our replay cache does not grow infinitely. It
+                         should be set to RAND_TIME(now+7200, 900) seconds.
 
    The service should refresh its seed when expiration-time passes. The service
    SHOULD keep its previous seed in memory and accept PoWs using it to avoid
@@ -240,7 +292,8 @@ Status: Draft
 3.2. Client fetches descriptor and computes PoW [CLIENT_POW]
 
   If a client receives a descriptor with "pow-params", it should assume that
-  the service is expecting a PoW input as part of the introduction protocol.
+  the service is prepared to receive PoW solutions as part of the introduction
+  protocol.
 
   The client parses the descriptor and extracts the PoW parameters. It makes
   sure that the <expiration-time> has not expired and if it has, it needs to
@@ -248,24 +301,37 @@ Status: Draft
 
   The client should then extract the <suggested-effort> field to configure its
   PoW 'target' (see [REF_TARGET]). The client SHOULD NOT accept 'target' values
-  that will cause an infinite PoW computation. {XXX: How to enforce this?}
+  that will cause unacceptably long PoW computation.
 
   To complete the PoW the client follows the following logic:
 
-      a) Client selects a target effort E.
-      b) Client generates a random 16-byte nonce N.
+      a) Client selects a target effort E, based on <suggested-effort> and past
+         connection attempt history.
+      b) Client generates a secure random 16-byte nonce N, as the starting
+         point for the solution search.
       c) Client derives seed C by decoding 'seed-b64'.
       d) Client calculates S = equix_solve(C || N || E)
-      e) Client calculates R = blake2b(C || N || E || S)
+      e) Client calculates R = ntohl(blake2b_32(C || N || E || S))
       f) Client checks if R * E <= UINT32_MAX.
-        f1) If yes, success! The client can submit N, E, the first 4 bytes of C
-    and S.
+        f1) If yes, success! The client can submit N, E, the first 4 bytes of
+        C, and S.
         f2) If no, fail! The client interprets N as a 16-byte little-endian
-    integer, increments it by 1 and goes back to step d).
+        integer, increments it by 1 and goes back to step d).
+
+  Note that the blake2b hash includes the output length parameter in its
+  initial state vector, so a blake2b_32 is not equivalent to the prefix of a
+  blake2b_512. We calculate the 32-bit blake2b specifically, and interpret it
+  in network byte order as an unsigned integer.
 
   At the end of the above procedure, the client should have S as the solution
-  of the Equix puzzle with N as the nonce, C as the seed. How quickly this
+  of the Equix-X puzzle with N as the nonce, C as the seed. How quickly this
   happens depends solely on the target effort E parameter.
+
+  The algorithm as described is suitable for single-threaded computation.
+  Optionally, a client may choose multiple nonces and attempt several solutions
+  in parallel on separate CPU cores. The specific choice of nonce is entirely
+  up to the client, so parallelization choices like this do not impact the
+  network protocol's interoperability at all.
 
 3.3. Client sends PoW in INTRO1 cell [INTRO1_POW]
 
@@ -292,6 +358,7 @@ Status: Draft
 
     POW_VERSION is 1 for the protocol specified in this proposal
     POW_NONCE is the nonce 'N' from the section above
+    POW_EFFORT is the 32-bit integer effort value, in network byte order
     POW_SEED is the first 4 bytes of the seed used
 
    This will increase the INTRODUCE1 payload size by 43 bytes since the
@@ -303,10 +370,10 @@ Status: Draft
 3.4. Service verifies PoW and handles the introduction  [SERVICE_VERIFY]
 
    When a service receives an INTRODUCE1 with the PROOF_OF_WORK extension, it
-   should check its configuration on whether proof-of-work is required to
-   complete the introduction. If it's not required, the extension SHOULD BE
-   ignored. If it is required, the service follows the procedure detailed in
-   this section.
+   should check its configuration on whether proof-of-work is enabled on the
+   service. If it's not enabled, the extension SHOULD BE ignored. If enabled,
+   even if the suggested effort is currently zero, the service follows the
+   procedure detailed in this section.
 
    If the service requires the PROOF_OF_WORK extension but received an
    INTRODUCE1 cell without any embedded proof-of-work, the service SHOULD
@@ -319,12 +386,12 @@ Status: Draft
 
       a) Find a valid seed C that starts with POW_SEED. Fail if no such seed
          exists.
-      b) Fail if E = POW_EFFORT is lower than the minimum effort.
-      c) Fail if N = POW_NONCE is present in the replay cache (see [REPLAY_PROTECTION[)
-      d) Calculate R = blake2b(C || N || E || S)
-      e) Fail if R * E > UINT32_MAX
-      f) Fail if equix_verify(C || N || E, S) != EQUIX_OK
-      g) Put the request in the queue with a priority of E
+      b) Fail if N = POW_NONCE is present in the replay cache
+              (see [REPLAY_PROTECTION])
+      c) Calculate R = ntohl(blake2b_32(C || N || E || S))
+      d) Fail if R * E > UINT32_MAX
+      e) Fail if equix_verify(C || N || E, S) != EQUIX_OK
+      f) Put the request in the queue with a priority of E
 
    If any of these steps fail the service MUST ignore this introduction request
    and abort the protocol.
@@ -349,7 +416,9 @@ Status: Draft
   will flag some connections as replays even if they are not; with this false
   positive probability increasing as the number of entries increase. However,
   with the right parameter tuning this probability should be negligible and
-  well handled by clients. {TODO: Figure bloom filter}
+  well handled by clients.
+
+  {TODO: Design and specify a suitable bloom filter for this purpose.}
 
 3.4.2. The Introduction Queue  [INTRO_QUEUE]
 
@@ -365,11 +434,11 @@ Status: Draft
   structure. Each element in that priority queue is an introduction request,
   and its priority is the effort put into its PoW:
 
-  When a verified introduction comes through, the service uses the effort()
-  function with the solution S as its input, and uses the output to place requests
-  into the right position of the priority_queue: The bigger the effort, the
-  more priority it gets in the queue. If two elements have the same effort, the
-  older one has priority over the newer one.
+  When a verified introduction comes through, the service uses its included
+  effort commitment value to place each request into the right position of the
+  priority_queue: The bigger the effort, the more priority it gets in the
+  queue. If two elements have the same effort, the older one has priority over
+  the newer one.
 
 3.4.2.2. Handling introductions from the introduction queue [HANDLE_QUEUE]
 
@@ -380,43 +449,103 @@ Status: Draft
 
 3.4.3. PoW effort estimation [EFFORT_ESTIMATION]
 
-  The service starts with a default suggested-effort value of 5000 (see
-  [EQUIX_DIFFICULTY] section for more info).
+3.4.3.1. High-level description of the effort estimation process
 
-  Then during its operation the service continuously keeps track of the
-  received PoW cell efforts to inform its clients of the effort they should put
-  in their introduction to get service. The service informs the clients by
-  using the <suggested-effort> field in the descriptor.
+  The service starts with a default suggested-effort value of 0, which keeps
+  the PoW defenses dormant until we notice signs of overload.
 
-  Everytime the service handles or trims an introduction request from the
-  priority queue in [HANDLE_QUEUE], the service adds the request's effort to a
-  sorted list.
+  The overall process of determining effort can be thought of as a set of
+  multiple coupled feedback loops. Clients perform their own effort
+  adjustments via [CLIENT_TIMEOUT] atop a base effort suggested by the service.
+  That suggestion incorporates the service's control adjustments atop a base
+  effort calculated using a sum of currently-queued client effort.
 
-  Then every HS_UPDATE_PERIOD seconds (which is controlled through a consensus
-  parameter and has a default value of 300 seconds) and while the DoS feature
-  is enabled, the service updates its <suggested-effort> value as follows:
+  Each feedback loop has an opportunity to cover different time scales. Clients
+  can make adjustments at every single circuit creation request, whereas
+  services are limited by the extra load that frequent updates would place on
+  HSDir nodes.
 
-    1. Set TOTAL_EFFORT to the sum of the effort of all valid requests that
-       have been received since the last HS descriptor update (this includes
-       all handled requests, trimmed requests and requests still in the queue)
+  In the combined client/service system these client-side increases are
+  expected to provide the most effective quick response to an emerging DoS
+  attack. After early clients increase the effort using [CLIENT_TIMEOUT],
+  later clients will benefit from the service detecting this increased queued
+  effort and offering a larger suggested_effort.
 
-    2. Set SUGGESTED_EFFORT = TOTAL_EFFORT / (SVC_BOTTOM_CAPACITY * HS_UPDATE_PERIOD).
-       The denominator above is the max number of requests that the service
-       could have handled during that time.
+  Effort increases and decreases both have an intrinsic cost. Increasing effort
+  will make the service more expensive to contact, and decreasing effort makes
+  new requests likely to become backlogged behind older requests. The steady
+  state condition is preferable to either of these side-effects, but ultimately
+  it's expected that the control loop always oscillates to some degree.
 
-    3. Set <suggested-effort> to max(MIN_EFFORT, SUGGESTED_EFFORT).
+3.4.3.2. Service-side effort estimation
 
-    During the above procedure we use the following default values:
-      - MIN_EFFORT = 1000, as the result of a simulation experiment [REF_TEVADOR_SIM]
-      - SVC_BOTTOM_CAPACITY = 100, which is the number of introduction requests
-        that can be handled by the service per second. This was computed in
-        [POW_DIFFICULTY_TOR] as 180, but we reduced it to 100 to account for
-        slower computers and networks.
+  Services keep an internal effort estimation which updates on a regular
+  periodic timer in response to measurements made on the queueing behavior
+  in the previous period. These internal effort changes can optionally trigger
+  client-visible suggested_effort changes when the difference is great enough
+  to warrant republishing to the HSDir.
 
-  The above algorithm is meant to balance the suggested effort based on the
-  effort of all received requests. It attempts to dynamically adjust the
-  suggested effort so that it increases when an attack is received, and tones
-  down when the attack has stopped.
+  This evaluation and update period is referred to as HS_UPDATE_PERIOD.
+  The service side effort estimation takes inspiration from TCP congestion
+  control's additive increase / multiplicative decrease approach, but unlike
+  a typical AIMD this algorithm is fixed-rate and doesn't update immediately
+  in response to events.
+
+  {TODO: HS_UPDATE_PERIOD is hardcoded to 300 (5 minutes) currently, but it
+   should be configurable in some way. Is it more appropriate to use the
+   service's torrc here or a consensus parameter?}
+
+3.4.3.3. Per-period service state
+
+  During each update period, the service maintains some state:
+
+    1. TOTAL_EFFORT, a sum of all effort values for rendezvous requests that
+       were successfully validated and enqueued.
+
+    2. REND_HANDLED, a count of rendezvous requests that were actually
+       launched. Requests that made it to dequeueing but were too old to launch
+       by then are not included.
+
+    3. HAD_QUEUE, a flag which is set if at any time in the update period we
+       saw the priority queue filled with more than a minimum amount of work,
+       greater than we would expect to process in approximately 1/4 second
+       using the configured dequeue rate.
+
+    4. MAX_TRIMMED_EFFORT, the largest observed single request effort that we
+       discarded during the period. Requests are discarded either due to age
+       (timeout) or during culling events that discard the bottom half of the
+       entire queue when it's too full.
+
+3.4.3.4. Service AIMD conditions
+
+  At the end of each period, the service may decide to increase effort,
+  decrease effort, or make no changes, based on these accumulated state values:
+
+    1. If MAX_TRIMMED_EFFORT > our previous internal suggested_effort,
+       always INCREASE. Requests that follow our latest advice are being
+       dropped.
+
+    2. If the HAD_QUEUE flag was set and the queue still contains at least
+       one item with effort >= our previous internal suggested_effort,
+       INCREASE. Even if we haven't yet reached the point of dropping requests,
+       this signal indicates that the our latest suggestion isn't high enough
+       and requests will build up in the queue.
+
+    3. If neither condition (1) or (2) are taking place and the queue is below
+       a level we would expect to process in approximately 1/4 second, choose
+       to DECREASE.
+
+    4. If none of these conditions match, the suggested effort is unchanged.
+
+  When we INCREASE, the internal suggested_effort is increased to either its
+  previous value + 1, or (TOTAL_EFFORT / REND_HANDLED), whichever is larger.
+
+  When we DECREASE, the internal suggested_effort is scaled by 2/3rds.
+
+  Over time, this will continue to decrease our effort suggestion any time the
+  service is fully processing its request queue. If the queue stays empty, the
+  effort suggestion decreases to zero and clients should no longer submit a
+  proof-of-work solution with their first connection attempt.
 
   It's worth noting that the suggested-effort is not a hard limit to the
   efforts that are accepted by the service, and it's only meant to serve as a
@@ -424,33 +553,17 @@ Status: Draft
   to the service. The service still adds requests with lower effort than
   suggested-effort to the priority queue in [ADD_QUEUE].
 
-  Finally, the above algorithm will never reset back to zero suggested-effort,
-  even if the attack is completely over. That's because in that case it would
-  be impossible to determine the total computing power of connecting
-  clients. Instead it will reset back to MIN_EFFORT, and the operator will have
-  to manually shut down the anti-DoS mechanism.
+3.4.3.5. Updating descriptor with new suggested effort
 
-  {XXX: SVC_BOTTOM_CAPACITY is static above and will not be accurate for all
-  boxes. Ideally we should calculate SVC_BOTTOM_CAPACITY dynamically based on
-  the resources of every onion service while the algorithm is running.}
+  The service descriptors may be updated for multiple reasons including
+  introduction point rotation common to all v3 onion services, the scheduled
+  seed rotations described in [DESC_POW], and updates to the effort suggestion.
+  Even though the internal effort estimate updates on a regular timer, we avoid
+  propagating those changes into the descriptor and the HSDir hosts unless
+  there is a significant change.
 
-3.4.3.1. Updating descriptor with new suggested effort
-
-  Every HS_UPDATE_PERIOD seconds the service should upload a new descriptor
-  with a new suggested-effort value.
-
-  The service should avoid uploading descriptors too often to avoid overwhelming
-  the HSDirs. The service SHOULD NOT upload descriptors more often than
-  HS_UPDATE_PERIOD. The service SHOULD NOT upload a new descriptor if the
-  suggested-effort value changes by less than 15%.
-
-  {XXX: Is this too often? Perhaps we can set different limits for when the
-  difficulty goes up and different for when it goes down. It's more important
-  to update the descriptor when the difficulty goes up.}
-
-  {XXX: What attacks are possible here? Can the attacker intentionally hit this
-  rate-limit and then influence the suggested effort so that clients do not
-  learn about the new effort?}
+  If the PoW params otherwise match but the seed has changed by less than 15
+  percent, services SHOULD NOT upload a new descriptor.
 
 4. Client behavior [CLIENT_BEHAVIOR]
 
@@ -463,8 +576,10 @@ Status: Draft
   not allow the service to inform the client that the rendezvous is never gonna
   occur.
 
-  For this reason we need to define some client behaviors to work around these
-  issues.
+  From the client's perspective there's no way to attribute this failure to
+  the service itself rather than the introduction point, so error accounting
+  is performed separately for each introduction-point. Existing mechanisms
+  will discard an introduction point that's required too many retries.
 
 4.1. Clients handling timeouts [CLIENT_TIMEOUT]
 
@@ -477,31 +592,35 @@ Status: Draft
 
   If the rendezvous request times out, the client SHOULD fetch a new descriptor
   for the service to make sure that it's using the right suggested-effort for
-  the PoW and the right PoW seed. The client SHOULD NOT fetch service
-  descriptors more often than every 'hs-pow-desc-fetch-rate-limit' seconds
-  (which is controlled through a consensus parameter and has a default value of
-  600 seconds).
+  the PoW and the right PoW seed. If the fetched descriptor includes a new
+  suggested effort or seed, it should first retry the request with these
+  parameters.
 
-  {XXX: Is this too rare? Too often?}
+  {TODO: This is not actually implemented yet, but we should do it. How often
+     should clients at most try to fetch new descriptors? Determined by a
+     consensus parameter? This change will also allow clients to retry
+     effectively in cases where the service has just been reconfigured to
+     enable PoW defenses.}
 
-  When the client fetches a new descriptor, it should try connecting to the
-  service with the new suggested-effort and PoW seed. If that doesn't work, it
-  should double the effort and retry. The client should keep on
-  doubling-and-retrying until it manages to get service, or its able to fetch a
-  new descriptor again.
+  Every time the client retries the connection, it will count these failures
+  per-introduction-point. These counts of previous retries are combined with
+  the service's suggested_effort when calculating the actual effort to spend
+  on any individual request to a service that advertises PoW support, even
+  when the currently advertised suggested_effort is zero.
 
-  {XXX: This means that the client will keep on spinning and
-  doubling-and-retrying for a service under this situation. There will never be
-  a "Client connection timed out" page for the user. Is this good? Is this bad?
-  Should we stop doubling-and-retrying after some iterations? Or should we
-  throw a custom error page to the user, and ask the user to stop spinning
-  whenever they want?}
+  On each retry, the client modifies its solver effort:
 
-4.3. Other descriptor issues
+    1. If the effort is below (CLIENT_POW_EFFORT_DOUBLE_UNTIL = 1000)
+       it will be doubled.
 
-  Another race condition here is if the service enables PoW, while a client has
-  a cached descriptor. How will the client notice that PoW is needed? Does it
-  need to fetch a new descriptor? Should there be another feedback mechanism?
+    2. Otherwise, multiply the effort by (CLIENT_POW_RETRY_MULTIPLIER = 1.5).
+
+    3. Constrain the new effort to be at least
+       (CLIENT_MIN_RETRY_POW_EFFORT = 8) and no greater than
+       (CLIENT_MAX_POW_EFFORT = 10000)
+
+  {TODO: These hardcoded limits should be replaced by timed limits and/or
+      an unlimited solver with robust cancellation. This is issue tor#40787}
 
 5. Attacker strategies [ATTACK_META]
 
@@ -520,7 +639,8 @@ Status: Draft
   that this attack is not possible: we tune this PoW parameter in section
   [POW_TUNING_VERIFICATION].
 
-5.1.2. Overwhelm rendezvous capacity (aka "Overwhelm bottom half") [ATTACK_BOTTOM_HALF]
+5.1.2. Overwhelm rendezvous capacity (aka "Overwhelm bottom half")
+       [ATTACK_BOTTOM_HALF]
 
   Given the way the introduction queue works (see [HANDLE_QUEUE]), a very
   effective strategy for the attacker is to totally overwhelm the queue
