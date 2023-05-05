@@ -1267,6 +1267,7 @@ see tor-design.pdf.
                   a private/public keypair.
       m_expand  = PROTOID | ":key_expand"
       KEYID(A)  = A
+      EXP(a, b) = The ECDH algorithm for establishing a shared secret.
 
    To perform the handshake, the client needs to know an identity key
    digest for the server, and an ntor onion key (a curve25519 public
