@@ -303,6 +303,12 @@ Status: Draft
   PoW 'target' (see [REF_TARGET]). The client SHOULD NOT accept 'target' values
   that will cause unacceptably long PoW computation.
 
+  The client uses a "personalization string" P equal to the following
+  nul-terminated ascii string: "Tor hs intro v1\0".
+
+  The client looks up `ID`, the current 32-byte blinded public ID
+  (KP_hs_blind_id) for the onion service.
+
   To complete the PoW the client follows the following logic:
 
       a) Client selects a target effort E, based on <suggested-effort> and past
@@ -310,8 +316,8 @@ Status: Draft
       b) Client generates a secure random 16-byte nonce N, as the starting
          point for the solution search.
       c) Client derives seed C by decoding 'seed-b64'.
-      d) Client calculates S = equix_solve(C || N || E)
-      e) Client calculates R = ntohl(blake2b_32(C || N || E || S))
+      d) Client calculates S = equix_solve(P || ID || C || N || E)
+      e) Client calculates R = ntohl(blake2b_32(P || ID || C || N || E || S))
       f) Client checks if R * E <= UINT32_MAX.
         f1) If yes, success! The client can submit N, E, the first 4 bytes of
         C, and S.
@@ -388,9 +394,9 @@ Status: Draft
          exists.
       b) Fail if N = POW_NONCE is present in the replay cache
               (see [REPLAY_PROTECTION])
-      c) Calculate R = ntohl(blake2b_32(C || N || E || S))
+      c) Calculate R = ntohl(blake2b_32(P || ID || C || N || E || S))
       d) Fail if R * E > UINT32_MAX
-      e) Fail if equix_verify(C || N || E, S) != EQUIX_OK
+      e) Fail if equix_verify(P || ID || C || N || E, S) != EQUIX_OK
       f) Put the request in the queue with a priority of E
 
    If any of these steps fail the service MUST ignore this introduction request
