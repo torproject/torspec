@@ -249,7 +249,7 @@ Proposals by number:
 326  The "tor-relay" Well-Known Resource Identifier [OPEN]
 327  A First Take at PoW Over Introduction Circuits [DRAFT]
 328  Make Relays Report When They Are Overloaded [CLOSED]
-329  Overcoming Tor's Bottlenecks with Traffic Splitting [DRAFT]
+329  Overcoming Tor's Bottlenecks with Traffic Splitting [NEEDS-REVISION]
 330  Modernizing authority contact entries [OPEN]
 331  Res tokens: Anonymous Credentials for Onion Service DoS Resilience [DRAFT]
 332  Ntor protocol with extra data, version 3 [FINISHED]
@@ -263,6 +263,7 @@ Proposals by number:
 340  Packed and fragmented relay messages [OPEN]
 341  A better algorithm for out-of-sockets eviction [OPEN]
 342  Decoupling hs_interval and SRV lifetime [DRAFT]
+343  CAA Extensions for the Tor Rendezvous Specification [OPEN]
 
 
 Proposals by status:
@@ -271,7 +272,6 @@ Proposals by status:
    294  TLS 1.3 Migration
    316  FlashFlow: A Secure Speed Test for Tor (Parent Proposal)
    327  A First Take at PoW Over Introduction Circuits
-   329  Overcoming Tor's Bottlenecks with Traffic Splitting
    331  Res tokens: Anonymous Credentials for Onion Service DoS Resilience
    342  Decoupling hs_interval and SRV lifetime
  NEEDS-REVISION:
@@ -283,6 +283,7 @@ Proposals by status:
    279  A Name System API for Tor Onion Services
    291  The move to two guard nodes
    317  Improve security aspects of DNS name resolution
+   329  Overcoming Tor's Bottlenecks with Traffic Splitting
  OPEN:
    239  Consensus Hash Chaining
    240  Early signing key revocation for directory authorities
@@ -305,6 +306,7 @@ Proposals by status:
    330  Modernizing authority contact entries
    340  Packed and fragmented relay messages
    341  A better algorithm for out-of-sockets eviction
+   343  CAA Extensions for the Tor Rendezvous Specification
  ACCEPTED:
    265  Load Balancing with Overhead Parameters [for 0.2.9.x]
    282  Remove "Named" and "Unnamed" handling from consensus voting [for 0.3.3.x]

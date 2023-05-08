@@ -2,7 +2,7 @@ Filename: 329-traffic-splitting.txt
 Title: Overcoming Tor's Bottlenecks with Traffic Splitting
 Author: David Goulet, Mike Perry
 Created: 2020-11-25
-Status: Needs Revision
+Status: Needs-Revision
 
 0. Status
 

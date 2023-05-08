@@ -1,0 +1,107 @@
+Filename: 343-rend-caa.txt
+Title: CAA Extensions for the Tor Rendezvous Specification
+Author: Q Misell <q@as207960.net>
+Created: 2023-04-25
+Status: Open
+
+Overview:
+  The document defines extensions to the Tor Rendezvous Specification Hidden
+  Service descriptor format to allow the attachment of DNS style CAA records to
+  Tor hidden services to allow the same security benefits as CAA provides in the
+  DNS.
+
+Motivation:
+  As part of the work on draft-misell-acme-onion [I-D.misell-acme-onion] at the
+  IETF it was felt necessary to define a method to incorporate CAA records
+  [RFC8659] into Tor hidden services.
+
+  CAA records in the DNS provide an mechanism to indicate which Certificate
+  Authorities are permitted to issue certificates for a given domain name, and
+  restrict which validation methods are permitted for certificate validation.
+
+  As Tor hidden service domains are not in the DNS another way to provide the
+  same security benefits as CAA does in the DNS needed to be devised.
+
+  More information about this project in general can be found at
+  https://e.as207960.net/w4bdyj/Gm2AylEF
+
+Specification:
+  To enable maximal code re-use in CA codebases the same CAA record format is
+  used in Tor hidden services as in the DNS. To this end a new field is added to
+  the second layer hidden service descriptor [tor-rend-spec-v3] § 2.5.2.2.
+  with the following format:
+
+    "caa" SP flags SP tag SP value NL
+    [Any number of times]
+
+  The contents of "flag", "tag", and "value" are as per [RFC8659] § 4.1.1.
+  Multiple CAA records may be present, as is the case in the DNS.
+
+  A hidden service's second layer descriptor using CAA may look
+  something like the following:
+
+    create2-formats 2
+    single-onion-service
+    caa 0 issue "example.com"
+    caa 0 iodef "mailto:security@example.com"
+    caa 128 validationmethods "onion-csr-01"
+    introduction-point AwAGsAk5nSMpAhRqhMHbTFCTSlfhP8f5PqUhe6DatgMgk7kSL3KHCZ...
+
+  As the CAA records are in the second layer descriptor and in the case of a
+  hidden service requiring client authentication it is impossible to read them
+  without the hidden service trusting a CA's public key, a method is required to
+  signal that there are CAA records present (but not reveal their contents,
+  which may disclose unwanted information about the hidden service operator to
+  third parties). This is to allow a CA to know that it must attempt to check
+  CAA records before issuance, and fail if it is unable to do so.
+
+  To this end a new field is added to the first layer hidden service descriptor
+  [tor-rend-spec-v3] § 2.5.1.2. with the following format:
+
+    "caa-critical" NL
+    [At most once]
+
+Security Considerations:
+  The second layer descriptor is signed and MACed in a way that only a party
+  with access to the secret key of the hidden service could manipulate what is
+  published there. Therefore, Tor CAA records have at least the same security as
+  those in the DNS secured by DNSSEC.
+
+  The "caa-critical" flag is visible to anyone with knowledge of the hidden
+  service's public key, however it reveals no information that could be used to
+  de-anonymize the hidden service operator.
+
+  The CAA flags in the second layer descriptor may reveal information about the
+  hidden service operator if they choose to publish an "iodef", "contactemail",
+  or "contactphone" tag. These however are not required for primary goal of CAA,
+  that is to restrict which CAs may issue certificates for a given domain name.
+
+  No more information is revealed by the "issue" nor "issuewild" tags than would
+  be revealed by someone making a connection to the hidden service and noting
+  which certificate is presented.
+
+Compatibility:
+  The hidden service spec [tor-rend-spec-v3] already requires that clients
+  ignore unknown lines when decoding hidden service descriptors, so this change
+  should not cause any compatibility issues. Additionally in testing no
+  compatibility issues where found with existing Tor implementations.
+
+  A hidden service with CAA records published in its descriptor is available at
+  znkiu4wogurrktkqqid2efdg4nvztm7d2jydqenrzeclfgv3byevnbid.onion, to allow
+  further compatibility testing.
+
+References:
+  [I-D.misell-acme-onion]
+             Misell, Q., "Automated Certificate Management Environment (ACME)
+             Extensions for ".onion" Domain Names", Internet-Draft
+             draft-misell-acme-onion-02, April 2023,
+             <https://datatracker.ietf.org/doc/html/draft-misell-acme-onion-02>.
+
+  [RFC8659]  Hallam-Baker, P., Stradling, R., and J. Hoffman-Andrews,
+             "DNS Certification Authority Authorization (CAA) Resource
+             Record", RFC 8659, DOI 10.17487/RFC8659, November 2019,
+             <https://www.rfc-editor.org/info/rfc8659>.
+
+  [tor-rend-spec-v3]
+             The Tor Project, "Tor Rendezvous Specification - Version 3",
+             <https://spec.torproject.org/rend-spec-v3>.

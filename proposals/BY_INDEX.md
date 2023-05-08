@@ -246,7 +246,7 @@ Below are a list of proposals sorted by their proposal number.  See
 * [`326-tor-relay-well-known-uri-rfc8615.md`](/proposals/326-tor-relay-well-known-uri-rfc8615.md): The "tor-relay" Well-Known Resource Identifier [OPEN]
 * [`327-pow-over-intro.txt`](/proposals/327-pow-over-intro.txt): A First Take at PoW Over Introduction Circuits [DRAFT]
 * [`328-relay-overload-report.md`](/proposals/328-relay-overload-report.md): Make Relays Report When They Are Overloaded [CLOSED]
-* [`329-traffic-splitting.txt`](/proposals/329-traffic-splitting.txt): Overcoming Tor's Bottlenecks with Traffic Splitting [DRAFT]
+* [`329-traffic-splitting.txt`](/proposals/329-traffic-splitting.txt): Overcoming Tor's Bottlenecks with Traffic Splitting [NEEDS-REVISION]
 * [`330-authority-contact.md`](/proposals/330-authority-contact.md): Modernizing authority contact entries [OPEN]
 * [`331-res-tokens-for-anti-dos.md`](/proposals/331-res-tokens-for-anti-dos.md): Res tokens: Anonymous Credentials for Onion Service DoS Resilience [DRAFT]
 * [`332-ntor-v3-with-extra-data.md`](/proposals/332-ntor-v3-with-extra-data.md): Ntor protocol with extra data, version 3 [FINISHED]
@@ -260,4 +260,5 @@ Below are a list of proposals sorted by their proposal number.  See
 * [`340-packed-and-fragmented.md`](/proposals/340-packed-and-fragmented.md): Packed and fragmented relay messages [OPEN]
 * [`341-better-oos.md`](/proposals/341-better-oos.md): A better algorithm for out-of-sockets eviction [OPEN]
 * [`342-decouple-hs-interval.md`](/proposals/342-decouple-hs-interval.md): Decoupling hs_interval and SRV lifetime [DRAFT]
+* [`343-rend-caa.txt`](/proposals/343-rend-caa.txt): CAA Extensions for the Tor Rendezvous Specification [OPEN]
 

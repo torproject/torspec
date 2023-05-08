@@ -41,6 +41,7 @@ for discussion.
 * [`330-authority-contact.md`](/proposals/330-authority-contact.md): Modernizing authority contact entries
 * [`340-packed-and-fragmented.md`](/proposals/340-packed-and-fragmented.md): Packed and fragmented relay messages
 * [`341-better-oos.md`](/proposals/341-better-oos.md): A better algorithm for out-of-sockets eviction
+* [`343-rend-caa.txt`](/proposals/343-rend-caa.txt): CAA Extensions for the Tor Rendezvous Specification
 
 
 ## ACCEPTED proposals: slated for implementation
@@ -107,7 +108,6 @@ discussion.
 * [`294-tls-1.3.txt`](/proposals/294-tls-1.3.txt): TLS 1.3 Migration
 * [`316-flashflow.md`](/proposals/316-flashflow.md): FlashFlow: A Secure Speed Test for Tor (Parent Proposal)
 * [`327-pow-over-intro.txt`](/proposals/327-pow-over-intro.txt): A First Take at PoW Over Introduction Circuits
-* [`329-traffic-splitting.txt`](/proposals/329-traffic-splitting.txt): Overcoming Tor's Bottlenecks with Traffic Splitting
 * [`331-res-tokens-for-anti-dos.md`](/proposals/331-res-tokens-for-anti-dos.md): Res tokens: Anonymous Credentials for Onion Service DoS Resilience
 * [`342-decouple-hs-interval.md`](/proposals/342-decouple-hs-interval.md): Decoupling hs_interval and SRV lifetime
 
@@ -125,6 +125,7 @@ certain changes.
 * [`279-naming-layer-api.txt`](/proposals/279-naming-layer-api.txt): A Name System API for Tor Onion Services
 * [`291-two-guard-nodes.txt`](/proposals/291-two-guard-nodes.txt): The move to two guard nodes
 * [`317-secure-dns-name-resolution.txt`](/proposals/317-secure-dns-name-resolution.txt): Improve security aspects of DNS name resolution
+* [`329-traffic-splitting.txt`](/proposals/329-traffic-splitting.txt): Overcoming Tor's Bottlenecks with Traffic Splitting
 
 
 ## NEEDS-RESEARCH proposals: blocking on research
