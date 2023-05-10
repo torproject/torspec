@@ -32,11 +32,9 @@ for discussion.
 * [`306-ipv6-happy-eyeballs.txt`](/proposals/306-ipv6-happy-eyeballs.txt): A Tor Implementation of IPv6 Happy Eyeballs
 * [`308-counter-galois-onion.txt`](/proposals/308-counter-galois-onion.txt): Counter Galois Onion: A New Proposal for Forward-Secure Relay Cryptography
 * [`309-optimistic-socks-in-tor.txt`](/proposals/309-optimistic-socks-in-tor.txt): Optimistic SOCKS Data
-* [`319-wide-everything.md`](/proposals/319-wide-everything.md): RELAY_FRAGMENT cells
 * [`322-dirport-linkspec.md`](/proposals/322-dirport-linkspec.md): Extending link specifiers to include the directory port
 * [`323-walking-onions-full.md`](/proposals/323-walking-onions-full.md): Specification for Walking Onions
 * [`324-rtt-congestion-control.txt`](/proposals/324-rtt-congestion-control.txt): RTT-based Congestion Control for Tor
-* [`325-packed-relay-cells.md`](/proposals/325-packed-relay-cells.md): Packed relay cells: saving space on small commands
 * [`326-tor-relay-well-known-uri-rfc8615.md`](/proposals/326-tor-relay-well-known-uri-rfc8615.md): The "tor-relay" Well-Known Resource Identifier
 * [`330-authority-contact.md`](/proposals/330-authority-contact.md): Modernizing authority contact entries
 * [`340-packed-and-fragmented.md`](/proposals/340-packed-and-fragmented.md): Packed and fragmented relay messages
@@ -358,7 +356,9 @@ longer relevant (the proposal is OBSOLETE).
 * [`270-newhope-hybrid-handshake.txt`](/proposals/270-newhope-hybrid-handshake.txt): RebelAlliance: A Post-Quantum Secure Hybrid Handshake Based on NewHope [OBSOLETE]
 * [`276-lower-bw-granularity.txt`](/proposals/276-lower-bw-granularity.txt): Report bandwidth with lower granularity in consensus documents [DEAD]
 * [`286-hibernation-api.txt`](/proposals/286-hibernation-api.txt): Controller APIs for hibernation access on mobile [REJECTED]
+* [`319-wide-everything.md`](/proposals/319-wide-everything.md): RELAY_FRAGMENT cells [OBSOLETE]
 * [`320-tap-out-again.md`](/proposals/320-tap-out-again.md): Removing TAP usage from v2 onion services [REJECTED]
+* [`325-packed-relay-cells.md`](/proposals/325-packed-relay-cells.md): Packed relay cells: saving space on small commands [OBSOLETE]
 
 
 

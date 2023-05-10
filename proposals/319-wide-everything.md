@@ -3,8 +3,10 @@ Filename: 319-wide-everything.md
 Title: RELAY_FRAGMENT cells
 Author: Nick Mathewson
 Created: 11 May 2020
-Status: Open
+Status: Obsolete
 ```
+
+(Proposal superseded by proposal 340)
 
 (This proposal is part of the Walking Onions spec project.)
 

@@ -3,8 +3,10 @@ Filename: 325-packed-relay-cells.md
 Title: Packed relay cells: saving space on small commands
 Author: Nick Mathewson
 Created: 10 July 2020
-Status: Open
+Status: Obsolete
 ```
+
+(Proposal superseded by proposal 340)
 
 # Introduction
 
