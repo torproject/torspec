@@ -118,17 +118,32 @@ circuit being immediately destroyed.
 
 ## Negotiation
 
-This message format requires a new `Relay` subprotocol version to
-indicate support.  If a client wants to indicate support for this
-format, it sends the following extension as part of its `ntor3`
-handshake:
+This message format requires a new `Relay` subprotocol version to indicate
+support. If a client wants to indicate support for this format, it sends the
+following extension as part of its `ntor3` handshake:
 
-   RELAY_PROTOCOL
-     version    u8
+  EXT_FIELD_TYPE:
 
-The `version` field is the `Relay` subprotocol version that the client
-wants to use. The relay must send back the same extension in its ntor3
-handshake to acknowledge support.
+    [03] -- Packed and Fragmented Cell Request
+
+This field is zero payload length. Its presence signifies that the client
+wants to use packed and fragmented cells on the circuit.
+
+The Exit side ntorv3 response payload is encoded as:
+
+  EXT_FIELD_TYPE:
+
+    [04] -- Packed and Fragmented Cell Response
+
+Again, the extension presence indicates to the client that the Exit has
+acknowledged the feature and is ready to use it. If the extension is not
+present, the client MUST not use the packed and fragmented feature even though
+the Exit has advertised the correct protover.
+
+The client MUST reject the handshake and thus close the circuit if:
+
+  - The response extension is seen for a non-ntorv3 handshake.
+  - The response extension is seen but no request was made initially.
 
 ## Migration
 
