@@ -299,7 +299,9 @@ Status: Needs-Revision
   meet the client at two separate rendezvous points. These introduce
   requests MUST be sent to the same intropoint (due to potential use of
   onionbalance), and SHOULD be sent back-to-back on the same intro
-  circuit. They MAY be combined with Proposal 340.
+  circuit. They MAY be combined with Proposal 340. (Note that if we do not
+  use Prop340, we will have to raise the limit on number of intros per
+  client circuit to 2, here, at intropoints).
 
   The first rendezvous circuit to get joined SHOULD use Proposal 340 to
   append the RELAY_BEGIN command, and the service MUST answer on this
