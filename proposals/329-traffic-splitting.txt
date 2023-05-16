@@ -532,60 +532,63 @@ Status: Needs-Revision
   original conflux paper used only RTT. However, with Proposal 324, we
   will have accurate information on the instantaneous available bandwidth
   of each circuit leg, as 'cwnd - inflight' (see Section 3 of
-  Proposal 324).
-
-  Some additional RTT optimizations are also useful, to improve
-  responsiveness and minimize out-of-order queue sizes.
+  Proposal 324). We also have the TCP block state of the local OR
+  connection.
 
   We specify two traffic schedulers from the multipath literature and
-  adapt them to Tor: [LOWRTT_TOR] and [BLEST_TOR]. [LOWRTT_TOR] also has
-  three variants, with different trade offs.
+  adapt them to Tor: [MINRTT_TOR], and [LOWRTT_TOR]. Additionally,
+  we create low-memory variants of these that aim to minimize the
+  out-of-order queue size at the receiving endpoint.
 
   However, see the [TRAFFIC_ANALYSIS] sections of this proposal for
   important details on how this selection can be changed, to reduce
   website traffic fingerprinting.
 
-  XXX: These sections are not accurate, and are subject to change
-  during the alpha process, via Shadow simulation. We need to specify
-  candidate algorithms for the UX properties. The latency algorithms
-  will be related to LOWRTT_TOR, and the throughput algorithms related
-  to BLEST_TOR, but significant changes will arise during evaluation,
-  and possibly also live deployment iteration.
+3.1. MinRTT scheduling [MINRTT_TOR]
 
-3.1. LowRTT Scheduling [LOWRTT_TOR]
+  This schedulng algorithm is used for the MIN_LATENCY user experience.
 
-  This scheduling algorithm is based on the original [CONFLUX] paper, with
-  ideas from [MPTCP]'s minRTT/LowRTT scheduler.
+  It works by always and only sending on the circuit with the current minimum
+  RTT. With this algorithm, conflux should effectively stay on the circuit with
+  the lowest initial RTT, unless that circuit's RTT raises above the RTT of the
+  other circuit (due to relay load or congestion). When the circuit's congestion
+  window is full (ie: cwnd - inflight <= 0), or if the local OR conn blocks,
+  the conflux set stops transmitting and stops reading on edge connections,
+  rather than switch.
 
-  In this algorithm, endpoints send cells on the circuit with lower RTT
-  (primary circuit). This continues while the congestion window on the
-  circuit has available room: ie whenever cwnd - package_window > 0.
+  This should result in low out-of-order queues in most situations, unless
+  the initial RTTs of the two circuits are very close (basically within the
+  Vegas RTT bounds of queue variance, 'alpha' and 'beta').
 
-  Whenever the primary circuit's congestion window becomes full, the
-  secondary circuit is used. We stop reading on the send window source
-  (edge connection) when both congestion windows become full.
+3.2. LowRTT Scheduling [LOWRTT_TOR]
+
+  This scheduling algorithm is based on [MPTCP]'s LowRTT scheduler. This
+  algorithm is used for the UX choice of HIGH_THROUGHPUT.
+
+  In this algorithm, endpoints send cells on the circuit with lowest RTT that
+  has an unblocked local OR connection, and room in its congestion window (ie:
+  cwnd - inflight > 0). We stop reading on edge connections only when both
+  congestion windows become full, or when both local OR connections are blocked.
 
   In this way, unlike original conflux, we switch to the secondary circuit
-  without causing congestion on the primary circuit. This improves both
-  load times, and overall throughput.
+  without causing congestion either locally, or on either circuit. This
+  improves both load times, and overall throughput. Given a large enough
+  transmission, both circuits are used to their full capacity,
+  simultaneously.
 
-  This behavior matches minRTT from [MPTCP], sometimes called LowRTT.
+3.3. MinRTT Low-Memory Scheduling [MINRTT_LOWMEM_TOR]
 
-  It may be better to stop reading on the edge connection when the primary
-  congestion window becomes full, rather than switch to the secondary
-  circuit as soon as the primary congestion window becomes full. (Ie: only
-  switch if the RTTs themselves change which circuit is primary). This is
-  what was done in the original Conflux paper. This behavior effectively
-  causes us to optimize for responsiveness and congestion avoidance,
-  rather than throughput. For evaluation, we will control this switching
-  behavior with a consensus parameter (see [CONSENSUS_PARAMETERS]).
+  The low memory version of the MinRTT scheduler ensures that we do not
+  perform a switch more often than once per congestion window worth of data.
 
-  Because of potential side channel risk (see [SIDE_CHANNELS]), a third
-  variant of this algorithm, where the primary circuit is chosen during
-  the [LINKING_CIRCUITS] handshake and never changed, is also possible
-  to control via consensus parameter.
+  XXX: Other rate limiting, such as not switching unless the RTT changes by
+  more than X%, may be useful here.
 
-3.2. BLEST Scheduling [BLEST_TOR]
+3.4. BLEST Scheduling [BLEST_TOR]
+
+  XXX: Something like this might be useful for minimizing OOQ for the UX
+  choice of LOW_MEM_THROUGHPUT, but we might just be able to reduce switching
+  frequency instead.
 
   XXX: We want an algorithm that only uses cwnd instead. This algorithm
   has issues if the primary cwnd grows while the secondary does not.
@@ -701,7 +704,7 @@ Status: Needs-Revision
   important to be mindful of ways that an adversary can inject new cell
   commands, as well as ways that the adversary can spawn new circuits
   arbitrarily.
- 
+
   It is also important, though slightly less so, to be mindful of the uniqueness
   of new handshakes, as handshakes can be used to classify usage (such as via
   Onion Service Circuit Fingerprinting). Handshake side channels are only
