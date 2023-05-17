@@ -275,7 +275,21 @@ Status: Needs-Revision
 
   To link exit circuits, two circuits to the same exit are built, with
   additional restrictions such that they do not share Guard or Middle
-  relays. When each circuit is opened, we ensure that congestion control
+  relays. This restriction applies via specific relay identity keys,
+  and not IP addresses, families, or networks. (This is because the purpose
+  of it is to avoid sharing a bottleneck *inside* relay circuit queues;
+  bottlenecks caused by a shared network are handled by TCP's congestion
+  control on the OR conns).
+
+  Bridges also are subject to the same constraint as Guard relays;
+  the C-Tor codebase emits a warn if only one bridge is configured, unless
+  that bridge has transport "snowflake". Snowflake is exempt from this
+  Guard restriction because it is actually backed by many bridges. In the
+  bridge case, we only warn, and do not refuse to build conflux circuits,
+  because it is not catastrophic that Bridges are shared, it is just
+  sub-optimal for performance and congestion.
+
+  When each circuit is opened, we ensure that congestion control
   has been negotiated. If congestion control negotiation has failed, the
   circuit MUST be closed. After this, the linking handshake begins.
 
@@ -306,6 +320,17 @@ Status: Needs-Revision
   circuit. They MAY be combined with Proposal 340. (Note that if we do not
   use Prop340, we will have to raise the limit on number of intros per
   client circuit to 2, here, at intropoints).
+
+  When rendezvous circuits are built, they should use the same Guard,
+  Bridge, and Middle restrictions as specified in 2.2, for Exits. These
+  restrictions SHOULD also take into consideration all Middles in the path,
+  including the rendezvous point. All relay identities should be unique
+  (again, except for when the Snowflake transport is in use). The one
+  special case here is if the chosen rendezvous points by a client
+  are the same as the service's guards. In this case, the service SHOULD
+  NOT use different guards, but instead stick with the guards it has.
+  The reason for this is that we do not want to create the ability
+  for a client to force a service to use different guards.
 
   The first rendezvous circuit to get joined SHOULD use Proposal 340 to
   append the RELAY_BEGIN command, and the service MUST answer on this
