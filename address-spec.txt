@@ -1,4 +1,3 @@
-
                           Special Hostnames in Tor
                                Nick Mathewson
 
@@ -71,6 +70,7 @@ Table of Contents
        - PUBKEY is the 32 bytes ed25519 master pubkey of the onion service.
        - VERSION is a one byte version field (default value '\x03')
        - ".onion checksum" is a constant string
+       - H is SHA3-256
        - CHECKSUM is truncated to two bytes before inserting it in onion_address
 
   When Tor sees an address in this format, it tries to look up and connect to
