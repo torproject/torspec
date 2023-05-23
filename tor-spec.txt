@@ -1260,8 +1260,6 @@ see tor-design.pdf.
       t_mac     = PROTOID | ":mac"
       t_key     = PROTOID | ":key_extract"
       t_verify  = PROTOID | ":verify"
-      MULT(a,b) = the multiplication of the curve25519 point 'a' by the
-                  scalar 'b'.
       G         = The preferred base point for curve25519 ([9])
       KEYGEN()  = The curve25519 key generation algorithm, returning
                   a private/public keypair.
