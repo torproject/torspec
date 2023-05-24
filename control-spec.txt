@@ -2260,6 +2260,7 @@ Table of Contents
           [SP "REASON=" Reason [SP "REMOTE_REASON=" Reason]]
           [SP "SOCKS_USERNAME=" EscapedUsername]
           [SP "SOCKS_PASSWORD=" EscapedPassword]
+          [SP "HS_POW=" HSPoW ]
           CRLF
 
       CircStatus =
@@ -2292,6 +2293,10 @@ Table of Contents
                 "HSCR_ESTABLISHED_WAITING" / "HSCR_JOINED" /
                 "HSSI_CONNECTING" / "HSSI_ESTABLISHED" /
                 "HSSR_CONNECTING" / "HSSR_JOINED"
+
+      HSPoWType = "v1"
+      HSPoWEffort = 1*DIGIT
+      HSPoW = HSPoWType "," HSPoWEffort
 
       EscapedUsername = QuotedString
       EscapedPassword = QuotedString
