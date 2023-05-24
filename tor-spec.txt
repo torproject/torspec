@@ -1068,28 +1068,28 @@ see tor-design.pdf.
 
 5.1.1. Choosing circuit IDs in create cells
 
-   The CircID for a CREATE/CREATE2 cell is an arbitrarily chosen
-   nonzero integer, selected by the node (OP or OR) that sends the
-   CREATE/CREATE2 cell.  In link protocol 3 or lower, CircIDs are 2
-   bytes long; in protocol 4 or higher, CircIDs are 4 bytes long.
+   The CircID for a CREATE/CREATE2 cell is a nonzero integer, selected
+   by the node (OP or OR) that sends the CREATE/CREATED2 cell.
+   Depending on the link protocol version, there are certain rules for
+   choosing the value of CircID which MUST be obeyed, as implementations
+   MAY decide to refuse in case of a violation.  In link protocol 3 or
+   lower, CircIDs are 2 bytes long; in protocol 4 or higher, CircIDs are
+   4 bytes long.
 
-   To prevent CircID collisions, when one node sends a CREATE/CREATE2
-   cell to another, it chooses from only one half of the possible
-   values based on the ORs' public identity keys.
-
-   In link protocol version 3 or lower, if the sending node has a lower
-   key, it chooses a CircID with an MSB of 0; otherwise, it chooses a
-   CircID with an MSB of 1. (Public keys are compared numerically by
-   modulus.)  With protocol version 3 or lower, a client with no public key
-   MAY choose any CircID it wishes, since clients never need to process a
-   CREATE/CREATE2 cell.
+   In link protocol version 3 or lower, the nodes choose from only one
+   half of the possible values based on the ORs' public identity keys,
+   in order to avoid collisions.  If the sending node has a lower key,
+   it chooses a CircID with an MSB of 0; otherwise, it chooses a CircID
+   with an MSB of 1. (Public keys are compared numerically by modulus.)
+   A client with no public key MAY choose any CircID it wishes, since
+   clients never need to process CREATE/CREATE2 cells.
 
    In link protocol version 4 or higher, whichever node initiated the
-   connection sets its MSB to 1, and whichever node didn't initiate the
-   connection sets its MSB to 0.
+   connection MUST set its MSB to 1, and whichever node didn't initiate
+   the connection MUST set its MSB to 0.
 
    The CircID value 0 is specifically reserved for cells that do not
-   belong to any circuit: CircID 0 must not be used for circuits.  No
+   belong to any circuit: CircID 0 MUST not be used for circuits.  No
    other CircID value, including 0x8000 or 0x80000000, is reserved.
 
    Existing Tor implementations choose their CircID values at random from
