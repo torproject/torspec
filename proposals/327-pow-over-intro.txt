@@ -13,12 +13,11 @@ Status: Draft
 
   So far our attempts at limiting the impact of introduction flooding DoS
   attacks on onion services has been focused on horizontal scaling with
-  Onionbalance, optimizing the CPU usage of Tor and applying congestion control
-  using rate limiting. While these measures move the goalpost forward, a core
-  problem with onion service DoS is that building rendezvous circuits is a
-  costly procedure both for the service and for the network. For more
-  information on the limitations of rate-limiting when defending against DDoS,
-  see [REF_TLS_1].
+  Onionbalance, optimizing the CPU usage of Tor and applying rate limiting.
+  While these measures move the goalpost forward, a core problem with onion
+  service DoS is that building rendezvous circuits is a costly procedure both
+  for the service and for the network. For more information on the limitations
+  of rate-limiting when defending against DDoS, see [REF_TLS_1].
 
   If we ever hope to have truly reachable global onion services, we need to
   make it harder for attackers to overload the service with introduction
