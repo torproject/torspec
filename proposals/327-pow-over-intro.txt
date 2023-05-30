@@ -712,14 +712,20 @@ Status: Draft
   turn into a DoS vector of its own. We will do this tuning in a way that's
   agnostic to the chosen PoW function.
 
-  We will then move towards analyzing the starting difficulty setting for our
-  PoW system. That defines the expected time for clients to succeed in our
-  system, and the expected time for attackers to overwhelm our system. Same as
-  above we will do this in a way that's agnostic to the chosen PoW function.
+  We will then move towards analyzing the client starting difficulty setting
+  for our PoW system. That defines the expected time for clients to succeed in
+  our system, and the expected time for attackers to overwhelm our system. Same
+  as above we will do this in a way that's agnostic to the chosen PoW function.
+
+  Currently, we have hardcoded the initial client starting difficulty at 8,
+  but this may be too low to ramp up quickly to various on and off attack
+  patterns. A higher initial difficulty may be needed for these, depending on
+  their severity. This section gives us an idea of how large such attacks can
+  be.
 
   Finally, using those two pieces we will tune our PoW function and pick the
-  right starting difficulty setting. At the end of this section we will know the
-  resources that an attacker needs to overwhelm the onion service, the
+  right client starting difficulty setting. At the end of this section we will
+  know the resources that an attacker needs to overwhelm the onion service, the
   resources that the service needs to verify introduction requests, and the
   resources that legitimate clients need to get to the onion service.
 
