@@ -13,12 +13,11 @@ Status: Draft
 
   So far our attempts at limiting the impact of introduction flooding DoS
   attacks on onion services has been focused on horizontal scaling with
-  Onionbalance, optimizing the CPU usage of Tor and applying congestion control
-  using rate limiting. While these measures move the goalpost forward, a core
-  problem with onion service DoS is that building rendezvous circuits is a
-  costly procedure both for the service and for the network. For more
-  information on the limitations of rate-limiting when defending against DDoS,
-  see [REF_TLS_1].
+  Onionbalance, optimizing the CPU usage of Tor and applying rate limiting.
+  While these measures move the goalpost forward, a core problem with onion
+  service DoS is that building rendezvous circuits is a costly procedure both
+  for the service and for the network. For more information on the limitations
+  of rate-limiting when defending against DDoS, see [REF_TLS_1].
 
   If we ever hope to have truly reachable global onion services, we need to
   make it harder for attackers to overload the service with introduction
@@ -78,16 +77,15 @@ Status: Draft
 
     This is a standard laptop/desktop user who is trying to browse the
     web. They don't know how these defences work and they don't care to
-    configure or tweak them. They are gonna use the default values and if the
-    site doesn't load, they are gonna close their browser and be sad at Tor.
-    They run a 2Ghz computer with 4GB of RAM.
+    configure or tweak them. If the site doesn't load, they are gonna close
+    their browser and be sad at Tor. They run a 2Ghz computer with 4GB of RAM.
 
   "The motivated user"
 
     This is a user that really wants to reach their destination. They don't
     care about the journey; they just want to get there. They know what's going
-    on; they are willing to tweak the default values and make their computer do
-    expensive multi-minute PoW computations to get where they want to be.
+    on; they are willing to make their computer do expensive multi-minute PoW
+    computations to get where they want to be.
 
   "The mobile user"
 
@@ -714,14 +712,20 @@ Status: Draft
   turn into a DoS vector of its own. We will do this tuning in a way that's
   agnostic to the chosen PoW function.
 
-  We will then move towards analyzing the default difficulty setting for our
-  PoW system. That defines the expected time for clients to succeed in our
-  system, and the expected time for attackers to overwhelm our system. Same as
-  above we will do this in a way that's agnostic to the chosen PoW function.
+  We will then move towards analyzing the client starting difficulty setting
+  for our PoW system. That defines the expected time for clients to succeed in
+  our system, and the expected time for attackers to overwhelm our system. Same
+  as above we will do this in a way that's agnostic to the chosen PoW function.
+
+  Currently, we have hardcoded the initial client starting difficulty at 8,
+  but this may be too low to ramp up quickly to various on and off attack
+  patterns. A higher initial difficulty may be needed for these, depending on
+  their severity. This section gives us an idea of how large such attacks can
+  be.
 
   Finally, using those two pieces we will tune our PoW function and pick the
-  right default difficulty setting. At the end of this section we will know the
-  resources that an attacker needs to overwhelm the onion service, the
+  right client starting difficulty setting. At the end of this section we will
+  know the resources that an attacker needs to overwhelm the onion service, the
   resources that the service needs to verify introduction requests, and the
   resources that legitimate clients need to get to the onion service.
 
@@ -799,10 +803,10 @@ Status: Draft
   the "target". However, since our system is dynamic, we define "success" as an
   abstract high-effort computation.
 
-  Our system is dynamic but we still need a default difficulty settings that
-  will define the metagame and be used for bootstrapping the system. The client
-  and attacker can still aim higher or lower but for UX purposes and for
-  analysis purposes we do need to define a default difficulty.
+  Our system is dynamic but we still need a starting difficulty setting that
+  will be used for bootstrapping the system. The client and attacker can still
+  aim higher or lower but for UX purposes and for analysis purposes we do need
+  to define a starting difficulty, to minimize retries by clients.
 
 6.2.1. Analysis based on adversary power
 
@@ -856,16 +860,13 @@ Status: Draft
     successes per second, then a legitimate client with a single box should be
     expected to spend 1 seconds getting a single success.
 
-  With the above table we can create some profiles for default values of our
-  PoW difficulty. So for example, we can use the last case as the default
-  parameter for Tor Browser, and then create three more profiles for more
-  expensive cases, scaling up to the first case which could be hardest since
-  the client is expected to spend 15 minutes for a single introduction.
+  With the above table we can create some profiles for starting values of our
+  PoW difficulty.
 
 6.2.2. Analysis based on Tor's performance [POW_DIFFICULTY_TOR]
 
   To go deeper here, we can use the performance measurements from
-  [TOR_MEASUREMENTS] to get a more specific intuition on the default
+  [TOR_MEASUREMENTS] to get a more specific intuition on the starting
   difficulty. In particular, we learned that completely handling an
   introduction cell takes 5.55 msecs in average. Using that value, we can
   compute the following table, that describes the number of introduction cells
@@ -898,7 +899,7 @@ Status: Draft
     64 high-effort introduction cells per second to succeed in a
     [ATTACK_BOTTOM_HALF] attack.
 
-  We can use this table to specify a default difficulty that won't allow our
+  We can use this table to specify a starting difficulty that won't allow our
   target adversary to succeed in an [ATTACK_BOTTOM_HALF] attack.
 
   Of course, when it comes to this table, the same disclaimer as in section
@@ -907,26 +908,6 @@ Status: Draft
   since they depend on auxiliary processing overheads, and on the network's
   capacity.
 
-6.3. Tuning equix difficulty [EQUIX_DIFFICULTY]
-
-  The above two sections were not depending on a particular PoW scheme. They
-  gave us an intuition on the values we are aiming for in terms of verification
-  speed and PoW difficulty. Now we need to make things concrete:
-
-  As described in section [EFFORT_ESTIMATION] we start the service with a
-  default suggested-effort value of 5000. Given the benchmarks of EquiX
-  [REF_EQUIX] this should take about 2 to 3 seconds on a modern CPU.
-
-  With this default difficulty setting and given the table in
-  [POW_DIFFICULTY_ANALYSIS] this means that an attacker with 50 boxes will be
-  able to get about 20 successful PoWs per second, and an attacker with 100
-  boxes about 40 successful PoWs per second.
-
-  Then using the table in [POW_DIFFICULTY_TOR] we can see that the number of
-  attacker's successes is not enough to overwhelm the service through an
-  [ATTACK_BOTTOM_HALF] attack. That is, an attacker would need to do about 152
-  introductions per second to overwhelm the service, whereas they can only do
-  40 with 100 boxes.
 
 7. Discussion
 
@@ -934,35 +915,13 @@ Status: Draft
 
   This proposal has user facing UX consequences.
 
-  Here is some UX improvements that don't need user-input:
-
-  - Primarily, there should be a way for Tor Browser to display to users that
-    additional time (and resources) will be needed to access a service that is
-    under attack. Depending on the design of the system, it might even be
-    possible to estimate how much time it will take.
-
-  And here are a few UX approaches that will need user-input and have an
-  increasing engineering difficulty. Ideally this proposal will not need
-  user-input and the default behavior should work for almost all cases.
-
-  a) Tor Browser needs a "range field" which the user can use to specify how
-     much effort they want to spend in PoW if this ever occurs while they are
-     browsing. The ranges could be from "Easy" to "Difficult", or we could try
-     to estimate time using an average computer. This setting is in the Tor
-     Browser settings and users need to find it.
-
-  b) We start with a default effort setting, and then we use the new onion
-     errors (see #19251) to estimate when an onion service connection has
-     failed because of DoS, and only then we present the user a "range field"
-     which they can set dynamically. Detecting when an onion service connection
-     has failed because of DoS can be hard because of the lack of feedback (see
-     [CLIENT_BEHAVIOR])
-
-  c) We start with a default effort setting, and if things fail we
-     automatically try to figure out an effort setting that will work for the
-     user by doing some trial-and-error connections with different effort
-     values. Until the connection succeeds we present a "Service is
-     overwhelmed, please wait" message to the user.
+  When the client first attempts a pow, it can note how long iterations of the
+  hash function take, and then use this to determine an estimation of the
+  duration of the PoW. This estimation could be communicated via the control
+  port or other mechanism, such that the browser could display how long the
+  PoW is expected to take on their device. If the device is a mobile platform,
+  and this time estimation is large, it could recommend that the user try from
+  a desktop machine.
 
 7.2. Future work [FUTURE_WORK]
 
@@ -1253,4 +1212,4 @@ A.2. References
     [REF_TLS_1]: https://www.ietf.org/archive/id/draft-nygren-tls-client-puzzles-02.txt
     [REF_TEVADOR_1]: https://lists.torproject.org/pipermail/tor-dev/2020-May/014268.html
     [REF_TEVADOR_2]: https://lists.torproject.org/pipermail/tor-dev/2020-June/014358.html
-    [REF_TEVADOR_SIM]: https://github.com/tevador/scratchpad/blob/master/tor-pow/effort_sim.md
+    [REF_TEVADOR_SIM]: https://github.com/mikeperry-tor/scratchpad/blob/master/tor-pow/effort_sim.py#L57
