@@ -2175,6 +2175,11 @@ see tor-design.pdf.
          matched on the other side from the previous cell sent that the OR/OP
          must remember.
 
+         (Note that if the digest in use has an output length greater than 20
+         bytes—as is the case for the hop of an onion service rendezvous
+         circuit created by the hs_ntor handshake—we truncate the digest
+         to 20 bytes here.)
+
    If the VERSION is unrecognized or below the minimum accepted version (taken
    from the consensus), the circuit should be torn down.
 
