@@ -3,6 +3,7 @@ Title: CAA Extensions for the Tor Rendezvous Specification
 Author: Q Misell <q@as207960.net>
 Created: 2023-04-25
 Status: Open
+Ticket: https://gitlab.torproject.org/tpo/core/tor/-/merge_requests/716
 
 Overview:
   The document defines extensions to the Tor Rendezvous Specification Hidden
@@ -22,8 +23,11 @@ Motivation:
   As Tor hidden service domains are not in the DNS another way to provide the
   same security benefits as CAA does in the DNS needed to be devised.
 
+  It is important to note that a hidden service is not required to publish a CAA
+  record to obtain a certificate, as is the case in the DNS.
+
   More information about this project in general can be found at
-  https://e.as207960.net/w4bdyj/Gm2AylEF
+  https://acmeforonions.org.
 
 Specification:
   To enable maximal code re-use in CA codebases the same CAA record format is
@@ -62,10 +66,10 @@ Specification:
     [At most once]
 
 Security Considerations:
-  The second layer descriptor is signed and MACed in a way that only a party
-  with access to the secret key of the hidden service could manipulate what is
-  published there. Therefore, Tor CAA records have at least the same security as
-  those in the DNS secured by DNSSEC.
+  The second layer descriptor is signed, encrypted and MACed in a way that only
+  a party with access to the secret key of the hidden service could manipulate
+  what is published there. Therefore, Tor CAA records have at least the same
+  security as those in the DNS secured by DNSSEC.
 
   The "caa-critical" flag is visible to anyone with knowledge of the hidden
   service's public key, however it reveals no information that could be used to
