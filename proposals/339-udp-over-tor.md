@@ -11,7 +11,7 @@ Status: Accepted
 Tor currently only supports delivering two kinds of traffic to the
 internet: TCP data streams, and a certain limited subset of DNS
 requests. This proposal describes a plan to extend the Tor protocol so
-that exit relays can also relay UDP traffic to the network?.
+that exit relays can also relay UDP traffic to the network.
 
 Why would we want to do this?  There are important protocols that use
 UDP, and in order to support users that rely on these protocols, we'll
