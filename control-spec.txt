@@ -1786,7 +1786,7 @@ Table of Contents
      "NonAnonymous" /; Add a non-anonymous Single Onion Service. Tor
                        checks this flag matches its configured hidden
                        service anonymity mode.
-     "MaxStreamsCloseCircuit"; Close the circuit is the maximum streams
+     "MaxStreamsCloseCircuit"; Close the circuit if the maximum streams
                                allowed is reached.
 
     NumStreams = A value between 0 and 65535 which is used as the maximum
