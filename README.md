@@ -1,3 +1,6 @@
+This project is no longer hosted here. Come find us at [our gitlab
+repository](https://gitlab.torproject.org/tpo/core/torspec) instead.
+
 # Tor specifications
 
 This repository holds the specifications that describe how Tor works.
